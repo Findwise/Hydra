@@ -1,0 +1,156 @@
+package com.findwise.hydra.common;
+
+import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+
+/**
+ * Convenience methods for handling serialization and deserialization of 
+ * objects to and from Json, using Gson. 
+ * @author joel.westberg
+ *
+ */
+public final class SerializationUtils {
+	private SerializationUtils() {}
+	
+	/**
+	 * Method for Deserializing any Json message into a Map. 
+	 * Should the Json message not be a map, it will be wrapped in a map, corresponding to
+	 * the JSON: <code>{ "" : &lt;original_json&gt; }</code>
+	 */
+	@SuppressWarnings("unchecked")
+	public static Map<String, Object> fromJson(String json) throws JsonException {
+		try {
+			Object o = toObject(json);
+			if(o instanceof HashMap) {
+				return (HashMap<String, Object>) o;
+			}
+			else {
+				HashMap<String, Object> x = new HashMap<String, Object>();
+				x.put("", o);
+				return x;
+			}
+		}
+		catch(JsonParseException e) {
+			throw new JsonException(e);
+		}
+	}
+	
+	public static Object toObject(String json) throws JsonException {
+		GsonBuilder gsonBuilder = new GsonBuilder();
+		gsonBuilder.serializeNulls();
+		gsonBuilder.registerTypeAdapter(Object.class, new NaturalGsonDeserializer()); 
+		Gson gson = gsonBuilder.create();
+		return gson.fromJson(json, Object.class);
+	}
+	
+	/**
+	 * Serializes any object to Json. 
+	 * @param o
+	 * @return
+	 */
+	public static String toJson(Object o) {
+		return new GsonBuilder().serializeNulls().create().toJson(o);
+	}
+	
+	/**
+	 * Method for verifying what class the passed Object will get if serialized and then deserialized via this class.
+	 */
+	public static Class<?> getResultingClass(Object o) {
+		return getResultingClass(toJson(o));
+	}
+	
+	/**
+	 * Functionally the same as calling SerializationUtils.toObject(<pre>json</pre>).getClass()
+	 */
+	public static Class<?> getResultingClass(String json) {
+		try {
+			return toObject(json).getClass();
+		} catch (JsonException e) {
+			return null;
+		}
+	}
+	
+	/**
+	 * Private class needed to induce Gson to serialize standard "String" : Object relations in JSON string to DBObjects.
+	 * In a more general case, DBObject could be a HashMap instead (see the equivalent parsing in hydra-api Document class)
+	 */
+	private static class NaturalGsonDeserializer implements JsonDeserializer<Object> {
+		
+		public Object deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
+			try {
+				if (json.isJsonNull()) {
+					return null;
+				} else if (json.isJsonPrimitive()) {
+					return handlePrimitive(json.getAsJsonPrimitive());
+				} else if (json.isJsonArray()) {
+					return handleArray(json.getAsJsonArray(), context);
+				} else {
+					return handleObject(json.getAsJsonObject(), context);
+				}
+			} catch (Exception e) {
+				InternalLogger.error("An exception was caught during deserialization", e);
+				return null;
+			}
+		}
+
+		private Object handlePrimitive(JsonPrimitive json) {
+			if (json.isBoolean()) {
+				return json.getAsBoolean();
+			}
+			else if (json.isString()) {
+				return json.getAsString();
+			}
+			
+			else {
+				BigDecimal bigDec = json.getAsBigDecimal();
+				
+				try {
+					bigDec.toBigIntegerExact();
+					
+					try {
+						return bigDec.intValueExact();
+					} catch (ArithmeticException e) {
+						return bigDec.longValue();
+					}
+				} 
+				catch (ArithmeticException e) {
+				}
+				return bigDec.doubleValue();
+			}
+		}
+
+		private Object handleArray(JsonArray json, JsonDeserializationContext context) {
+			List<Object> array = new ArrayList<Object>();
+			for (int i = 0; i < json.size(); i++) {
+				array.add(context.deserialize(json.get(i), Object.class));
+			}
+			return array;
+		}
+
+		private Object handleObject(JsonObject json, JsonDeserializationContext context) {
+			try {
+				HashMap<String, Object> map = new HashMap<String, Object>();
+				for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
+					map.put(entry.getKey(), context.deserialize(entry.getValue(), Object.class));
+				}
+				return map;
+			} catch(Exception e) {
+				return null;
+			}
+		}
+	}
+}

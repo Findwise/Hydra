@@ -1,0 +1,20 @@
+hydra-core
+
+* Release notes
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~ NOTE:  You must follow this rather odd format in order for it to work on the maven site
+~~ For a reference see http://maven.apache.org/doxia/format.html
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+0.1.0
+
++--------------------------------------------------------------------------+
+
+First release.
+
+A first implementation of the Hydra Core daemon. 
+
++--------------------------------------------------------------------------+
+
+

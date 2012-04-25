@@ -1,0 +1,321 @@
+package com.findwise.hydra.stage;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import com.findwise.hydra.local.LocalDocument;
+import junit.framework.Assert;
+
+public class RegexStageTest {
+
+	private RegexStage regexStage;
+	private LocalDocument doc;
+
+	@Before
+	public void setUp() {
+		regexStage = new RegexStage();
+		doc = new LocalDocument();
+	}
+
+	@Test
+	public void testExtractContent() throws RequiredArgumentMissingException,
+			ProcessException, IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "rawcontent");
+		config1.put("outField", "out");
+		config1.put("regex", "\\Q<![CDATA[<!DOCTYPE html>\\E(.*)\\Q]]>\\E");
+		config1.put("substitute", "$1");
+		configs.add(config1);
+		regexStage.setRegexConfigsList(configs);
+
+		// should match
+		doc.putContentField(
+				"rawcontent",
+				"<![CDATA[<!DOCTYPE html><html><head></head><body><h1 class=\"BIG\">h1 #1</h1><h1>h1 #2</h1><h2>h2 #1</h2><h2>h2 #2</h2></body></html>]]>");
+		regexStage.process(doc);
+		assertEquals(
+				"<html><head></head><body><h1 class=\"BIG\">h1 #1</h1><h1>h1 #2</h1><h2>h2 #1</h2><h2>h2 #2</h2></body></html>",
+				doc.getContentField("out").toString());
+
+		// should not match
+		LocalDocument doc2 = new LocalDocument();
+		doc2.putContentField(
+				"rawcontent",
+				"<html><head></head><body><h1 class=\"BIG\">h1 #1</h1><h1>h1 #2</h1><h2>h2 #1</h2><h2>h2 #2</h2></body></html>");
+		regexStage.process(doc2);
+		assertTrue(!doc2.hasContentField("out"));
+	}
+
+	@Test
+	public void testExtractContentWithDollarSign()
+			throws RequiredArgumentMissingException, ProcessException,
+			IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "rawcontent");
+		config1.put("outField", "out");
+		config1.put("regex", "\\Q<![CDATA[<!DOCTYPE html>\\E(.*)\\Q]]>\\E");
+		config1.put("substitute", "$1");
+		configs.add(config1);
+		regexStage.setRegexConfigsList(configs);
+
+		// should match
+		doc.putContentField(
+				"rawcontent",
+				"<![CDATA[<!DOCTYPE html><html><head></head><body><a href=\"http://www5.goteborg.se/prod/Intraservice/Namndhandlingar/SamrumPortal.nsf/550F49BBA4E92355C12575430046D20B/$File/081120_Biblioteksplanen.pdf</a><h1 class=\"BIG\">h1 #1</h1><h1>h1 #2</h1><h2>h2 #1</h2><h2>h2 #2</h2></body></html>]]>");
+		regexStage.process(doc);
+		assertEquals(
+				"<html><head></head><body><a href=\"http://www5.goteborg.se/prod/Intraservice/Namndhandlingar/SamrumPortal.nsf/550F49BBA4E92355C12575430046D20B/$File/081120_Biblioteksplanen.pdf</a><h1 class=\"BIG\">h1 #1</h1><h1>h1 #2</h1><h2>h2 #1</h2><h2>h2 #2</h2></body></html>",
+				doc.getContentField("out").toString());
+	}
+
+	@Test
+	public void testReplaceString() throws RequiredArgumentMissingException,
+			ProcessException, IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "rawcontent");
+		config1.put("outField", "out");
+		config1.put("regex", "(^[A-Za-z0-9]*.[A-Za-z0-9]*).*");
+		config1.put("substitute", "$1.ru");
+		configs.add(config1);
+		regexStage.setRegexConfigsList(configs);
+
+		doc.putContentField("rawcontent", "www.giantbomb.com");
+		regexStage.process(doc);
+		assertEquals("www.giantbomb.ru", doc.getContentField("out").toString());
+	}
+
+	@Test
+	public void testMultipleConfigs() throws RequiredArgumentMissingException,
+			ProcessException, IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "rawcontent");
+		config1.put("outField", "out");
+		config1.put("regex", "(^[A-Za-z0-9]*.[A-Za-z0-9]*).*");
+		config1.put("substitute", "$1.ru");
+
+		Map<String, String> config2 = new HashMap<String, String>();
+		config2.put("inField", "rawcontent");
+		config2.put("outField", "out2");
+		config2.put("regex", "^[A-Za-z0-9]*.([A-Za-z0-9]*).*");
+		config2.put("substitute", "$1");
+
+		configs.add(config1);
+		configs.add(config2);
+		regexStage.setRegexConfigsList(configs);
+		regexStage.init();
+
+		doc.putContentField("rawcontent", "www.giantbomb.com");
+		regexStage.process(doc);
+		assertEquals("www.giantbomb.ru", doc.getContentField("out").toString());
+		assertEquals("giantbomb", doc.getContentField("out2").toString());
+	}
+
+	@Test
+	public void testValidateFieldValue()
+			throws RequiredArgumentMissingException, ProcessException,
+			IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "rawcontent");
+		config1.put("outField", "out");
+		config1.put("regex", "^[A-Za-z].*(giantbomb*).*");
+		config1.put("substitute", "Gaming website");
+
+		configs.add(config1);
+		regexStage.setRegexConfigsList(configs);
+		regexStage.init();
+
+		doc.putContentField("rawcontent", "www.giantbomb.com");
+		regexStage.process(doc);
+
+		assertEquals("Gaming website", doc.getContentField("out").toString());
+	}
+
+	@Test
+	public void testContentWithLineBreak()
+			throws RequiredArgumentMissingException, ProcessException,
+			IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "rawcontent");
+		config1.put("outField", "out");
+		config1.put("regex", "\\Q<![CDATA[<!DOCTYPE html>\\E(.*)\\Q]]>\\E");
+		config1.put("substitute", "$1");
+		configs.add(config1);
+		regexStage.setRegexConfigsList(configs);
+		regexStage.init();
+
+		// should match
+		doc.putContentField("rawcontent",
+				"<![CDATA[<!DOCTYPE html><html><head></head><body>\n</body></html>]]>");
+		regexStage.process(doc);
+		assertEquals("<html><head></head><body>\n</body></html>",
+				doc.getContentField("out"));
+	}
+
+	@Test
+	public void testExtractCategories()
+			throws RequiredArgumentMissingException, ProcessException,
+			IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "rawcontent");
+		config1.put("outField", "out");
+		config1.put("regex",
+				"\\Q<!--\\E\\s*\\QBEGIN_CATEGORIES::\\E(.*)\\QEND_CATEGORIES\\E\\s*\\Q-->\\E");
+		config1.put("substitute", "$1");
+		configs.add(config1);
+		regexStage.setRegexConfigsList(configs);
+		regexStage.init();
+
+		// should match
+		doc.putContentField(
+				"rawcontent",
+				"<html><!-- \nBEGIN_CATEGORIES::{\n\"Läroplaner\": [{\"category1\":\"Gymnasieskolan\",\"category2\": \"Ämnesplaner\"}],\n\"Skolform\":[{\"category1\":\"Förskola\",\"category2\": \"Pedagogisk omsorg\"}]\n}END_CATEGORIES\n -->");
+		regexStage.process(doc);
+		assertEquals(
+				"{\n\"Läroplaner\": [{\"category1\":\"Gymnasieskolan\",\"category2\": \"Ämnesplaner\"}],\n\"Skolform\":[{\"category1\":\"Förskola\",\"category2\": \"Pedagogisk omsorg\"}]\n}",
+				doc.getContentField("out").toString());
+
+	}
+
+	@Test
+	public void testOwerWriteFieldWithNoMatch()
+			throws RequiredArgumentMissingException, ProcessException,
+			IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "rawcontent");
+		config1.put("outField", "url");
+		config1.put("regex", "not real regex since we dont want match");
+		config1.put("substitute", "$1");
+		configs.add(config1);
+
+		regexStage.setRegexConfigsList(configs);
+
+		regexStage.init();
+
+		doc.putContentField("rawcontent",
+				"<![CDATA[<!DOCTYPE html><html><head></head><body>\n</body></html>]]>");
+		doc.putContentField("url", "http://www.giantbomb.com");
+		regexStage.process(doc);
+		assertEquals("http://www.giantbomb.com", doc.getContentField("url"));
+	}
+
+	@Test
+	public void testCanonicalLinkExtract()
+			throws RequiredArgumentMissingException, ProcessException,
+			IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "rawcontent");
+		config1.put("outField", "out");
+		config1.put("regex", "<link href=\"([^\"]*)\" rel=\"canonical\">(.*)");
+		config1.put("substitute", "$1");
+		configs.add(config1);
+		regexStage.setRegexConfigsList(configs);
+		regexStage.init();
+
+		// should match
+		doc.putContentField(
+				"rawcontent",
+				"<html><head><link href=\"http://www.skolverket.se/lagar-och-regler/skollagenochandralagar\" rel=\"canonical\"></head><body></body></html>");
+		regexStage.process(doc);
+		assertEquals(
+				"http://www.skolverket.se/lagar-och-regler/skollagenochandralagar",
+				doc.getContentField("out"));
+	}
+
+	@Test
+	public void testThatOutfieldNotWrittenWhenNoMatch()
+			throws RequiredArgumentMissingException, ProcessException,
+			IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "rawcontent");
+		config1.put("outField", "out");
+		config1.put("regex", "<div id=\"mainContant\">(.*)<div id=\"footer\">");
+		config1.put("substitute", "$1");
+		configs.add(config1);
+		regexStage.setRegexConfigsList(configs);
+		regexStage.init();
+
+		// should match
+		doc.putContentField(
+				"rawcontent",
+				"<html><head><link href=\"http://www.skolverket.se/lagar-och-regler/skollagenochandralagar\" rel=\"canonical\"></head><body><div id=\"mainContent\">test<div id=\"footer\"></body></html>");
+		regexStage.process(doc);
+		Assert.assertNull(doc.getContentField("out"));
+	}
+
+	@Test
+	public void testMatchDate() throws RequiredArgumentMissingException,
+			ProcessException, IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "atom:updated");
+		config1.put("outField", "LAST-UPDATED");
+		config1.put("regex", "(.*)T.*");
+		config1.put("substitute", "$1");
+		configs.add(config1);
+		regexStage.setRegexConfigsList(configs);
+		regexStage.init();
+
+		// should match
+		doc.putContentField("atom:updated", "2011-04-15T12:21:33+02:00");
+		regexStage.process(doc);
+		Assert.assertEquals("2011-04-15", doc.getContentField("LAST-UPDATED"));
+	}
+
+	@Test
+	public void testInFieldIsNull() throws RequiredArgumentMissingException,
+			ProcessException, IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "atom:updated");
+		config1.put("outField", "LAST-UPDATED");
+		config1.put("regex", "(.*)T.*");
+		config1.put("substitute", "$1");
+		configs.add(config1);
+		regexStage.setRegexConfigsList(configs);
+		regexStage.init();
+
+		// should match
+		regexStage.process(doc);
+		Assert.assertEquals(null, doc.getContentField("LAST-UPDATED"));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testInFieldIsList() throws RequiredArgumentMissingException,
+			ProcessException, IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "atom:updated");
+		config1.put("outField", "LAST-UPDATED");
+		config1.put("regex", "(.*)T.*");
+		config1.put("substitute", "$1");
+		configs.add(config1);
+		regexStage.setRegexConfigsList(configs);
+		regexStage.init();
+
+		doc.putContentField("atom:updated", Arrays.asList(new String[]{"2011-04-15T12:21:33+02:00","2011-06-17T12:31:31+02:00"}));
+		regexStage.process(doc);
+		Assert.assertEquals("2011-04-15", ((List<String>)doc.getContentField("LAST-UPDATED")).get(0));
+		Assert.assertEquals("2011-06-17", ((List<String>)doc.getContentField("LAST-UPDATED")).get(1));
+	}
+	
+}
