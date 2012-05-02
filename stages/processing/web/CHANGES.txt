@@ -1,0 +1,52 @@
+web-stages
+
+* Release notes
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~ NOTE:  You must follow this rather odd format in order for it to work on the maven site
+~~ For a reference see http://maven.apache.org/doxia/format.html
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+0.0.1
+
++--------------------------------------------------------------------------+
+
+Updated to not use snapshot of basic stages
+
+Added descriptions to parameters and stage
+
+Changed returnHTML parameter to be a boolean instead of a string
+
+A JsoupSelectorStage that is set to return HTML will now return the HTML of the selected element and children, and not just the children.
+
+Added parameter for returning the raw HTML content of the selected tag (default false).
+Operates on a stage level, so all configs for the same instance are affected.
+
+Added test for pseudo-selectors
+
+Properly handle listfields, appending the selected content of each list item to the output field
+
+Tests for IBM Connections Memberlist extraction added
+
+Added a test that checks that if there is now field to perform the jsoup selector on the output field will not be created (it will be null)
+
+Added support for fields having list values
+
+Fixed English in configuration comment
+Added test for extracting XMLdata
+
+Added test for when the field that is supposed to containt the HTML does not exist.
+
+Added test for empty HTML field
+
+Fixed nullpointer bug when content field does not exist
+
+Added test for parsing text from broken HTML. Also fixed a bug when singlevalue was set to true and the selector didn't return any value.
+
+Added test for extracting all text (selector using *)
+
+Updated the JsoupSelector stage to use the new configuration annotations (also updated test)
+
++--------------------------------------------------------------------------+
+
+
