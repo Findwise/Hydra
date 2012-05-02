@@ -12,4 +12,5 @@ import java.lang.annotation.Target;
 public @interface Parameter {
 	String name() default "";
 	String description() default "";
+	boolean required() default false;
 }
