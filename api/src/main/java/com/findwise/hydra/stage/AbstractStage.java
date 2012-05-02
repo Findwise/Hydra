@@ -2,8 +2,8 @@ package com.findwise.hydra.stage;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,7 +54,9 @@ public abstract class AbstractStage extends Thread {
 	 * 
 	 * @throws RequiredArgumentMissingException
 	 */
-	public abstract void init() throws RequiredArgumentMissingException;
+	public void init() throws RequiredArgumentMissingException {
+		
+	}
 
 	public Thread getShutDownHook() {
 		return shutDownHook;
@@ -66,35 +68,6 @@ public abstract class AbstractStage extends Thread {
 
 	private String stageName;
 	private boolean continueRunning;
-
-	/**
-	 * Used to read arguments from a array of strings, assuming that each member
-	 * of the array comes in the format of "key:value". Designed to be
-	 * lightweight and simple since primary usage should be for scanning
-	 * machine-generated arguments.
-	 * 
-	 * Skips first argument (stage name is not a key value pair)
-	 * 
-	 * @param args
-	 *            String array with elements of format "key:value"
-	 * @return A map mapping keys to values.
-	 */
-	public static Map<String, String> readArguments(String[] args) {
-		Map<String, String> ret = new HashMap<String, String>();
-		for (int i = 1; i < args.length; i++) {
-			String keyValue = args[i];
-			String[] split = keyValue.split(":", 2);
-			if (split.length == 2) {
-				ret.put(split[0], split[1]);
-				Logger.debug("Added argument: " + split[0] + " : " + split[1]);
-			}
-			else {
-				Logger.warn("AbstractStage: Argument not added to argMap: " + keyValue);
-			}
-		}
-
-		return ret;
-	}
 
 	/**
 	 * 
@@ -148,13 +121,7 @@ public abstract class AbstractStage extends Thread {
 	 */
 	public void setParameters(Map<String, Object> map) throws IllegalArgumentException, IllegalAccessException {
 		if (getClass().isAnnotationPresent(Stage.class)) {
-			setParameters(map, getClass());
-		}
-	}
-	
-	private void setParameters(Map<String, Object> map, Class<?> startClass) throws IllegalArgumentException, IllegalAccessException {
-		for (Field field : startClass.getDeclaredFields()) {
-			if (field.isAnnotationPresent(Parameter.class)) {
+			for(Field field : getParameterFields()) {
 				if (map.containsKey(field.getName())) {
 					boolean prevAccessible = field.isAccessible();
 					if (!prevAccessible) {
@@ -165,11 +132,23 @@ public abstract class AbstractStage extends Thread {
 				}
 			}
 		}
-		
-		//recursively do this for all superclasses
+	}
+	
+	public List<Field> getParameterFields() {
+		List<Field> list = new ArrayList<Field>();
+		addParameterFields(list, getClass());
+		return list;
+	}
+	
+	private void addParameterFields(List<Field> list, Class<?> startClass) {
+		for (Field field : startClass.getDeclaredFields()) {
+			if (field.isAnnotationPresent(Parameter.class)) {
+				list.add(field);
+			}
+		}
 		Class<?> superClass = startClass.getSuperclass();
 		if(!superClass.equals(Object.class)) {
-			setParameters(map, superClass);
+			addParameterFields(list, superClass);
 		}
 	}
 
@@ -274,7 +253,6 @@ public abstract class AbstractStage extends Thread {
 
 			Logger.info("Shutting down stage: " + getStageName());
 			if (AbstractStage.this.isAlive()) {
-				System.out.println(AbstractStage.this.getClass().getName());
 				AbstractStage.this.setContinueRunning(false);
 				try {
 					AbstractStage.this.join();
