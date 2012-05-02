@@ -1,0 +1,28 @@
+hydra-solr-in
+
+* Release notes
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~ NOTE:  You must follow this rather odd format in order for it to work on the maven site
+~~ For a reference see http://maven.apache.org/doxia/format.html
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+0.0.1
+
++--------------------------------------------------------------------------+
+
+Added default port number and an field id to the test.
+
+Updated to  use the new configuration tools 
+refs #2866
+
+Changed to "id" field
+
+Added delete handling and fixed tests
+
+#fixes 2910
+Moved SolrInput stage from Hydra-in to stages
+
++--------------------------------------------------------------------------+
+
+
