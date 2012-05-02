@@ -1,4 +1,4 @@
-package com.findwise.hydra.input;
+package com.findwise.hydra;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -6,7 +6,7 @@ import com.findwise.hydra.common.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
 
-public class StdinInputStage {
+public class StdinInput {
 	
 	/**
 	 * Usage: key:value is added here;key2:second value here;key3:Third value here [...] 
