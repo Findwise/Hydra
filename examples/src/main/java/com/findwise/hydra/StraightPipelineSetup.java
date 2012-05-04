@@ -8,13 +8,12 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.findwise.hydra.admin.Module;
 import com.findwise.hydra.mongodb.MongoConnector;
 import com.google.inject.Guice;
 
 public class StraightPipelineSetup {
 	public static void main(String[] args) throws Exception {
-		MongoConnector mdc = Guice.createInjector(new Module("pipeline"))
+		MongoConnector mdc = Guice.createInjector(new ExampleModule("pipeline"))
 		.getInstance(MongoConnector.class);
 
 		mdc.connect();
