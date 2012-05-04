@@ -1,4 +1,4 @@
-package com.findwise.hydra.admin;
+package com.findwise.hydra;
 
 import com.findwise.hydra.DatabaseConfiguration;
 import com.findwise.hydra.DatabaseConnector;
@@ -8,14 +8,14 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
-public class Module extends AbstractModule {
+public class ExampleModule extends AbstractModule {
 	private String namespace;
 	
-	public Module() {
-		this("junitspace");
+	public ExampleModule() {
+		this("pipeline");
 	}
 	
-	public Module(String namespace) {
+	public ExampleModule(String namespace) {
 		this.namespace = namespace;
 	}
 

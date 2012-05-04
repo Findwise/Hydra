@@ -1,6 +1,5 @@
 package com.findwise.hydra;
 
-import java.io.File;
 import java.io.IOException;
 
 import com.findwise.hydra.common.DocumentFile;
