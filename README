@@ -27,7 +27,7 @@ Let's say we want to change the field source in all documents that have been tou
 The easiest way to do this without coding is to use the CmdlineInserter-class found in the examples library:
 	
 1. Add the library with the stage you want to add, in this case the basic-stages jar:
-	Program arguments: add library *pipeline* basic-stages-jar-with-dependencies.jar
+	Program arguments: add library pipeline basic-stages-jar-with-dependencies.jar
 	You should see the following output:
 	> Attempting to work with pipeline 'pipeline'
 	> Added stage library with id: 4fa39d8dda06916a91fb9665
@@ -35,3 +35,5 @@ The easiest way to do this without coding is to use the CmdlineInserter-class fo
 	Program arguments: add stage pipeline 4fa39d8dda06916a91fb9665 {stageClass: 'com.findwise.hydra.stage.SetStaticFieldStage', queryOptions:['touched(extractTitles,true)'], fieldNames: ['source'],fieldValues: ['web']}
 
 Alternatively, you can keep the Json in a separate file called <stagename>.properties, which will be read if you fail to provide any json on the command line.
+
+For further information, refer to the Wiki on http://github.com/Findwise/Hydra/wiki
