@@ -2,3 +2,4 @@ target/
 .settings/
 .classpath
 .project
+examples/src/main/resources/*.jar
