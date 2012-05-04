@@ -3,28 +3,36 @@ Hydra Processing Framework
 Getting started
 	1. Install MongoDB, and start it
 	2. Check out and build hydra-core
-	3. Start the built jar with ÎéÎíjava -jar hydra-core-jar-with-dependencies.jarÎéÎí or just run the Main class from your IDE
+	3. Start the built jar with 
+		java -jar hydra-core-jar-with-dependencies.jar
+	   or just run the Main class from your IDE
 	
 	You now have a running pipeline system. Try adding some documents using the API classes or the input-stages and play around with it.
 
 For a basic pipeline you will need the following jars:
-	hydra-core-jar-with-dependencies
-	hydra-admin-jar-with-dependencies
-	basic-stages-jar-with-dependencies
+	hydra-core-jar-with-dependencies - the framework itself
+	basic-stages-jar-with-dependencies - a library of reusable stages
+	solr-out-jar-with-dependencies - a library containing the SolrOutputStage which sends documents to Solr
 								
 Starting an AbstractStage-derived stage
 
-	Let's say we want to change the field source in all documents that have been touched by the stage extractPDFMetadata to ÎéÎíPDFÎéÎí. It should modify documents in the database intranet. Since our stage makes static changes to fields, we can use the stage SetStaticFieldStage (included in basic-stages) instead of building our own. Let's call our stage fixWrongSourceType.
-
-	When loading a stage it will look for a properties file located on the class path, called fixWrongSourceType.properties in our case. This properties file should contain a JSON map of parameters for the stage. In the case of our fixWrongSourceType stage, it could look like this:
-
-											
+	Let's say we want to change the *field* source in all documents that have been touched by the stage extractPDFMetadata to *pdf*. It should modify documents in the database intranet. Since our stage makes static changes to fields, we can use the stage SetStaticFieldStage (included in basic-stages) instead of building our own. Let's call our stage fixWrongSourceType. Since all configuration is done using Json, you'll need a Json representation of your configuration for the stage. It could look like this:
+	
 	{
 		stageClass: "com.findwise.hydra.stage.SetStaticFieldStage",
 		queryOptions: ["touched(extractTitles,true)"],
 		fieldNames: ["source"],
 		fieldValues: ["web"]
 	}
-																		
-	Now we want to start our stage. To do this, open a terminal in the directory where you keep your Hydra jars and type:
-		java -jar hydra-admin-jar-with-dependencies.jar add fixWrongSourceType basic-stages-jar-with-dependencies.jar intranet
+	
+	The easiest way to do this without coding is to use the CmdlineInserter-class found in the examples library:
+	
+	1. Add the library with the stage you want to add, in this case the basic-stages jar:
+		Program arguments: add library *pipeline* basic-stages-jar-with-dependencies.jar
+		You should see the following output:
+		> Attempting to work with pipeline 'pipeline'
+		> Added stage library with id: 4fa39d8dda06916a91fb9665
+	2. Now, add your stage, by referencing the id to your library of stages, again using CmdlineInserter:
+		Program arguments: add stage *pipeline* 4fa39d8dda06916a91fb9665 {stageClass: "com.findwise.hydra.stage.SetStaticFieldStage", queryOptions:["touched(extractTitles,true)"], fieldNames: ["source"],fieldValues: ["web"]}
+		
+		Alternatively, you can keep the Json in a separate file called <stagename>.properties, which will be read if you fail to provide any json on the command line.
