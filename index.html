@@ -1,0 +1,112 @@
+<!doctype html>
+<!-- The Time Machine GitHub pages theme was designed and developed by Jon Rohan, on Feb 7, 2012. -->
+<!-- Follow him for fun. http://twitter.com/jonrohan. Tail his code on http://github.com/jonrohan -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <link rel="stylesheet" href="stylesheets/stylesheet.css" media="screen"/>
+  <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type="text/javascript" src="javascripts/script.js"></script>
+
+  <title>Hydra</title>
+  <meta name="description" content="The Distributed Document Processing Framework">
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+</head>
+
+<body>
+
+  <div class="wrapper">
+    <header>
+      <h1 class="title">Hydra</h1>
+    </header>
+    <div id="container">
+      <p class="tagline">The Distributed Document Processing Framework</p>
+      <div id="main" role="main">
+        <div class="download-bar">
+        <div class="inner">
+          <a href="https://github.com/Findwise/Hydra/tarball/master" class="download-button tar"><span>Download</span></a>
+          <a href="https://github.com/Findwise/Hydra/zipball/master" class="download-button zip"><span>Download</span></a>
+          <a href="https://github.com/Findwise/Hydra" class="code">View Hydra on GitHub</a>
+        </div>
+        <span class="blc"></span><span class="trc"></span>
+        </div>
+        <article class="markdown-body">
+          <h2>What is Hydra?</h2>
+
+<p>
+When working with free text search using for example Apache Solr the quality of the data in the index is a key factor of the quality of the results delivered. Hydra is designed to give the search solution
+the tools necessary to modify the data that is to be indexed in an efficient and flexible way. This is done by providing a scalable and efficient pipeline which the documents will have to pass through before being
+indexed into the search engine.
+</p>
+
+<p>
+Architecturally Hydra sits in between the search engine and the source integration. A common use-case would be to use Apache ManifoldCF to crawl a filesystem and send the documents to Hydra which in turn will process and dispatch processed documents to Solr for indexing.
+</p>
+
+<h2>Why name it Hydra?</h2>
+
+<p>The mythical Hydra is scaly many-headed beast, tasked with guarding the underworld. Each head on it's own can chew through any foe, and should an adventurer manage to cut one head off, it will grow back. </p>
+
+<p>The modern-day Hydra is also a many-headed beast. Any amount of heads (or processing nodes) can be created, each capable of chewing through any kind of document. Adding a new head, and thereby scaling your processing capacity, is as easy as starting the framework on a new machine. The processing nodes are designed to be entirely independent of each other, and thus if you cut one head off, it will not affect the capability of the pipeline. Though, of course, there will be fewer teeth available to chew your foes... err... documents. </p>
+
+<p>While it's up to you to reattach a head should it be cut off, Hydra does regenerate it's teeth - the processing stages. Should one fail, for instance if your PDF Parser runs across a corrupted PDF and crashes, it will be automatically restarted and begin processing new documents.</p>
+
+<h2>Description</h2>
+
+<p>
+The pipeline framework design is intended to be easily distributed, very flexible and to allow easy testing and development. Because of its distributed data crunching nature, we've decided to name it Hydra. 
+</p>
+
+<p>
+Hydra is designed as a fully distributed, persisted and flexible document processing pipeline. It has one central repository, currently an instance of a MongoDB document store that can be run on a single machine or completely in the cloud. A worker node reads a pipeline configuration from this central repository - all processing stages are packeted as separate jar files. The stages in those jar files are then launched by the main process as separate JVM instances for isolation purposes. This is perhaps the most controversial design decision, but was done to ensure problems such as Tika leaking memory and running out of heap space on a problematic document would not bring the whole pipeline to a halt. The design can of course be extended to run multiple stages in the same JVM. All communication between the stages and the core framework happens via REST. Because of this, one can test processing stages in development by simply running them from any IDE such as Eclipse, pointing them to an active node. This eliminates the need for time consuming WAR packaging/deployment found in e.g. OpenPipeline.
+</p>
+
+<p>
+Hydra was also designed to allow the development of a particular pipeline to be easy, even allowing for test driven development (TDD) of a pipeline, e.g. specifying a valid document domain model, that will be enforced before output from the pipeline takes place.
+</p>
+
+<p>
+The stages, running in their own JVMs, will then fetch documents relevant for their processing purpose from MongoDB, e.g. a “Static Writer” stage would fetch any and all documents, while a more specialized node might only fetch documents that have or lack a certain field. This allows configuration of both the classic “straight” pipeline where all documents pass through all processing nodes (in order, if necessary), and asymmetrical pipelines that can fork depending on the content of the document.
+</p>
+
+<p>
+All administration of the pipeline, as well as traceability, are handled directly through an administrator interface communicating with the central repository (MongoDB). To add processing power to the pipeline, it is as simple as starting a new worker node on another machine, pointing to the same pipeline configuration in MongoDB.
+</p>
+
+<h3>Design Goals</h3>
+
+<p>Hydras key design goals are for it to be:</p>
+
+<ul>
+<li><p>scalable: the central repository as well as the number of worker nodes can scale horizontally with little to no performance loss.</p></li>
+<li><p>distributed: any processing node can work on any document - a single document may be processed on any number of physical machines</p></li>
+<li><p>fail-safe: if a processing node goes down, this will not affect the documents in the pipeline, which are persisted centrally, and any other node can simply and automatically pick up where the other left off.</p></li>
+<li><p>robust: all stages run in separate JVMs, thus allowing for instance Tika to crash in a separate JVM, which will be automatically restarted, without stopping the processing pipeline for less problematic documents.</p></li>
+<li><p>easy to use/configure: stages can be run from your IDE during development, allowing testing against the actual data in the repository.</p></li>
+</ul>
+        </article>
+      </div>
+    </div>
+    <footer>
+      <div class="owner">
+      <p><a href="https://github.com/Findwise" class="avatar"><img src="https://secure.gravatar.com/avatar/4cdfaba7b998f86851a0f7dd53b078d2?s=30&amp;d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-140.png" width="48" height="48"/></a> <a href="https://github.com/Findwise">Findwise</a> maintains <a href="https://github.com/Findwise/Hydra">Hydra</a></p>
+      </div>
+      <div class="creds">
+        <small>This page generated using <a href="https://pages.github.com/">GitHub Pages</a><br/>theme by <a href="http://twitter.com/jonrohan/">Jon Rohan</a></small>
+      </div>
+    </footer>
+  </div>
+  <div class="current-section">
+    <a href="#top">Scroll to top</a>
+    <a href="https://github.com/Findwise/Hydra/tarball/master" class="tar">tar</a><a href="https://github.com/Findwise/Hydra/zipball/master" class="zip">zip</a><a href="" class="code">source code</a>
+    <p class="name"></p>
+  </div>
+
+  
+</body>
+</html>
