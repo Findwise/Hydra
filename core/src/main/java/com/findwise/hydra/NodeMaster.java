@@ -104,7 +104,7 @@ public final class NodeMaster extends Thread {
 	}
 	
 	/**
-	 * Updates pipelien and stops all stages that have been changed. After this method has run
+	 * Updates pipeline and stops all stages that have been changed. After this method has run
 	 * those runners will need to be recreated.
 	 * @param newPipeline
 	 * @throws IOException
@@ -129,6 +129,7 @@ public final class NodeMaster extends Thread {
 		for(StoredStage stage : propUpdated) {
 			sm.getWrapper(stage).destroy();
 			sm.removeWrapper(stage);
+			addStage(stage.getName(), newPipeline);
 		}
 	}
 	
@@ -162,6 +163,9 @@ public final class NodeMaster extends Thread {
 			} catch (InterruptedException e) {
 				Thread.interrupted();
 			}
+		}
+		if(pipeline.hasStage(stage.getName())) {
+			logger.error("patientRemoveStage() : Unable to remove stage "+stage.getName()+ " from the running pipeline");
 		}
 	}
 	

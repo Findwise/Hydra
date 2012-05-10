@@ -13,7 +13,6 @@ public class Pipeline<T extends Stage> {
 	private Map<String, T> stages;
 	
 	public Pipeline() {
-		
 		stages = new HashMap<String, T>();
 	}
 	
