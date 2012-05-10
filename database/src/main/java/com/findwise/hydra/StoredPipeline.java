@@ -37,7 +37,7 @@ public class StoredPipeline extends Pipeline<StoredStage> {
 	public boolean removeStage(StoredStage stage) {
 		try {
 			FileUtils.deleteDirectory(getStageDirectory(stage));
-			return true;
+			return super.removeStage(stage);
 		} catch (IOException e) {
 			logger.error("Unable to delete directory for stage "+stage.getName());
 			return false;
