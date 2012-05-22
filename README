@@ -32,8 +32,8 @@ The easiest way to do this without coding is to use the CmdlineInserter-class fo
 	> Attempting to work with pipeline 'pipeline'
 	> Added stage library with id: 4fa39d8dda06916a91fb9665
 2. Now, add your stage, by referencing the id to your library of stages, again using CmdlineInserter:
-	Program arguments: add stage pipeline 4fa39d8dda06916a91fb9665 {stageClass: 'com.findwise.hydra.stage.SetStaticFieldStage', queryOptions:['touched(extractTitles,true)'], fieldNames: ['source'],fieldValues: ['web']}
+	Program arguments: add stage pipeline webSourceStage 4fa39d8dda06916a91fb9665 {stageClass: 'com.findwise.hydra.stage.SetStaticFieldStage', queryOptions:['touched(extractTitles,true)'], fieldNames: ['source'],fieldValues: ['web']}
 
-Alternatively, you can keep the Json in a separate file called <stagename>.properties, which will be read if you fail to provide any json on the command line.
+The format is: add stage <pipeline> <name-of-stage> <library-id> <your-json-configuration>. Alternatively, you can keep the Json in a separate file called <stagename>.properties, which will be read if you fail to provide any json on the command line.
 
 For further information, refer to the Wiki on http://github.com/Findwise/Hydra/wiki
