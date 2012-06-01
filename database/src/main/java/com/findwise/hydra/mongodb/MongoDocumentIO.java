@@ -3,6 +3,7 @@ package com.findwise.hydra.mongodb;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -38,6 +39,8 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	private DBCollection oldDocuments;
 	private GridFS documentfs;
 	private WriteConcern concern;
+	
+	private HashSet<String> seenTags = new HashSet<String>();
 	
 	public static final int OLD_DOCUMENT_AVG_SIZE = 10000;
 	
@@ -235,6 +238,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	 */
 	@Override
 	public MongoDocument getAndTag(DatabaseQuery<MongoType> query, String tag) {
+		ensureIndex(tag);
 		MongoQuery mq = (MongoQuery)query;
 		mq.requireMetadataFieldNotExists(Document.PENDING_METADATA_FLAG);
 		mq.requireMetadataFieldNotExists(FETCHED_TAG+"."+tag);
@@ -242,6 +246,15 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		DBObject dbo = getUpdateObject(update);
 
 		return findAndModify(mq.toDBObject(), dbo);
+	}
+	
+	private void ensureIndex(String tag) {
+		if(!seenTags.contains(tag)) {
+			long start = System.currentTimeMillis();
+			documents.ensureIndex(MongoDocument.METADATA_KEY+"."+FETCHED_TAG+"."+tag);
+			logger.info("Ensured index for stage "+tag+" in "+(System.currentTimeMillis()-start)+" ms");
+			seenTags.add(tag);
+		}
 	}
 
 	

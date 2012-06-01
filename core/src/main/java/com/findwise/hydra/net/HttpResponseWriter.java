@@ -134,7 +134,7 @@ public final class HttpResponseWriter {
 	
 
 	protected static void printID(HttpResponse response, String uuid) {
-		logger.error("Got ID ping!");
+		logger.info("Got ID ping!");
 		response.setStatusCode(HttpStatus.SC_OK);
 		setStringEntity(response, uuid);
 	}
