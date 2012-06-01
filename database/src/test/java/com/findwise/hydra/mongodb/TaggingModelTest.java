@@ -40,38 +40,16 @@ public class TaggingModelTest {
 	public void testDiff() throws Exception {
 		int count = 1000;
 		long[] currentMs = testCurrent(count);
-		System.out.println(Arrays.toString(currentMs));
 		
 		reset();
 		
-		long[] currentIndexMs = testCurrentWithIndividualIndexes(count);
-		System.out.println(Arrays.toString(currentIndexMs));
-		
-		//reset();
-		
 		//long[] otherMs = testArray(1000);
-		
-		
+
+		System.out.println(Arrays.toString(currentMs));
 	}
 	
 	
 	public long[] testCurrent(int count) throws Exception {
-		long[] ret = new long[4];
-		ret[0] = insertCurrentDocuments(count);
-		ret[1] = getCurrent(count, "tag");
-		ret[2] = getCurrent(count, "tag2");
-		ret[3] = getCurrent(count, "tag3");
-		
-		return ret;
-	}
-	
-	public long[] testCurrentWithIndividualIndexes(int count) throws Exception {
-
-		mdc.getDB().getCollection("documents").ensureIndex("metadata.fetched.tag");
-		mdc.getDB().getCollection("documents").ensureIndex("metadata.fetched.tag2");
-		mdc.getDB().getCollection("documents").ensureIndex("metadata.fetched.tag3");
-		
-
 		long[] ret = new long[4];
 		ret[0] = insertCurrentDocuments(count);
 		ret[1] = getCurrent(count, "tag");
