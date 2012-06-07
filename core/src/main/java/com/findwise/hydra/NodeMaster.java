@@ -138,7 +138,7 @@ public final class NodeMaster extends Thread {
 		StoredStage stage = new StoredStage(stageName, newStage.getDatabaseFile());
 		stage.setProperties(newStage.getProperties());
 		stage.setPropertiesModifiedDate(newStage.getPropertiesModifiedDate());
-		stage.setActive(newStage.isActive());
+		stage.setMode(newStage.getMode());
 		stage.getDatabaseFile().attach(dbc.getPipelineReader().getStream(stage.getDatabaseFile()));
 		pipeline.addStage(stage);
 		stage.getDatabaseFile().detachInputStream();
