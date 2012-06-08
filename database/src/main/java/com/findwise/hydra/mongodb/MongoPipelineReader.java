@@ -6,9 +6,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.findwise.hydra.DatabaseFile;
 import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.PipelineReader;
@@ -26,8 +23,6 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 	private GridFS pipelinefs;
 
 	private DBCollection stages = null;
-	
-	private Logger logger = LoggerFactory.getLogger(MongoPipelineReader.class);
 	
 	public static final String STAGE_KEY = "stage";
 	public static final String TYPE_KEY = "type";
