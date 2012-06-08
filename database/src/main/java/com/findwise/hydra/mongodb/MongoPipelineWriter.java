@@ -51,7 +51,7 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 	
 	public void inactivate(Stage stage) {
 		DBObject q = reader.getStageQuery(stage.getName());
-		stages.findAndModify(q, new BasicDBObject(MongoPipelineReader.ACTIVE_KEY, false));
+		stages.findAndModify(q, new BasicDBObject(MongoPipelineReader.ACTIVE_KEY, Stage.Mode.INACTIVE.toString()));
 	}
 	
 	
@@ -70,7 +70,7 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 		props.put(MongoPipelineReader.PROPERTIES_MAP_SUBKEY, s.getProperties());
 		
 		obj.put(MongoPipelineReader.PROPERTIES_KEY, props);
-		obj.put(MongoPipelineReader.ACTIVE_KEY, true);
+		obj.put(MongoPipelineReader.ACTIVE_KEY, Stage.Mode.ACTIVE.toString());
 		if(s.getDatabaseFile()!=null) {
 			obj.put(MongoPipelineReader.FILE_KEY, s.getDatabaseFile().getId());
 		}
@@ -86,7 +86,7 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 	@Deprecated
 	public void removeInactiveFiles() {
 		BasicDBObject query = new BasicDBObject();
-		query.put(MongoPipelineReader.ACTIVE_KEY, new BasicDBObject("$ne", 1));
+		query.put(MongoPipelineReader.ACTIVE_KEY, Stage.Mode.INACTIVE.toString());
 		List<GridFSDBFile> list = pipelinefs.find(query);
 		for(GridFSDBFile file : list) {
 			pipelinefs.remove(file);

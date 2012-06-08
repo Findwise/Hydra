@@ -6,9 +6,10 @@ import java.util.Map;
 import com.findwise.hydra.common.SerializationUtils;
 
 public class Stage {
+	public enum Mode { ACTIVE, INACTIVE, DEBUG }
 	private String name;
 	private DatabaseFile databaseFile;
-	private boolean active;
+	private Mode mode;
 	private Map<String, Object> properties;
 	private Date propertiesModifiedDate;
 	boolean changedProperties;
@@ -33,13 +34,13 @@ public class Stage {
 	public void setDatabaseFile(DatabaseFile databaseFile) {
 		this.databaseFile = databaseFile;
 	}
-
-	boolean isActive() {
-		return active;
+	
+	public void setMode(Mode mode) {
+		this.mode = mode;
 	}
 	
-	public void setActive(boolean active) {
-		this.active = active;
+	public Mode getMode() {
+		return mode;
 	}
 	
 	public Map<String, Object> getProperties() {

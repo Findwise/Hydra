@@ -157,9 +157,9 @@ public abstract class AbstractStage extends Thread {
 		setParameters(properties);
 		this.createAndApplyShutDownHook();
 	}
-
+	
 	@SuppressWarnings("unchecked")
-	public static void main(String args[]) {
+	public static AbstractStage getInstance(String[] args) {
 		Logger.debug("Starting AbstractStage with args: " + Arrays.toString(args));
 		if (args.length < 1) {
 			Logger.error("No stage name found", new RequiredArgumentMissingException("No stage name was specified"));
@@ -202,31 +202,34 @@ public abstract class AbstractStage extends Thread {
 			stage.setName(stageName);
 			stage.setUp(rp, properties);
 			stage.init();
-			stage.start();
-			Logger.info("Started stage: " + stage.getName());
+			
+			return stage;
 
 		} catch (RequiredArgumentMissingException e) {
 			Logger.error("Failed to read arguments", e);
-			System.exit(1);
 		} catch (ClassNotFoundException e) {
 			Logger.error("Could not find the Stage class in classpath", e);
-			System.exit(1);
 		} catch (InstantiationException e) {
 			Logger.error("Could not instantiate the Stage class", e);
-			System.exit(1);
 		} catch (IllegalAccessException e) {
 			Logger.error("Could not access constructor of Stage class", e);
-			System.exit(1);
 		} catch (JsonException e) {
 			Logger.error("Communication failiure when reading properties", e);
-			System.exit(1);
 		} catch (HttpException e) {
 			Logger.error("Communication failiure when reading properties", e);
-			System.exit(1);
 		} catch (IOException e) {
 			Logger.error("Communication failiure when reading properties", e);
+		}
+		return null;
+	}
+
+	public static void main(String args[]) {
+		AbstractStage stage = getInstance(args);
+		if(stage==null) {
 			System.exit(1);
 		}
+		stage.start();
+		Logger.info("Started stage: " + stage.getName());
 	}
 
 	/**
