@@ -33,7 +33,13 @@ public class CmdlineInserter {
 		
 		if(args[0].equals("add")) {
 			if(args[1].equals("library")) {
-				Object outId = addFile(mdc, args[3]);
+				Object outId;
+				if(args.length<5) {
+					outId = addFile(mdc, args[3]);
+				}
+				else {
+					outId = addFile(mdc, args[3], args[4]);
+				}
 				if(outId!=null) {
 					System.out.println("Added stage library with id: "+outId);
 				}
@@ -49,7 +55,11 @@ public class CmdlineInserter {
 					map = SerializationUtils.fromJson(maps);
 				}
 				DatabaseFile df = new DatabaseFile();
-				df.setId(new ObjectId(libraryId));
+				try {
+					df.setId(new ObjectId(libraryId));
+				} catch(Exception e) {
+					df.setId(libraryId);
+				}
 				Stage s = new Stage(name, df);
 				s.setProperties(map);
 				Pipeline<Stage> pipeline = mdc.getPipelineReader().getPipeline();
@@ -101,14 +111,27 @@ public class CmdlineInserter {
 		return fileData.toString();
 	}
 
-	
 	public static Object addFile(MongoConnector dbc, String jar) throws FileNotFoundException, URISyntaxException {
+		return addFile(dbc, jar, null);
+	}
+	
+	public static Object addFile(MongoConnector dbc, String jar, String id) throws FileNotFoundException, URISyntaxException {
 		URL path = ClassLoader.getSystemResource(jar);
+		File f;
 		if(path==null) {
-			System.out.println("Unable to locate file "+jar);
-			return null;
+			f = new File(jar);
+			if(!f.exists()) {
+				System.out.println("Unable to locate file "+jar);
+				return null;
+			}
 		}
-		File f = new File(path.toURI());
-		return dbc.getPipelineWriter().save(f.getName(), new FileInputStream(f));
+		else {
+			f = new File(path.toURI());
+		}
+		if(id==null) {
+			return dbc.getPipelineWriter().save(f.getName(), new FileInputStream(f));			
+		}
+		dbc.getPipelineWriter().save(id, f.getName(), new FileInputStream(f));
+		return id;
 	}
 }

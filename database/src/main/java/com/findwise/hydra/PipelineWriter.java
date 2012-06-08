@@ -18,6 +18,13 @@ public interface PipelineWriter<T extends DatabaseType> {
 	 * @return the id of the written file
 	 */
 	Object save(String filename, InputStream file);
+
+	/**
+	 * Saves a file to the database with the given id
+	 * 
+	 * @return true if save was successful. 
+	 */
+	boolean save(Object id, String fileName, InputStream file);
 	
 	/**
 	 * Removes a file from the database.
@@ -36,4 +43,5 @@ public interface PipelineWriter<T extends DatabaseType> {
 	 * brand new, and needs to be set up in some way.
 	 */
 	void prepare();
+
 }
