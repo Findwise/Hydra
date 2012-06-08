@@ -104,11 +104,17 @@ public class CmdlineInserter {
 	
 	public static Object addFile(MongoConnector dbc, String jar) throws FileNotFoundException, URISyntaxException {
 		URL path = ClassLoader.getSystemResource(jar);
+		File f;
 		if(path==null) {
-			System.out.println("Unable to locate file "+jar);
-			return null;
+			f = new File(jar);
+			if(!f.exists()) {
+				System.out.println("Unable to locate file "+jar);
+				return null;
+			}
 		}
-		File f = new File(path.toURI());
+		else {
+			f = new File(path.toURI());
+		}
 		return dbc.getPipelineWriter().save(f.getName(), new FileInputStream(f));
 	}
 }
