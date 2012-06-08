@@ -53,7 +53,7 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 	public Pipeline<Stage> getPipeline() {
 		Pipeline<Stage> p = new Pipeline<Stage>();
 		
-		DBCursor cursor = stages.find(new BasicDBObject(ACTIVE_KEY, true));
+		DBCursor cursor = stages.find(new BasicDBObject(ACTIVE_KEY, Stage.Mode.ACTIVE.toString()));
 		
 		while(cursor.hasNext()) {
 			p.addStage(getStage(cursor.next()));
