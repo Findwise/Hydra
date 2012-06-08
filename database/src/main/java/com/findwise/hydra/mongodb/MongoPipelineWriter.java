@@ -51,7 +51,7 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 	
 	public void inactivate(Stage stage) {
 		DBObject q = reader.getStageQuery(stage.getName());
-		stages.findAndModify(q, new BasicDBObject(MongoPipelineReader.ACTIVE_KEY, Stage.Mode.INACTIVE.toString()));
+		stages.findAndModify(q, new BasicDBObject("$set", new BasicDBObject(MongoPipelineReader.ACTIVE_KEY, Stage.Mode.INACTIVE.toString())));
 	}
 	
 	
