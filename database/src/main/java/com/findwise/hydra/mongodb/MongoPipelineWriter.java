@@ -99,6 +99,16 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 		inputFile.save();
 		return inputFile.getId();
 	}
+	
+	@Override
+	public boolean save(Object id, String fileName, InputStream file) {
+		pipelinefs.remove(new BasicDBObject(MongoDocument.MONGO_ID_KEY, id));
+		
+		GridFSInputFile inputFile = pipelinefs.createFile(file, fileName);
+		inputFile.put("_id", id);
+		inputFile.save();
+		return true;
+	}
 
 	@Override
 	public boolean deleteFile(Object id) {

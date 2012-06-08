@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +64,7 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 	
 	@SuppressWarnings("unchecked")
 	private Stage getStage(DBObject dbo) {
-		Stage stage = new Stage((String)dbo.get(STAGE_KEY), getFile((ObjectId)dbo.get(FILE_KEY)));
+		Stage stage = new Stage((String)dbo.get(STAGE_KEY), getFile(dbo.get(FILE_KEY)));
 		DBObject props = (DBObject) dbo.get(PROPERTIES_KEY);
 		stage.setPropertiesModifiedDate((Date)props.get(PROPERTIES_DATE_SUBKEY));
 		DBObject properties = (DBObject) props.get(PROPERTIES_MAP_SUBKEY);
@@ -90,13 +89,8 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 	
 	@Override
 	public InputStream getStream(DatabaseFile df) {
-		if(df.getId() instanceof ObjectId) {
-			GridFSDBFile file = pipelinefs.find((ObjectId)df.getId());
-			return file==null ? null : file.getInputStream();
-		}
-
-		logger.error("Incorrect id type, should be ObjectId but got "+df.getId().getClass());
-		return null;
+		GridFSDBFile file = pipelinefs.findOne(new BasicDBObject(MongoDocument.MONGO_ID_KEY, df.getId()));
+		return file==null ? null : file.getInputStream();
 	}
 	
 	@Override
@@ -123,8 +117,8 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 		return getFile(dbo);
 	}
 	
-	private DatabaseFile getFile(ObjectId id) {
-		return getFile(pipelinefs.findOne(id));
+	private DatabaseFile getFile(Object id) {
+		return getFile(pipelinefs.findOne(new BasicDBObject(MongoDocument.MONGO_ID_KEY, id)));
 	}
 	
 	private DatabaseFile getFile(DBObject dbo) {
@@ -134,7 +128,7 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 		DatabaseFile df = new DatabaseFile();
 		df.setFilename((String)dbo.get("filename"));
 		df.setUploadDate((Date)dbo.get("uploadDate"));
-		df.setId(dbo.get("_id"));
+		df.setId(dbo.get(MongoDocument.MONGO_ID_KEY));
 		return df;
 	}
 }
