@@ -70,7 +70,7 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 		props.put(MongoPipelineReader.PROPERTIES_MAP_SUBKEY, s.getProperties());
 		
 		obj.put(MongoPipelineReader.PROPERTIES_KEY, props);
-		obj.put(MongoPipelineReader.ACTIVE_KEY, Stage.Mode.ACTIVE.toString());
+		obj.put(MongoPipelineReader.ACTIVE_KEY, s.getMode().toString());
 		if(s.getDatabaseFile()!=null) {
 			obj.put(MongoPipelineReader.FILE_KEY, s.getDatabaseFile().getId());
 		}
