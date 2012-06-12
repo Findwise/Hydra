@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +39,8 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 
 	@Override
 	public void write(Pipeline<? extends Stage> p) throws IOException {
-		for(Stage s : p.getStages()) {
+		Pipeline<Stage> old = reader.getPipeline();
+		for(Stage s : old.getStages()) {
 			inactivate(s);
 		}
 
@@ -112,16 +112,11 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 
 	@Override
 	public boolean deleteFile(Object id) {
-		if(id instanceof ObjectId) {
-			if(pipelinefs.find((ObjectId)id)==null) {
-				return false;
-			}
-			pipelinefs.remove((ObjectId)id);
-			return true;
-		}
-		else {
-			logger.error("Incorrect id type, should be ObjectId but got "+id.getClass());
+		DBObject obj = new BasicDBObject(MongoDocument.MONGO_ID_KEY, id);
+		if (pipelinefs.find(obj).size()==0) {
 			return false;
 		}
+		pipelinefs.remove(obj);
+		return true;
 	}
 }
