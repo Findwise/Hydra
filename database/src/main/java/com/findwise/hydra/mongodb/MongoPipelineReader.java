@@ -42,12 +42,21 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 		stages = db.getCollection(STAGES_COLLECTION);
 		pipelinefs = new GridFS(db, PIPELINE_FS); 
 	}
-	
+
 	@Override
 	public Pipeline<Stage> getPipeline() {
+		return getPipeline(Stage.Mode.ACTIVE);
+	}
+	
+	@Override 
+	public Pipeline<Stage> getDebugPipeline() {
+		return getPipeline(Stage.Mode.DEBUG);
+	}
+
+	private Pipeline<Stage> getPipeline(Stage.Mode mode) {
 		Pipeline<Stage> p = new Pipeline<Stage>();
 		
-		DBCursor cursor = stages.find(new BasicDBObject(ACTIVE_KEY, Stage.Mode.ACTIVE.toString()));
+		DBCursor cursor = stages.find(new BasicDBObject(ACTIVE_KEY, mode.toString()));
 		
 		while(cursor.hasNext()) {
 			p.addStage(getStage(cursor.next()));
@@ -55,7 +64,6 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 		
 		return p;
 	}
-	
 	
 	@SuppressWarnings("unchecked")
 	private Stage getStage(DBObject dbo) {

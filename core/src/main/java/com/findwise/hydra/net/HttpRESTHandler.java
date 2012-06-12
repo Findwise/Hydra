@@ -150,16 +150,11 @@ public class HttpRESTHandler implements HttpRequestHandler  {
         if(nm.getPipeline().hasStage(stage)) {
         	map = nm.getPipeline().getStage(stage).getProperties();
         }
-        
-        if(handleGetDebugProperties()) {
-        	return;
-        }
+        else if(nm.getDatabaseConnector().getPipelineReader().getDebugPipeline().hasStage(stage)){
+        	map = nm.getDatabaseConnector().getPipelineReader().getDebugPipeline().getStage(stage).getProperties();
+        } 
         
         HttpResponseWriter.printJson(response, map);
-	}
-	
-	private boolean handleGetDebugProperties() {
-		return false;
 	}
 	
 	private void handleGetDocument(HttpRequest request, HttpResponse response) throws IOException {
