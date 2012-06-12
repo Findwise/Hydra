@@ -24,4 +24,6 @@ public interface PipelineReader<T extends DatabaseType> {
 	DatabaseFile getFile(String fileName);
 	
 	Pipeline<Stage> getPipeline();
+	
+	Pipeline<Stage> getDebugPipeline();
 }
