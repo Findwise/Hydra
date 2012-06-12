@@ -27,13 +27,16 @@ Let's say we want to change the field source in all documents that have been tou
 The easiest way to do this without coding is to use the CmdlineInserter-class found in the examples library:
 	
 1. Add the library with the stage you want to add, in this case the basic-stages jar:
-	Program arguments: add library pipeline basic-stages-jar-with-dependencies.jar
+	Program arguments: -a -p pipeline -l -i myLibaryId basic-stages-jar-with-dependencies.jar 
 	You should see the following output:
-	> Attempting to work with pipeline 'pipeline'
-	> Added stage library with id: 4fa39d8dda06916a91fb9665
+	> Added stage library with id: myLibaryId
 2. Now, add your stage, by referencing the id to your library of stages, again using CmdlineInserter:
-	Program arguments: add stage pipeline webSourceStage 4fa39d8dda06916a91fb9665 {stageClass: 'com.findwise.hydra.stage.SetStaticFieldStage', queryOptions:['touched(extractTitles,true)'], fieldNames: ['source'],fieldValues: ['web']}
+	Program arguments: -a -p pipeline -s -i myLibraryId -n myStage myStage.properties
+	In this example, myStage.properties contains the configuration of the stage.
 
-The format is: add stage <pipeline> <name-of-stage> <library-id> <your-json-configuration>. Alternatively, you can keep the Json in a separate file called <stagename>.properties, which will be read if you fail to provide any json on the command line.
+It is also possible to combine these two operations into one:
+	Program arguments: -a -p pipeline -l -i myLibraryId basic-stages-jar-with-dependencies.jar -s -n myStage myStage.properties
+
+For more information on the CmdlineInserter class, try invoking it and it should be fairly self-explanatory.
 
 For further information, refer to the Wiki on http://github.com/Findwise/Hydra/wiki
