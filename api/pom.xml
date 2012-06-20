@@ -56,19 +56,5 @@
 		</plugins>
 	</build>
 
-	<scm>
-		<developerConnection>scm:svn:https://svn.findwise.com/Findwise/Hydra/api/trunk/</developerConnection>
-	</scm>
-
-	<distributionManagement>
-		<repository>
-			<id>fw-releases</id>
-			<url>https://mvn.findwise.com/content/repositories/releases</url>
-		</repository>
-		<snapshotRepository>
-			<id>fw-snapshots</id>
-			<url>https://mvn.findwise.com/content/repositories/snapshots</url>
-		</snapshotRepository>
-	</distributionManagement>
-
+	
 </project>

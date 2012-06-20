@@ -39,7 +39,7 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>apache-lang</groupId>
+			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
 			<version>2.1</version>
 			<type>jar</type>
@@ -91,20 +91,4 @@
 		</plugins>
 
 	</build>
-
-
-	<scm>
-		<developerConnection>scm:svn:https://svn.findwise.com/Findwise/Hydra/basic-stages/trunk</developerConnection>
-	</scm>
-
-	<distributionManagement>
-		<repository>
-			<id>fw-releases</id>
-			<url>https://mvn.findwise.com/content/repositories/releases</url>
-		</repository>
-		<snapshotRepository>
-			<id>fw-snapshots</id>
-			<url>https://mvn.findwise.com/content/repositories/snapshots</url>
-		</snapshotRepository>
-	</distributionManagement>
 </project>
