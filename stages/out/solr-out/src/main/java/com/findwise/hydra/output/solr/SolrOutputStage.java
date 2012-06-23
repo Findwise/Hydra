@@ -20,16 +20,17 @@ import com.findwise.hydra.stage.AbstractOutputStage;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
-import java.util.Map;
+import java.util.*;
 
 @Stage
 public class SolrOutputStage extends AbstractOutputStage {
+
     @Parameter
     private String solrDeployPath;
-        
     @Parameter
     private Map<String, String> fieldMappings;
-    
+    @Parameter
+    private boolean sendAll = false;
     private int itemCounterCommit;
     private int itemCounterSend;
     private int commitLimit;
@@ -49,17 +50,19 @@ public class SolrOutputStage extends AbstractOutputStage {
         solr = solrInstance;
     }
 
-	@Override
-	public void init() throws RequiredArgumentMissingException {
-		documents = new ArrayList<DocumentAction>();
-		
-		try {
-			solr = getSolrServer();
-		} catch (MalformedURLException e) {
-			Logger.error("Solr URL malformed.");
-		}
-	}
-	
+    @Override
+    public void init() throws RequiredArgumentMissingException {
+        documents = new ArrayList<DocumentAction>();
+        fieldMappings = new HashMap<String, String>();
+
+
+        try {
+            solr = getSolrServer();
+        } catch (MalformedURLException e) {
+            Logger.error("Solr URL malformed.");
+        }
+    }
+
     private synchronized void addAction(LocalDocument doc) throws Exception {
         boolean newlist = false;
         if (!documents.isEmpty()) {
@@ -103,7 +106,7 @@ public class SolrOutputStage extends AbstractOutputStage {
         countUpSend();
         countUpCommit();
     }
-    
+
     protected void notifyInternal() {
         try {
             checkTimeouts();
@@ -138,7 +141,7 @@ public class SolrOutputStage extends AbstractOutputStage {
         } catch (Exception e) {
         }
     }
-    
+
     private List<SolrInputDocument> getSolrInputDocuments(List<LocalDocument> docs) {
         List<SolrInputDocument> toAdd = new LinkedList<SolrInputDocument>();
         for (Document d : docs) {
@@ -146,13 +149,20 @@ public class SolrOutputStage extends AbstractOutputStage {
         }
         return toAdd;
     }
-    
-   protected SolrInputDocument createSolrInputDocumentWithFieldConfig(Document doc) {
+
+    protected SolrInputDocument createSolrInputDocumentWithFieldConfig(Document doc) {
         SolrInputDocument docToAdd = new SolrInputDocument();
-        
-        for(String inField: fieldMappings.keySet()) {
-            if(doc.hasContentField(inField))
-                docToAdd.addField(fieldMappings.get(inField), doc.getContentField(inField));
+
+        if (sendAll) {
+            for (String inField : doc.getContentFields()) {
+                docToAdd.addField(inField, doc.getContentField(inField));
+            }
+        } else {
+            for (String inField : fieldMappings.keySet()) {
+                if (doc.hasContentField(inField)) {
+                    docToAdd.addField(fieldMappings.get(inField), doc.getContentField(inField));
+                }
+            }
         }
         return docToAdd;
     }
@@ -283,12 +293,21 @@ public class SolrOutputStage extends AbstractOutputStage {
     public void setSendTimeout(int sendTimeout) {
         this.sendTimeout = sendTimeout;
     }
-    
+
     public Map<String, String> getFieldMappings() {
         return fieldMappings;
     }
 
     public void setFieldMappings(Map<String, String> fieldConfigs) {
         this.fieldMappings = fieldConfigs;
+    }
+
+    /**
+     * Only used by the junit test
+     *
+     * @param sendAll
+     */
+    public void setSendAll(boolean sendAll) {
+        this.sendAll = sendAll;
     }
 }
