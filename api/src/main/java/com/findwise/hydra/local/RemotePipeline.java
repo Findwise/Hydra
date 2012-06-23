@@ -21,6 +21,7 @@ public class RemotePipeline {
 	public static final String PENDING_DOCUMENT_URL = "pendingDocument";
 	public static final String DISCARDED_DOCUMENT_URL = "discardedDocument";
 	public static final String GET_PROPERTIES_URL = "getProperties";
+	public static final String FAILED_DOCUMENT_URL = "failedDocument";
 	
 	public static final String STAGE_PARAM = "stage";
 	public static final String RECURRING_PARAM = "recurring";
@@ -39,6 +40,7 @@ public class RemotePipeline {
 	private String writeUrl;
 	private String releaseUrl;
 	private String processedUrl;
+	private String failedUrl;
 	private String pendingUrl;
 	private String discardedUrl;
 	private String propertyUrl;
@@ -60,6 +62,7 @@ public class RemotePipeline {
 		writeUrl = "/"+WRITE_DOCUMENT_URL+"?"+STAGE_PARAM+"="+stageName;
 		releaseUrl = "/"+RELEASE_DOCUMENT_URL+"?"+STAGE_PARAM+"="+stageName;
 		processedUrl = "/"+PROCESSED_DOCUMENT_URL+"?"+STAGE_PARAM+"="+stageName;
+		failedUrl = "/"+FAILED_DOCUMENT_URL+"?"+STAGE_PARAM+"="+stageName;
 		pendingUrl = "/"+PENDING_DOCUMENT_URL+"?"+STAGE_PARAM+"="+stageName;
 		discardedUrl = "/"+DISCARDED_DOCUMENT_URL+"?"+STAGE_PARAM+"="+stageName;
 		propertyUrl = "/"+GET_PROPERTIES_URL+"?"+STAGE_PARAM+"="+stageName;
@@ -211,6 +214,19 @@ public class RemotePipeline {
 	
 	public boolean markPending(LocalDocument d) throws IOException, HttpException {
 		HttpResponse response = core.post(pendingUrl, d.contentFieldsToJson(null));
+		if(response.getStatusLine().getStatusCode()==HttpStatus.SC_OK) {
+			EntityUtils.consume(response.getEntity());
+		
+			return true;
+		}
+		
+		logUnexpected(response);
+		
+		return false;
+	}
+	
+	public boolean markFailed(LocalDocument d) throws IOException, HttpException {
+		HttpResponse response = core.post(failedUrl, d.contentFieldsToJson(null));
 		if(response.getStatusLine().getStatusCode()==HttpStatus.SC_OK) {
 			EntityUtils.consume(response.getEntity());
 		
