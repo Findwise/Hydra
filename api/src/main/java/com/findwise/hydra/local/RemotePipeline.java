@@ -45,6 +45,8 @@ public class RemotePipeline {
 	private String discardedUrl;
 	private String propertyUrl;
 	
+	private String stageName;
+	
 	private LocalDocument currentDocument;
 	
 	/**
@@ -58,6 +60,7 @@ public class RemotePipeline {
 	}
 	
 	public RemotePipeline(String hostName, int port, String stageName) {
+		this.stageName = stageName;
 		getUrl = "/"+GET_DOCUMENT_URL+"?"+STAGE_PARAM+"="+stageName;
 		writeUrl = "/"+WRITE_DOCUMENT_URL+"?"+STAGE_PARAM+"="+stageName;
 		releaseUrl = "/"+RELEASE_DOCUMENT_URL+"?"+STAGE_PARAM+"="+stageName;
@@ -236,6 +239,11 @@ public class RemotePipeline {
 		logUnexpected(response);
 		
 		return false;
+	}
+	
+	public boolean markFailed(LocalDocument d, Throwable t) throws IOException, HttpException {
+		d.addError(stageName, t);
+		return markFailed(d);
 	}
 	
 	public boolean markProcessed(LocalDocument d) throws IOException, HttpException {
