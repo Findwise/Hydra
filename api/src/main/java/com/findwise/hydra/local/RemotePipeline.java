@@ -226,7 +226,7 @@ public class RemotePipeline {
 	}
 	
 	public boolean markFailed(LocalDocument d) throws IOException, HttpException {
-		HttpResponse response = core.post(failedUrl, d.contentFieldsToJson(null));
+		HttpResponse response = core.post(failedUrl, d.modifiedFieldsToJson());
 		if(response.getStatusLine().getStatusCode()==HttpStatus.SC_OK) {
 			EntityUtils.consume(response.getEntity());
 		
@@ -239,7 +239,7 @@ public class RemotePipeline {
 	}
 	
 	public boolean markProcessed(LocalDocument d) throws IOException, HttpException {
-		HttpResponse response = core.post(processedUrl, d.contentFieldsToJson(null));
+		HttpResponse response = core.post(processedUrl, d.modifiedFieldsToJson());
 		if(response.getStatusLine().getStatusCode()==HttpStatus.SC_OK) {
 			EntityUtils.consume(response.getEntity());
 		
@@ -252,7 +252,7 @@ public class RemotePipeline {
 	}
 	
 	public boolean markDiscarded(LocalDocument d) throws IOException, HttpException {
-		HttpResponse response = core.post(discardedUrl, d.contentFieldsToJson(null));
+		HttpResponse response = core.post(discardedUrl, d.modifiedFieldsToJson());
 		if(response.getStatusLine().getStatusCode()==HttpStatus.SC_OK) {
 			EntityUtils.consume(response.getEntity());
 		
