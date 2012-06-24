@@ -297,6 +297,26 @@ public class MongoConnectorTest {
 	}
 	
 	@Test
+	public void testFailedDocument() {		
+		DatabaseDocument<MongoType> failed = mdc.getDocumentWriter().getAndTag(new MongoQuery(), "failedTag");
+		
+		mdc.getDocumentWriter().markFailed(failed, "test_stage");
+		
+		if(mdc.getDocumentReader().getDocumentById(failed.getID())!=null) {
+			fail("Failed document was retrieved after discard");
+		}
+		
+		DatabaseDocument<MongoType> old = mdc.getDocumentReader().getDocumentById(failed.getID(), true);
+		if(old==null) {
+			fail("Failed to find the document in the 'old' database");
+		}
+		
+		if(!old.getMetadataMap().containsKey(Document.FAILED_METADATA_FLAG)) {
+			fail("No failed flag on the document");
+		}
+	}
+	
+	@Test
 	public void testActiveDatabaseSize() {
 		if(mdc.getDocumentReader().getActiveDatabaseSize() != 3) {
 			fail("Not the correct active database size. Expected 3 got: "+mdc.getDocumentReader().getActiveDatabaseSize());

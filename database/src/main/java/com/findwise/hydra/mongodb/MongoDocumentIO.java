@@ -143,15 +143,19 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	 */
 	@Override
 	public MongoDocument getDocumentById(Object id) {
+		return getDocumentById(id, false);
+	}
+
+	@Override
+	public MongoDocument getDocumentById(Object id, boolean includeInactive) {
 		MongoQuery mq = new MongoQuery();
 		mq.requireID(id);
 		MongoDocument doc = (MongoDocument) documents.findOne(mq.toDBObject());
-		if(doc==null) {
-			return null;
+		if(doc==null && includeInactive) {
+			doc = (MongoDocument) oldDocuments.findOne(mq.toDBObject());
 		}
 		return doc;
 	}
-
 
 	/* (non-Javadoc)
 	 * @see com.findwise.hydra.DocumentReader#getDocuments(com.findwise.hydra.DatabaseQuery, int)
@@ -376,6 +380,25 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		if(documents.findAndModify(mq.toDBObject(), dbo)==null) {
 			return false;
 		}
+		
+		return true;
+	}
+	
+	@Override
+	public boolean markFailed(DatabaseDocument<MongoType> d, String stage) {
+		MongoQuery mq = new MongoQuery();
+		mq.requireID(d.getID());
+		DBObject doc = documents.findAndRemove(mq.toDBObject());
+		
+		if(doc==null) {
+			return false;
+		}
+		
+		doc.putAll(((MongoDocument)d).toMap());
+		stampMetadataField(doc, MongoDocument.FAILED_METADATA_FLAG, stage);
+		
+		
+		oldDocuments.insert(doc);
 		
 		return true;
 	}

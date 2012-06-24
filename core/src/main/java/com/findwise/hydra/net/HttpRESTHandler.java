@@ -261,6 +261,7 @@ public class HttpRESTHandler implements HttpRequestHandler  {
 				break;
 			}
 			case FAILED: {
+				res = nm.getDatabaseConnector().getDocumentWriter().markFailed(md, stage);
 				break;
 			}
 			case DISCARDED: {
