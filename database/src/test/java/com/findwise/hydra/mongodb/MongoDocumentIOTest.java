@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DocumentWriter;
+import com.findwise.hydra.TailableIterator;
 import com.findwise.hydra.TestModule;
 import com.google.inject.Guice;
 import com.mongodb.DB;
@@ -100,5 +101,79 @@ public class MongoDocumentIOTest {
 			fail("Incorrect number of old documents kept: "+ mdc.getDocumentReader().getInactiveDatabaseSize());
 		}
 	}
+	
+	@Test
+	public void testInactiveIterator() throws Exception {
+		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
+		dw.prepare();
+		
+		MongoDocument first = new MongoDocument();
+		first.putContentField("num", 1);
+		dw.insert(first);
+		DatabaseDocument<MongoType> dd = dw.getAndTag(new MongoQuery(), "tag");
+		dw.markProcessed(dd, "tag");
+		
+		TailableIterator<MongoType> it = mdc.getDocumentReader().getInactiveIterator();
+		
+		TailReader tr = new TailReader(it);
+		tr.start();
+		
+		while(tr.lastRead>System.currentTimeMillis()) {
+			Thread.sleep(50);
+		}
+		
+		long lastRead = tr.lastRead;
+		
+		if(!tr.lastReadDoc.getContentField("num").equals(1)) {
+			fail("Last doc read was not the correct document!");
+		}
+		
+		MongoDocument second = new MongoDocument();
+		second.putContentField("num", 2);
+		dw.insert(second);
+		dd = dw.getAndTag(new MongoQuery(), "tag");
+		dw.markProcessed(dd, "tag");
+		
+		while(tr.lastRead==lastRead) {
+			Thread.sleep(50);
+		}
 
+		if (!tr.lastReadDoc.getContentField("num").equals(2)) {
+			fail("Last doc read was not the correct document!");
+		}
+
+		tr.interrupt();
+
+		long interrupt = System.currentTimeMillis();
+		
+		while (tr.isAlive() && (System.currentTimeMillis()-interrupt)<10000) {
+			Thread.sleep(50);
+		}
+		
+		if(tr.isAlive()) {
+			fail("Unable to interrupt the tailableiterator");
+		}
+	}
+	
+
+	public static class TailReader extends Thread {
+		private TailableIterator<MongoType> it;
+		public long lastRead = Long.MAX_VALUE;
+		public DatabaseDocument<MongoType> lastReadDoc = null;
+		
+		public TailReader(TailableIterator<MongoType> it) {
+			this.it = it;
+		}
+
+		public void run() {
+			while (it.hasNext()) {
+				lastRead = System.currentTimeMillis();
+				lastReadDoc = it.next();
+			}
+		}
+
+		public void interrupt() {
+			it.interrupt();
+		}
+	}
 }

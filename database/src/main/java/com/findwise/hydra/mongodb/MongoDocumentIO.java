@@ -17,6 +17,7 @@ import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.DocumentFile;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.Bytes;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -450,5 +451,10 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	@Override
 	public long getInactiveDatabaseSize() {
 		return oldDocuments.count();
+	}
+
+	@Override
+	public MongoTailableIterator getInactiveIterator() {
+		return new MongoTailableIterator(oldDocuments.find(new BasicDBObject()).sort(new BasicDBObject("$natural", 1)).addOption(Bytes.QUERYOPTION_TAILABLE).addOption(Bytes.QUERYOPTION_AWAITDATA));
 	}
 }
