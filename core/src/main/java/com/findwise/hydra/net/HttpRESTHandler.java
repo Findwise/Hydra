@@ -32,6 +32,8 @@ import com.google.inject.Inject;
 public class HttpRESTHandler implements HttpRequestHandler  {
 	private Logger logger = LoggerFactory.getLogger(HttpRESTHandler.class);
 	
+	private enum Mark { PENDING, PROCESSED, DISCARDED, FAILED };
+	
 	private NodeMaster nm;
 	
 	private String restId;
@@ -89,13 +91,16 @@ public class HttpRESTHandler implements HttpRequestHandler  {
 			handleWriteDocument(request, response);
 			return true;
 		} else if (uri.startsWith(RemotePipeline.PROCESSED_DOCUMENT_URL)) {
-			handleProcessedDocument(request, response);
+			handleMark(request, response, Mark.PROCESSED);
 			return true;
 		} else if (uri.startsWith(RemotePipeline.PENDING_DOCUMENT_URL)) {
-			handlePendingDocument(request, response);
+			handleMark(request, response, Mark.PENDING);
 			return true;
 		} else if (uri.startsWith(RemotePipeline.DISCARDED_DOCUMENT_URL)) {
-			handleDiscardedRequest(request, response);
+			handleMark(request, response, Mark.DISCARDED);
+			return true;
+		} else if (uri.startsWith(RemotePipeline.FAILED_DOCUMENT_URL)) {
+			handleMark(request, response, Mark.FAILED);
 			return true;
 		}
 		
@@ -225,92 +230,51 @@ public class HttpRESTHandler implements HttpRequestHandler  {
 		return nm.getDatabaseConnector().getDocumentWriter().markTouched(md.getID(),stage);
 	}
 	
-	private void handleProcessedDocument(HttpRequest request, HttpResponse response) throws IOException {
-		logger.trace("handleProcessedDocument()");
-        HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request).getEntity();
-        String requestContent = EntityUtils.toString(requestEntity);
-        
-        String stage = getParam(request, RemotePipeline.STAGE_PARAM);
-        if(stage==null) {
-        	HttpResponseWriter.printMissingParameter(response, RemotePipeline.STAGE_PARAM);
-        	return;
-        }
-        
-        DatabaseDocument<MongoType> md;
-        try {
-        	md = nm.getDatabaseConnector().convert(new LocalDocument(requestContent));
-        }
-        catch(JsonException e) {
-        	HttpResponseWriter.printJsonException(response, e);
-        	return;
-        }
-        
-        boolean res = nm.getDatabaseConnector().getDocumentWriter().markProcessed(md, stage);
-        if(!res) {
-        	HttpResponseWriter.printNoDocument(response);
-        }
-        else {
-        	HttpResponseWriter.printSaveOk(response, md.getID());
-        }
-	}
-	
-	private void handlePendingDocument(HttpRequest request, HttpResponse response) throws IOException {
-		logger.trace("handlePendingDocument()");
-        HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request).getEntity();
-        String requestContent = EntityUtils.toString(requestEntity);
-        
-        String stage = getParam(request, RemotePipeline.STAGE_PARAM);
-        if(stage==null) {
-        	HttpResponseWriter.printMissingParameter(response, RemotePipeline.STAGE_PARAM);
-        	return;
-        }
-        
-        DatabaseDocument<MongoType> md;
-        try {
-        	md = nm.getDatabaseConnector().convert(new LocalDocument(requestContent));
-        }
-        catch(JsonException e) {
-        	HttpResponseWriter.printJsonException(response, e);
-        	return;
-        }
-        boolean res = nm.getDatabaseConnector().getDocumentWriter().markPending(md, stage);
-        if(!res) {
-            logger.debug("Missing document: "+md.toJson());
-        	HttpResponseWriter.printNoDocument(response);
-        }
-        else {
-        	HttpResponseWriter.printSaveOk(response, md.getID());
-        }
-	}
-	
-	private void handleDiscardedRequest(HttpRequest request, HttpResponse response) throws IOException {
-		logger.trace("handleDiscardedRequest()");
-        HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request).getEntity();
-        String requestContent = EntityUtils.toString(requestEntity);
-        
-        String stage = getParam(request, RemotePipeline.STAGE_PARAM);
-        if(stage==null) {
-        	HttpResponseWriter.printMissingParameter(response, RemotePipeline.STAGE_PARAM);
-        	return;
-        }
-        
-        DatabaseDocument<MongoType> md;
-        try {
-        	md = nm.getDatabaseConnector().convert(new LocalDocument(requestContent));
-        }
-        catch(JsonException e) {
-        	HttpResponseWriter.printJsonException(response, e);
-        	return;
-        }
-        
-        boolean res = nm.getDatabaseConnector().getDocumentWriter().markDiscarded(md, stage);
-        
-        if(!res) {
-        	HttpResponseWriter.printNoDocument(response);
-        }
-        else {
-        	HttpResponseWriter.printSaveOk(response, md.getID());
-        }
+	private void handleMark(HttpRequest request, HttpResponse response, Mark mark) throws IOException {
+		logger.trace("handleMark(..., ..., "+mark.toString()+")");
+		
+		HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request).getEntity();
+		String requestContent = EntityUtils.toString(requestEntity);
+
+		String stage = getParam(request, RemotePipeline.STAGE_PARAM);
+		if (stage == null) {
+			HttpResponseWriter.printMissingParameter(response, RemotePipeline.STAGE_PARAM);
+			return;
+		}
+
+		DatabaseDocument<MongoType> md;
+		try {
+			md = nm.getDatabaseConnector().convert(new LocalDocument(requestContent));
+		} catch (JsonException e) {
+			HttpResponseWriter.printJsonException(response, e);
+			return;
+		}
+
+		boolean res = false;
+		switch (mark) {
+			case PENDING: {
+				res = nm.getDatabaseConnector().getDocumentWriter().markPending(md, stage);
+				break;
+			}
+			case PROCESSED: {
+				res = nm.getDatabaseConnector().getDocumentWriter().markProcessed(md, stage);
+				break;
+			}
+			case FAILED: {
+				res = nm.getDatabaseConnector().getDocumentWriter().markFailed(md, stage);
+				break;
+			}
+			case DISCARDED: {
+				res = nm.getDatabaseConnector().getDocumentWriter().markDiscarded(md, stage);
+				break;
+			}
+		}
+
+		if (!res) {
+			HttpResponseWriter.printNoDocument(response);
+		} else {
+			HttpResponseWriter.printSaveOk(response, md.getID());
+		}
 	}
  
 	private void handleWriteDocument(HttpRequest request, HttpResponse response) throws IOException {

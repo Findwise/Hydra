@@ -16,6 +16,7 @@ public interface Document extends JsonDeserializer, JsonSerializer {
 	String PENDING_METADATA_FLAG = "pending";
 	String PROCESSED_METADATA_FLAG = "processed";
 	String DISCARDED_METADATA_FLAG = "discarded";
+	String FAILED_METADATA_FLAG = "failed";
 	String DATE_METADATA_SUBKEY = "date";
 	String STAGE_METADATA_SUBKEY = "stage";
 	String ERROR_METADATA_KEY = "error";

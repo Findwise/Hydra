@@ -93,6 +93,22 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 * @return
 	 */
 	boolean markDiscarded(DatabaseDocument<T> d, String stage);
+	
+	/**
+	 * Indicates that the document has failed in processing, without having been
+	 * successfully passed out of it. A valid reason for this might be that the 
+	 * output stage threw  an exception while sending the document out.
+	 * 
+	 * After this method is called on a given document, it should not show up in
+	 * normal get-operations performed by this interface.
+	 * 
+	 * @param d
+	 *            the document to fail
+	 * @param stage
+	 *            the name of the stage that discarded this document.
+	 * @return
+	 */
+	boolean markFailed(DatabaseDocument<T> d, String stage);
 
 	/**
 	 * Indicates that this document has reached an output stage which will

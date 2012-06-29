@@ -19,6 +19,14 @@ public interface DocumentReader<T extends DatabaseType> {
 
 	DatabaseDocument<T> getDocumentById(Object id);
 
+	DatabaseDocument<T> getDocumentById(Object id, boolean includeInactive);
+	
+	/**
+	 * Returns a TailableIterator over all inactive documents, no longer being
+	 * processed. 
+	 */
+	TailableIterator<T> getInactiveIterator();
+	
 	List<DatabaseDocument<T>> getDocuments(DatabaseQuery<T> q, int limit);
 
 	DocumentFile getDocumentFile(DatabaseDocument<T> d) throws IOException;

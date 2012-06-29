@@ -17,6 +17,7 @@ import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.DocumentFile;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.Bytes;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -143,15 +144,19 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	 */
 	@Override
 	public MongoDocument getDocumentById(Object id) {
+		return getDocumentById(id, false);
+	}
+
+	@Override
+	public MongoDocument getDocumentById(Object id, boolean includeInactive) {
 		MongoQuery mq = new MongoQuery();
 		mq.requireID(id);
 		MongoDocument doc = (MongoDocument) documents.findOne(mq.toDBObject());
-		if(doc==null) {
-			return null;
+		if(doc==null && includeInactive) {
+			doc = (MongoDocument) oldDocuments.findOne(mq.toDBObject());
 		}
 		return doc;
 	}
-
 
 	/* (non-Javadoc)
 	 * @see com.findwise.hydra.DocumentReader#getDocuments(com.findwise.hydra.DatabaseQuery, int)
@@ -379,6 +384,25 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		
 		return true;
 	}
+	
+	@Override
+	public boolean markFailed(DatabaseDocument<MongoType> d, String stage) {
+		MongoQuery mq = new MongoQuery();
+		mq.requireID(d.getID());
+		DBObject doc = documents.findAndRemove(mq.toDBObject());
+		
+		if(doc==null) {
+			return false;
+		}
+		
+		doc.putAll(((MongoDocument)d).toMap());
+		stampMetadataField(doc, MongoDocument.FAILED_METADATA_FLAG, stage);
+		
+		
+		oldDocuments.insert(doc);
+		
+		return true;
+	}
 
 
 	@Override
@@ -427,5 +451,10 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	@Override
 	public long getInactiveDatabaseSize() {
 		return oldDocuments.count();
+	}
+
+	@Override
+	public MongoTailableIterator getInactiveIterator() {
+		return new MongoTailableIterator(oldDocuments.find(new BasicDBObject()).sort(new BasicDBObject("$natural", 1)).addOption(Bytes.QUERYOPTION_TAILABLE).addOption(Bytes.QUERYOPTION_AWAITDATA));
 	}
 }
