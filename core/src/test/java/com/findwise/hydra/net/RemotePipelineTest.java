@@ -9,6 +9,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.findwise.hydra.DatabaseConnector;
+import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.NodeMaster;
 import com.findwise.hydra.TestModule;
 import com.findwise.hydra.common.Document.Action;
@@ -398,6 +399,41 @@ public class RemotePipelineTest {
 			if (tmp.getContentField("name").equals(testDoc.getContentField("name"))) {
 				fail("Should not retrieve a document which has been discarded.");
 			}	
+		}
+	}
+	
+	@Test
+	public void testMarkFailed() throws Exception {
+		RemotePipeline rp = new RemotePipeline("127.0.0.1", server.getPort(), "testStage");
+		
+		LocalQuery lq = new LocalQuery();
+		LocalDocument testDoc = rp.getDocument(lq);
+		if (testDoc == null) {
+			fail("Should find at least one document.");
+		}
+		
+		if (!rp.markFailed(testDoc)) {
+			fail("markFailed returned false");
+		}
+
+		if(nm.getDatabaseConnector().getDocumentReader().getDocumentById(testDoc.getID())!=null) {
+			fail("Document was found even though markFailed had been called");
+		}
+		
+		testDoc = rp.getDocument(lq);
+		if(!rp.markFailed(testDoc, new NullPointerException("message"))) {
+			fail("markFailed(Doc, Throwable) returned false");
+		}
+		
+
+		if(nm.getDatabaseConnector().getDocumentReader().getDocumentById(testDoc.getID())!=null) {
+			fail("Document was found even though markFailed(Doc, Throwable) had been called");
+		}
+		
+		DatabaseDocument<MongoType> dbdoc = nm.getDatabaseConnector().getDocumentReader().getDocumentById(testDoc.getID(), true);
+		
+		if(!dbdoc.hasErrors()) {
+			fail("dbdocument had no errors");
 		}
 	}
 	
