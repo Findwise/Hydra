@@ -357,4 +357,21 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	public final void clear() {
 		setup();
 	}
+
+	@Override
+	public Status getStatus() {
+		if(getMetadataMap().containsKey(FAILED_METADATA_FLAG)) {
+			return Status.FAILED;
+		}
+		if(getMetadataMap().containsKey(DISCARDED_METADATA_FLAG)) {
+			return Status.DISCARDED;
+		}
+		if(getMetadataMap().containsKey(PENDING_METADATA_FLAG)) {
+			return Status.PENDING;
+		}
+		if(getMetadataMap().containsKey(PROCESSED_METADATA_FLAG)) {
+			return Status.PROCESSED;
+		}
+		return Status.PROCESSING;
+	}
 }

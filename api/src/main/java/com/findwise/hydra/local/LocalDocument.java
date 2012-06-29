@@ -11,6 +11,7 @@ import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.InternalLogger;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.common.Document.Status;
 import com.findwise.tools.Comparator;
 import com.google.gson.JsonParseException;
 
@@ -318,5 +319,22 @@ public class LocalDocument implements Document {
 	@Override
 	public String toString() {
 		return toJson();
+	}
+
+	@Override
+	public Status getStatus() {
+		if(getMetadataMap().containsKey(FAILED_METADATA_FLAG)) {
+			return Status.FAILED;
+		}
+		if(getMetadataMap().containsKey(DISCARDED_METADATA_FLAG)) {
+			return Status.DISCARDED;
+		}
+		if(getMetadataMap().containsKey(PENDING_METADATA_FLAG)) {
+			return Status.PENDING;
+		}
+		if(getMetadataMap().containsKey(PROCESSED_METADATA_FLAG)) {
+			return Status.PROCESSED;
+		}
+		return Status.PROCESSING;
 	}
 }
