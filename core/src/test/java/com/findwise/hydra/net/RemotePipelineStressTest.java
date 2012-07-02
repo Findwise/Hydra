@@ -19,7 +19,6 @@ import com.findwise.hydra.NodeMaster;
 import com.findwise.hydra.TestModule;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
-import com.findwise.hydra.mongodb.MongoConnector;
 import com.findwise.hydra.mongodb.MongoDocument;
 import com.google.inject.Guice;
 import com.google.inject.Injector;

@@ -14,7 +14,7 @@ public class RESTServerTest {
 
 	@Test
 	public void testBlockingStart() throws IOException, InterruptedException {
-		Injector inj =  Guice.createInjector(new TestModule("jUnit-RemotePipelineTest"));
+		Injector inj =  Guice.createInjector(new TestModule("jUnit-RESTServerTest"));
 		int port = inj.getInstance(MapConfiguration.class).getRestPort();
 		RESTServer server1 = inj.getInstance(RESTServer.class);
 		
@@ -47,7 +47,7 @@ public class RESTServerTest {
 
 	@Test
 	public void testShutdown() throws IOException, InterruptedException {
-		Injector inj =  Guice.createInjector(new TestModule("jUnit-RemotePipelineTest"));
+		Injector inj =  Guice.createInjector(new TestModule("jUnit-RESTServerTest"));
 		RESTServer server = RESTServer.getNewStartedRESTServer(inj);
 		server.shutdown();
 		Thread.sleep(1000);
