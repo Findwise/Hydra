@@ -12,6 +12,7 @@ import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DocumentWriter;
 import com.findwise.hydra.TailableIterator;
 import com.findwise.hydra.TestModule;
+import com.findwise.hydra.common.Document.Status;
 import com.google.inject.Guice;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -173,7 +174,7 @@ public class MongoDocumentIOTest {
 
 	int testReadCount = 1000;
 	@Test
-	public void testRead() throws Exception {
+	public void testReadStatus() throws Exception {
 		mdc.getDocumentWriter().prepare();
 		
 
@@ -184,7 +185,9 @@ public class MongoDocumentIOTest {
 			public void run() {
 				try {
 					insertDocuments(testReadCount);
-					processDocuments(testReadCount);
+					processDocuments(testReadCount/3);
+					failDocuments(testReadCount/3);
+					discardDocuments(testReadCount - (testReadCount/3)*2);
 				} catch (Exception e) {
 					System.out.println(e.getMessage());
 				}
@@ -206,6 +209,18 @@ public class MongoDocumentIOTest {
 			fail("Saw too many documents");
 		}
 		
+		if(tr.countProcessed != testReadCount/3) {
+			fail("Incorrect number of processed documents. Expected "+testReadCount/3+" but saw "+tr.countProcessed);
+		}
+		
+		if(tr.countFailed != testReadCount/3) {
+			fail("Incorrect number of failed documents. Expected "+testReadCount/3+" but saw "+tr.countFailed);
+		}
+		
+		if(tr.countDiscarded != testReadCount - (testReadCount/3)*2) {
+			fail("Incorrect number of discarded documents. Expected "+(testReadCount - (testReadCount/3)*2)+" but saw "+tr.countDiscarded);
+		}
+		
 		tr.interrupt();
 	}
 	
@@ -215,6 +230,26 @@ public class MongoDocumentIOTest {
 		for(int i=0; i<count; i++) {
 			dd = mdc.getDocumentReader().getDocument(new MongoQuery());
 			mdc.getDocumentWriter().markProcessed(dd, "x");
+		}
+		return System.currentTimeMillis()-start;
+	}
+	
+	public long failDocuments(int count) throws Exception {
+		long start = System.currentTimeMillis();
+		DatabaseDocument<MongoType> dd;
+		for(int i=0; i<count; i++) {
+			dd = mdc.getDocumentReader().getDocument(new MongoQuery());
+			mdc.getDocumentWriter().markFailed(dd, "x");
+		}
+		return System.currentTimeMillis()-start;
+	}
+	
+	public long discardDocuments(int count) throws Exception {
+		long start = System.currentTimeMillis();
+		DatabaseDocument<MongoType> dd;
+		for(int i=0; i<count; i++) {
+			dd = mdc.getDocumentReader().getDocument(new MongoQuery());
+			mdc.getDocumentWriter().markDiscarded(dd, "x");
 		}
 		return System.currentTimeMillis()-start;
 	}
@@ -255,6 +290,10 @@ public class MongoDocumentIOTest {
 		public DatabaseDocument<MongoType> lastReadDoc = null;
 		boolean hasError = false;
 		
+		int countFailed = 0;
+		int countProcessed = 0;
+		int countDiscarded = 0;
+		
 		int count = 0;
 		
 		public TailReader(TailableIterator<MongoType> it) {
@@ -266,6 +305,17 @@ public class MongoDocumentIOTest {
 				while (it.hasNext()) {
 					lastRead = System.currentTimeMillis();
 					lastReadDoc = it.next();
+					
+					Status s = lastReadDoc.getStatus();
+					
+					if(s==Status.DISCARDED) {
+						countDiscarded++;
+					} else if (s == Status.PROCESSED) {
+						countProcessed++;
+					} else if (s == Status.FAILED) {
+						countFailed++;
+					}
+					
 					count++;
 				}
 			} catch (Exception e) {
