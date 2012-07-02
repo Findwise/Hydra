@@ -1,43 +1,73 @@
 package com.findwise.hydra.mongodb;
 
-import java.util.Iterator;
+import java.util.prefs.BackingStoreException;
 
-import com.findwise.hydra.DatabaseDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.findwise.hydra.TailableIterator;
+import com.mongodb.BasicDBObject;
+import com.mongodb.Bytes;
+import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoException.CursorNotFound;
 
 public class MongoTailableIterator implements TailableIterator<MongoType> {
-
-	private Iterator<DatabaseDocument<MongoType>> iterator; 
+	
+	private static Logger logger = LoggerFactory.getLogger(MongoTailableIterator.class);
 	private DBCursor cursor;
+	private DBCollection dbc;
 	
 	boolean closed = false;
 	
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public MongoTailableIterator(DBCursor cursor) {
-		this.cursor = cursor;
-		this.iterator = (Iterator) cursor;
+	/**
+	 * @param dbc
+	 * @throws BackingStoreException if there is a problem in getting an iterator
+	 */
+	public MongoTailableIterator(DBCollection dbc) throws BackingStoreException {
+		this.dbc = dbc;
+		createCursor();
+	}
+	
+	private void createCursor() throws BackingStoreException {
+		if(!dbc.isCapped()) {
+			throw new BackingStoreException("Unable to create cursor: collection is not capped");
+		}
+		cursor = dbc.find(new BasicDBObject()).sort(new BasicDBObject("$natural", 1)).addOption(Bytes.QUERYOPTION_TAILABLE).addOption(Bytes.QUERYOPTION_AWAITDATA);
 	}
 	
 	@Override
 	public boolean hasNext() {
-		try {
-			if(closed) {
-				return false;
+		while (cursor.count() == 0 && !closed) {
+			try {
+				createCursor();
+				Thread.sleep(500);
+			} catch (BackingStoreException e) {
+				logger.error("Unable to create cursor during call to hasNext()", e);
+			} catch (InterruptedException e) {
+				logger.info("Interrupt caught during sleep", e);
+				Thread.currentThread().interrupt();
 			}
-			return iterator.hasNext();
+		}
+		if (closed) {
+			return false;
+		}
+		try {
+			return cursor.hasNext();
 		} catch(CursorNotFound e) {
+			if(!closed) {
+				logger.error("Cursor lost without being closed", e);
+			}
 			return false;
 		}
 	}
 
 	@Override
-	public DatabaseDocument<MongoType> next() {
+	public MongoDocument next() {
 		if(closed) {
 			return null;
 		}
-		return iterator.next();
+		return (MongoDocument) cursor.next();
 	}
 
 	@Override
@@ -47,6 +77,7 @@ public class MongoTailableIterator implements TailableIterator<MongoType> {
 
 	@Override
 	public void interrupt() {
+		closed = true;
 		cursor.close();
 	}
 

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.prefs.BackingStoreException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,6 @@ import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.DocumentFile;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.Bytes;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -177,6 +177,10 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 
 	public DBCollection getDocumentCollection() {
 		return documents;
+	}
+	
+	public DBCollection getOldDocumentCollection() {
+		return oldDocuments;
 	}
 
 	public void setDocumentCollection(DBCollection documents) {
@@ -455,6 +459,11 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 
 	@Override
 	public MongoTailableIterator getInactiveIterator() {
-		return new MongoTailableIterator(oldDocuments.find(new BasicDBObject()).sort(new BasicDBObject("$natural", 1)).addOption(Bytes.QUERYOPTION_TAILABLE).addOption(Bytes.QUERYOPTION_AWAITDATA));
+		try {
+			return new MongoTailableIterator(oldDocuments);
+		} catch (BackingStoreException e) {
+			logger.error("Unable to get Tailable Iterator!", e);
+			return null;
+		}
 	}
 }

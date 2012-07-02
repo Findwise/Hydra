@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Random;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,6 +35,13 @@ public class TaggingModelTest {
 		mdc.getDB().dropDatabase();
 		createAndConnect();
 		
+	}
+	
+	@AfterClass
+	public static void tearDown() throws Exception {
+		TaggingModelTest tmt = new TaggingModelTest();
+		tmt.createAndConnect();
+		tmt.mdc.getDB().dropDatabase();
 	}
 	
 	@Test
