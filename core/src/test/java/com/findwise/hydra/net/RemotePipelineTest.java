@@ -16,6 +16,7 @@ import com.findwise.hydra.common.Document.Action;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
+import com.findwise.hydra.mongodb.MongoConnector;
 import com.findwise.hydra.mongodb.MongoDocument;
 import com.findwise.hydra.mongodb.MongoDocumentIO;
 import com.findwise.hydra.mongodb.MongoType;
@@ -71,6 +72,18 @@ public class RemotePipelineTest {
 	public void tearDown() throws Exception {
 		DatabaseConnector<MongoType> dbc = nm.getDatabaseConnector();
 		dbc.getDocumentWriter().deleteAll();
+	}
+	
+	@AfterClass
+	public static void tearDownClass() throws Exception {
+		NodeMaster nm = inj.getInstance(NodeMaster.class);
+		if(!nm.isAlive()) {
+			nm.blockingStart();
+		
+			nm.getDatabaseConnector().waitForWrites(true);
+			nm.getDatabaseConnector().connect();
+		}
+		((MongoConnector)nm.getDatabaseConnector()).getDB().dropDatabase();
 	}
 	
 	@Test
