@@ -8,6 +8,8 @@ public interface Document extends JsonDeserializer, JsonSerializer {
 	public enum Action {
 		ADD, DELETE, UPDATE
 	};
+	
+	enum Status { PROCESSING, PROCESSED, DISCARDED, FAILED, PENDING };
 
 	String ID_KEY = "_id";
 	String ACTION_KEY = "_action";
@@ -24,7 +26,9 @@ public interface Document extends JsonDeserializer, JsonSerializer {
 	Action getAction();
 	
 	void setAction(Action action);
-
+	
+	Status getStatus();
+	
 	boolean hasContentField(String fieldName);
 
 	boolean hasMetadataField(String fieldName);

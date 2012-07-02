@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 import java.util.Random;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -18,6 +19,7 @@ import com.findwise.hydra.NodeMaster;
 import com.findwise.hydra.TestModule;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
+import com.findwise.hydra.mongodb.MongoConnector;
 import com.findwise.hydra.mongodb.MongoDocument;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -58,6 +60,18 @@ public class RemotePipelineStressTest {
 		System.out.println("Deleted everything\n");
 	}
 
+	@AfterClass
+	public static void tearDownClass() throws Exception {
+		NodeMaster nm = inj.getInstance(NodeMaster.class);
+		if(!nm.isAlive()) {
+			nm.blockingStart();
+		
+			nm.getDatabaseConnector().waitForWrites(true);
+			nm.getDatabaseConnector().connect();
+		}
+		//((MongoConnector)nm.getDatabaseConnector()).getDB().dropDatabase();
+	}
+	
 	@Test
 	public void testStressGet100() throws Exception {
 		insertAndGet(100);

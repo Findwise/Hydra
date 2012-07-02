@@ -23,6 +23,7 @@ import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.TestModule;
 import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.DocumentFile;
+import com.findwise.hydra.common.Document.Status;
 import com.google.inject.Guice;
 
 public class MongoConnectorTest {
@@ -95,7 +96,7 @@ public class MongoConnectorTest {
 	public static void tearDownClass() throws Exception {
 		MongoConnectorTest test = new MongoConnectorTest();
 		test.createAndConnect();
-		//test.mdc.getDB().dropDatabase();
+		test.mdc.getDB().dropDatabase();
 	}
 
 	@Test
@@ -294,6 +295,15 @@ public class MongoConnectorTest {
 				fail("Discarded document was retrieved after discard");
 			}
 		}
+		
+		DatabaseDocument<MongoType> old = mdc.getDocumentReader().getDocumentById(discarded_d.getID(), true);
+		if(old==null) {
+			fail("Failed to find the document in the 'old' database");
+		}
+		
+		if(old.getStatus()!=Status.DISCARDED) {
+			fail("No discarded flag on the document");
+		}
 	}
 	
 	@Test
@@ -311,8 +321,34 @@ public class MongoConnectorTest {
 			fail("Failed to find the document in the 'old' database");
 		}
 		
-		if(!old.getMetadataMap().containsKey(Document.FAILED_METADATA_FLAG)) {
+		if(old.getStatus()!=Status.FAILED) {
 			fail("No failed flag on the document");
+		}
+	}
+	
+	@Test
+	public void testPendingDocument() {		
+		DatabaseDocument<MongoType> pending = mdc.getDocumentWriter().getAndTag(new MongoQuery(), "pending");
+		
+		mdc.getDocumentWriter().markPending(pending, "test_stage");
+		
+		pending = mdc.getDocumentWriter().getDocumentById(pending.getID());
+		
+		if(pending.getStatus()!=Status.PENDING) {
+			fail("No PENDING flag on the document");
+		}
+	}
+	
+	@Test
+	public void testProcessedDocument() {		
+		DatabaseDocument<MongoType> processed = mdc.getDocumentWriter().getAndTag(new MongoQuery(), "processed");
+		
+		mdc.getDocumentWriter().markProcessed(processed, "test_stage");
+		
+		processed = mdc.getDocumentWriter().getDocumentById(processed.getID(), true);
+		
+		if(processed.getStatus()!=Status.PROCESSED) {
+			fail("No PROCESSED flag on the document");
 		}
 	}
 	

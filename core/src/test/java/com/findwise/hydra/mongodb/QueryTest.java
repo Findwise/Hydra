@@ -1,26 +1,18 @@
 package com.findwise.hydra.mongodb;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.TestModule;
-import com.findwise.hydra.mongodb.MongoConnector;
-import com.findwise.hydra.mongodb.MongoDocument;
-import com.findwise.hydra.mongodb.MongoQuery;
 import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.local.LocalQuery;
 import com.google.inject.Guice;
@@ -32,11 +24,10 @@ import com.google.inject.Guice;
  */
 public class QueryTest {
 
-	DatabaseConnector mdc;
-	DatabaseDocument test;
-	DatabaseDocument test2;
-	DatabaseDocument random;
-	File f;
+	MongoConnector mdc;
+	DatabaseDocument<MongoType> test;
+	DatabaseDocument<MongoType> test2;
+	DatabaseDocument<MongoType> random;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -52,16 +43,6 @@ public class QueryTest {
 		test2.putContentField("number", 2);
 		test2.putMetadataField("date", new Date());
 		
-		f = new File("test1234.txt");
-		if(f.exists()) {
-			fail("Failing setup");
-		}
-		
-		FileWriter fw = new FileWriter(f);
-		
-		fw.write("This is a file @"+System.currentTimeMillis());
-		fw.close();
-		
 		random = new MongoDocument();
 		
 		try {
@@ -71,7 +52,7 @@ public class QueryTest {
 			fail("IOException when establishing connection");
 		}
 		
-		DatabaseDocument d;
+		DatabaseDocument<MongoType> d;
 		while((d = mdc.getDocumentReader().getDocument(new MongoQuery()))!=null) {
 			mdc.getDocumentWriter().delete(d);
 		}
@@ -79,23 +60,13 @@ public class QueryTest {
 		mdc.getDocumentWriter().insert(test);
 		mdc.getDocumentWriter().insert(test2);
 		mdc.getDocumentWriter().insert(random);
-		
-		DocumentFile df = new DocumentFile(test.getID(), f.getName(), new FileInputStream(f));
-		
-		mdc.getDocumentWriter().write(df);
 	}
-
-	@After
-	public void tearDown() throws Exception {
-		boolean successfulDelete = f.delete();
-		for (int maxTries = 10; !successfulDelete && maxTries > 0; maxTries--) {
-			System.gc();
-			Thread.sleep(300);
-			successfulDelete = f.delete();
-		}
-		if (!successfulDelete) {
-			fail("TearDown failed to delete: " + f.getAbsolutePath());
-		}
+	
+	@AfterClass
+	public static void tearDownClass() throws Exception {
+		QueryTest qt = new QueryTest();
+		qt.setUp();
+		qt.mdc.getDB().dropDatabase();
 	}
 
 	@Test
@@ -132,7 +103,7 @@ public class QueryTest {
 	public void testRequireContentFieldExists() throws JsonException {
 		LocalQuery q = new LocalQuery();
 		q.requireContentFieldExists("number");
-		List<DatabaseDocument> ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
+		List<DatabaseDocument<MongoType>> ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
 		if(ds.size()!=1) {
 			fail("Received incorrect number of documents..");
 		}
@@ -148,7 +119,7 @@ public class QueryTest {
 	public void testRequireContentFieldNotExists() throws JsonException {
 		LocalQuery q = new LocalQuery();
 		q.requireContentFieldNotExists("number");
-		List<DatabaseDocument> ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
+		List<DatabaseDocument<MongoType>> ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
 		if(ds.size()!=2) {
 			fail("Received incorrect number of documents..");
 		}
@@ -164,7 +135,7 @@ public class QueryTest {
 	public void testRequireTouchedByStage() throws JsonException {
 		LocalQuery q = new LocalQuery();
 		q.requireTouchedByStage("xyz");
-		List<DatabaseDocument> ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
+		List<DatabaseDocument<MongoType>> ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
 		if(ds.size()!=0) {
 			fail("Got documents, shouldn't have.");
 		}
@@ -185,7 +156,7 @@ public class QueryTest {
 	public void testRequireNotTouchedByStage() throws JsonException {
 		LocalQuery q = new LocalQuery();
 		q.requireNotTouchedByStage("xyz");
-		List<DatabaseDocument> ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
+		List<DatabaseDocument<MongoType>> ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
 		if(ds.size()!=3) {
 			fail("Received incorrect number of documents..");
 		}
@@ -216,7 +187,7 @@ public class QueryTest {
 		if(mdq.toDBObject().keySet().size()!=1) {
 			fail("Expected query to have one value");
 		}
-		List<DatabaseDocument> list = mdc.getDocumentReader().getDocuments(mdq, 142);
+		List<DatabaseDocument<MongoType>> list = mdc.getDocumentReader().getDocuments(mdq, 142);
 		if(list.size()!=2) {
 			fail("Expected to find two documents");
 		}
