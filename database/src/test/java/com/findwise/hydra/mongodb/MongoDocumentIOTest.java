@@ -195,7 +195,6 @@ public class MongoDocumentIOTest {
 		long timer = System.currentTimeMillis();
 		
 		while (tr.count < testReadCount && (System.currentTimeMillis()-timer)<10000) {
-			System.out.println(tr.count);
 			Thread.sleep(50);
 		}
 		
@@ -206,7 +205,6 @@ public class MongoDocumentIOTest {
 		if(tr.count > testReadCount) {
 			fail("Saw too many documents");
 		}
-		System.out.println(tr.count);
 		
 		tr.interrupt();
 	}
