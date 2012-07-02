@@ -2,6 +2,8 @@ package com.findwise.hydra.mongodb;
 
 import static org.junit.Assert.fail;
 
+import java.util.Random;
+
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
@@ -107,19 +109,23 @@ public class MongoDocumentIOTest {
 		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
 		dw.prepare();
 		
+		TailableIterator<MongoType> it = mdc.getDocumentReader().getInactiveIterator();
+		
+		TailReader tr = new TailReader(it);
+		tr.start();
+		
 		MongoDocument first = new MongoDocument();
 		first.putContentField("num", 1);
 		dw.insert(first);
 		DatabaseDocument<MongoType> dd = dw.getAndTag(new MongoQuery(), "tag");
 		dw.markProcessed(dd, "tag");
 		
-		TailableIterator<MongoType> it = mdc.getDocumentReader().getInactiveIterator();
-		
-		TailReader tr = new TailReader(it);
-		tr.start();
-		
-		while(tr.lastRead>System.currentTimeMillis()) {
+		while(tr.lastRead>System.currentTimeMillis() && tr.isAlive()) {
 			Thread.sleep(50);
+		}
+		
+		if(!tr.isAlive()) {
+			fail("TailableReader died");
 		}
 		
 		long lastRead = tr.lastRead;
@@ -142,6 +148,11 @@ public class MongoDocumentIOTest {
 			fail("Last doc read was not the correct document!");
 		}
 
+		
+		if(tr.hasError) {
+			fail("An exception was thrown by the TailableIterator prior to interrupt");
+		}
+		
 		tr.interrupt();
 
 		long interrupt = System.currentTimeMillis();
@@ -153,6 +164,90 @@ public class MongoDocumentIOTest {
 		if(tr.isAlive()) {
 			fail("Unable to interrupt the tailableiterator");
 		}
+		
+		if(tr.hasError) {
+			fail("An exception was thrown by the TailableIterator after interrupt");
+		}
+	}
+	
+
+	int testReadCount = 1000;
+	@Test
+	public void testRead() throws Exception {
+		mdc.getDocumentWriter().prepare();
+		
+
+		TailReader tr = new TailReader(mdc.getDocumentReader().getInactiveIterator());
+		tr.start();
+		
+		Thread t = new Thread() {
+			public void run() {
+				try {
+					insertDocuments(testReadCount);
+					processDocuments(testReadCount);
+				} catch (Exception e) {
+					System.out.println(e.getMessage());
+				}
+			}
+		};
+		t.start();
+		
+		long timer = System.currentTimeMillis();
+		
+		while (tr.count < testReadCount && (System.currentTimeMillis()-timer)<10000) {
+			System.out.println(tr.count);
+			Thread.sleep(50);
+		}
+		
+		if(tr.count < testReadCount) {
+			fail("Did not see all documents");
+		}
+		
+		if(tr.count > testReadCount) {
+			fail("Saw too many documents");
+		}
+		System.out.println(tr.count);
+		
+		tr.interrupt();
+	}
+	
+	public long processDocuments(int count) throws Exception {
+		long start = System.currentTimeMillis();
+		DatabaseDocument<MongoType> dd;
+		for(int i=0; i<count; i++) {
+			dd = mdc.getDocumentReader().getDocument(new MongoQuery());
+			mdc.getDocumentWriter().markProcessed(dd, "x");
+		}
+		return System.currentTimeMillis()-start;
+	}
+	
+	public long insertDocuments(int count) throws Exception {
+		int error=0, success=0;
+		long start = System.currentTimeMillis();
+		for(int i=0; i<count; i++) {
+			MongoDocument d = new MongoDocument();
+			d.putContentField(getRandomString(5), getRandomString(20));
+			if(mdc.getDocumentWriter().insert(d)) {
+				success++;
+			} else {
+				error++;
+			}
+		}
+		System.out.println("Success:" +success+" and Error:"+error);
+		return System.currentTimeMillis()-start;
+	}
+
+	
+	private String getRandomString(int length) {
+		char[] ca = new char[length];
+
+		Random r = new Random(System.currentTimeMillis());
+
+		for (int i = 0; i < length; i++) {
+			ca[i] = (char) ('A' + r.nextInt(26));
+		}
+
+		return new String(ca);
 	}
 	
 
@@ -160,15 +255,24 @@ public class MongoDocumentIOTest {
 		private TailableIterator<MongoType> it;
 		public long lastRead = Long.MAX_VALUE;
 		public DatabaseDocument<MongoType> lastReadDoc = null;
+		boolean hasError = false;
+		
+		int count = 0;
 		
 		public TailReader(TailableIterator<MongoType> it) {
 			this.it = it;
 		}
 
 		public void run() {
-			while (it.hasNext()) {
-				lastRead = System.currentTimeMillis();
-				lastReadDoc = it.next();
+			try {
+				while (it.hasNext()) {
+					lastRead = System.currentTimeMillis();
+					lastReadDoc = it.next();
+					count++;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				hasError = true;
 			}
 		}
 
