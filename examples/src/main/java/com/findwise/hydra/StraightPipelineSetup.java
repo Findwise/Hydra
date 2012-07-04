@@ -13,7 +13,7 @@ import com.google.inject.Guice;
 
 public class StraightPipelineSetup {
 	public static void main(String[] args) throws Exception {
-		MongoConnector mdc = Guice.createInjector(new ExampleModule("pipeline"))
+		MongoConnector mdc = Guice.createInjector(new ExampleModule("pipeline", "127.0.0.1"))
 		.getInstance(MongoConnector.class);
 
 		mdc.connect();
