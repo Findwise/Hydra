@@ -54,12 +54,24 @@ public class CmdlineInserter {
 	}
 	
 	@SuppressWarnings("static-access")
+	private static Option getUserOptions() {
+		return OptionBuilder.withLongOpt("user").hasArg().withDescription("the database user name").create();
+	}
+	
+	@SuppressWarnings("static-access")
+	private static Option getPasswordOptions() {
+		return OptionBuilder.withLongOpt("password").hasArg().withDescription("the database user password").create();
+	}
+	
+	@SuppressWarnings("static-access")
 	private static Option getMongoOption() {
 		return OptionBuilder.withLongOpt("mongo").hasArg().withDescription("the MongoDB host").create("m");
 	}
 	
 	private static Options getOptions() {
 		Options options = new Options();
+		options.addOption(getUserOptions());
+		options.addOption(getPasswordOptions());
 		options.addOption(getHelpOption());
 		options.addOption(getMongoOption());
 		options.addOption("a", "add", false, "performs an add. Use '-h -a' for more information");
@@ -71,6 +83,8 @@ public class CmdlineInserter {
 	private static Options getAddOptions() {
 		
 		Options options = new Options();
+		options.addOption(getUserOptions());
+		options.addOption(getPasswordOptions());
 		options.addOption(getHelpOption());
 		options.addOption(getMongoOption());
 		OptionGroup og = new OptionGroup();
@@ -89,6 +103,8 @@ public class CmdlineInserter {
 		options.addOption(getLibraryOption());
 		options.addOption(getHelpOption());
 		options.addOption(getMongoOption());
+		options.addOption(getUserOptions());
+		options.addOption(getPasswordOptions());
 		options.addOption(OptionBuilder.withArgName("library id").hasArg()
 				.withDescription("The ID of the library you wish to add. Reusing an id will overwrite.").withLongOpt("id")
 				.create("i"));
@@ -108,6 +124,8 @@ public class CmdlineInserter {
 		options.addOption(getStageOption());
 		options.addOption(getPipelineOption());
 		options.addOption(getMongoOption());
+		options.addOption(getUserOptions());
+		options.addOption(getPasswordOptions());
 		return options;
 	}
 	
@@ -121,6 +139,8 @@ public class CmdlineInserter {
 		options.addOptionGroup(og);
 		options.addOption(getPipelineOption());
 		options.addOption(getMongoOption());
+		options.addOption(getUserOptions());
+		options.addOption(getPasswordOptions());
 
 		return options;
 	}
@@ -131,6 +151,8 @@ public class CmdlineInserter {
 		options.addOption(getLibraryOption());
 		options.addOption(getHelpOption());
 		options.addOption(getMongoOption());
+		options.addOption(getUserOptions());
+		options.addOption(getPasswordOptions());
 		options.addOption(OptionBuilder.withArgName("library id").hasArg()
 				.withDescription("The ID of the library you wish to remove").withLongOpt("id")
 				.create("i"));
@@ -146,6 +168,8 @@ public class CmdlineInserter {
 		options.addOption(getStageOption());
 		options.addOption(getPipelineOption());
 		options.addOption(getMongoOption());
+		options.addOption(getUserOptions());
+		options.addOption(getPasswordOptions());
 		return options;
 	}
 	
@@ -200,7 +224,16 @@ public class CmdlineInserter {
 			System.out.println("No MongoDB host specified. Defaulting to "+host);
 		}
 		
-		MongoConnector mdc = Guice.createInjector(new ExampleModule(cmd.getOptionValue("p"), host))
+		ExampleModule module = new ExampleModule(cmd.getOptionValue("p"), host);
+		
+		if(cmd.hasOption("user")) {
+			module.setUsername(cmd.getOptionValue("user"));
+		}
+		if(cmd.hasOption("password")) {
+			module.setPassword(cmd.getOptionValue("password"));
+		}
+		
+		MongoConnector mdc = Guice.createInjector(module)
 				.getInstance(MongoConnector.class);
 
 		mdc.connect();

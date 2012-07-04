@@ -255,18 +255,12 @@ public class MongoDocumentIOTest {
 	}
 	
 	public long insertDocuments(int count) throws Exception {
-		int error=0, success=0;
 		long start = System.currentTimeMillis();
 		for(int i=0; i<count; i++) {
 			MongoDocument d = new MongoDocument();
 			d.putContentField(getRandomString(5), getRandomString(20));
-			if(mdc.getDocumentWriter().insert(d)) {
-				success++;
-			} else {
-				error++;
-			}
+			mdc.getDocumentWriter().insert(d);
 		}
-		System.out.println("Success:" +success+" and Error:"+error);
 		return System.currentTimeMillis()-start;
 	}
 
