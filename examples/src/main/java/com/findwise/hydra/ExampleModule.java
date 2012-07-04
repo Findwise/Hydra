@@ -22,9 +22,12 @@ public class ExampleModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		DatabaseConfiguration c = getConfiguration();
+		
 		bindConstant().annotatedWith(Names.named(DatabaseConnector.NAMESPACE_PARAM)).to(c.getNamespace());
 		bindConstant().annotatedWith(Names.named(DatabaseConnector.DATABASE_URL_PARAM)).to(c.getDatabaseUrl());
-		
+		bindConstant().annotatedWith(Names.named(DatabaseConnector.DATABASE_USER)).to(c.getDatabaseUser());
+		bindConstant().annotatedWith(Names.named(DatabaseConnector.DATABASE_PASSWORD)).to(c.getDatabasePassword());
+
 		bind(DatabaseConnector.class).to(MongoConnector.class);
 	}
 	
@@ -40,6 +43,14 @@ public class ExampleModule extends AbstractModule {
 			@Override
 			public String getDatabaseUrl() {
 				return "127.0.0.1";
+			@Override
+			public String getDatabaseUser() {
+				return "";
+			}
+
+			@Override
+			public String getDatabasePassword() {
+				return "";
 			}
 		};
 	}

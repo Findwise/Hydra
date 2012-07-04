@@ -53,9 +53,15 @@ public class CmdlineInserter {
 		return OptionBuilder.withLongOpt("stage").withDescription("add a stage").create("s");
 	}
 	
+	@SuppressWarnings("static-access")
+	private static Option getMongoOption() {
+		return OptionBuilder.withLongOpt("mongo").hasArg().withDescription("the MongoDB host").create("m");
+	}
+	
 	private static Options getOptions() {
 		Options options = new Options();
 		options.addOption(getHelpOption());
+		options.addOption(getMongoOption());
 		options.addOption("a", "add", false, "performs an add. Use '-h -a' for more information");
 		options.addOption("r", "remove", false, "performs a remove Use '-h -r' for more information");
 		
@@ -66,6 +72,7 @@ public class CmdlineInserter {
 		
 		Options options = new Options();
 		options.addOption(getHelpOption());
+		options.addOption(getMongoOption());
 		OptionGroup og = new OptionGroup();
 		og.addOption(getLibraryOption());
 		og.addOption(getStageOption());
@@ -81,6 +88,7 @@ public class CmdlineInserter {
 		Options options = new Options();
 		options.addOption(getLibraryOption());
 		options.addOption(getHelpOption());
+		options.addOption(getMongoOption());
 		options.addOption(OptionBuilder.withArgName("library id").hasArg()
 				.withDescription("The ID of the library you wish to add. Reusing an id will overwrite.").withLongOpt("id")
 				.create("i"));
@@ -99,6 +107,7 @@ public class CmdlineInserter {
 				.create("i"));
 		options.addOption(getStageOption());
 		options.addOption(getPipelineOption());
+		options.addOption(getMongoOption());
 		return options;
 	}
 	
@@ -111,6 +120,7 @@ public class CmdlineInserter {
 		og.setRequired(true);
 		options.addOptionGroup(og);
 		options.addOption(getPipelineOption());
+		options.addOption(getMongoOption());
 
 		return options;
 	}
@@ -120,6 +130,7 @@ public class CmdlineInserter {
 		Options options = new Options();
 		options.addOption(getLibraryOption());
 		options.addOption(getHelpOption());
+		options.addOption(getMongoOption());
 		options.addOption(OptionBuilder.withArgName("library id").hasArg()
 				.withDescription("The ID of the library you wish to remove").withLongOpt("id")
 				.create("i"));
@@ -134,6 +145,7 @@ public class CmdlineInserter {
 		options.addOption(getHelpOption());
 		options.addOption(getStageOption());
 		options.addOption(getPipelineOption());
+		options.addOption(getMongoOption());
 		return options;
 	}
 	
@@ -179,7 +191,16 @@ public class CmdlineInserter {
 			return;
 		}
 		
-		MongoConnector mdc = Guice.createInjector(new ExampleModule(cmd.getOptionValue("p")))
+		String host;
+		
+		if(cmd.hasOption("m")) {
+			host = cmd.getOptionValue("m");
+		} else {
+			host = "127.0.0.1";
+			System.out.println("No MongoDB host specified. Defaulting to "+host);
+		}
+		
+		MongoConnector mdc = Guice.createInjector(new ExampleModule(cmd.getOptionValue("p"), host))
 				.getInstance(MongoConnector.class);
 
 		mdc.connect();
