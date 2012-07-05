@@ -72,6 +72,9 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 
 	private String url;
 	private String pipelineName;
+	
+	private String username;
+	private String password;
 
 	private MongoPipelineReader pipelineReader;
 	private MongoPipelineWriter pipelineWriter;
@@ -79,11 +82,17 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	
 	private boolean connected = false;
 
+	public MongoConnector(String url, String namespace) {
+		this(url, namespace, "", "");
+	}
+	
 	@Inject
 	public MongoConnector(@Named(DATABASE_URL_PARAM) String url,
-			@Named(NAMESPACE_PARAM) String namespace) {
+			@Named(NAMESPACE_PARAM) String namespace, @Named(DATABASE_USER) String username, @Named(DATABASE_PASSWORD) String password) {
 		this.url = url;
 		this.pipelineName = namespace;
+		this.username = username;
+		this.password = password;
 	}
 
 	@Override
@@ -101,7 +110,13 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 			throw new ConnectionException(e);
 		}
 		db = mongo.getDB(pipelineName);
-
+		
+		if(requiresAuthentication(mongo)) {
+			if(!mongo.getDB("admin").authenticate(username, password.toCharArray())) {
+				logger.error("Failed to authenticate with MongoDB");
+				throw new ConnectionException(new MongoException(""));
+			}
+		}
 
 		pipelineReader = new MongoPipelineReader(db);
 		pipelineWriter = new MongoPipelineWriter(pipelineReader, concern);
@@ -131,6 +146,15 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 		connected = true;
 	}
 	
+	private boolean requiresAuthentication(Mongo mongo) {
+		try {
+			mongo.getDatabaseNames();
+			return false;
+		} catch (MongoException e) {
+			return true;
+		}
+	}
+
 	@Override
 	public MongoPipelineStatus getNewPipelineStatus() {
 		return new MongoPipelineStatus();

@@ -6,4 +6,8 @@ public interface DatabaseConfiguration {
 	String getNamespace();
 
 	String getDatabaseUrl();
+	
+	String getDatabaseUser();
+	
+	String getDatabasePassword();
 }

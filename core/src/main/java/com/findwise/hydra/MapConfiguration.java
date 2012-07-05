@@ -65,4 +65,21 @@ public class MapConfiguration implements CoreConfiguration {
 		return defaultValue;
 	}
 
+	@Override
+	public String getDatabaseUser() {
+		return getParameter(DatabaseConnector.DATABASE_USER, "admin");
+	}
+
+	public void setDatabaseUser(String user) {
+		map.put(DatabaseConnector.DATABASE_USER, user);
+	}
+
+	@Override
+	public String getDatabasePassword() {
+		return getParameter(DatabaseConnector.DATABASE_PASSWORD, "changeme");
+	}
+
+	public void setDatabasePassword(String password) {
+		map.put(DatabaseConnector.DATABASE_PASSWORD, password);
+	}
 }

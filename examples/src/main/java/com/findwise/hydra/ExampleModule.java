@@ -10,13 +10,40 @@ import com.google.inject.name.Names;
 
 public class ExampleModule extends AbstractModule {
 	private String namespace;
+	private String mongohost;
+	private String username;
+	private String password;
 	
-	public ExampleModule() {
-		this("pipeline");
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
 	}
 	
-	public ExampleModule(String namespace) {
+	
+	public ExampleModule() {
+		this("pipeline", "127.0.0.1");
+	}
+	
+	public ExampleModule(String namespace, String mongohost) {
+		this(namespace, mongohost, "admin", "changeme");
+	}
+	
+	public ExampleModule(String namespace, String mongohost, String username, String password) {
 		this.namespace = namespace;
+		this.mongohost = mongohost;
+		this.username = username;
+		this.password = password;
 	}
 
 	@Override
@@ -42,15 +69,17 @@ public class ExampleModule extends AbstractModule {
 			
 			@Override
 			public String getDatabaseUrl() {
-				return "127.0.0.1";
+				return mongohost;
+			}
+
 			@Override
 			public String getDatabaseUser() {
-				return "";
+				return username;
 			}
 
 			@Override
 			public String getDatabasePassword() {
-				return "";
+				return password;
 			}
 		};
 	}
