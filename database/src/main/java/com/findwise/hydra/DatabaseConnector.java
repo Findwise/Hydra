@@ -7,6 +7,8 @@ import com.findwise.hydra.local.LocalQuery;
 
 public interface DatabaseConnector<T extends DatabaseType> {
 	String DATABASE_URL_PARAM = "database_url";
+	String DATABASE_USER = "database_user";
+	String DATABASE_PASSWORD = "database_password";
 	String NAMESPACE_PARAM = "namespace";
 	
 	/**

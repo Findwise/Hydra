@@ -51,6 +51,16 @@ public class FileConfiguration implements CoreConfiguration {
 	public int getRestPort() {
 		return conf.getInt(REST_PORT_PARAM, RemotePipeline.DEFAULT_PORT);
 	}
+
+	@Override
+	public String getDatabaseUser() {
+		return conf.getString(DatabaseConnector.DATABASE_USER, "");
+	}
+
+	@Override
+	public String getDatabasePassword() {
+		return conf.getString(DatabaseConnector.DATABASE_PASSWORD, "");
+	}
 	
 	
 }
