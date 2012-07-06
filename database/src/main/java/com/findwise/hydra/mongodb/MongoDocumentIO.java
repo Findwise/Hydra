@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.prefs.BackingStoreException;
 
 import org.slf4j.Logger;
@@ -41,7 +42,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	private GridFS documentfs;
 	private WriteConcern concern;
 	
-	private HashSet<String> seenTags = new HashSet<String>();
+	private Set<String> seenTags = new HashSet<String>();
 	
 	public static final int OLD_DOCUMENT_AVG_SIZE = 10000;
 	

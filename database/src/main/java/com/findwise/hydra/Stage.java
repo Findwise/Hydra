@@ -14,9 +14,17 @@ public class Stage {
 	private Date propertiesModifiedDate;
 	boolean changedProperties;
 	
+	/**
+	 * Creates a stage that is ACTIVE by default.
+	 */
 	public Stage(String name, DatabaseFile databaseFile) {
+		this(name, databaseFile, Mode.ACTIVE);
+	}
+	
+	public Stage(String name, DatabaseFile databaseFile, Mode mode) {
 		this.name = name;
 		this.databaseFile = databaseFile;
+		this.mode = mode;
 	}
 	
 	public String getName() {
