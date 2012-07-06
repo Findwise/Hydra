@@ -10,6 +10,7 @@ import com.findwise.hydra.DatabaseFile;
 import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.PipelineReader;
 import com.findwise.hydra.Stage;
+import com.findwise.hydra.Stage.Mode;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -69,6 +70,7 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 	private Stage getStage(DBObject dbo) {
 		Stage stage = new Stage((String)dbo.get(STAGE_KEY), getFile(dbo.get(FILE_KEY)));
 		DBObject props = (DBObject) dbo.get(PROPERTIES_KEY);
+		stage.setMode(Mode.valueOf((String)dbo.get(ACTIVE_KEY)));
 		stage.setPropertiesModifiedDate((Date)props.get(PROPERTIES_DATE_SUBKEY));
 		DBObject properties = (DBObject) props.get(PROPERTIES_MAP_SUBKEY);
 		HashMap<String, Object> map = new HashMap<String, Object>();
