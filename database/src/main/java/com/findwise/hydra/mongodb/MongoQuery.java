@@ -3,6 +3,7 @@ package com.findwise.hydra.mongodb;
 import java.util.Map;
 
 import com.findwise.hydra.DatabaseQuery;
+import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.Document.Action;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.local.LocalQuery;
@@ -114,7 +115,7 @@ public class MongoQuery implements DatabaseQuery<MongoType> {
 	
 	@Override
 	public final void requireAction(Action action) {
-		qb = qb.put(MongoDocument.MONGO_ID_KEY).is(action.toString());
+		qb = qb.put(MongoDocument.ACTION_KEY).is(action.toString());
 	}
 
 	private void fromLocalQuery(LocalQuery local) {
@@ -137,5 +138,13 @@ public class MongoQuery implements DatabaseQuery<MongoType> {
 				requireNotTouchedByStage(field);
 			}
 		}
+		if(local.getAction()!=null) {
+			requireAction(local.getAction());
+		}
+	}
+	
+	public boolean matches(Document d) {
+		
+		return true;
 	}
 }
