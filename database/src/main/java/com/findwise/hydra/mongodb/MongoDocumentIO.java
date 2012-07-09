@@ -48,9 +48,6 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	
 	private static Logger logger = LoggerFactory.getLogger(MongoDocumentIO.class);
 
-	protected static final String FETCHED_TAG = "fetched";
-	protected static final String TOUCHED_TAG = "touched";
-	
 	private long maxDocumentsToKeep;
 	
 	public static final String DOCUMENT_COLLECTION = "documents";
@@ -61,11 +58,8 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	
 	public static final String DOCUMENT_KEY = "document";
 	
-	private boolean discardOld = false;
-	
 	public MongoDocumentIO(DB db, WriteConcern concern, boolean discard, long documentsToKeep) {
 		this.concern = concern;
-		this.discardOld = discard;
 		this.maxDocumentsToKeep = documentsToKeep;
 		
 		documents = db.getCollection(DOCUMENT_COLLECTION);
@@ -76,15 +70,8 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	}
 	
 	@Override
-	public void setDiscardOld(boolean discard) {
-		discardOld = discard;
-	}
-	
-	@Override
 	public void prepare() {
-		if(discardOld) {
-			capIfNew(documents.getDB(), maxDocumentsToKeep*OLD_DOCUMENT_AVG_SIZE, maxDocumentsToKeep);
-		}
+		capIfNew(documents.getDB(), maxDocumentsToKeep*OLD_DOCUMENT_AVG_SIZE, maxDocumentsToKeep);
 		oldDocuments = documents.getDB().getCollection(OLD_DOCUMENT_COLLECTION);
 		oldDocuments.setObjectClass(MongoDocument.class);
 	}
@@ -251,8 +238,8 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		ensureIndex(tag);
 		MongoQuery mq = (MongoQuery)query;
 		mq.requireMetadataFieldNotExists(Document.PENDING_METADATA_FLAG);
-		mq.requireMetadataFieldNotExists(FETCHED_TAG+"."+tag);
-		DBObject update = new BasicDBObject(MongoDocument.METADATA_KEY+"."+FETCHED_TAG+"."+tag, new Date());
+		mq.requireMetadataFieldNotExists(DatabaseDocument.FETCHED_METADATA_TAG+"."+tag);
+		DBObject update = new BasicDBObject(MongoDocument.METADATA_KEY+"."+DatabaseDocument.FETCHED_METADATA_TAG+"."+tag, new Date());
 		DBObject dbo = getUpdateObject(update);
 
 		return findAndModify(mq.toDBObject(), dbo);
@@ -261,7 +248,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	private void ensureIndex(String tag) {
 		if(!seenTags.contains(tag)) {
 			long start = System.currentTimeMillis();
-			documents.ensureIndex(MongoDocument.METADATA_KEY+"."+FETCHED_TAG+"."+tag);
+			documents.ensureIndex(MongoDocument.METADATA_KEY+"."+DatabaseDocument.FETCHED_METADATA_TAG+"."+tag);
 			logger.info("Ensured index for stage "+tag+" in "+(System.currentTimeMillis()-start)+" ms");
 			seenTags.add(tag);
 		}
@@ -312,7 +299,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	public boolean markTouched(Object id, String tag) {
 		MongoQuery mq = new MongoQuery();
 		mq.requireID(id);
-		DBObject update = new BasicDBObject(MongoDocument.METADATA_KEY+"."+TOUCHED_TAG+"."+tag, new Date());
+		DBObject update = new BasicDBObject(MongoDocument.METADATA_KEY+"."+DatabaseDocument.TOUCHED_METADATA_TAG+"."+tag, new Date());
 		DBObject dbo = getUpdateObject(update);
 		
 		if(documents.findAndModify(mq.toDBObject(), dbo)==null) {
@@ -427,9 +414,9 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		dbob.add(MongoDocument.METADATA_KEY+"."+Document.PENDING_METADATA_FLAG, new BasicDBObject("$exists", false));
 		
 		Date earlierThan = new Date(new Date().getTime()-intervalMillis);
-		dbob.add(MongoDocument.METADATA_KEY+"."+FETCHED_TAG+"."+tag, new BasicDBObject("$lt", earlierThan));
+		dbob.add(MongoDocument.METADATA_KEY+"."+DatabaseDocument.FETCHED_METADATA_TAG+"."+tag, new BasicDBObject("$lt", earlierThan));
 		
-		DBObject update = new BasicDBObject(MongoDocument.METADATA_KEY+"."+FETCHED_TAG+"."+tag, new Date());
+		DBObject update = new BasicDBObject(MongoDocument.METADATA_KEY+"."+DatabaseDocument.FETCHED_METADATA_TAG+"."+tag, new Date());
 		
 		return findAndModify(dbob.get(), getUpdateObject(update));
 	}

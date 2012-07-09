@@ -18,6 +18,7 @@ public class LocalDocument implements Document {
 
 	private Map<String, Object> documentMap;
 	private Set<String> touchedContent;
+
 	private Set<String> touchedMetadata;
 	private boolean touchedAction;
 
@@ -335,5 +336,17 @@ public class LocalDocument implements Document {
 			return Status.PROCESSED;
 		}
 		return Status.PROCESSING;
+	}
+
+	public Set<String> getTouchedContent() {
+		return touchedContent;
+	}
+
+	public Set<String> getTouchedMetadata() {
+		return touchedMetadata;
+	}
+
+	public boolean isTouchedAction() {
+		return touchedAction;
 	}
 }
