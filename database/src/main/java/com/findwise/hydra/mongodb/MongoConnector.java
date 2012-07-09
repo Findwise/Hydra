@@ -82,6 +82,11 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	
 	private boolean connected = false;
 
+	
+	public MongoConnector(){
+		
+	}
+	
 	public MongoConnector(String url, String namespace) {
 		this(url, namespace, "", "");
 	}
@@ -229,5 +234,29 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	
 	public DB getDB() {
 		return db;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+
+	public void setPipelineName(String pipelineName) {
+		this.pipelineName = pipelineName;
 	}
 }

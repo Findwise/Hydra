@@ -3,11 +3,17 @@ package com.findwise.hydra.output.solr;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
+import org.apache.http.HttpException;
 import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.common.SolrInputDocument;
 
@@ -15,299 +21,269 @@ import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.Document.Action;
 import com.findwise.hydra.common.Logger;
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.output.DocumentAction;
 import com.findwise.hydra.stage.AbstractOutputStage;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
-import java.util.*;
 
 @Stage
 public class SolrOutputStage extends AbstractOutputStage {
 
-    @Parameter
-    private String solrDeployPath;
-    @Parameter
-    private Map<String, String> fieldMappings;
-    @Parameter
-    private boolean sendAll = false;
-    private int itemCounterCommit;
-    private int itemCounterSend;
-    private int commitLimit;
-    private int sendLimit;
-    private int sendTimeout;
-    private int commitTimeout;
-    private long lastSend = 0;
-    private long lastCommit = 0;
-    private SolrServer solr;
-    private List<DocumentAction> documents;
+	@Parameter
+	private String solrDeployPath;
+	@Parameter
+	private Map<String, String> fieldMappings;
+	@Parameter
+	private boolean sendAll = false;
+	@Parameter
+	private String idField = "id";
+	@Parameter
+	private int commitWithin = 0;
+	@Parameter
+	private int sendLimit;
+	@Parameter
+	private int sendTimeout;
 
-    protected void setSolrDeployPath(String solrDeployPath) {
-        this.solrDeployPath = solrDeployPath;
-    }
+	private int itemCounterSend;
+	private long lastSend = 0;
+	private SolrServer solr;
+	private List<LocalDocument> addDocuments = new ArrayList<LocalDocument>();
+	private List<LocalDocument> removeDocuments = new ArrayList<LocalDocument>();
 
-    protected void setSolrServer(SolrServer solrInstance) {
-        solr = solrInstance;
-    }
+	@Override
+	public void output(LocalDocument doc) {
+		final Action action = doc.getAction();
 
-    @Override
-    public void init() throws RequiredArgumentMissingException {
-        documents = new ArrayList<DocumentAction>();
-        fieldMappings = new HashMap<String, String>();
+		if (action == Action.ADD) {
+			addAction(doc);
+		} else if (action == Action.DELETE) {
+			deleteAction(doc);
+		}
+		checkTimeouts();
+	}
 
+	@Override
+	public void init() throws RequiredArgumentMissingException {
+		fieldMappings = new HashMap<String, String>();
+		try {
+			solr = getSolrServer();
+		} catch (MalformedURLException e) {
+			Logger.error("Solr URL malformed.");
+		}
+	}
 
-        try {
-            solr = getSolrServer();
-        } catch (MalformedURLException e) {
-            Logger.error("Solr URL malformed.");
-        }
-    }
+	private synchronized void addAction(LocalDocument doc) {
+		addDocuments.add(doc);
+		countUpSend();
+	}
 
-    private synchronized void addAction(LocalDocument doc) throws Exception {
-        boolean newlist = false;
-        if (!documents.isEmpty()) {
-            DocumentAction o = documents.get(documents.size() - 1);
-            if (o.getType().equals(DocumentAction.types.list_add)) {
-                o.getAddlist().add(doc);
-            } else {
-                newlist = true;
-            }
-        } else {
-            newlist = true;
-        }
-        if (newlist) {
-            List<LocalDocument> newList = new LinkedList<LocalDocument>();
-            newList.add(doc);
-            documents.add(new DocumentAction(DocumentAction.types.list_add, newList));
-        }
+	private synchronized void deleteAction(LocalDocument doc) {
+		removeDocuments.add(doc);
+		countUpSend();
+	}
 
-        countUpSend();
-        countUpCommit();
-    }
+	protected void notifyInternal() {
+		try {
+			checkTimeouts();
+		} catch (Exception e) {
+			Logger.error("Failed to send or commit, I should probably crash.",
+					e);
+		}
+	}
 
-    private synchronized void deleteAction(LocalDocument doc) throws Exception {
+	private synchronized void checkTimeouts() {
+		long now = new Date().getTime();
+		if (now - lastSend >= sendTimeout && sendTimeout > 0) {
+			send();
+		}
+	}
 
-        boolean newlist = false;
-        if (!documents.isEmpty()) {
-            DocumentAction o = documents.get(documents.size() - 1);
-            if (o.getType().equals(DocumentAction.types.list_delete)) {
-                o.getRemovelist().add(doc);
-            } else {
-                newlist = true;
-            }
-        } else {
-            newlist = true;
-        }
-        if (newlist) {
-            List<LocalDocument> newList = new LinkedList<LocalDocument>();
-            newList.add(doc);
-            documents.add(new DocumentAction(DocumentAction.types.list_delete, newList));
-        }
-        countUpSend();
-        countUpCommit();
-    }
+	private void countUpSend() {
+		itemCounterSend++;
+		if (itemCounterSend >= sendLimit) {
+			send();
+		}
+	}
 
-    protected void notifyInternal() {
-        try {
-            checkTimeouts();
-        } catch (Exception e) {
-            Logger.error("Failed to send or commit, I should probably crash.", e);
-        }
-    }
+	protected SolrInputDocument createSolrInputDocumentWithFieldConfig(
+			Document doc) {
+		SolrInputDocument docToAdd = new SolrInputDocument();
 
-    private synchronized void checkTimeouts() throws Exception {
-        long now = new Date().getTime();
-        if (now - lastSend >= sendTimeout && sendTimeout > 0) {
-            send();
-        }
+		if (sendAll) {
+			for (String inField : doc.getContentFields()) {
+				docToAdd.addField(inField, doc.getContentField(inField));
+			}
+		} else {
+			for (String inField : fieldMappings.keySet()) {
+				if (doc.hasContentField(inField)) {
+					docToAdd.addField(fieldMappings.get(inField),
+							doc.getContentField(inField));
+				}
+			}
+		}
+		return docToAdd;
+	}
 
-        if (now - lastCommit >= commitTimeout && commitTimeout > 0) {
-            commit(true);
-        }
-    }
+	private void send() {
+		sendAdds();
+		sendRemoves();
+		itemCounterSend = 0;
+		lastSend = new Date().getTime();
+	}
 
-    private void countUpSend() throws Exception {
-        itemCounterSend++;
-        if (itemCounterSend >= sendLimit) {
-            send();
-        }
-    }
+	private void sendAdds() {
+		Map<LocalDocument, SolrInputDocument> solrDocMap = mapToSolrDocuments(addDocuments);
+		try {
+			addDocs(solrDocMap.values());
+			acceptDocuments(solrDocMap.keySet());
 
-    private void acceptDocuments(List<LocalDocument> docs) {
-        try {
-            for (LocalDocument doc : docs) {
-                accept(doc);
-            }
-        } catch (Exception e) {
-        }
-    }
+		} catch (Exception e) {
+			Logger.warn(
+					"Could not remove documents in Solr, trying to remove them individually...",
+					e);
+			sendAddsIndividually(solrDocMap);
+		}
 
-    private List<SolrInputDocument> getSolrInputDocuments(List<LocalDocument> docs) {
-        List<SolrInputDocument> toAdd = new LinkedList<SolrInputDocument>();
-        for (Document d : docs) {
-            toAdd.add(createSolrInputDocumentWithFieldConfig(d));
-        }
-        return toAdd;
-    }
+	}
 
-    protected SolrInputDocument createSolrInputDocumentWithFieldConfig(Document doc) {
-        SolrInputDocument docToAdd = new SolrInputDocument();
+	private void sendAddsIndividually(
+			Map<LocalDocument, SolrInputDocument> solrDocMap) {
+		for (Entry<LocalDocument, SolrInputDocument> docEntry : solrDocMap
+				.entrySet()) {
+			try {
+				addDocs(Collections.singleton(docEntry.getValue()));
+			} catch (Exception e) {
+				failDocument(docEntry.getKey());
+			}
+		}
+	}
 
-        if (sendAll) {
-            for (String inField : doc.getContentFields()) {
-                docToAdd.addField(inField, doc.getContentField(inField));
-            }
-        } else {
-            for (String inField : fieldMappings.keySet()) {
-                if (doc.hasContentField(inField)) {
-                    docToAdd.addField(fieldMappings.get(inField), doc.getContentField(inField));
-                }
-            }
-        }
-        return docToAdd;
-    }
+	private void addDocs(Collection<SolrInputDocument> docs)
+			throws SolrServerException, IOException {
+		if (getCommitWithin() != 0) {
+			solr.add(docs, getCommitWithin());
+		} else {
+			solr.add(docs);
+		}
+	}
 
-    private List<String> getIDs(List<LocalDocument> docs) {
-        List<String> toDelete = new LinkedList<String>();
-        for (Document d : docs) {
-            String id = (String) d.getContentField("id");
-            if (id == null) {
-                id = (String) d.getContentField("ID");
-            }
-            toDelete.add(id);
-        }
-        return toDelete;
-    }
+	private Map<LocalDocument, SolrInputDocument> mapToSolrDocuments(
+			List<LocalDocument> docs) {
+		Map<LocalDocument, SolrInputDocument> solrDocMap = new HashMap<LocalDocument, SolrInputDocument>();
+		for (LocalDocument d : docs) {
+			solrDocMap.put(d, createSolrInputDocumentWithFieldConfig(d));
+		}
+		return solrDocMap;
+	}
 
-    private void send() throws Exception {
-        if (solr == null) {
-            solr = getSolrServer();
-        }
+	private void sendRemoves() {
+		Map<LocalDocument, String> idMap = mapToIds(removeDocuments);
+		try {
+			solr.deleteById(new ArrayList<String>(idMap.values()));
+			acceptDocuments(idMap.keySet());
+		} catch (Exception e) {
+			Logger.warn(
+					"Could not remove documents in Solr, trying to remove them individually...",
+					e);
+			sendRemovesIndividually(idMap);
+		} finally {
+			removeDocuments.clear();
+		}
+	}
 
-        if (documents.size() > 0 && itemCounterSend > 0) {
-            try {
-                Logger.info("Running send() to Solr");
-                for (DocumentAction da : documents) {
-                    if (da.getType().equals(DocumentAction.types.list_add)) {
-                        solr.add(getSolrInputDocuments(da.getAddlist()));
-                        acceptDocuments(da.getAddlist());
-                    } else if (da.getType().equals(DocumentAction.types.list_delete)) {
-                        commit(false);
-                        solr.deleteById(getIDs(da.getRemovelist()));
-                        acceptDocuments(da.getRemovelist());
-                    }
-                }
-                itemCounterSend = 0;
-                documents = new LinkedList<DocumentAction>();
+	private void acceptDocuments(Collection<LocalDocument> docs)
+			throws IOException, HttpException {
+		for (LocalDocument doc : docs) {
+			accept(doc);
+		}
+	}
 
-            } catch (IOException e) {
-                itemCounterSend = 0;
-                documents = new LinkedList<DocumentAction>();
-                throw e;
-            }
-        }
-        lastSend = new Date().getTime();
-    }
+	private void sendRemovesIndividually(Map<LocalDocument, String> idMap) {
+		for (Entry<LocalDocument, String> docEntry : idMap.entrySet()) {
+			try {
+				solr.deleteById(docEntry.getValue());
+			} catch (Exception e) {
+				failDocument(docEntry.getKey());
+			}
 
-    private void countUpCommit() throws Exception {
-        itemCounterCommit++;
-        if (commitLimit >= 0 && itemCounterCommit >= commitLimit) { //Only send commits if limit is greater than zero
-            commit(true);
-        }
-    }
+		}
+	}
 
-    private void commit(Boolean send) throws Exception {
-        if (solr == null) {
-            solr = getSolrServer();
-        }
-        if (itemCounterCommit > 0) {
-            Logger.info("Running commit to Solr");
-            if (send) {
-                send();
-            }
-            solr.commit();
-            itemCounterCommit = 0;
-        }
-        lastCommit = new Date().getTime();
-    }
+	private Map<LocalDocument, String> mapToIds(List<LocalDocument> docs) {
+		Map<LocalDocument, String> idMap = new HashMap<LocalDocument, String>();
+		for (LocalDocument d : docs) {
+			String id = (String) d.getContentField(idField);
+			idMap.put(d, id);
+		}
+		return idMap;
+	}
 
-    private SolrServer getSolrServer() throws MalformedURLException {
-        return new CommonsHttpSolrServer(solrDeployPath);
-    }
+	private void failDocument(LocalDocument doc) {
+		try {
+			fail(doc);
+		} catch (Exception e) {
+			Logger.error(
+					"Could not fail document with hydra id: " + doc.getID(), e);
+		}
+	}
 
-    @Override
-    public void output(LocalDocument doc) {
-        final Action action = doc.getAction();
+	private SolrServer getSolrServer() throws MalformedURLException {
+		return new CommonsHttpSolrServer(solrDeployPath);
+	}
 
-        try {
-            if (action == Action.ADD) {
-                addAction(doc);
-            } else if (action == Action.DELETE) {
-                deleteAction(doc);
-            }
-            checkTimeouts();
-        } catch (Exception e) {
-            //I should crash shouldn't I?
-            Logger.error("I should crash shouldn't I?", e);
-        }
-    }
+	public void close() throws Exception {
 
-    public void close() throws Exception {
+		if (itemCounterSend > 0) {
+			send();
+		}
+	}
 
-        if (itemCounterSend > 0) {
-            send();
-        }
-        if (itemCounterCommit > 0) {
-            commit(true);
-        }
-    }
+	public int getSendLimit() {
+		return sendLimit;
+	}
 
-    public int getCommitLimit() {
-        return commitLimit;
-    }
+	public void setSendLimit(int sendLimit) {
+		this.sendLimit = sendLimit;
+	}
 
-    public void setCommitLimit(int commitLimit) {
-        this.commitLimit = commitLimit;
-    }
+	public int getSendTimeout() {
+		return sendTimeout;
+	}
 
-    public int getCommitTimeout() {
-        return commitTimeout;
-    }
+	public void setSendTimeout(int sendTimeout) {
+		this.sendTimeout = sendTimeout;
+	}
 
-    public void setCommitTimeout(int commitTimeout) {
-        this.commitTimeout = commitTimeout;
-    }
+	public Map<String, String> getFieldMappings() {
+		return fieldMappings;
+	}
 
-    public int getSendLimit() {
-        return sendLimit;
-    }
+	public void setFieldMappings(Map<String, String> fieldConfigs) {
+		this.fieldMappings = fieldConfigs;
+	}
 
-    public void setSendLimit(int sendLimit) {
-        this.sendLimit = sendLimit;
-    }
+	/**
+	 * Only used by the junit test
+	 * 
+	 * @param sendAll
+	 */
+	public void setSendAll(boolean sendAll) {
+		this.sendAll = sendAll;
+	}
 
-    public int getSendTimeout() {
-        return sendTimeout;
-    }
+	protected void setSolrDeployPath(String solrDeployPath) {
+		this.solrDeployPath = solrDeployPath;
+	}
 
-    public void setSendTimeout(int sendTimeout) {
-        this.sendTimeout = sendTimeout;
-    }
+	protected void setSolrServer(SolrServer solrInstance) {
+		solr = solrInstance;
+	}
 
-    public Map<String, String> getFieldMappings() {
-        return fieldMappings;
-    }
+	public int getCommitWithin() {
+		return commitWithin;
+	}
 
-    public void setFieldMappings(Map<String, String> fieldConfigs) {
-        this.fieldMappings = fieldConfigs;
-    }
-
-    /**
-     * Only used by the junit test
-     *
-     * @param sendAll
-     */
-    public void setSendAll(boolean sendAll) {
-        this.sendAll = sendAll;
-    }
+	public void setCommitWithin(int commitWithin) {
+		this.commitWithin = commitWithin;
+	}
 }
