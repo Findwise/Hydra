@@ -337,4 +337,16 @@ public class LocalDocument implements Document {
 		}
 		return Status.PROCESSING;
 	}
+
+	public Set<String> getTouchedContent() {
+		return touchedContent;
+	}
+
+	public Set<String> getTouchedMetadata() {
+		return touchedMetadata;
+	}
+
+	public boolean isTouchedAction() {
+		return touchedAction;
+	}
 }
