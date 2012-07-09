@@ -161,16 +161,4 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 * brand new, and needs to be set up in some way.
 	 */
 	void prepare();
-
-	/**
-	 * If set to <code>true</code>, documents no longer live in the database
-	 * will be discarded.
-	 * 
-	 * Implementing classes are required to support this behavior, but may
-	 * choose to disregard it if called <em>after</em> the
-	 * <code>prepare()</code> method.
-	 * 
-	 * @param discard
-	 */
-	void setDiscardOld(boolean discard);
 }

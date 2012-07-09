@@ -10,7 +10,7 @@ import com.findwise.hydra.common.Query;
 import com.findwise.hydra.common.SerializationUtils;
 import com.google.gson.JsonParseException;
 
-public final class LocalQuery implements Query, JsonDeserializer {
+public class LocalQuery implements Query, JsonDeserializer {
 	private Map<String, Object> equalsMap;
 	private Map<String, Boolean> existsMap;
 	private Map<String, Boolean> touchedMap;

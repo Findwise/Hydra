@@ -2,6 +2,7 @@ package com.findwise.hydra.mongodb;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -373,5 +374,26 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 			return Status.PROCESSED;
 		}
 		return Status.PROCESSING;
+	}
+	
+	/**
+	 * nullsafe
+	 */
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> getMetadataSubMap(String key) {
+		if(getMetadataMap().containsKey(key)) {
+			return (Map<String, Object>) getMetadataMap().get(key);
+		}
+		return new HashMap<String, Object>();
+	}
+	
+	@Override
+	public boolean touchedBy(String stage) {
+		return getMetadataSubMap(TOUCHED_METADATA_TAG).containsKey(stage);
+	}
+
+	@Override
+	public boolean fetchedBy(String stage) {
+		return getMetadataSubMap(FETCHED_METADATA_TAG).containsKey(stage);
 	}
 }

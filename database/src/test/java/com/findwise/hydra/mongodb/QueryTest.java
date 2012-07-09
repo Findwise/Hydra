@@ -13,6 +13,7 @@ import org.junit.Test;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.TestModule;
 import com.findwise.hydra.common.Document;
+import com.findwise.hydra.common.Document.Action;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.local.LocalQuery;
 import com.google.inject.Guice;
@@ -35,10 +36,12 @@ public class QueryTest {
 		mdc.waitForWrites(true);
 		
 		test = new MongoDocument();
+		test.setAction(Action.ADD);
 		test.putContentField("name", "test");
 		test.putMetadataField("date", new Date());
 		
 		test2 = new MongoDocument();
+		test2.setAction(Action.DELETE);
 		test2.putContentField("name", "test");
 		test2.putContentField("number", 2);
 		test2.putMetadataField("date", new Date());
@@ -170,6 +173,34 @@ public class QueryTest {
 		ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
 		if(ds.size()!=2) {
 			fail("Received incorrect number of documents..");
+		}
+	}
+	
+	@Test
+	public void testRequireAction() throws JsonException {
+		LocalQuery q = new LocalQuery();
+		q.requireAction(Action.UPDATE);
+		List<DatabaseDocument<MongoType>> ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
+		if(ds.size()!=0) {
+			fail("Got documents for UPDATE, shouldn't have.");
+		}
+		
+		q = new LocalQuery();
+		q.requireAction(Action.ADD);
+		ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
+		if(ds.size()!=1) {
+			fail("Should have gotten a document back for ADD...");
+		}
+		
+		if(ds.get(0).getAction() != Action.ADD || !ds.get(0).getContentField("name").equals(test.getContentField("name"))) {
+			fail("Didn't get the correct document for ADD...");
+		}
+
+		q = new LocalQuery();
+		q.requireAction(Action.DELETE);
+		ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
+		if(ds.size()!=1) {
+			fail("Should have gotten a document back for DELETE...");
 		}
 	}
 
