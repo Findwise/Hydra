@@ -18,6 +18,7 @@ public class LocalDocument implements Document {
 
 	private Map<String, Object> documentMap;
 	private Set<String> touchedContent;
+
 	private Set<String> touchedMetadata;
 	private boolean touchedAction;
 
