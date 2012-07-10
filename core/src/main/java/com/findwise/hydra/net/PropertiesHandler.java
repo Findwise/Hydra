@@ -11,16 +11,17 @@ import org.apache.http.protocol.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.findwise.hydra.NodeMaster;
+import com.findwise.hydra.DatabaseConnector;
+import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.local.RemotePipeline;
 
-public class PropertiesHandler implements ResponsibleHandler {
+public class PropertiesHandler<T extends DatabaseType> implements ResponsibleHandler {
 	Logger logger = LoggerFactory.getLogger(PropertiesHandler.class);
 	
-	private NodeMaster nm;
+	private DatabaseConnector<T> dbc;
 	
-	public PropertiesHandler(NodeMaster nm) {
-		this.nm = nm;
+	public PropertiesHandler(DatabaseConnector<T> dbc) {
+		this.dbc = dbc;
 	}
 	
 	@Override
@@ -38,11 +39,11 @@ public class PropertiesHandler implements ResponsibleHandler {
         
         Map<String, Object> map = new HashMap<String, Object>();
         
-        if(nm.getPipeline().hasStage(stage)) {
-        	map = nm.getPipeline().getStage(stage).getProperties();
+        if(dbc.getPipelineReader().getPipeline().hasStage(stage)) {
+        	map = dbc.getPipelineReader().getPipeline().getStage(stage).getProperties();
         }
-        else if(nm.getDatabaseConnector().getPipelineReader().getDebugPipeline().hasStage(stage)){
-        	map = nm.getDatabaseConnector().getPipelineReader().getDebugPipeline().getStage(stage).getProperties();
+        else if(dbc.getPipelineReader().getDebugPipeline().hasStage(stage)){
+        	map = dbc.getPipelineReader().getDebugPipeline().getStage(stage).getProperties();
         } 
         
         HttpResponseWriter.printJson(response, map);

@@ -12,22 +12,23 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.findwise.hydra.NodeMaster;
+import com.findwise.hydra.DatabaseConnector;
+import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.net.RESTTools.Method;
 
-public class ReleaseHandler implements ResponsibleHandler {
+public class ReleaseHandler<T extends DatabaseType> implements ResponsibleHandler {
 
-	private NodeMaster nm;
+	private DatabaseConnector<T> dbc;
 
 	private static Logger logger = LoggerFactory
 			.getLogger(ReleaseHandler.class);
 
-	public ReleaseHandler(NodeMaster nm) {
-		this.nm = nm;
+	public ReleaseHandler(DatabaseConnector<T> dbc) {
+		this.dbc = dbc;
 	}
 
 	@Override
@@ -60,8 +61,7 @@ public class ReleaseHandler implements ResponsibleHandler {
 	}
 
 	private boolean release(Document md, String stage) {
-		return nm.getDatabaseConnector().getDocumentWriter()
-				.markTouched(md.getID(), stage);
+		return dbc.getDocumentWriter().markTouched(md.getID(), stage);
 	}
 
 	@Override

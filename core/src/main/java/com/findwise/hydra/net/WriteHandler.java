@@ -13,23 +13,23 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseDocument;
-import com.findwise.hydra.NodeMaster;
+import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
-import com.findwise.hydra.mongodb.MongoType;
 import com.findwise.hydra.net.RESTTools.Method;
 
-public class WriteHandler implements ResponsibleHandler {
+public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler {
 
-	private NodeMaster nm;
+	private DatabaseConnector<T> dbc;
 
 	private static Logger logger = LoggerFactory.getLogger(WriteHandler.class);
 
-	public WriteHandler(NodeMaster nm) {
-		this.nm = nm;
+	public WriteHandler(DatabaseConnector<T> dbc) {
+		this.dbc = dbc;
 	}
 	
 	@Override
@@ -57,9 +57,9 @@ public class WriteHandler implements ResponsibleHandler {
         	return;
         }
         
-        DatabaseDocument<MongoType> md;
+        DatabaseDocument<T> md;
         try {
-        	md = nm.getDatabaseConnector().convert(new LocalDocument(requestContent));
+        	md = dbc.convert(new LocalDocument(requestContent));
         }
         catch(JsonException e) {
         	HttpResponseWriter.printJsonException(response, e);
@@ -89,18 +89,18 @@ public class WriteHandler implements ResponsibleHandler {
 	}
 	
 	private boolean release(Document md, String stage) {
-		return nm.getDatabaseConnector().getDocumentWriter()
+		return dbc.getDocumentWriter()
 				.markTouched(md.getID(), stage);
 	}
 	
-	private boolean handlePartialWrite(DatabaseDocument<MongoType> md, HttpResponse response) throws UnsupportedEncodingException{
+	private boolean handlePartialWrite(DatabaseDocument<T> md, HttpResponse response) throws UnsupportedEncodingException{
 		logger.trace("handlePartialWrite()");
 		if(md.getID()==null) {
 			HttpResponseWriter.printMissingID(response);
 			return false;
 		}
 		logger.debug("Handling a partial write for document "+md.getID());
-		DatabaseDocument<MongoType> inDB = nm.getDatabaseConnector().getDocumentReader().getDocumentById(md.getID());
+		DatabaseDocument<T> inDB = dbc.getDocumentReader().getDocumentById(md.getID());
 		if(inDB==null) {
 			HttpResponseWriter.printUpdateFailed(response, md.getID());
 			return false;
@@ -108,7 +108,7 @@ public class WriteHandler implements ResponsibleHandler {
 		inDB.putAll(md);
 
 
-		if(nm.getDatabaseConnector().getDocumentWriter().update(inDB)){
+		if(dbc.getDocumentWriter().update(inDB)){
 			HttpResponseWriter.printSaveOk(response, md.getID());
 			return true;
 		} 
@@ -118,9 +118,9 @@ public class WriteHandler implements ResponsibleHandler {
 		}
 	}
 	
-	private boolean handleFullUpdate(DatabaseDocument<MongoType> md, HttpResponse response) {
+	private boolean handleFullUpdate(DatabaseDocument<T> md, HttpResponse response) {
 		logger.trace("handleFullUpdate()");
-		if(nm.getDatabaseConnector().getDocumentWriter().update(md)) {
+		if(dbc.getDocumentWriter().update(md)) {
 			HttpResponseWriter.printSaveOk(response, md.getID());
 			return true;
 		}
@@ -128,8 +128,8 @@ public class WriteHandler implements ResponsibleHandler {
 		return false;
 	}
 	
-	private boolean handleInsert(DatabaseDocument<MongoType> md, HttpResponse response) {
-		if(nm.getDatabaseConnector().getDocumentWriter().insert(md)) {
+	private boolean handleInsert(DatabaseDocument<T> md, HttpResponse response) {
+		if(dbc.getDocumentWriter().insert(md)) {
 			HttpResponseWriter.printInsertOk(response, md);
 			return true;
 		}

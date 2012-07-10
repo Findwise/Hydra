@@ -12,23 +12,23 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseQuery;
-import com.findwise.hydra.NodeMaster;
+import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
-import com.findwise.hydra.mongodb.MongoType;
 import com.findwise.hydra.net.RESTTools.Method;
 
-public class QueryHandler implements ResponsibleHandler {
+public class QueryHandler<T extends DatabaseType> implements ResponsibleHandler {
 
-	private NodeMaster nm;
+	private DatabaseConnector<T> dbc;
 
 	private static Logger logger = LoggerFactory.getLogger(QueryHandler.class);
 
-	public QueryHandler(NodeMaster nm) {
-		this.nm = nm;
+	public QueryHandler(DatabaseConnector<T> dbc) {
+		this.dbc = dbc;
 	}
 
 	@Override
@@ -46,7 +46,7 @@ public class QueryHandler implements ResponsibleHandler {
 			return;
 		}
 
-		DatabaseQuery<MongoType> dbq;
+		DatabaseQuery<T> dbq;
 		try {
 			dbq = requestToQuery(requestContent);
 		} catch (JsonException e) {
@@ -60,11 +60,9 @@ public class QueryHandler implements ResponsibleHandler {
 				RemotePipeline.RECURRING_PARAM);
 
 		if (recurring != null && recurring.equals("1")) {
-			d = nm.getDatabaseConnector().getDocumentWriter()
-					.getAndTagRecurring(dbq, stage);
+			d = dbc.getDocumentWriter().getAndTagRecurring(dbq, stage);
 		} else {
-			d = nm.getDatabaseConnector().getDocumentWriter()
-					.getAndTag(dbq, stage);
+			d = dbc.getDocumentWriter().getAndTag(dbq, stage);
 		}
 
 		if (d != null) {
@@ -75,10 +73,9 @@ public class QueryHandler implements ResponsibleHandler {
 
 	}
 
-	private DatabaseQuery<MongoType> requestToQuery(String requestContent)
+	private DatabaseQuery<T> requestToQuery(String requestContent)
 			throws JsonException {
-		return nm.getDatabaseConnector()
-				.convert(new LocalQuery(requestContent));
+		return dbc.convert(new LocalQuery(requestContent));
 	}
 
 	@Override

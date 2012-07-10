@@ -11,6 +11,7 @@ import org.apache.http.protocol.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.NodeMaster;
 import com.google.inject.Inject;
@@ -18,7 +19,7 @@ import com.google.inject.Inject;
 public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandler {
 	private Logger logger = LoggerFactory.getLogger(HttpRESTHandler.class);
 	
-	private NodeMaster nm;
+	private DatabaseConnector<T> dbc;
 	
 	private String restId;
 
@@ -45,11 +46,15 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 	
 	@Inject
     public HttpRESTHandler(NodeMaster nm) {
-        this.nm = nm;
+        this.dbc = (DatabaseConnector<T>)nm.getDatabaseConnector();
+    }
+	
+    public HttpRESTHandler(DatabaseConnector<T> dbc) {
+        this.dbc = dbc;
     }
 	
 	private void createHandlers() {
-		handlers = new ResponsibleHandler[] { new PropertiesHandler(nm), new MarkHandler(nm.getDatabaseConnector()), new QueryHandler(nm), new ReleaseHandler(nm), new WriteHandler(nm) };
+		handlers = new ResponsibleHandler[] { new PropertiesHandler(dbc), new MarkHandler(dbc), new QueryHandler(dbc), new ReleaseHandler(dbc), new WriteHandler(dbc) };
 	}
 	
 	private ResponsibleHandler[] getHandlers() {
@@ -83,11 +88,6 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 			logger.debug("Parsing incoming request");
 			
 			if(dispatch(request, response, context, getPingHandler())) {
-				return;
-			}
-			
-			if (!nm.isAlive()) {
-				HttpResponseWriter.printDeadNode(response);
 				return;
 			}
 			
