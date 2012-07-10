@@ -1,6 +1,9 @@
 package com.findwise.hydra.local;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpException;
@@ -22,11 +25,14 @@ public class RemotePipeline {
 	public static final String DISCARDED_DOCUMENT_URL = "discardedDocument";
 	public static final String GET_PROPERTIES_URL = "getProperties";
 	public static final String FAILED_DOCUMENT_URL = "failedDocument";
+	public static final String FILE_URL = "documentFile";
 	
 	public static final String STAGE_PARAM = "stage";
 	public static final String RECURRING_PARAM = "recurring";
 	public static final String NORELEASE_PARAM = "norelease";
 	public static final String PARTIAL_PARAM = "partial";
+	public static final String DOCID_PARAM = "docid";
+	public static final String FILENAME_PARAM = "filename";
 	
 	public static final int DEFAULT_PORT = 12001;
 	public static final String DEFAULT_HOST = "127.0.0.1";
@@ -44,6 +50,7 @@ public class RemotePipeline {
 	private String pendingUrl;
 	private String discardedUrl;
 	private String propertyUrl;
+	private String fileUrl;
 	
 	private String stageName;
 	
@@ -69,6 +76,7 @@ public class RemotePipeline {
 		pendingUrl = "/"+PENDING_DOCUMENT_URL+"?"+STAGE_PARAM+"="+stageName;
 		discardedUrl = "/"+DISCARDED_DOCUMENT_URL+"?"+STAGE_PARAM+"="+stageName;
 		propertyUrl = "/"+GET_PROPERTIES_URL+"?"+STAGE_PARAM+"="+stageName;
+		fileUrl = "/"+FILE_URL+"?"+STAGE_PARAM+"="+stageName;
 		
 		getRecurringUrl = getUrl+"&"+RECURRING_PARAM+"=1";
 		
@@ -300,6 +308,58 @@ public class RemotePipeline {
 			InternalLogger.debug("No document found matching query");
 			EntityUtils.consume(response.getEntity());
 			return null;
+		} else {
+			logUnexpected(response);
+			return null;
+		}
+	}
+	
+	private String getFileUrl(String fileName, String docid) {
+		return fileUrl+"&"+RemotePipeline.FILENAME_PARAM+"="+fileName+"&"+RemotePipeline.DOCID_PARAM+"="+docid;
+	}
+	
+	public InputStream getFile(String fileName, String docid) throws IOException, HttpException {
+		HttpResponse response = core.get(getFileUrl(fileName, docid));
+		
+		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+			return new ByteArrayInputStream(EntityUtils.toByteArray(response.getEntity()));
+		} 
+		else {
+			logUnexpected(response);
+			return null;
+		}
+	}
+	
+	public boolean saveFile(InputStream is, String fileName, String docid) throws IOException, HttpException {
+		HttpResponse response = core.post(getFileUrl(fileName, docid),  is);
+
+		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+			EntityUtils.consume(response.getEntity());
+			return true;
+		} else {
+			logUnexpected(response);
+			return false;
+		}
+	}
+	
+	public boolean deleteFile(String fileName, String docid) throws IOException, HttpException {
+		HttpResponse response = core.delete(getFileUrl(fileName, docid));
+
+		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+			EntityUtils.consume(response.getEntity());
+			return true;
+		} else {
+			logUnexpected(response);
+			return false;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<String> getFileNames(String docid) throws IOException, HttpException, JsonException {
+		HttpResponse response = core.get(fileUrl+"&"+RemotePipeline.DOCID_PARAM+"="+docid);
+		
+		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+			return (List<String>)SerializationUtils.toObject(EntityUtils.toString(response.getEntity()));
 		} else {
 			logUnexpected(response);
 			return null;

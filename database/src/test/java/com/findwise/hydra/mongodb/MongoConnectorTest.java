@@ -73,7 +73,7 @@ public class MongoConnectorTest {
 		mdc.getDocumentWriter().insert(test2);
 		mdc.getDocumentWriter().insert(random);
 		
-		DocumentFile df = new DocumentFile(test.getID(), f.getName(), new FileInputStream(f));
+		DocumentFile df = new DocumentFile(test.getID(), f.getName(), new FileInputStream(f), "setup");
 		mdc.getDocumentWriter().write(df);	
 	}
 
@@ -178,14 +178,14 @@ public class MongoConnectorTest {
 
 	@Test
 	public void testWriteDocumentFile() throws IOException{
-		if(mdc.getDocumentReader().getDocumentFile(test2)!=null) {
-			fail("loadSourceFile found file");
+		if(mdc.getDocumentReader().getDocumentFileNames(test2).size()!=0) {
+			fail("Document already had files");
 		}
 		
-		DocumentFile df = new DocumentFile(test2.getID(), f.getName(), new FileInputStream(f));
+		DocumentFile df = new DocumentFile(test2.getID(), f.getName(), new FileInputStream(f), "stage");
 
 		mdc.getDocumentWriter().write(df);
-		DocumentFile df2 = mdc.getDocumentReader().getDocumentFile(test2);
+		DocumentFile df2 = mdc.getDocumentReader().getDocumentFile(test2, f.getName());
 
 		
 		BufferedReader fr = new BufferedReader(new FileReader(f));
@@ -203,7 +203,7 @@ public class MongoConnectorTest {
 
 	@Test
 	public void testGetDocumentFile() throws IOException{
-		DocumentFile fx = mdc.getDocumentReader().getDocumentFile(test);
+		DocumentFile fx = mdc.getDocumentReader().getDocumentFile(test, f.getName());
 
 		if(!f.getName().equals(fx.getFileName())) {
 			fail("Couldn't find document file");

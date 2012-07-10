@@ -29,7 +29,9 @@ public interface DocumentReader<T extends DatabaseType> {
 	
 	List<DatabaseDocument<T>> getDocuments(DatabaseQuery<T> q, int limit);
 
-	DocumentFile getDocumentFile(DatabaseDocument<T> d) throws IOException;
+	DocumentFile getDocumentFile(DatabaseDocument<T> d, String fileName) throws IOException;
+	
+	List<String> getDocumentFileNames(DatabaseDocument<T> d) throws IOException;
 	
 	/**
 	 * @return the number of active (i.e. not processed or discarded) documents in database

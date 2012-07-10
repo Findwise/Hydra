@@ -57,6 +57,8 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	public static final int DEFAULT_RECURRING_INTERVAL = 2000;
 	
 	public static final String DOCUMENT_KEY = "document";
+	public static final String FILENAME_KEY = "filename";
+	public static final String STAGE_KEY = "stage";
 	
 	public MongoDocumentIO(DB db, WriteConcern concern, boolean discard, long documentsToKeep) {
 		this.concern = concern;
@@ -102,15 +104,31 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	 * @see com.findwise.hydra.DocumentReader#getDocumentFile(com.findwise.hydra.DatabaseDocument)
 	 */
 	@Override
-	public DocumentFile getDocumentFile(DatabaseDocument<MongoType> d) throws IOException {
+	public DocumentFile getDocumentFile(DatabaseDocument<MongoType> d, String filename) throws IOException {
 		MongoDocument md = (MongoDocument)d;
-		DBObject query = QueryBuilder.start(DOCUMENT_KEY).is(md.getID()).get();
+		DBObject query = QueryBuilder.start(DOCUMENT_KEY).is(md.getID()).and(FILENAME_KEY).is(filename).get();
 		GridFSDBFile file = documentfs.findOne(query);
 		if(file==null) {
 			return null;
 		}
 		
-		return new DocumentFile(d.getID(), file.getFilename(), file.getInputStream(), file.getUploadDate());
+		return new DocumentFile(d.getID(), file.getFilename(), file.getInputStream(), (String)file.get(STAGE_KEY), file.getUploadDate());
+	}
+	
+	@Override
+	public List<String> getDocumentFileNames(DatabaseDocument<MongoType> d)
+			throws IOException {
+		MongoDocument md = (MongoDocument)d;
+		DBObject query = QueryBuilder.start(DOCUMENT_KEY).is(md.getID()).get();
+		
+		ArrayList<String> list = new ArrayList<String>();
+		
+		List<GridFSDBFile> files = documentfs.find(query);
+		for(GridFSDBFile file : files) {
+			list.add(file.getFilename());
+		}
+		
+		return list;
 	}
 	
 	
@@ -453,5 +471,18 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 			logger.error("Unable to get Tailable Iterator!", e);
 			return null;
 		}
+	}
+
+	@Override
+	public boolean deleteDocumentFile(DatabaseDocument<MongoType> d, String fileName) {
+		MongoDocument md = (MongoDocument) d;
+		DBObject query = QueryBuilder.start(DOCUMENT_KEY).is(md.getID()).and(FILENAME_KEY).is(fileName).get();
+		if(documentfs.getFileList(query).size()!=1) {
+			return false;
+		}
+		
+		documentfs.remove(query);
+		return true;
+		
 	}
 }

@@ -98,13 +98,37 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	}
 
 	@Override
-	public DocumentFile getDocumentFile(DatabaseDocument<MemoryType> d) throws IOException {
+	public DocumentFile getDocumentFile(DatabaseDocument<MemoryType> d, String fileName) throws IOException {
 		for(DocumentFile f : files) {
-			if(f.getDocumentId().equals(d.getID())) {
+			if(f.getDocumentId().equals(d.getID()) && f.getFileName().equals(fileName)) {
 				return copy(f);
 			}
 		}
 		return null;
+	}
+	
+	@Override
+	public boolean deleteDocumentFile(DatabaseDocument<MemoryType> d, String fileName) {
+		for(DocumentFile f : files) {
+			if(f.getDocumentId().equals(d.getID()) && f.getFileName().equals(fileName)) {
+				files.remove(f);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public List<String> getDocumentFileNames(DatabaseDocument<MemoryType> d) throws IOException {
+		ArrayList<String> list = new ArrayList<String>();
+		
+		for(DocumentFile f : files) {
+			if(f.getDocumentId().equals(d.getID())) {
+				list.add(f.getFileName());
+			}
+		}
+		
+		return list;
 	}
 
 	@Override
@@ -238,15 +262,14 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	}
 	
 	private DocumentFile copy(DocumentFile df) throws IOException {
-		String s = IOUtils.toString(df.getStream());
+		String s = IOUtils.toString(df.getStream(), "UTF-8");
 		df.getStream().close();
-		df.setStream(IOUtils.toInputStream(s));
-		return new DocumentFile(df.getDocumentId(), df.getFileName(), IOUtils.toInputStream(s), df.getUploadDate());
+		df.setStream(IOUtils.toInputStream(s, "UTF-8"));
+		return new DocumentFile(df.getDocumentId(), df.getFileName(), IOUtils.toInputStream(s, "UTF-8"), df.getSavedByStage(), df.getUploadDate());
 	}
 
 	@Override
 	public void prepare() {
 		
 	}
-
 }

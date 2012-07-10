@@ -1,7 +1,10 @@
 package com.findwise.hydra.net;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.nio.entity.NStringEntity;
@@ -101,6 +104,12 @@ public final class HttpResponseWriter {
 		response.setStatusCode(HttpStatus.SC_OK);
 		setStringEntity(response, "Document " + id + " successfully saved");
 	}
+	
+	protected static void printFileDeleteOk(HttpResponse response, String filename, Object id) {
+		logger.debug("Successfully deleted file with filename: "+filename+" from document " + id);
+		response.setStatusCode(HttpStatus.SC_OK);
+		setStringEntity(response, "File " + id + " successfully deleted");
+	}
 
 	protected static void printInsertOk(HttpResponse response, Document d) {
 		logger.debug("Successfully inserted a document with ID: " + d.getID());
@@ -139,9 +148,21 @@ public final class HttpResponseWriter {
 		setStringEntity(response, uuid);
 	}
 
-	public static void printAccessDenied(HttpResponse response) {
+	protected static void printAccessDenied(HttpResponse response) {
 		logger.warn("Denying access");
 		response.setStatusCode(HttpStatus.SC_FORBIDDEN);
 		setStringEntity(response, "Access forbidden");
+	}
+	
+	protected static void printStream(HttpResponse response, InputStream is) throws IOException {
+		logger.warn("Printing an input stream");
+		response.setStatusCode(HttpStatus.SC_OK);
+		setStringEntity(response, IOUtils.toString(is, "UTF-8"));
+	}
+
+	protected static void printFileNotFound(HttpResponse response, String fileName) {
+		logger.debug("Printing no file found");
+		response.setStatusCode(HttpStatus.SC_NOT_FOUND);
+		setStringEntity(response, "No file found by the name "+fileName+" for this document");
 	}
 }

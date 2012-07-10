@@ -8,16 +8,18 @@ public class DocumentFile {
 	private String fileName;
 	private Date uploadDate;
 	private Object documentId;
+	private String savedByStage;
 	
-	public DocumentFile(Object documentId, String fileName, InputStream stream) {
-		this(documentId, fileName, stream, null);
+	public DocumentFile(Object documentId, String fileName, InputStream stream, String savedByStage) {
+		this(documentId, fileName, stream, savedByStage, null);
 	}
 	
-	public DocumentFile(Object documentId, String fileName, InputStream stream, Date uploadDate) {
+	public DocumentFile(Object documentId, String fileName, InputStream stream, String savedByStage, Date uploadDate) {
 		this.documentId = documentId;
 		this.fileName = fileName;
 		this.stream = stream;
 		this.uploadDate = uploadDate;
+		this.savedByStage = savedByStage;
 	}
 
 	public InputStream getStream() {
@@ -50,5 +52,13 @@ public class DocumentFile {
 
 	public void setDocumentId(Object documentId) {
 		this.documentId = documentId;
+	}
+
+	public void setSavedByStage(String savedByStage) {
+		this.savedByStage = savedByStage;
+	}
+
+	public String getSavedByStage() {
+		return savedByStage;
 	}
 }

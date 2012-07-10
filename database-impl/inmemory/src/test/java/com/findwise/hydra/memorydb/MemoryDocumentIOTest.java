@@ -114,15 +114,16 @@ public class MemoryDocumentIOTest {
 
 	@Test
 	public void testWriteDocumentFile() throws IOException{
-		if(io.getDocumentFile(test2)!=null) {
+		if(io.getDocumentFileNames(test2).size()!=0) {
 			fail("found file already attached to the document");
 		}
 		
 		String content = TestTools.getRandomString(100);
-		DocumentFile df = new DocumentFile(test2.getID(), TestTools.getRandomString(10), IOUtils.toInputStream(content));
+		String name = TestTools.getRandomString(10);
+		DocumentFile df = new DocumentFile(test2.getID(), name, IOUtils.toInputStream(content), "stage");
 
 		io.write(df);
-		DocumentFile df2 = io.getDocumentFile(test2);
+		DocumentFile df2 = io.getDocumentFile(test2, name);
 
 		if(!IOUtils.toString(df2.getStream()).equals(content)) {
 			fail("Content mismatch between saved and fetched file");

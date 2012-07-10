@@ -148,6 +148,11 @@ public interface DocumentWriter<T extends DatabaseType> {
 	boolean update(DatabaseDocument<T> d);
 
 	void delete(DatabaseDocument<T> d);
+	
+	/**
+	 * Deletes the specified file belonging to the specified document
+	 */
+	boolean deleteDocumentFile(DatabaseDocument<T> d, String fileName);
 
 	/**
 	 * For use in testing
