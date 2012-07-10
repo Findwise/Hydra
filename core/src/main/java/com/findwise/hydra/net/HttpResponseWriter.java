@@ -138,4 +138,10 @@ public final class HttpResponseWriter {
 		response.setStatusCode(HttpStatus.SC_OK);
 		setStringEntity(response, uuid);
 	}
+
+	public static void printAccessDenied(HttpResponse response) {
+		logger.warn("Denying access");
+		response.setStatusCode(HttpStatus.SC_FORBIDDEN);
+		setStringEntity(response, "Access forbidden");
+	}
 }
