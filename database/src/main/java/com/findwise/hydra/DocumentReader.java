@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.findwise.hydra.common.DocumentFile;
+import com.findwise.hydra.mongodb.MongoTailableIterator;
+import com.mongodb.DBObject;
 
 /**
  * The implementation of this interface should be side-effect free, allowing the
@@ -26,6 +28,8 @@ public interface DocumentReader<T extends DatabaseType> {
 	 * processed. 
 	 */
 	TailableIterator<T> getInactiveIterator();
+
+	MongoTailableIterator getInactiveIterator(DBObject query);
 	
 	List<DatabaseDocument<T>> getDocuments(DatabaseQuery<T> q, int limit);
 
@@ -40,4 +44,5 @@ public interface DocumentReader<T extends DatabaseType> {
 	 * @return the number of inactive (i.e. processed or discarded) documents in the database.
 	 */
 	long getInactiveDatabaseSize();
+
 }
