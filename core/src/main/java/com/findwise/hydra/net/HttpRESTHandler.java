@@ -48,6 +48,10 @@ public class HttpRESTHandler implements HttpRequestHandler  {
 	}
 
 	public void handle(final HttpRequest request, final HttpResponse response, final HttpContext context) {
+		if(!accessAllowed(request)) {
+			HttpResponseWriter.printAccessDenied(response);
+			return;
+		}
 		try {
 			logger.debug("Parsing incoming request");
 			
@@ -105,6 +109,8 @@ public class HttpRESTHandler implements HttpRequestHandler  {
 		}
 		
 		return false;
+	public boolean accessAllowed(HttpRequest request) {
+		return true;
 	}
 	
 	private boolean handleIfGet(HttpRequest request, HttpResponse response) throws IOException {

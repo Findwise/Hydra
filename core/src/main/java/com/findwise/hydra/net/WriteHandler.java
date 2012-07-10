@@ -1,0 +1,153 @@
+package com.findwise.hydra.net;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.findwise.hydra.DatabaseDocument;
+import com.findwise.hydra.NodeMaster;
+import com.findwise.hydra.common.Document;
+import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.local.LocalDocument;
+import com.findwise.hydra.local.RemotePipeline;
+import com.findwise.hydra.mongodb.MongoType;
+import com.findwise.hydra.net.RESTTools.Method;
+
+public class WriteHandler implements ResponsibleHandler {
+
+	private NodeMaster nm;
+
+	private static Logger logger = LoggerFactory.getLogger(WriteHandler.class);
+
+	public WriteHandler(NodeMaster nm) {
+		this.nm = nm;
+	}
+	
+	@Override
+	public void handle(HttpRequest request, HttpResponse response, HttpContext arg2)
+			throws HttpException, IOException {
+		logger.trace("handleWriteDocument()");
+        HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request).getEntity();
+        String requestContent = EntityUtils.toString(requestEntity);
+
+        String stage = RESTTools.getParam(request, RemotePipeline.STAGE_PARAM);
+        if(stage==null) {
+        	HttpResponseWriter.printMissingParameter(response, RemotePipeline.STAGE_PARAM);
+        	return;
+        }
+        
+        String partial = RESTTools.getParam(request, RemotePipeline.PARTIAL_PARAM);
+        if(partial==null) {
+        	HttpResponseWriter.printMissingParameter(response, RemotePipeline.PARTIAL_PARAM);
+        	return;
+        }
+        
+        String norelease = RESTTools.getParam(request, RemotePipeline.NORELEASE_PARAM);
+        if(norelease==null) {
+        	HttpResponseWriter.printMissingParameter(response, RemotePipeline.NORELEASE_PARAM);
+        	return;
+        }
+        
+        DatabaseDocument<MongoType> md;
+        try {
+        	md = nm.getDatabaseConnector().convert(new LocalDocument(requestContent));
+        }
+        catch(JsonException e) {
+        	HttpResponseWriter.printJsonException(response, e);
+        	return;
+        }
+        
+        boolean saveRes;
+        if(partial.equals("1")) {
+        	saveRes = handlePartialWrite(md, response);
+        }
+        else {
+        	if(md.getID()!=null) {
+        		saveRes = handleFullUpdate(md, response);
+        	}
+        	else {
+        		saveRes = handleInsert(md, response);
+        	}
+        }
+
+		if (saveRes && norelease.equals("0")) {
+			boolean result = release(md, stage);
+			if (!result) {
+				HttpResponseWriter.printReleaseFailed(response);
+				return;
+			}
+		}
+	}
+	
+	private boolean release(Document md, String stage) {
+		return nm.getDatabaseConnector().getDocumentWriter()
+				.markTouched(md.getID(), stage);
+	}
+	
+	private boolean handlePartialWrite(DatabaseDocument<MongoType> md, HttpResponse response) throws UnsupportedEncodingException{
+		logger.trace("handlePartialWrite()");
+		if(md.getID()==null) {
+			HttpResponseWriter.printMissingID(response);
+			return false;
+		}
+		logger.debug("Handling a partial write for document "+md.getID());
+		DatabaseDocument<MongoType> inDB = nm.getDatabaseConnector().getDocumentReader().getDocumentById(md.getID());
+		if(inDB==null) {
+			HttpResponseWriter.printUpdateFailed(response, md.getID());
+			return false;
+		}
+		inDB.putAll(md);
+
+
+		if(nm.getDatabaseConnector().getDocumentWriter().update(inDB)){
+			HttpResponseWriter.printSaveOk(response, md.getID());
+			return true;
+		} 
+		else {
+			HttpResponseWriter.printUpdateFailed(response, md.getID());
+			return false;
+		}
+	}
+	
+	private boolean handleFullUpdate(DatabaseDocument<MongoType> md, HttpResponse response) {
+		logger.trace("handleFullUpdate()");
+		if(nm.getDatabaseConnector().getDocumentWriter().update(md)) {
+			HttpResponseWriter.printSaveOk(response, md.getID());
+			return true;
+		}
+		HttpResponseWriter.printUpdateFailed(response, md.getID());
+		return false;
+	}
+	
+	private boolean handleInsert(DatabaseDocument<MongoType> md, HttpResponse response) {
+		if(nm.getDatabaseConnector().getDocumentWriter().insert(md)) {
+			HttpResponseWriter.printInsertOk(response, md);
+			return true;
+		}
+		else {
+			HttpResponseWriter.printInsertFailed(response);
+			return false;
+		}
+	}
+	@Override
+	public boolean supports(HttpRequest request) {
+		return RESTTools.getMethod(request) == Method.POST
+				&& RemotePipeline.WRITE_DOCUMENT_URL.equals(RESTTools
+						.getBaseUrl(request));
+	}
+
+	@Override
+	public String[] getSupportedUrls() {
+		return new String[] { RemotePipeline.WRITE_DOCUMENT_URL };
+	}
+
+}
