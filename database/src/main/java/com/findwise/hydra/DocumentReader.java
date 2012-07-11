@@ -1,6 +1,5 @@
 package com.findwise.hydra;
 
-import java.io.IOException;
 import java.util.List;
 
 import com.findwise.hydra.common.DocumentFile;
@@ -29,9 +28,9 @@ public interface DocumentReader<T extends DatabaseType> {
 	
 	List<DatabaseDocument<T>> getDocuments(DatabaseQuery<T> q, int limit);
 
-	DocumentFile getDocumentFile(DatabaseDocument<T> d, String fileName) throws IOException;
+	DocumentFile getDocumentFile(DatabaseDocument<T> d, String fileName);
 	
-	List<String> getDocumentFileNames(DatabaseDocument<T> d) throws IOException;
+	List<String> getDocumentFileNames(DatabaseDocument<T> d);
 	
 	/**
 	 * @return the number of active (i.e. not processed or discarded) documents in database
@@ -42,4 +41,8 @@ public interface DocumentReader<T extends DatabaseType> {
 	 * @return the number of inactive (i.e. processed or discarded) documents in the database.
 	 */
 	long getInactiveDatabaseSize();
+
+	Object toDocumentId(String urlEncodedString);
+	
+	String toUrlEncodedString(Object documentId);
 }

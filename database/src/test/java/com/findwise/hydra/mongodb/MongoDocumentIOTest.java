@@ -4,6 +4,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Random;
 
+import org.bson.types.ObjectId;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
@@ -102,6 +103,17 @@ public class MongoDocumentIOTest {
 		}
 		if(mdc.getDocumentReader().getInactiveDatabaseSize()!=MongoPipelineStatus.DEFAULT_NUMBER_TO_KEEP) {
 			fail("Incorrect number of old documents kept: "+ mdc.getDocumentReader().getInactiveDatabaseSize());
+		}
+	}
+	
+	@Test
+	public void testIdSerialization() {
+		ObjectId id = new ObjectId();
+		
+		String serialized = mdc.getDocumentReader().toUrlEncodedString(id);
+		Object deserialized = mdc.getDocumentReader().toDocumentId(serialized);
+		if(!id.equals(deserialized)) {
+			fail("Serialization failed");
 		}
 	}
 	

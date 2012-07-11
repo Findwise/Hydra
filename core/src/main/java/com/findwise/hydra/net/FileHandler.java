@@ -3,6 +3,7 @@ package com.findwise.hydra.net;
 import java.io.IOException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.SerializationException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpException;
@@ -134,10 +135,15 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
         	HttpResponseWriter.printMissingParameter(response, RemotePipeline.STAGE_PARAM);
         	return null;
         }
-        
-        tuple.docid = RESTTools.getParam(request, RemotePipeline.DOCID_PARAM);
-        if(tuple.docid==null) {
+
+		String rawparam = RESTTools.getParam(request, RemotePipeline.DOCID_PARAM);
+		if(rawparam==null) {
         	HttpResponseWriter.printMissingParameter(response, RemotePipeline.DOCID_PARAM);
+        	return null;
+        }
+		tuple.docid = dbc.getDocumentReader().toDocumentId(rawparam);
+		if(tuple.docid==null) {
+        	HttpResponseWriter.printUnhandledException(response, new SerializationException("Unable to deserialize the parameter "+RemotePipeline.DOCID_PARAM));
         	return null;
         }
         
@@ -166,12 +172,12 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 	
 	private class Tuple {
 		String stage;
-		String docid;
+		Object docid;
 	}
 	
 	private class Triple {
 		String stage;
-		String docid;
+		Object docid;
 		String fileName;
 	}
 }

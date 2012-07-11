@@ -1,12 +1,17 @@
 package com.findwise.hydra.memorydb;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseQuery;
@@ -15,6 +20,8 @@ import com.findwise.hydra.DocumentWriter;
 import com.findwise.hydra.TailableIterator;
 import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.DocumentFile;
+import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.common.SerializationUtils;
 
 public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		DocumentReader<MemoryType> {
@@ -22,6 +29,8 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	private HashSet<MemoryDocument> set;
 	private LinkedBlockingQueue<MemoryDocument> inactive;
 	private boolean[] b = new boolean[1];
+	
+	private static Logger logger = LoggerFactory.getLogger(MemoryDocumentIO.class); 
 	
 	private HashSet<DocumentFile> files;
 
@@ -98,10 +107,14 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	}
 
 	@Override
-	public DocumentFile getDocumentFile(DatabaseDocument<MemoryType> d, String fileName) throws IOException {
+	public DocumentFile getDocumentFile(DatabaseDocument<MemoryType> d, String fileName) {
 		for(DocumentFile f : files) {
 			if(f.getDocumentId().equals(d.getID()) && f.getFileName().equals(fileName)) {
-				return copy(f);
+				try {
+					return copy(f);
+				} catch (IOException e) {
+					logger.error("Error copying the streams", e);
+				}
 			}
 		}
 		return null;
@@ -119,7 +132,7 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	}
 
 	@Override
-	public List<String> getDocumentFileNames(DatabaseDocument<MemoryType> d) throws IOException {
+	public List<String> getDocumentFileNames(DatabaseDocument<MemoryType> d) {
 		ArrayList<String> list = new ArrayList<String>();
 		
 		for(DocumentFile f : files) {
@@ -197,6 +210,7 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		}
 		set.remove(temp);
 		((MemoryDocument)d).tag(flag, stage);
+		deleteAllFiles(d);
 		addInactive((MemoryDocument)d);
 		return true;
 	}
@@ -247,7 +261,14 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 
 	@Override
 	public void delete(DatabaseDocument<MemoryType> d) {
+		deleteAllFiles(d);
 		set.remove(getDocumentById(d.getID()));
+	}
+
+	private void deleteAllFiles(DatabaseDocument<MemoryType> d) {
+		for(String fileName : getDocumentFileNames(d)) {
+			deleteDocumentFile(d, fileName);
+		}
 	}
 
 	@Override
@@ -271,5 +292,28 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	@Override
 	public void prepare() {
 		
+	}
+	
+	@Override
+	public Object toDocumentId(String urlEncodedString) {
+		try {
+			return SerializationUtils.toObject(URLDecoder.decode(urlEncodedString, "UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			logger.error("Unable to deserialize document id", e);
+			return null;
+		} catch (JsonException e) {
+			logger.error("Unable to deserialize document id", e);
+			return null;
+		}
+	}
+
+	@Override
+	public String toUrlEncodedString(Object documentId) {
+		try {
+			return URLEncoder.encode(SerializationUtils.toJson(documentId), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			logger.error("Unable to serialize document id", e);
+			return null;
+		}
 	}
 }

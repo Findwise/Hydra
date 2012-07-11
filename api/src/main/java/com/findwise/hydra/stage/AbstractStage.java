@@ -7,8 +7,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.http.HttpException;
-
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.common.Logger;
 import com.findwise.hydra.common.SerializationUtils;
@@ -152,7 +150,7 @@ public abstract class AbstractStage extends Thread {
 		}
 	}
 
-	public void setUp(RemotePipeline rp, Map<String, Object> properties) throws IllegalArgumentException, IllegalAccessException, JsonException, IOException, HttpException {
+	public void setUp(RemotePipeline rp, Map<String, Object> properties) throws IllegalArgumentException, IllegalAccessException, IOException {
 		setRemotePipeline(rp);
 		setParameters(properties);
 		this.createAndApplyShutDownHook();
@@ -214,8 +212,6 @@ public abstract class AbstractStage extends Thread {
 		} catch (IllegalAccessException e) {
 			Logger.error("Could not access constructor of Stage class", e);
 		} catch (JsonException e) {
-			Logger.error("Communication failiure when reading properties", e);
-		} catch (HttpException e) {
 			Logger.error("Communication failiure when reading properties", e);
 		} catch (IOException e) {
 			Logger.error("Communication failiure when reading properties", e);

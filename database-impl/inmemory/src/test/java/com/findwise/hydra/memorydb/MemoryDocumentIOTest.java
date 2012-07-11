@@ -51,7 +51,6 @@ public class MemoryDocumentIOTest {
 			io.insert(md);
 		}
 		
-		System.out.println(io.getActiveDatabaseSize());
 		
 		if(io.getActiveDatabaseSize()!=size+count) {
 			fail("Incorrect database size after inserts. Expected "+(size+count)+" but found "+io.getActiveDatabaseSize());
@@ -109,6 +108,17 @@ public class MemoryDocumentIOTest {
 		list = io.getDocuments(mdq, 1);
 		if(list.size()!=1) {
 			fail("Wrong number of documents returned. Expected 1, found "+list.size());
+		}
+	}
+
+	@Test
+	public void testIdSerialization() {
+		MemoryDocument md = new MemoryDocument();
+		io.insert(md);
+		String serialized = io.toUrlEncodedString(md.getID());
+		Object deserialized = io.toDocumentId(serialized);
+		if(!md.getID().equals(deserialized)) {
+			fail("Serialization failed for "+md.getID().toString() );
 		}
 	}
 

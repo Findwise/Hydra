@@ -1,13 +1,18 @@
 package com.findwise.hydra.mongodb;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.prefs.BackingStoreException;
 
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +22,8 @@ import com.findwise.hydra.DocumentReader;
 import com.findwise.hydra.DocumentWriter;
 import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.DocumentFile;
+import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.common.SerializationUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.CommandResult;
@@ -104,7 +111,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	 * @see com.findwise.hydra.DocumentReader#getDocumentFile(com.findwise.hydra.DatabaseDocument)
 	 */
 	@Override
-	public DocumentFile getDocumentFile(DatabaseDocument<MongoType> d, String filename) throws IOException {
+	public DocumentFile getDocumentFile(DatabaseDocument<MongoType> d, String filename) {
 		MongoDocument md = (MongoDocument)d;
 		DBObject query = QueryBuilder.start(DOCUMENT_KEY).is(md.getID()).and(FILENAME_KEY).is(filename).get();
 		GridFSDBFile file = documentfs.findOne(query);
@@ -116,8 +123,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	}
 	
 	@Override
-	public List<String> getDocumentFileNames(DatabaseDocument<MongoType> d)
-			throws IOException {
+	public List<String> getDocumentFileNames(DatabaseDocument<MongoType> d) {
 		MongoDocument md = (MongoDocument)d;
 		DBObject query = QueryBuilder.start(DOCUMENT_KEY).is(md.getID()).get();
 		
@@ -345,8 +351,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		doc.put(MongoDocument.METADATA_KEY, metadata);
 	}
 	
-	@Override
-	public boolean markProcessed(DatabaseDocument<MongoType> d, String stage) {
+	private boolean markDone(DatabaseDocument<MongoType> d, String stage, String stamp) {
 		MongoQuery mq = new MongoQuery();
 		mq.requireID(d.getID());
 		DBObject doc = documents.findAndRemove(mq.toDBObject());
@@ -355,28 +360,23 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 			return false;
 		}
 		
-		stampMetadataField(doc, MongoDocument.PROCESSED_METADATA_FLAG, stage);
+		doc.putAll(((MongoDocument)d).toMap());
 		
+		stampMetadataField(doc, stamp, stage);
+		deleteAllFiles(d);
 		oldDocuments.insert(doc);
 		
 		return true;
 	}
 	
 	@Override
+	public boolean markProcessed(DatabaseDocument<MongoType> d, String stage) {
+		return markDone(d, stage, MongoDocument.PROCESSED_METADATA_FLAG);
+	}
+	
+	@Override
 	public boolean markDiscarded(DatabaseDocument<MongoType> d, String stage) {
-		MongoQuery mq = new MongoQuery();
-		mq.requireID(d.getID());
-		DBObject doc = documents.findAndRemove(mq.toDBObject());
-		
-		if(doc==null) {
-			return false;
-		}
-		
-		stampMetadataField(doc, MongoDocument.DISCARDED_METADATA_FLAG, stage);
-
-		oldDocuments.insert(doc);
-		
-		return true;
+		return markDone(d, stage,  MongoDocument.DISCARDED_METADATA_FLAG);
 	}
 	
 	@Override
@@ -397,21 +397,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	
 	@Override
 	public boolean markFailed(DatabaseDocument<MongoType> d, String stage) {
-		MongoQuery mq = new MongoQuery();
-		mq.requireID(d.getID());
-		DBObject doc = documents.findAndRemove(mq.toDBObject());
-		
-		if(doc==null) {
-			return false;
-		}
-		
-		doc.putAll(((MongoDocument)d).toMap());
-		stampMetadataField(doc, MongoDocument.FAILED_METADATA_FLAG, stage);
-		
-		
-		oldDocuments.insert(doc);
-		
-		return true;
+		return markDone(d, stage, MongoDocument.FAILED_METADATA_FLAG);
 	}
 
 
@@ -484,5 +470,42 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		documentfs.remove(query);
 		return true;
 		
+	}
+	
+	public void deleteAllFiles(DatabaseDocument<MongoType> d) {
+		for(String fileName : getDocumentFileNames(d)) {
+			deleteDocumentFile(d, fileName);
+		}
+	}
+	
+	@SuppressWarnings("rawtypes")
+	@Override
+	public Object toDocumentId(String urlEncodedString) {
+		try {
+			Object o = SerializationUtils.toObject(URLDecoder.decode(urlEncodedString, "UTF-8"));
+			Object clazz = o.getClass();
+			if(o instanceof Map) {
+				return new ObjectId((Integer)((Map) o).get("_time"), (Integer)((Map) o).get("_machine"), (Integer)((Map) o).get("_inc"));
+			} else {
+				logger.error("Serialized ID was not deserialized to map. Was it created by a Hydra database of this type?");
+				return null;
+			}
+		} catch (UnsupportedEncodingException e) {
+			logger.error("Unable to deserialize document id", e);
+			return null;
+		} catch (JsonException e) {
+			logger.error("Unable to deserialize document id", e);
+			return null;
+		}
+	}
+
+	@Override
+	public String toUrlEncodedString(Object documentId) {
+		try {
+			return URLEncoder.encode(SerializationUtils.toJson(documentId), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			logger.error("Unable to serialize document id", e);
+			return null;
+		}
 	}
 }

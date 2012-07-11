@@ -59,7 +59,7 @@ public class RESTServer extends Thread {
 	private boolean shutdownCalled = false;
 	private boolean executing = false;
 	
-	private HttpRESTHandler requestHandler;
+	private HttpRESTHandler<?> requestHandler;
 	
 	private String id;
 
@@ -122,9 +122,6 @@ public class RESTServer extends Thread {
 				}
 			}
 			catch (IOException e) {
-				e.printStackTrace();
-			}
-			catch (HttpException e) {
 				e.printStackTrace();
 			}
 		}

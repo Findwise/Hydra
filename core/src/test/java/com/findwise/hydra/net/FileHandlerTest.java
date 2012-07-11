@@ -33,7 +33,7 @@ public class FileHandlerTest {
 		
 		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
 		
-		String content = "adsafgoaiuhgahgo\ndŒŠšasdas";
+		String content = "adsafgoaiuhgahgo\ndÃ¥Ã¤Ã¶asdas";
 		String fileName = "test.txt";
 		
 		rp.saveFile(IOUtils.toInputStream(content, "UTF-8"), fileName, testDoc.getID().toString());
@@ -74,7 +74,7 @@ public class FileHandlerTest {
 			fail("Got non-zero filename list before any files were added");
 		}
 		
-		String content = "adsafgoaiuhgahgo\ndŒŠšasdas";
+		String content = "adsafgoaiuhgahgo\ndÃ¥Ã¤Ã¶asdas";
 		String fileName = "test.txt";
 		String fileName2 = "test2.txt";
 		
@@ -107,9 +107,9 @@ public class FileHandlerTest {
 			fail("Got non-null for non-existant file");
 		}
 		
-		String content = "adsafgoaiuhgahgo\ndŒŠšasdas";
+		String content = "adsafgoaiuhgahgo\ndndÃ¥Ã¤Ã¶asasddas";
 		String fileName = "test.txt";
-		String content2 = "adsagagasdgarqRE13123AFg da\ndŒŠšasdas";
+		String content2 = "adsagagasdgarqRE13123AFg da\nndÃ¥Ã¤Ã¶asdas";
 		String fileName2 = "test2.txt";
 		
 		mc.getDocumentWriter().write(new DocumentFile(testDoc.getID(), fileName, IOUtils.toInputStream(content, "UTF-8"), "stage"));
@@ -150,7 +150,7 @@ public class FileHandlerTest {
 			fail("Got positive response for non-existant file");
 		}
 		
-		String content = "adsafgoaiuhgahgo\ndŒŠšasdas";
+		String content = "adsafgoaiuhgahgo\ndÃ¥Ã¤Ã¶asdas";
 		String fileName = "test.txt";
 		String fileName2 = "test2.txt";
 		
