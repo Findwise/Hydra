@@ -4,6 +4,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Random;
 
+import org.bson.types.ObjectId;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,6 +13,7 @@ import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DocumentWriter;
 import com.findwise.hydra.TailableIterator;
 import com.findwise.hydra.TestModule;
+import com.findwise.hydra.common.SerializationUtils;
 import com.findwise.hydra.common.Document.Status;
 import com.google.inject.Guice;
 import com.mongodb.DB;
@@ -102,6 +104,21 @@ public class MongoDocumentIOTest {
 		}
 		if(mdc.getDocumentReader().getInactiveDatabaseSize()!=MongoPipelineStatus.DEFAULT_NUMBER_TO_KEEP) {
 			fail("Incorrect number of old documents kept: "+ mdc.getDocumentReader().getInactiveDatabaseSize());
+		}
+	}
+	
+	@Test
+	public void testIdSerialization() throws Exception {
+		ObjectId id = new ObjectId();
+		
+		String serialized = SerializationUtils.toJson(id);
+		Object deserialized = mdc.getDocumentReader().toDocumentIdFromJson(serialized);
+		if(!id.equals(deserialized)) {
+			fail("Serialization failed from json string");
+		}
+		deserialized = mdc.getDocumentReader().toDocumentId(SerializationUtils.toObject(serialized));
+		if(!id.equals(deserialized)) {
+			fail("Serialization failed from primitive");
 		}
 	}
 	

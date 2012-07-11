@@ -2,7 +2,10 @@ package com.findwise.hydra.local;
 
 import static org.junit.Assert.*;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

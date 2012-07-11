@@ -2,9 +2,6 @@ package com.findwise.hydra.stage;
 
 import java.io.IOException;
 
-import org.apache.http.HttpException;
-
-import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.common.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
@@ -62,12 +59,6 @@ public abstract class AbstractInputStage extends AbstractStage {
 			}
 		} catch (IOException e) {
 			Logger.error("IOException while trying to discard");
-			e.printStackTrace();
-		} catch (HttpException e) {
-			Logger.error("HTTPEception while trying to discard");
-			e.printStackTrace();
-		} catch (JsonException e) {
-			Logger.error("JsonException while trying to discard");
 			e.printStackTrace();
 		}
 	}

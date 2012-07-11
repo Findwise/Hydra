@@ -2,6 +2,7 @@ package com.findwise.hydra.net;
 
 import static org.junit.Assert.fail;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -13,6 +14,7 @@ import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.NodeMaster;
 import com.findwise.hydra.TestModule;
 import com.findwise.hydra.common.Document.Action;
+import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
@@ -450,4 +452,33 @@ public class RemotePipelineTest {
 		}
 	}
 	
+	@Test
+	public void testSaveFile() throws Exception {
+		MongoDocument testDoc = new MongoDocument();
+		nm.getDatabaseConnector().getDocumentWriter().insert(testDoc);
+		
+		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
+		
+		String content = "xäöåx";
+
+		String fileName = "test.txt";
+		DocumentFile df = new DocumentFile(testDoc.getID(), fileName, IOUtils.toInputStream(content, "UTF-8"));
+		df.setEncoding("UTF-8");
+		rp.saveFile(df);
+		
+		DocumentFile df2 = nm.getDatabaseConnector().getDocumentReader().getDocumentFile(testDoc, fileName);
+		
+		if(df2==null) {
+			fail("File was not properly saved");
+		}
+		
+		if(!df2.getFileName().equals(fileName)) {
+			fail("File had wrong file name");
+		}
+		
+		String fc = IOUtils.toString(df2.getStream(), "UTF-8");
+		if(!fc.equals(content)) {
+			fail("File had wrong contents");
+		}
+	}
 }

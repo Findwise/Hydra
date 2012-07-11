@@ -54,4 +54,8 @@ public final class RESTTools {
 	public static boolean isGet(HttpRequest request) {
 		return getMethod(request) == Method.GET;
 	}
+
+	public static boolean isDelete(HttpRequest request) {
+		return getMethod(request) == Method.DELETE;
+	}
 }

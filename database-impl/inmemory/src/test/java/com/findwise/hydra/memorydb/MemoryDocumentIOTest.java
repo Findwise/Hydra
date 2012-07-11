@@ -15,6 +15,7 @@ import org.junit.runner.RunWith;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.common.Document;
+import com.findwise.hydra.common.SerializationUtils;
 import com.findwise.hydra.common.Document.Status;
 import com.findwise.hydra.common.DocumentFile;
 
@@ -51,7 +52,6 @@ public class MemoryDocumentIOTest {
 			io.insert(md);
 		}
 		
-		System.out.println(io.getActiveDatabaseSize());
 		
 		if(io.getActiveDatabaseSize()!=size+count) {
 			fail("Incorrect database size after inserts. Expected "+(size+count)+" but found "+io.getActiveDatabaseSize());
@@ -113,16 +113,33 @@ public class MemoryDocumentIOTest {
 	}
 
 	@Test
+	public void testIdSerialization() throws Exception {
+		MemoryDocument md = new MemoryDocument();
+		io.insert(md);
+		String serialized = SerializationUtils.toJson(md.getID());
+		Object deserialized = io.toDocumentIdFromJson(serialized);
+		if(!md.getID().equals(deserialized)) {
+			fail("Serialization failed from json for "+md.getID().toString() );
+		}
+		
+		deserialized = io.toDocumentId(SerializationUtils.toObject(serialized));
+		if(!md.getID().equals(deserialized)) {
+			fail("Serialization failed from primitive");
+		}
+	}
+
+	@Test
 	public void testWriteDocumentFile() throws IOException{
-		if(io.getDocumentFile(test2)!=null) {
+		if(io.getDocumentFileNames(test2).size()!=0) {
 			fail("found file already attached to the document");
 		}
 		
 		String content = TestTools.getRandomString(100);
-		DocumentFile df = new DocumentFile(test2.getID(), TestTools.getRandomString(10), IOUtils.toInputStream(content));
+		String name = TestTools.getRandomString(10);
+		DocumentFile df = new DocumentFile(test2.getID(), name, IOUtils.toInputStream(content), "stage");
 
 		io.write(df);
-		DocumentFile df2 = io.getDocumentFile(test2);
+		DocumentFile df2 = io.getDocumentFile(test2, name);
 
 		if(!IOUtils.toString(df2.getStream()).equals(content)) {
 			fail("Content mismatch between saved and fetched file");
