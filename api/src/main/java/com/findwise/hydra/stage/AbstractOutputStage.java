@@ -5,10 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.http.HttpException;
-
 import com.findwise.hydra.common.Logger;
-import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
@@ -28,7 +25,7 @@ public abstract class AbstractOutputStage extends AbstractProcessStage {
 
 
 	@Override
-	public void setUp(RemotePipeline rp, Map<String, Object> properties) throws IllegalArgumentException, IllegalAccessException, JsonException, IOException, HttpException {
+	public void setUp(RemotePipeline rp, Map<String, Object> properties) throws IllegalArgumentException, IllegalAccessException, IOException {
 		super.setUp(rp, properties);
 		rules = new ArrayList<OutputRule>();
 	}
@@ -60,9 +57,7 @@ public abstract class AbstractOutputStage extends AbstractProcessStage {
 					reject();
 				} catch (IOException e) {
 					throw new ProcessException(e);
-				} catch (HttpException e) {
-					throw new ProcessException(e);
-				}
+				} 
 				rejected = true;
 			}
 		}
@@ -79,20 +74,19 @@ public abstract class AbstractOutputStage extends AbstractProcessStage {
 	 */
 	public abstract void output(LocalDocument document);
 
-	protected boolean accept(LocalDocument document) throws IOException,
-			HttpException {
+	protected boolean accept(LocalDocument document) throws IOException {
 		return getRemotePipeline().markProcessed(document);
 	}
 
-	protected boolean pending(LocalDocument document) throws IOException, HttpException {
+	protected boolean pending(LocalDocument document) throws IOException {
 		return getRemotePipeline().markPending(document);
 	}
 
-	protected boolean fail(LocalDocument document) throws IOException, HttpException {
+	protected boolean fail(LocalDocument document) throws IOException {
 		return getRemotePipeline().markFailed(document);
 	}
 	
-	private boolean reject() throws IOException, HttpException {
+	private boolean reject() throws IOException {
 		return getRemotePipeline().releaseLastDocument();
 	}
 	

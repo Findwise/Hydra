@@ -157,8 +157,6 @@ public class SolrInputStage extends AbstractInputStage implements HttpRequestHan
 		for(LocalDocument document : documents) {
 			try {
 				getRemotePipeline().saveFull(document);
-			} catch (HttpException e) {
-				throw new IOException(e);
 			} catch (JsonException e) {
 				throw new IOException(e);
 			}

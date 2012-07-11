@@ -54,7 +54,7 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
     }
 	
 	private void createHandlers() {
-		handlers = new ResponsibleHandler[] { new PropertiesHandler(dbc), new MarkHandler(dbc), new QueryHandler(dbc), new ReleaseHandler(dbc), new WriteHandler(dbc) };
+		handlers = new ResponsibleHandler[] { new FileHandler(dbc), new PropertiesHandler(dbc), new MarkHandler(dbc), new QueryHandler(dbc), new ReleaseHandler(dbc), new WriteHandler(dbc) };
 	}
 	
 	private ResponsibleHandler[] getHandlers() {

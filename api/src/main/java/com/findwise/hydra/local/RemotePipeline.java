@@ -1,13 +1,21 @@
 package com.findwise.hydra.local;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.util.EntityUtils;
 
+import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.common.InternalLogger;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.common.SerializationUtils;
@@ -22,11 +30,14 @@ public class RemotePipeline {
 	public static final String DISCARDED_DOCUMENT_URL = "discardedDocument";
 	public static final String GET_PROPERTIES_URL = "getProperties";
 	public static final String FAILED_DOCUMENT_URL = "failedDocument";
+	public static final String FILE_URL = "documentFile";
 	
 	public static final String STAGE_PARAM = "stage";
 	public static final String RECURRING_PARAM = "recurring";
 	public static final String NORELEASE_PARAM = "norelease";
 	public static final String PARTIAL_PARAM = "partial";
+	public static final String DOCID_PARAM = "docid";
+	public static final String FILENAME_PARAM = "filename";
 	
 	public static final int DEFAULT_PORT = 12001;
 	public static final String DEFAULT_HOST = "127.0.0.1";
@@ -44,6 +55,7 @@ public class RemotePipeline {
 	private String pendingUrl;
 	private String discardedUrl;
 	private String propertyUrl;
+	private String fileUrl;
 	
 	private String stageName;
 	
@@ -69,6 +81,7 @@ public class RemotePipeline {
 		pendingUrl = "/"+PENDING_DOCUMENT_URL+"?"+STAGE_PARAM+"="+stageName;
 		discardedUrl = "/"+DISCARDED_DOCUMENT_URL+"?"+STAGE_PARAM+"="+stageName;
 		propertyUrl = "/"+GET_PROPERTIES_URL+"?"+STAGE_PARAM+"="+stageName;
+		fileUrl = "/"+FILE_URL+"?"+STAGE_PARAM+"="+stageName;
 		
 		getRecurringUrl = getUrl+"&"+RECURRING_PARAM+"=1";
 		
@@ -83,12 +96,11 @@ public class RemotePipeline {
 	 * The fetched document will be tagged with the name of the stage which is
 	 * used to execute getDocumebt.
 	 */
-	public LocalDocument getDocument(LocalQuery query) throws IOException, HttpException, JsonException {
+	public LocalDocument getDocument(LocalQuery query) throws IOException {
 		return getDocument(query, false);
 	}
 
-	public LocalDocument getDocument(LocalQuery query, boolean recurring) throws IOException, HttpException,
-			JsonException {
+	public LocalDocument getDocument(LocalQuery query, boolean recurring) throws IOException {
 		HttpResponse response;
 		if(recurring) {
 			response = core.post(getRecurringUrl, query.toJson());
@@ -98,7 +110,12 @@ public class RemotePipeline {
 		}
 		
 		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-			LocalDocument ld = new LocalDocument(EntityUtils.toString(response.getEntity()));
+			LocalDocument ld;
+			try {
+				ld = new LocalDocument(EntityUtils.toString(response.getEntity()));
+			} catch (JsonException e) {
+				throw new IOException(e);
+			}
 			InternalLogger.debug("Received document with ID " + ld.getID());
 			currentDocument = ld;
 			return ld;
@@ -119,7 +136,7 @@ public class RemotePipeline {
 	 * @throws HttpException 
 	 * @throws IOException 
 	 */
-	public boolean releaseLastDocument() throws IOException, HttpException{
+	public boolean releaseLastDocument() throws IOException {
 		if(currentDocument==null) {
 			InternalLogger.debug("There is no document to release...");
 			return false;
@@ -151,7 +168,7 @@ public class RemotePipeline {
 	/**
 	 * Writes all outstanding updates to the last document fetched from the pipeline.
 	 */
-	public boolean saveCurrentDocument() throws IOException, HttpException, JsonException {
+	public boolean saveCurrentDocument() throws IOException, JsonException {
 		boolean keepingLock = keepLock;
 		if (currentDocument == null) {
 			InternalLogger.error("There is no document to write.");
@@ -168,7 +185,7 @@ public class RemotePipeline {
 	/**
 	 * Writes an entire document to the pipeline. Use is discouraged, try using save(..) whenever possible.
 	 */
-	public boolean saveFull(LocalDocument d) throws IOException, HttpException, JsonException {
+	public boolean saveFull(LocalDocument d) throws IOException, JsonException {
 		boolean res = save(d, false);
 		if(res) {
 			d.markSynced();
@@ -180,7 +197,7 @@ public class RemotePipeline {
 	/**
 	 * Writes all outstanding updates to the document since it was initialized.
 	 */
-	public boolean save(LocalDocument d) throws IOException, HttpException, JsonException {
+	public boolean save(LocalDocument d) throws IOException, JsonException {
 		boolean res = save(d, true);
 		if(res) {
 			d.markSynced();
@@ -189,7 +206,7 @@ public class RemotePipeline {
 		return res;
 	}
 	
-	private boolean save(LocalDocument d, boolean partialUpdate) throws IOException, HttpException, JsonException {
+	private boolean save(LocalDocument d, boolean partialUpdate) throws IOException, JsonException {
 		boolean hasId = d.getID()!=null;
 		String s;
 		if(partialUpdate) {
@@ -215,7 +232,7 @@ public class RemotePipeline {
 		return false;
 	}
 	
-	public boolean markPending(LocalDocument d) throws IOException, HttpException {
+	public boolean markPending(LocalDocument d) throws IOException {
 		HttpResponse response = core.post(pendingUrl, d.contentFieldsToJson(null));
 		if(response.getStatusLine().getStatusCode()==HttpStatus.SC_OK) {
 			EntityUtils.consume(response.getEntity());
@@ -228,7 +245,7 @@ public class RemotePipeline {
 		return false;
 	}
 	
-	public boolean markFailed(LocalDocument d) throws IOException, HttpException {
+	public boolean markFailed(LocalDocument d) throws IOException {
 		HttpResponse response = core.post(failedUrl, d.modifiedFieldsToJson());
 		if(response.getStatusLine().getStatusCode()==HttpStatus.SC_OK) {
 			EntityUtils.consume(response.getEntity());
@@ -241,12 +258,12 @@ public class RemotePipeline {
 		return false;
 	}
 	
-	public boolean markFailed(LocalDocument d, Throwable t) throws IOException, HttpException {
+	public boolean markFailed(LocalDocument d, Throwable t) throws IOException {
 		d.addError(stageName, t);
 		return markFailed(d);
 	}
 	
-	public boolean markProcessed(LocalDocument d) throws IOException, HttpException {
+	public boolean markProcessed(LocalDocument d) throws IOException {
 		HttpResponse response = core.post(processedUrl, d.modifiedFieldsToJson());
 		if(response.getStatusLine().getStatusCode()==HttpStatus.SC_OK) {
 			EntityUtils.consume(response.getEntity());
@@ -259,7 +276,7 @@ public class RemotePipeline {
 		return false;
 	}
 	
-	public boolean markDiscarded(LocalDocument d) throws IOException, HttpException {
+	public boolean markDiscarded(LocalDocument d) throws IOException {
 		HttpResponse response = core.post(discardedUrl, d.modifiedFieldsToJson());
 		if(response.getStatusLine().getStatusCode()==HttpStatus.SC_OK) {
 			EntityUtils.consume(response.getEntity());
@@ -289,17 +306,108 @@ public class RemotePipeline {
 		return s;
 	}
 	
-	public Map<String, Object> getProperties() throws JsonException, IOException, HttpException {
+	public Map<String, Object> getProperties() throws IOException {
 		HttpResponse response = core.get(propertyUrl);
 		
 		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-			Map<String, Object> map = SerializationUtils.fromJson(EntityUtils.toString(response.getEntity()));
+			Map<String, Object> map;
+			try {
+				map = SerializationUtils.fromJson(EntityUtils.toString(response.getEntity()));
+			} catch (JsonException e) {
+				throw new IOException(e);
+			}
 			InternalLogger.debug("Successfully retrieved propertyMap with " + map.size()+" entries");
 			return map;
 		} else if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
 			InternalLogger.debug("No document found matching query");
 			EntityUtils.consume(response.getEntity());
 			return null;
+		} else {
+			logUnexpected(response);
+			return null;
+		}
+	}
+	
+	private String getFileUrl(DocumentFile df) throws UnsupportedEncodingException {
+		return getFileUrl(df.getFileName(), df.getDocumentId());
+	}
+	
+	private String getFileUrl(String fileName, Object docid) throws UnsupportedEncodingException {
+		return fileUrl+"&"+RemotePipeline.FILENAME_PARAM+"="+fileName+"&"+RemotePipeline.DOCID_PARAM+"="+URLEncoder.encode(SerializationUtils.toJson(docid), "UTF-8");
+	}
+	
+	public DocumentFile getFile(String fileName, Object docid) throws IOException {
+		HttpResponse response = core.get(getFileUrl(fileName, docid));
+		
+		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+			Object o;
+			try {
+				o = SerializationUtils.toObject(EntityUtils.toString(response.getEntity()));
+			} catch (JsonException e) {
+				throw new IOException(e);
+			}
+			if(!(o instanceof Map)) {
+				return null;
+			}
+			
+			@SuppressWarnings("unchecked")
+			Map<String, Object> map = (Map<String, Object>) o;
+			Date d = new Date((Long)map.get("uploadDate"));
+			String encoding = (String) map.get("encoding");
+			String mimetype = (String) map.get("mimetype");
+			String savedByStage = (String) map.get("savedByStage");
+			InputStream is;
+			if(encoding == null) {
+				is = new ByteArrayInputStream(Base64.decodeBase64(((String)map.get("stream")).getBytes("UTF-8")));
+			} else {
+				is = new ByteArrayInputStream(Base64.decodeBase64(((String)map.get("stream")).getBytes(encoding)));
+			}
+
+			DocumentFile df = new DocumentFile(docid, fileName, is, savedByStage, d);
+			df.setEncoding(encoding);
+			df.setMimetype(mimetype);
+			
+			return df;
+		} 
+		else {
+			logUnexpected(response);
+			return null;
+		}
+	}
+	
+	public boolean saveFile(DocumentFile df) throws IOException {
+		HttpResponse response = core.post(getFileUrl(df),  SerializationUtils.toJson(df));
+		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+			EntityUtils.consume(response.getEntity());
+			return true;
+		} else {
+			logUnexpected(response);
+			return false;
+		}
+	}
+	
+	public boolean deleteFile(String fileName, Object docid) throws IOException {
+		HttpResponse response = core.delete(getFileUrl(fileName, docid));
+
+		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+			EntityUtils.consume(response.getEntity());
+			return true;
+		} else {
+			logUnexpected(response);
+			return false;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<String> getFileNames(Object docid) throws IOException {
+		HttpResponse response = core.get(fileUrl+"&"+RemotePipeline.DOCID_PARAM+"="+URLEncoder.encode(SerializationUtils.toJson(docid), "UTF-8"));
+
+		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+			try {
+				return (List<String>)SerializationUtils.toObject(EntityUtils.toString(response.getEntity()));
+			} catch (JsonException e) {
+				throw new IOException(e);
+			}
 		} else {
 			logUnexpected(response);
 			return null;

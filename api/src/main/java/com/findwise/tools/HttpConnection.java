@@ -1,10 +1,12 @@
 package com.findwise.tools;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.Socket;
 
 import org.apache.http.ConnectionReuseStrategy;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
@@ -12,6 +14,7 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
+import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.DefaultHttpClientConnection;
@@ -72,15 +75,26 @@ public class HttpConnection {
         connStrategy = new DefaultConnectionReuseStrategy();
 	}
 	
-	public HttpResponse get(String url) throws IOException, HttpException {
+	public HttpResponse get(String url) throws IOException {
 		BasicHttpRequest request = new BasicHttpRequest("GET", url);
-		if(!conn.isOpen() || conn.isStale()) {
+		if(!conn.isOpen()) {
 			connect();
 		}
 		return request(request);
 	}
 	
-	public HttpResponse post(String url, String content) throws IOException, HttpException {
+	public HttpResponse post(String url, String content) throws IOException {
+		String printable = (content.length()>100) ? content.substring(0, 100)+" [snip]..." : content;
+		InternalLogger.debug("Posting "+printable+" to "+url);
+		
+		return post(url, new StringEntity(content, "UTF-8"));
+	}
+	
+	public HttpResponse post(String url, InputStream content) throws IOException {
+		return post(url, new InputStreamEntity(content, -1));
+	}
+	
+	private HttpResponse post(String url, HttpEntity entity) throws IOException {
 		HttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", url);
 		
 		if (!conn.isOpen()) {
@@ -91,26 +105,33 @@ public class HttpConnection {
 			connect();
 		}
 		
-		StringEntity requestBody = new StringEntity(content, "UTF-8");
-		
-		String printable = (content.length()>100) ? content.substring(0, 100)+" [snip]..." : content;
-		
-		InternalLogger.debug("Posting "+printable+" to "+request.getRequestLine().getUri());
-		request.setEntity(requestBody);
+		request.setEntity(entity);
 
 		return request(request);
 	}
 	
-	private HttpResponse request(HttpRequest request) throws HttpException, IOException {
+	public HttpResponse delete(String url) throws IOException {
+		HttpRequest request = new BasicHttpRequest("DELETE", url);
+		if(!conn.isOpen() || conn.isStale()) {
+			connect();
+		}
+		return request(request);
+	}
+ 	
+	private HttpResponse request(HttpRequest request) throws IOException {
 		request.setParams(params);
-		httpexecutor.preProcess(request, httpproc, context);
-		HttpResponse response = httpexecutor.execute(request, conn, context);
-		response.setParams(params);
-		httpexecutor.postProcess(response, httpproc, context);
+		try {
+			httpexecutor.preProcess(request, httpproc, context);
+			HttpResponse response = httpexecutor.execute(request, conn, context);
+			response.setParams(params);
+			httpexecutor.postProcess(response, httpproc, context);
 
-		release(response);
-		
-		return response;
+			release(response);
+
+			return response;
+		} catch (HttpException e) {
+			throw new IOException(e);
+		}
 	}
 	
 	private void release(HttpResponse response) throws IOException {

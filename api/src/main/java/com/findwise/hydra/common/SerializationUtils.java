@@ -1,11 +1,18 @@
 package com.findwise.hydra.common;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.codec.binary.Base64;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -16,6 +23,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
 
 /**
  * Convenience methods for handling serialization and deserialization of 
@@ -52,7 +60,8 @@ public final class SerializationUtils {
 	public static Object toObject(String json) throws JsonException {
 		GsonBuilder gsonBuilder = new GsonBuilder();
 		gsonBuilder.serializeNulls();
-		gsonBuilder.registerTypeAdapter(Object.class, new NaturalGsonDeserializer()); 
+		gsonBuilder.registerTypeAdapter(Object.class, new NaturalGsonDeserializer());
+		gsonBuilder.setDateFormat(DateFormat.FULL);
 		Gson gson = gsonBuilder.create();
 		return gson.fromJson(json, Object.class);
 	}
@@ -63,7 +72,34 @@ public final class SerializationUtils {
 	 * @return
 	 */
 	public static String toJson(Object o) {
-		return new GsonBuilder().serializeNulls().create().toJson(o);
+		GsonBuilder gsonBuilder = new GsonBuilder();
+		gsonBuilder.registerTypeAdapter(InputStream.class,
+				new com.google.gson.JsonSerializer<InputStream>() {
+					public JsonElement serialize(InputStream src, Type typeOfSrc, JsonSerializationContext context) {
+						ByteArrayOutputStream baos = new ByteArrayOutputStream();
+						try {
+							for (int b; (b = src.read()) >= 0;) {
+								baos.write(b);
+							}
+						} catch (IOException e) {
+							Logger.error("Caught IOException in Stream serialization", e);
+						}
+						return new JsonPrimitive(new String(Base64.encodeBase64(baos.toByteArray())));
+					}
+				});
+		
+		gsonBuilder.registerTypeAdapter(Date.class,
+				new com.google.gson.JsonSerializer<Date>() {
+					@Override
+					public JsonElement serialize(Date src, Type typeOfSrc,
+							JsonSerializationContext context) {
+						return src == null ? null : new JsonPrimitive(src
+								.getTime());
+					}
+				});
+
+		gsonBuilder.setDateFormat(DateFormat.FULL);
+		return gsonBuilder.serializeNulls().create().toJson(o);
 	}
 	
 	/**

@@ -3,7 +3,6 @@ package com.findwise.hydra.stage;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.http.HttpException;
 import org.apache.http.ParseException;
 
 import com.findwise.hydra.common.JsonException;
@@ -40,7 +39,7 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	 * @throws JsonException
 	 */
 	protected LocalDocument fetch() throws ParseException, IOException,
-			HttpException, JsonException {
+			JsonException {
 		return getRemotePipeline().getDocument(getLocalQuery());
 	}
 
@@ -51,7 +50,7 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	 * @throws HttpException
 	 * @throws JsonException
 	 */
-	protected void persist() throws IOException, HttpException, JsonException {
+	protected void persist() throws IOException, JsonException {
 		Logger.debug("Saving document to RemotePipeline..");
 		getRemotePipeline().saveCurrentDocument();
 
@@ -67,8 +66,7 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	 * @throws IOException
 	 * @throws HttpException
 	 */
-	protected void persistError(ProcessException e) throws IOException,
-			HttpException {
+	protected void persistError(ProcessException e) throws IOException {
 		Logger.error("Trying to release document due to error in processing", e);
 		getRemotePipeline().releaseLastDocument();
 	}
@@ -102,7 +100,7 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	}
 
 	@Override
-	public void setUp(RemotePipeline rp, Map<String, Object> properties) throws IllegalArgumentException, IllegalAccessException, JsonException, IOException, HttpException {
+	public void setUp(RemotePipeline rp, Map<String, Object> properties) throws IllegalArgumentException, IllegalAccessException, IOException {
 		super.setUp(rp, properties);
 		LocalQuery q = queryParamTranslator.createQueryFromList(getQueryOptions());
 		setLocalQuery(q);
