@@ -102,11 +102,9 @@ public class StageRunner extends Thread {
 		try {
 			executor.execute(cmdLine, resultHandler);
 		} catch (ExecuteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 	}
 

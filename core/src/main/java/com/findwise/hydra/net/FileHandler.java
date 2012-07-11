@@ -3,14 +3,12 @@ package com.findwise.hydra.net;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Date;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.SerializationException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -20,6 +18,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseDocument;
@@ -31,6 +31,8 @@ import com.findwise.hydra.local.RemotePipeline;
 
 public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 
+	private static Logger logger = LoggerFactory.getLogger(FileHandler.class);
+	
 	private DatabaseConnector<T> dbc;
 	
 	public FileHandler(DatabaseConnector<T> dbc) {
@@ -78,7 +80,7 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 			
 			dbc.getDocumentWriter().write(df);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("An error occurred during file save", e);
 			HttpResponseWriter.printUnhandledException(response, e);
 		}
 	}

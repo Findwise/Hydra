@@ -21,7 +21,7 @@ public abstract class AbstractInputStage extends AbstractStage {
 			try {
 				Thread.sleep(DEFAULT_HOLD_INTERVAL);
 			} catch (Exception e) {
-				Logger.error("Caught excpetion while running", e);
+				Logger.error("Caught exception while running", e);
 				Runtime.getRuntime().removeShutdownHook(getShutDownHook());
 				System.exit(1);
 			}
@@ -59,7 +59,7 @@ public abstract class AbstractInputStage extends AbstractStage {
 			}
 		} catch (IOException e) {
 			Logger.error("IOException while trying to discard");
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 	}
 
