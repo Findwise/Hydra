@@ -13,6 +13,7 @@ import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DocumentWriter;
 import com.findwise.hydra.TailableIterator;
 import com.findwise.hydra.TestModule;
+import com.findwise.hydra.common.SerializationUtils;
 import com.findwise.hydra.common.Document.Status;
 import com.google.inject.Guice;
 import com.mongodb.DB;
@@ -107,13 +108,17 @@ public class MongoDocumentIOTest {
 	}
 	
 	@Test
-	public void testIdSerialization() {
+	public void testIdSerialization() throws Exception {
 		ObjectId id = new ObjectId();
 		
-		String serialized = mdc.getDocumentReader().toUrlEncodedString(id);
-		Object deserialized = mdc.getDocumentReader().toDocumentId(serialized);
+		String serialized = SerializationUtils.toJson(id);
+		Object deserialized = mdc.getDocumentReader().toDocumentIdFromJson(serialized);
 		if(!id.equals(deserialized)) {
-			fail("Serialization failed");
+			fail("Serialization failed from json string");
+		}
+		deserialized = mdc.getDocumentReader().toDocumentId(SerializationUtils.toObject(serialized));
+		if(!id.equals(deserialized)) {
+			fail("Serialization failed from primitive");
 		}
 	}
 	

@@ -42,7 +42,7 @@ public interface DocumentReader<T extends DatabaseType> {
 	 */
 	long getInactiveDatabaseSize();
 
-	Object toDocumentId(String urlEncodedString);
+	Object toDocumentId(Object jsonPrimitive);
 	
-	String toUrlEncodedString(Object documentId);
+	Object toDocumentIdFromJson(String json);
 }

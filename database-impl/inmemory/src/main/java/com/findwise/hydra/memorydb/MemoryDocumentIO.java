@@ -1,10 +1,8 @@
 package com.findwise.hydra.memorydb;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -278,15 +276,16 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 
 	@Override
 	public void write(DocumentFile df) throws IOException {
+		df.setUploadDate(new Date());
 		files.add(copy(df));
 		df.getStream().close();
 	}
 	
 	private DocumentFile copy(DocumentFile df) throws IOException {
-		String s = IOUtils.toString(df.getStream(), "UTF-8");
+		String s = IOUtils.toString(df.getStream(), df.getEncoding());
 		df.getStream().close();
-		df.setStream(IOUtils.toInputStream(s, "UTF-8"));
-		return new DocumentFile(df.getDocumentId(), df.getFileName(), IOUtils.toInputStream(s, "UTF-8"), df.getSavedByStage(), df.getUploadDate());
+		df.setStream(IOUtils.toInputStream(s, df.getEncoding()));
+		return new DocumentFile(df.getDocumentId(), df.getFileName(), IOUtils.toInputStream(s, df.getEncoding()), df.getSavedByStage(), df.getUploadDate());
 	}
 
 	@Override
@@ -295,24 +294,16 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	}
 	
 	@Override
-	public Object toDocumentId(String urlEncodedString) {
+	public Object toDocumentId(Object jsonPrimitive) {
+		return jsonPrimitive.toString();
+	}
+	
+	@Override
+	public Object toDocumentIdFromJson(String json) {
 		try {
-			return SerializationUtils.toObject(URLDecoder.decode(urlEncodedString, "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			logger.error("Unable to deserialize document id", e);
-			return null;
+			return SerializationUtils.toObject((String) json).toString();
 		} catch (JsonException e) {
 			logger.error("Unable to deserialize document id", e);
-			return null;
-		}
-	}
-
-	@Override
-	public String toUrlEncodedString(Object documentId) {
-		try {
-			return URLEncoder.encode(SerializationUtils.toJson(documentId), "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			logger.error("Unable to serialize document id", e);
 			return null;
 		}
 	}

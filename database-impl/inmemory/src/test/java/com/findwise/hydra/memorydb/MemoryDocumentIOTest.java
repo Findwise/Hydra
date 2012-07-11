@@ -15,6 +15,7 @@ import org.junit.runner.RunWith;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.common.Document;
+import com.findwise.hydra.common.SerializationUtils;
 import com.findwise.hydra.common.Document.Status;
 import com.findwise.hydra.common.DocumentFile;
 
@@ -112,13 +113,18 @@ public class MemoryDocumentIOTest {
 	}
 
 	@Test
-	public void testIdSerialization() {
+	public void testIdSerialization() throws Exception {
 		MemoryDocument md = new MemoryDocument();
 		io.insert(md);
-		String serialized = io.toUrlEncodedString(md.getID());
-		Object deserialized = io.toDocumentId(serialized);
+		String serialized = SerializationUtils.toJson(md.getID());
+		Object deserialized = io.toDocumentIdFromJson(serialized);
 		if(!md.getID().equals(deserialized)) {
-			fail("Serialization failed for "+md.getID().toString() );
+			fail("Serialization failed from json for "+md.getID().toString() );
+		}
+		
+		deserialized = io.toDocumentId(SerializationUtils.toObject(serialized));
+		if(!md.getID().equals(deserialized)) {
+			fail("Serialization failed from primitive");
 		}
 	}
 

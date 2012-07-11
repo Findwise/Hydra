@@ -33,10 +33,10 @@ public class FileHandlerTest {
 		
 		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
 		
-		String content = "adsafgoaiuhgahgo\ndåäöasdas";
+		String content = "adsafgoaiuhgahgo\ndasdas";
 		String fileName = "test.txt";
 		
-		rp.saveFile(IOUtils.toInputStream(content, "UTF-8"), fileName, testDoc.getID().toString());
+		rp.saveFile(new DocumentFile(testDoc.getID(), fileName, IOUtils.toInputStream(content, "UTF-8")));
 		
 		DocumentFile df = mc.getDocumentReader().getDocumentFile(testDoc, fileName);
 		
@@ -47,6 +47,7 @@ public class FileHandlerTest {
 		if(!df.getFileName().equals(fileName)) {
 			fail("File had wrong file name");
 		}
+		
 		String fc = IOUtils.toString(df.getStream(), "UTF-8");
 		
 		if(!fc.equals(content)) {
@@ -74,7 +75,7 @@ public class FileHandlerTest {
 			fail("Got non-zero filename list before any files were added");
 		}
 		
-		String content = "adsafgoaiuhgahgo\ndåäöasdas";
+		String content = "adsafgoaiuhgahgo\ndasåäödas";
 		String fileName = "test.txt";
 		String fileName2 = "test2.txt";
 		
@@ -107,26 +108,24 @@ public class FileHandlerTest {
 			fail("Got non-null for non-existant file");
 		}
 		
-		String content = "adsafgoaiuhgahgo\ndndåäöasasddas";
+		String content = "adsafgoaiuhgahgo\ndndasasddåäöäöåäöäas";
 		String fileName = "test.txt";
-		String content2 = "adsagagasdgarqRE13123AFg da\nndåäöasdas";
+		String content2 = "adsagagasdgarqRE13123AFg da\nndasdas";
 		String fileName2 = "test2.txt";
 		
 		mc.getDocumentWriter().write(new DocumentFile(testDoc.getID(), fileName, IOUtils.toInputStream(content, "UTF-8"), "stage"));
 		mc.getDocumentWriter().write(new DocumentFile(testDoc.getID(), fileName2, IOUtils.toInputStream(content2, "UTF-8"), "stage"));
 		
-		InputStream s = rp.getFile(fileName, testDoc.getID().toString());
+		InputStream s = rp.getFile(fileName, testDoc.getID().toString()).getStream();
 		if(s==null) {
 			fail("Did not get a file stream for file 1");
 		}
 		String fc = IOUtils.toString(s, "UTF-8");
 		if(!fc.equals(content)) {
-			System.out.println("::: "+fc);
-			System.out.println(content);
 			fail("Content of file 1 did not match");
 		}
 		
-		s = rp.getFile(fileName2, testDoc.getID().toString());
+		s = rp.getFile(fileName2, testDoc.getID().toString()).getStream();
 		if(s==null) {
 			fail("Did not get a file stream for file 2");
 		}
@@ -150,7 +149,7 @@ public class FileHandlerTest {
 			fail("Got positive response for non-existant file");
 		}
 		
-		String content = "adsafgoaiuhgahgo\ndåäöasdas";
+		String content = "adsafgoaiuhgahgo\ndasdas";
 		String fileName = "test.txt";
 		String fileName2 = "test2.txt";
 		

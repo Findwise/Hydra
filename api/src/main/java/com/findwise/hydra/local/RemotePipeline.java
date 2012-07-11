@@ -5,14 +5,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.util.EntityUtils;
 
+import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.common.InternalLogger;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.common.SerializationUtils;
@@ -325,15 +328,46 @@ public class RemotePipeline {
 		}
 	}
 	
+	private String getFileUrl(DocumentFile df) throws UnsupportedEncodingException {
+		return getFileUrl(df.getFileName(), df.getDocumentId());
+	}
+	
 	private String getFileUrl(String fileName, Object docid) throws UnsupportedEncodingException {
 		return fileUrl+"&"+RemotePipeline.FILENAME_PARAM+"="+fileName+"&"+RemotePipeline.DOCID_PARAM+"="+URLEncoder.encode(SerializationUtils.toJson(docid), "UTF-8");
 	}
 	
-	public InputStream getFile(String fileName, Object docid) throws IOException {
+	public DocumentFile getFile(String fileName, Object docid) throws IOException {
 		HttpResponse response = core.get(getFileUrl(fileName, docid));
 		
 		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-			return new ByteArrayInputStream(EntityUtils.toByteArray(response.getEntity()));
+			Object o;
+			try {
+				o = SerializationUtils.toObject(EntityUtils.toString(response.getEntity()));
+			} catch (JsonException e) {
+				throw new IOException(e);
+			}
+			if(!(o instanceof Map)) {
+				return null;
+			}
+			
+			@SuppressWarnings("unchecked")
+			Map<String, Object> map = (Map<String, Object>) o;
+			Date d = new Date((Long)map.get("uploadDate"));
+			String encoding = (String) map.get("encoding");
+			String mimetype = (String) map.get("mimetype");
+			String savedByStage = (String) map.get("savedByStage");
+			InputStream is;
+			if(encoding == null) {
+				is = new ByteArrayInputStream(Base64.decodeBase64(((String)map.get("stream")).getBytes("UTF-8")));
+			} else {
+				is = new ByteArrayInputStream(Base64.decodeBase64(((String)map.get("stream")).getBytes(encoding)));
+			}
+
+			DocumentFile df = new DocumentFile(docid, fileName, is, savedByStage, d);
+			df.setEncoding(encoding);
+			df.setMimetype(mimetype);
+			
+			return df;
 		} 
 		else {
 			logUnexpected(response);
@@ -341,9 +375,8 @@ public class RemotePipeline {
 		}
 	}
 	
-	public boolean saveFile(InputStream is, String fileName, Object docid) throws IOException {
-		HttpResponse response = core.post(getFileUrl(fileName, docid),  is);
-
+	public boolean saveFile(DocumentFile df) throws IOException {
+		HttpResponse response = core.post(getFileUrl(df),  SerializationUtils.toJson(df));
 		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 			EntityUtils.consume(response.getEntity());
 			return true;

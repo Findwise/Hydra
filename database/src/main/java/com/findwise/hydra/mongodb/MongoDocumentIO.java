@@ -1,9 +1,7 @@
 package com.findwise.hydra.mongodb;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -66,6 +64,8 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	public static final String DOCUMENT_KEY = "document";
 	public static final String FILENAME_KEY = "filename";
 	public static final String STAGE_KEY = "stage";
+	private static final String MIMETYPE_KEY = "contentType";
+	private static final String ENCODING_KEY = "encoding";
 	
 	public MongoDocumentIO(DB db, WriteConcern concern, boolean discard, long documentsToKeep) {
 		this.concern = concern;
@@ -119,7 +119,17 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 			return null;
 		}
 		
-		return new DocumentFile(d.getID(), file.getFilename(), file.getInputStream(), (String)file.get(STAGE_KEY), file.getUploadDate());
+		DocumentFile df =  new DocumentFile(d.getID(), file.getFilename(), file.getInputStream(), (String)file.get(STAGE_KEY), file.getUploadDate());
+
+		if(file.containsField(MIMETYPE_KEY)) {
+			df.setMimetype((String) file.get(MIMETYPE_KEY));
+		}
+		
+		if(file.containsField(ENCODING_KEY)) {
+			df.setEncoding((String) file.get(ENCODING_KEY));
+		}
+		
+		return df;
 	}
 	
 	@Override
@@ -286,6 +296,9 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		
 		GridFSInputFile input = documentfs.createFile(df.getStream(), df.getFileName());
 		input.put(DOCUMENT_KEY, df.getDocumentId());
+		input.put(ENCODING_KEY, df.getEncoding());
+		input.put(MIMETYPE_KEY, df.getMimetype());
+		
 		input.save();
 	}
 
@@ -480,31 +493,22 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Object toDocumentId(String urlEncodedString) {
-		try {
-			Object o = SerializationUtils.toObject(URLDecoder.decode(urlEncodedString, "UTF-8"));
-			Object clazz = o.getClass();
-			if(o instanceof Map) {
-				return new ObjectId((Integer)((Map) o).get("_time"), (Integer)((Map) o).get("_machine"), (Integer)((Map) o).get("_inc"));
-			} else {
-				logger.error("Serialized ID was not deserialized to map. Was it created by a Hydra database of this type?");
-				return null;
-			}
-		} catch (UnsupportedEncodingException e) {
-			logger.error("Unable to deserialize document id", e);
-			return null;
-		} catch (JsonException e) {
-			logger.error("Unable to deserialize document id", e);
+	public Object toDocumentId(Object jsonPrimitive) {
+		if (jsonPrimitive instanceof Map) {
+			return new ObjectId((Integer) ((Map) jsonPrimitive).get("_time"),
+					(Integer) ((Map) jsonPrimitive).get("_machine"),
+					(Integer) ((Map) jsonPrimitive).get("_inc"));
+		} else {
+			logger.error("Serialized ID was not deserialized to map. The type was a "+jsonPrimitive.getClass()+". Was it created by a Hydra database of this type?");
 			return null;
 		}
 	}
-
-	@Override
-	public String toUrlEncodedString(Object documentId) {
+	
+	public Object toDocumentIdFromJson(String json) {
 		try {
-			return URLEncoder.encode(SerializationUtils.toJson(documentId), "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			logger.error("Unable to serialize document id", e);
+			return toDocumentId(SerializationUtils.toObject((String)json));
+		} catch (JsonException e) {
+			logger.error("Error deserializing json", e);
 			return null;
 		}
 	}

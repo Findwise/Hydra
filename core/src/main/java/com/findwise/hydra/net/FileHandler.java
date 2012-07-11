@@ -1,7 +1,15 @@
 package com.findwise.hydra.net;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.Date;
+import java.util.Map;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.SerializationException;
 import org.apache.http.HttpEntity;
@@ -9,6 +17,7 @@ import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
@@ -16,6 +25,8 @@ import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.common.DocumentFile;
+import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.common.SerializationUtils;
 import com.findwise.hydra.local.RemotePipeline;
 
 public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
@@ -52,22 +63,24 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 		return new String[] { RemotePipeline.FILE_URL };
 	}
 	
-	private void handleSaveFile(HttpRequest request, HttpResponse response) throws IOException {
-        HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request).getEntity();
-        String requestContent = EntityUtils.toString(requestEntity, "UTF-8");
+	private void handleSaveFile(HttpRequest request, HttpResponse response) {
+		try {
+			DocumentFile df = getDocumentFile(request);
+			if (df == null) {
+				HttpResponseWriter.printBadRequestContent(response);
+			}
 
-        Triple triple = getTriple(request, response);
-        if(triple==null) {
-        	return;
-        }
-        
-        DatabaseDocument<T> md = dbc.getDocumentReader().getDocumentById(triple.docid);
-        if(md==null) {
-        	HttpResponseWriter.printNoDocument(response);
-        	return;
-        }
-        
-        dbc.getDocumentWriter().write(new DocumentFile(md.getID(), triple.fileName, IOUtils.toInputStream(requestContent, "UTF-8"), triple.stage));
+			DatabaseDocument<T> md = dbc.getDocumentReader().getDocumentById(df.getDocumentId());
+			if (md == null) {
+				HttpResponseWriter.printNoDocument(response);
+				return;
+			}
+			
+			dbc.getDocumentWriter().write(df);
+		} catch (Exception e) {
+			e.printStackTrace();
+			HttpResponseWriter.printUnhandledException(response, e);
+		}
 	}
 	
 	private void handleGetFile(HttpRequest request, HttpResponse response) throws IOException {
@@ -89,7 +102,7 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
         	return;
         }
         
-        HttpResponseWriter.printStream(response, df.getStream());
+        HttpResponseWriter.printJson(response, df);
 	}
 	
 	private void handleGetFilenames(HttpRequest request, HttpResponse response) throws IOException {
@@ -106,6 +119,38 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
         }
 		
         HttpResponseWriter.printJson(response, dbc.getDocumentReader().getDocumentFileNames(md));
+	}
+	
+	@SuppressWarnings("unchecked")
+	private DocumentFile getDocumentFile(HttpRequest request) throws ParseException, IOException, JsonException {
+        HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request).getEntity();
+        String requestContent = EntityUtils.toString(requestEntity, "UTF-8");
+
+		Object o = SerializationUtils.fromJson(requestContent);
+		
+		if(!(o instanceof Map)) {
+			return null;
+		}
+		
+		Map<String, Object> map = (Map<String, Object>) o;
+		Object id = dbc.getDocumentReader().toDocumentId(map.get("documentId"));
+		String fileName = (String) map.get("fileName");
+		Date d = (Date) map.get("uploadDate");
+		String encoding = (String) map.get("encoding");
+		String mimetype = (String) map.get("mimetype");
+		String savedByStage = (String) map.get("savedByStage");
+		InputStream is;
+		if(encoding == null) {
+			is = new ByteArrayInputStream(Base64.decodeBase64(((String)map.get("stream")).getBytes("UTF-8")));
+		} else {
+			is = new ByteArrayInputStream(Base64.decodeBase64(((String)map.get("stream")).getBytes(encoding)));
+		}
+		
+		DocumentFile df = new DocumentFile(id, fileName, is, savedByStage, d);
+		df.setEncoding(encoding);
+		df.setMimetype(mimetype);
+		
+		return df;
 	}
 	
 	private void handleDeleteFile(HttpRequest request, HttpResponse response) throws IOException {
@@ -141,7 +186,11 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
         	HttpResponseWriter.printMissingParameter(response, RemotePipeline.DOCID_PARAM);
         	return null;
         }
-		tuple.docid = dbc.getDocumentReader().toDocumentId(rawparam);
+		try {
+			tuple.docid = dbc.getDocumentReader().toDocumentIdFromJson(URLDecoder.decode(rawparam, "UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			
+		}
 		if(tuple.docid==null) {
         	HttpResponseWriter.printUnhandledException(response, new SerializationException("Unable to deserialize the parameter "+RemotePipeline.DOCID_PARAM));
         	return null;

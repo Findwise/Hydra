@@ -135,6 +135,12 @@ public final class HttpResponseWriter {
 		setStringEntity(response, "An internal server error occurred with the message " + e.getMessage());
 	}
 	
+	protected static void printBadRequestContent(HttpResponse response) {
+		logger.error("Printing Bad Request Content");
+		response.setStatusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY);
+		setStringEntity(response, "Bad Request content. Content not understood.");
+	}
+	
 	protected static void printJson(HttpResponse response, Object o) {
 		logger.debug("Printing a JSON response.");
 		response.setStatusCode(HttpStatus.SC_OK);
@@ -152,12 +158,6 @@ public final class HttpResponseWriter {
 		logger.warn("Denying access");
 		response.setStatusCode(HttpStatus.SC_FORBIDDEN);
 		setStringEntity(response, "Access forbidden");
-	}
-	
-	protected static void printStream(HttpResponse response, InputStream is) throws IOException {
-		logger.warn("Printing an input stream");
-		response.setStatusCode(HttpStatus.SC_OK);
-		setStringEntity(response, IOUtils.toString(is, "UTF-8"));
 	}
 
 	protected static void printFileNotFound(HttpResponse response, String fileName) {
