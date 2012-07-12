@@ -1,7 +1,6 @@
 package com.findwise.hydra.mongodb;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
