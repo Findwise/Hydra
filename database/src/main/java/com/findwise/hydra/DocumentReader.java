@@ -29,7 +29,7 @@ public interface DocumentReader<T extends DatabaseType> {
 	 */
 	TailableIterator<T> getInactiveIterator();
 
-	MongoTailableIterator getInactiveIterator(DBObject query);
+	TailableIterator<T> getInactiveIterator(DBObject query);
 	
 	List<DatabaseDocument<T>> getDocuments(DatabaseQuery<T> q, int limit);
 
