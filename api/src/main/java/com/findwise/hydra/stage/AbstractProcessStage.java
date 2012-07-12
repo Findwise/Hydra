@@ -20,10 +20,13 @@ import com.findwise.hydra.local.StaticQueryParamTranslator;
  * @author anton.hagerstrand
  * @author simon.stenstrom
  * @author anders.rask
+ * @author joel.westberg
  * 
  */
 public abstract class AbstractProcessStage extends AbstractStage {
-
+	@Parameter(description="If set, indicates that the document being processed should be FAILED if a ProcessException is thrown by the stage. If not set, the error will only be persisted and the document written back to Hydra.")
+	private boolean failDocumentOnProcessException = false;
+	
 	public static final int NUM_RESERVED_ARGUMENTS = 3;
 	private long holdInterval = DEFAULT_HOLD_INTERVAL;
 	private static QueryParamTranslator queryParamTranslator = new StaticQueryParamTranslator();
@@ -64,11 +67,13 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	 * @param e
 	 *            The thrown error.
 	 * @throws IOException
+	 * @throws JsonException 
 	 * @throws HttpException
 	 */
-	protected void persistError(ProcessException e) throws IOException {
+	protected void persistError(LocalDocument d, ProcessException e) throws IOException, JsonException {
 		Logger.error("Trying to release document due to error in processing", e);
-		getRemotePipeline().releaseLastDocument();
+		d.addError(getStageName(), e);
+		getRemotePipeline().saveCurrentDocument();
 	}
 	
 	/**
@@ -134,7 +139,11 @@ public abstract class AbstractProcessStage extends AbstractStage {
 						process(doc);
 						persist();
 					} catch (ProcessException e) {
-						persistError(e);
+						if(failDocumentOnProcessException) {
+							getRemotePipeline().markFailed(doc, e);
+						} else {
+							persistError(doc, e);
+						}
 					}
 
 				}
@@ -146,5 +155,4 @@ public abstract class AbstractProcessStage extends AbstractStage {
 			}
 		}
 	}
-
 }
