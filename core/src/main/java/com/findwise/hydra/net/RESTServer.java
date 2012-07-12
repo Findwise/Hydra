@@ -122,7 +122,7 @@ public class RESTServer extends Thread {
 				}
 			}
 			catch (IOException e) {
-				e.printStackTrace();
+				logger.error("An IOException occurred during ping operation", e);
 			}
 		}
 		Thread.sleep(50);

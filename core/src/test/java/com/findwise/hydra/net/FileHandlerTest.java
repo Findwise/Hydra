@@ -19,11 +19,13 @@ import com.findwise.hydra.memorydb.MemoryType;
 public class FileHandlerTest {
 	private MemoryConnector mc;
 	private RESTServer server;
+	private HttpRESTHandler<MemoryType> handler;
 	
 	@Before
 	public void setUp() {
 		mc = new MemoryConnector();
-		server = RESTServer.getNewStartedRESTServer(20000, new HttpRESTHandler<MemoryType>(mc));
+		handler = new HttpRESTHandler<MemoryType>(mc);
+		server = RESTServer.getNewStartedRESTServer(20000, handler);
 	}
 	
 	@Test

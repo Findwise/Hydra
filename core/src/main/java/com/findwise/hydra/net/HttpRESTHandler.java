@@ -1,12 +1,17 @@
 package com.findwise.hydra.net;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.nio.reactor.IOSession;
 import org.apache.http.protocol.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,19 +28,11 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 	
 	private String restId;
 
-	boolean localhostOnly = false;
+	private List<String> allowedHosts;
 	
 	private ResponsibleHandler[] handlers;
 	
 	private PingHandler pingHandler;
-	
-	public boolean isLocalhostOnly() {
-		return localhostOnly;
-	}
-
-	public void setLocalhostOnly(boolean localhostOnly) {
-		this.localhostOnly = localhostOnly;
-	}
 
 	private PingHandler getPingHandler() {
 		if(pingHandler == null) {
@@ -46,11 +43,16 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 	
 	@Inject
     public HttpRESTHandler(NodeMaster nm) {
-        this.dbc = (DatabaseConnector<T>)nm.getDatabaseConnector();
+        this((DatabaseConnector<T>)nm.getDatabaseConnector());
     }
 	
     public HttpRESTHandler(DatabaseConnector<T> dbc) {
+        this(dbc, null);
+    }
+    
+    public HttpRESTHandler(DatabaseConnector<T> dbc, List<String> allowedHosts) {
         this.dbc = dbc;
+        this.setAllowedHosts(allowedHosts);
     }
 	
 	private void createHandlers() {
@@ -80,7 +82,7 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 
 	@Override
 	public void handle(final HttpRequest request, final HttpResponse response, final HttpContext context) {
-		if(!accessAllowed(request)) {
+		if(!accessAllowed(context)) {
 			HttpResponseWriter.printAccessDenied(response);
 			return;
 		}
@@ -103,8 +105,35 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 		}
     }
 	
-	public boolean accessAllowed(HttpRequest request) {
-		return true;
+	public boolean accessAllowed(HttpContext context) {
+		if(allowedHosts==null) {
+			return true;
+		}
+		try {
+			Field f = context.getClass().getDeclaredField("iosession");
+			boolean accessible = f.isAccessible();
+			Field modifiersField = Field.class.getDeclaredField("modifiers");
+			int modifiers = f.getModifiers();
+			modifiersField.setAccessible(true);
+			modifiersField.set(f, f.getModifiers() & ~Modifier.FINAL);
+			modifiersField.set(f, f.getModifiers() & ~Modifier.PRIVATE);
+			f.setAccessible(true);
+			IOSession io = (IOSession) f.get(context);
+			f.setAccessible(accessible);
+			modifiersField.set(f, modifiers);
+			SocketAddress sa = io.getRemoteAddress();
+			if(sa instanceof InetSocketAddress) {
+				if(allowedHosts.contains(((InetSocketAddress) sa).getHostName())) {
+					return true;
+				} else {
+					logger.error("Connection came from somewhere other than the list of allowed hosts ("+sa+"). Refusing the connection.");
+					return false;
+				}
+			}
+		} catch (Exception e) {
+			logger.error("Caught an exception while trying to determine remote address. Refusing the connection.");
+		} 
+		return false;
 	}
 
 	@Override
@@ -134,5 +163,13 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 		for(T t : array) {
 			list.add(t);
 		}
+	}
+
+	public void setAllowedHosts(List<String> allowedHosts) {
+		this.allowedHosts = allowedHosts;
+	}
+
+	public List<String> getAllowedHosts() {
+		return allowedHosts;
 	}
 }
