@@ -10,6 +10,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.Bytes;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.MongoException.CursorNotFound;
 
 public class MongoTailableIterator implements TailableIterator<MongoType> {
@@ -18,14 +19,23 @@ public class MongoTailableIterator implements TailableIterator<MongoType> {
 	private DBCursor cursor;
 	private DBCollection dbc;
 	
+	
 	boolean closed = false;
+	private DBObject query;
+
+	
 	
 	/**
 	 * @param dbc
 	 * @throws BackingStoreException if there is a problem in getting an iterator
 	 */
-	public MongoTailableIterator(DBCollection dbc) throws BackingStoreException {
+	public MongoTailableIterator(DBCollection dbc) throws BackingStoreException {	
+		this(new BasicDBObject(), dbc);
+	}
+	
+	public MongoTailableIterator(DBObject query, DBCollection dbc) throws BackingStoreException{
 		this.dbc = dbc;
+		this.query = query;
 		createCursor();
 	}
 	
@@ -33,7 +43,7 @@ public class MongoTailableIterator implements TailableIterator<MongoType> {
 		if(!dbc.isCapped()) {
 			throw new BackingStoreException("Unable to create cursor: collection is not capped");
 		}
-		cursor = dbc.find(new BasicDBObject()).sort(new BasicDBObject("$natural", 1)).addOption(Bytes.QUERYOPTION_TAILABLE).addOption(Bytes.QUERYOPTION_AWAITDATA);
+		cursor = dbc.find(query).sort(new BasicDBObject("$natural", 1)).addOption(Bytes.QUERYOPTION_TAILABLE).addOption(Bytes.QUERYOPTION_AWAITDATA);
 	}
 	
 	@Override

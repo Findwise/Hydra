@@ -20,6 +20,7 @@ import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.common.SerializationUtils;
+import com.mongodb.DBObject;
 
 public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		DocumentReader<MemoryType> {
@@ -306,5 +307,11 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 			logger.error("Unable to deserialize document id", e);
 			return null;
 		}
+	}
+
+	@Override
+	public TailableIterator<MemoryType> getInactiveIterator(DatabaseQuery<MemoryType> query) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

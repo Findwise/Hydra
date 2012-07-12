@@ -25,6 +25,8 @@ public interface DocumentReader<T extends DatabaseType> {
 	 * processed. 
 	 */
 	TailableIterator<T> getInactiveIterator();
+
+	TailableIterator<T> getInactiveIterator(DatabaseQuery<T> query);
 	
 	List<DatabaseDocument<T>> getDocuments(DatabaseQuery<T> q, int limit);
 
@@ -41,7 +43,7 @@ public interface DocumentReader<T extends DatabaseType> {
 	 * @return the number of inactive (i.e. processed or discarded) documents in the database.
 	 */
 	long getInactiveDatabaseSize();
-
+	
 	Object toDocumentId(Object jsonPrimitive);
 	
 	Object toDocumentIdFromJson(String json);
