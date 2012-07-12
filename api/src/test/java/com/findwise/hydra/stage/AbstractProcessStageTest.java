@@ -3,10 +3,15 @@ package com.findwise.hydra.stage;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.util.HashMap;
 
 import org.junit.After;
 import org.junit.Before;
@@ -167,59 +172,76 @@ public class AbstractProcessStageTest {
 		}
 
 	}
+	
+	@Stage
+	public static class ErrorAbstractStage extends AbstractProcessStage {
+		@Override
+		public void process(LocalDocument doc) throws ProcessException {
+			throw new ProcessException("err");
+		}
+
+	}
 
 	private AbstractProcessStage getErrorAbstractStage(RemotePipeline rp) {
-		AbstractProcessStage stage = new DummyAbstractStage() {
-			@Override
-			public void process(LocalDocument doc) throws ProcessException {
-				throw new ProcessException("err");
-			}
-
-		};
+		AbstractProcessStage stage = new ErrorAbstractStage();
 
 		stage.setRemotePipeline(rp);
 		return stage;
 	}
 
 	@Test
-	public void testDocumentProcessException() {
+	public void testDocumentProcessException() throws Exception {
 		rp = mock(RemotePipeline.class);
 		stage = getErrorAbstractStage(rp);
 		spy(stage);
 
-		LocalDocument testDoc1 = new LocalDocument();
-		testDoc1.putContentField("testField1", "test1");
-		testDoc1.putContentField("testField2", "test2");
-		
-		try {
-			when(rp.getDocument(any(LocalQuery.class))).thenReturn(testDoc1);
-			when(rp.releaseLastDocument()).thenReturn(true);
-		} catch (Exception e) {
-			fail(e.getStackTrace().toString());
-		}
+		LocalDocument testDoc1 = mock(LocalDocument.class);
+		when(testDoc1.getContentField("testField1")).thenReturn("test1");
+		when(testDoc1.getContentField("testField1")).thenReturn("test2");
+
+		when(rp.getDocument(any(LocalQuery.class))).thenReturn(testDoc1);
+		when(rp.releaseLastDocument()).thenReturn(true);
 
 		stage.start();
-		try {
-			Thread.sleep(1000);
-			stage.stopStage();
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			fail(e.getStackTrace().toString());
-		}
+		Thread.sleep(1000);
+		stage.stopStage();
+		Thread.sleep(1000);
 
-		try {
-			verify(rp, atLeast(3)).getDocument(any(LocalQuery.class));
-			// verify(stage, atLeast(3)).process(any(LocalDocument.class));
-			verify(rp, atLeast(3)).releaseLastDocument();
-		} catch (Exception e) {
-			fail(e.getStackTrace().toString());
-		}
+		verify(rp, atLeast(3)).getDocument(any(LocalQuery.class));
+		verify(rp, atLeast(3)).saveCurrentDocument();
+		verify(rp, never()).markFailed(testDoc1);
+		verify(rp, never()).markFailed(any(LocalDocument.class), any(Throwable.class));
+		verify(testDoc1, atLeast(3)).addError(any(String.class), any(Throwable.class));
+	}
+	
+	@Test
+	public void testFailDocumentOnProcessException() throws Exception {
+		rp = mock(RemotePipeline.class);
+		stage = getErrorAbstractStage(rp);
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		map.put("failDocumentOnProcessException", true);
+		stage.setParameters(map);
+		
+		spy(stage);
+
+		LocalDocument testDoc1 = mock(LocalDocument.class);
+		when(testDoc1.getContentField("testField1")).thenReturn("test1");
+		when(testDoc1.getContentField("testField1")).thenReturn("test2");
+
+		when(rp.getDocument(any(LocalQuery.class))).thenReturn(testDoc1);
+		when(rp.releaseLastDocument()).thenReturn(true);
+
+		stage.start();
+		Thread.sleep(1000);
+		stage.stopStage();
+		Thread.sleep(1000);
+
+		verify(rp, atLeast(3)).markFailed(any(LocalDocument.class), any(ProcessException.class));
 	}
 
 	/**
 	 * TestStage to see if methods are called.
 	 */
-
 	public static class TestStage extends AbstractProcessStage {
 
 		public static boolean hasProcess = false;
@@ -228,7 +250,6 @@ public class AbstractProcessStageTest {
 		@Override
 		public void process(LocalDocument doc) throws ProcessException {
 			hasProcess = true;
-
 		}
 
 		@Override
@@ -236,7 +257,47 @@ public class AbstractProcessStageTest {
 			hasInit = true;
 
 		}
+	}
+	
+//	@Test
+	public void testPersistError() throws IOException {
+		ExceptionStage es = new ExceptionStage();
+		RemotePipeline rp = mock(RemotePipeline.class);
+		es.setRemotePipeline(rp);
+		
+		LocalDocument ld = mock(LocalDocument.class);
 
+		try {
+			when(rp.getDocument(any(LocalQuery.class))).thenReturn(ld);
+			when(rp.releaseLastDocument()).thenReturn(true);
+		} catch (Exception e) {
+			fail(e.getStackTrace().toString());
+		}
+		
+		es.start();
+		try {
+			Thread.sleep(1000);
+			stage.stopStage();
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			fail(e.getStackTrace().toString());
+		}
+		
+		verify(ld, times(1)).addError("es", any(Throwable.class));
+		
 	}
 
+//	@Test
+	public void testFailOnPersistError() {
+		
+	}
+	
+	public static class ExceptionStage extends AbstractProcessStage {
+
+		@Override
+		public void process(LocalDocument doc) throws ProcessException {
+			System.out.println("throwing");
+			throw new ProcessException("msg");
+		}
+	}
 }
