@@ -511,4 +511,14 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 			return null;
 		}
 	}
+	
+	@Override
+	public MongoTailableIterator getInactiveIterator(DatabaseQuery<MongoType> query) {
+		try {
+			return new MongoTailableIterator(((MongoQuery)query).toDBObject(), oldDocuments);
+		} catch (BackingStoreException e) {
+			logger.error("Unable to get Tailable Iterator!", e);
+			return null;
+		}
+	}
 }
