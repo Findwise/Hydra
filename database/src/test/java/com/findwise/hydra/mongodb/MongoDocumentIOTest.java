@@ -21,6 +21,8 @@ import com.mongodb.DBCollection;
 
 public class MongoDocumentIOTest {
 	private MongoConnector mdc;
+	
+	private Random r = new Random(System.currentTimeMillis());
 
 	private void createAndConnect() throws Exception {
 	
@@ -188,7 +190,41 @@ public class MongoDocumentIOTest {
 		}
 	}
 	
-
+	@Test
+	public void testDoneContentTransfer() throws Exception {
+		mdc.getDocumentWriter().prepare();
+		
+		MongoDocument d = new MongoDocument();
+		d.putContentField(getRandomString(5), getRandomString(20));
+		d.putContentField(getRandomString(5), getRandomString(20));
+		d.putContentField(getRandomString(5), getRandomString(20));
+		d.putContentField(getRandomString(5), getRandomString(20));
+		d.putContentField(getRandomString(5), getRandomString(20));
+		
+		
+		mdc.getDocumentWriter().insert(d);
+		
+		mdc.getDocumentWriter().markProcessed(d, "x");
+		
+		MongoDocument d2 = mdc.getDocumentReader().getDocumentById(d.getID(), true);
+		
+		if(d.getContentFields().size()!=d2.getContentFields().size()) {
+			fail("Processed document did not have the correct number of content fields");
+		}
+		
+		for(String field : d.getContentFields()) {
+			if(!d2.hasContentField(field)) {
+				fail("Processed document did not have the correct content fields");
+			}
+			
+			if(!d2.getContentField(field).equals(d.getContentField(field))) {
+				fail("Processed document did not have the correct data in the content fields");
+			}
+		}
+		
+	}
+	
+	
 	int testReadCount = 1000;
 	@Test
 	public void testReadStatus() throws Exception {
@@ -284,8 +320,6 @@ public class MongoDocumentIOTest {
 	
 	private String getRandomString(int length) {
 		char[] ca = new char[length];
-
-		Random r = new Random(System.currentTimeMillis());
 
 		for (int i = 0; i < length; i++) {
 			ca[i] = (char) ('A' + r.nextInt(26));
