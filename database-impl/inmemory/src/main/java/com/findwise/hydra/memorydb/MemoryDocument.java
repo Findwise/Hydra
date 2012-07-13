@@ -8,8 +8,6 @@ import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.local.LocalDocument;
 
 public class MemoryDocument extends LocalDocument implements DatabaseDocument<MemoryType> {
-
-	private Object id;
 	
 	@Override
 	public Object putMetadataField(String key, Object value) {
@@ -115,11 +113,11 @@ public class MemoryDocument extends LocalDocument implements DatabaseDocument<Me
 	}
 
 	public void setID(Object id) {
-		this.id = id;
+		getDocumentMap().put(ID_KEY, id);
 	}
 	
 	@Override
 	public Object getID() {
-		return id;
+		return getDocumentMap().get(ID_KEY);
 	}
 }
