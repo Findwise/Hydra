@@ -201,8 +201,13 @@ public class MongoDocumentIOTest {
 		d.putContentField(getRandomString(5), getRandomString(20));
 		d.putContentField(getRandomString(5), getRandomString(20));
 		
-		
 		mdc.getDocumentWriter().insert(d);
+
+		d = mdc.getDocumentReader().getDocumentById(d.getID());
+		
+		d.putContentField(getRandomString(5), getRandomString(20));
+		
+		mdc.getDocumentWriter().update(d);
 		
 		mdc.getDocumentWriter().markProcessed(d, "x");
 		
