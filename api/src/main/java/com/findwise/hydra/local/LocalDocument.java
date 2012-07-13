@@ -201,6 +201,10 @@ public class LocalDocument implements Document {
 	public String toJson() {
 		return SerializationUtils.toJson(documentMap);
 	}
+	
+	protected Map<String, Object> getDocumentMap() {
+		return documentMap;
+	}
 
 	@Override
 	public boolean isEqual(Document d) {
