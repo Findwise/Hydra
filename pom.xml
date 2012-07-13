@@ -1,0 +1,37 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.findwise.hydra</groupId>
+  <artifactId>hydra-parent</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  
+  <modules>
+	<module>api</module>
+	<module>database</module>
+	<module>database-impl/inmemory</module>
+	<module>core</module>
+  </modules>
+
+  <build>
+    <plugins>
+    <plugin>
+      <artifactId>maven-antrun-plugin</artifactId>
+      <version>1.4</version>
+      <executions>
+        <execution>
+          <id>copy</id>
+          <phase>compile</phase>
+          <configuration>
+            <tasks>
+              <copy file="core/target/hydra-core-jar-with-dependencies.jar" tofile="bin/hydra-core.jar"/>
+            </tasks>
+          </configuration>
+          <goals>
+            <goal>run</goal>
+          </goals>
+        </execution> 
+      </executions>
+    </plugin>
+    </plugins>
+  </build>
+</project>
