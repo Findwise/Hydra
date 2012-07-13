@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+import com.findwise.hydra.common.Document.Status;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
@@ -50,6 +51,10 @@ public class MarkHandlerTest {
 			if(!doc.getContentField(field).equals(doc2.getContentField(field))) {
 				fail("Content mismatch");
 			}
+		}
+		
+		if(!doc2.getStatus().equals(Status.PROCESSED)) {
+			fail("No FAILED status on the document");
 		}
 	}
 }

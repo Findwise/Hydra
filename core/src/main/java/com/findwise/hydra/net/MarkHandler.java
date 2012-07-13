@@ -54,6 +54,12 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
 		}
 		
 		DatabaseDocument<T> dbdoc = dbc.getDocumentReader().getDocumentById(md.getID());
+		
+		if(dbdoc==null) {
+			HttpResponseWriter.printNoDocument(response);
+			return;
+		}
+		
 		dbdoc.putAll(md);
 
 		if (!mark(dbdoc, stage, getMark(request))) {
