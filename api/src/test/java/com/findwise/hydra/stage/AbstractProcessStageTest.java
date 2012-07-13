@@ -17,6 +17,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.findwise.hydra.common.Logger;
+import com.findwise.hydra.common.Logger.Level;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
@@ -28,7 +30,7 @@ public class AbstractProcessStageTest {
 
 	@Before
 	public void setUp() throws Exception {
-
+		Logger.setGlobalLoggingLevel(Level.OFF);
 	}
 
 	@After
