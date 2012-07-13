@@ -16,6 +16,8 @@ public class MemoryTailableIterator implements TailableIterator<MemoryType> {
 	private MemoryDocument peeked;
 	private boolean[] modified;
 	
+	private MemoryQuery query;
+	
 	private boolean closed = false;
 	
 	/**
@@ -23,8 +25,17 @@ public class MemoryTailableIterator implements TailableIterator<MemoryType> {
 	 * @throws BackingStoreException if there is a problem in getting an iterator
 	 */
 	public MemoryTailableIterator(BlockingQueue<MemoryDocument> queue, boolean[] modified) {
+		this(queue, modified, new MemoryQuery());
+	}
+	
+	/**
+	 * @param dbc
+	 * @throws BackingStoreException if there is a problem in getting an iterator
+	 */
+	public MemoryTailableIterator(BlockingQueue<MemoryDocument> queue, boolean[] modified, MemoryQuery query) {
 		this.queue = queue;
 		this.modified = modified;
+		this.query = query;
 	}
 	
 	@Override
@@ -40,7 +51,10 @@ public class MemoryTailableIterator implements TailableIterator<MemoryType> {
 		
 		while (!closed) {
 			try {
-				peeked = queue.take();
+				MemoryDocument d;
+				do {
+					d = queue.take();
+				} while(!d.matches(query));
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				logger.info("Interrupt caught during sleep", e);

@@ -20,7 +20,6 @@ import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.common.SerializationUtils;
-import com.mongodb.DBObject;
 
 public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		DocumentReader<MemoryType> {
@@ -84,7 +83,7 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 
 	@Override
 	public TailableIterator<MemoryType> getInactiveIterator() {
-		return new MemoryTailableIterator(inactive, b);
+		return getInactiveIterator(new MemoryQuery());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -311,7 +310,6 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 
 	@Override
 	public TailableIterator<MemoryType> getInactiveIterator(DatabaseQuery<MemoryType> query) {
-		// TODO Auto-generated method stub
-		return null;
+		return new MemoryTailableIterator(inactive, b, new MemoryQuery());
 	}
 }
