@@ -4,6 +4,8 @@ package com.findwise.hydra.common;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import com.findwise.hydra.common.Logger.Level;
+
 /**
  * This class is mirrors the Log4J error levels, providing an interface
  * for logging on stdout which will be redirected to Log4J by 
@@ -26,6 +28,8 @@ public final class Logger {
     public static final String STACKTRACEMESSAGE = "$STACKTRACE$ ";
 
     private static Level internalLoggingLevel = Level.WARN;
+
+	private static Level globalLevel = Level.TRACE;
 
     /**
      * Sets the name of the Log4J logger (equivalent to <code>new log4j.Logger(String clazz)</code>)
@@ -52,6 +56,9 @@ public final class Logger {
      * @param s
      */
     public static void log(Level l, String s) {
+    	if(!logOnLevel(l)) {
+    		return;
+    	}
         System.out.println(PREFIXES[l.ordinal()]+s);
     }
     
@@ -61,6 +68,9 @@ public final class Logger {
      * @param s
      */
     public static void log(Level l, String s, Throwable e) {
+    	if(!logOnLevel(l)) {
+    		return;
+    	}
     	System.out.println(STACKTRACEMESSAGE);
     	log(l, s);
         StringWriter st = new StringWriter();
@@ -185,5 +195,20 @@ public final class Logger {
      */
     public static void setInternalLoggingLevel(Level internalLevel) {
         internalLoggingLevel = internalLevel;
+    }
+    
+    /**
+     * Sets the global logging level. 
+     */
+    public static void setGlobalLoggingLevel(Level loggingLevel) {
+    	globalLevel  = loggingLevel;
+    }
+    
+    public static Level getGlobalLoggingLevel() {
+    	return globalLevel;
+    }
+    
+    private static boolean logOnLevel(Level l) {
+    	return l.ordinal()>=globalLevel.ordinal() && l!=Level.OFF;
     }
 }

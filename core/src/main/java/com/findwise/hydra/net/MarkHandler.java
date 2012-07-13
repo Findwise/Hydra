@@ -52,8 +52,11 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
 			HttpResponseWriter.printJsonException(response, e);
 			return;
 		}
+		
+		DatabaseDocument<T> dbdoc = dbc.getDocumentReader().getDocumentById(md.getID());
+		dbdoc.putAll(md);
 
-		if (!mark(md, stage, getMark(request))) {
+		if (!mark(dbdoc, stage, getMark(request))) {
 			HttpResponseWriter.printNoDocument(response);
 		} else {
 			HttpResponseWriter.printSaveOk(response, md.getID());
