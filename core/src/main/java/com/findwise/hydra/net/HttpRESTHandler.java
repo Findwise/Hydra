@@ -1,23 +1,14 @@
 package com.findwise.hydra.net;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpException;
-import org.apache.http.HttpHeaders;
 import org.apache.http.HttpInetConnection;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
-import org.apache.http.nio.NHttpServerConnection;
-import org.apache.http.nio.reactor.IOSession;
-import org.apache.http.params.CoreConnectionPNames;
-import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
 import org.slf4j.Logger;
@@ -48,6 +39,7 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 		return pingHandler;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Inject
     public HttpRESTHandler(NodeMaster nm) {
         this((DatabaseConnector<T>)nm.getDatabaseConnector());
@@ -63,7 +55,7 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
     }
 	
 	private void createHandlers() {
-		handlers = new ResponsibleHandler[] { new FileHandler(dbc), new PropertiesHandler(dbc), new MarkHandler(dbc), new QueryHandler(dbc), new ReleaseHandler(dbc), new WriteHandler(dbc) };
+		handlers = new ResponsibleHandler[] { new FileHandler<T>(dbc), new PropertiesHandler<T>(dbc), new MarkHandler<T>(dbc), new QueryHandler<T>(dbc), new ReleaseHandler<T>(dbc), new WriteHandler<T>(dbc) };
 	}
 	
 	private ResponsibleHandler[] getHandlers() {
