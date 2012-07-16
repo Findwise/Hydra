@@ -4,25 +4,25 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.UUID;
 
-import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.HttpStatus;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
-import org.apache.http.impl.DefaultHttpResponseFactory;
-import org.apache.http.impl.nio.DefaultServerIOEventDispatch;
+import org.apache.http.impl.nio.DefaultHttpServerIODispatch;
+import org.apache.http.impl.nio.DefaultNHttpServerConnection;
+import org.apache.http.impl.nio.DefaultNHttpServerConnectionFactory;
 import org.apache.http.impl.nio.reactor.DefaultListeningIOReactor;
-import org.apache.http.nio.NHttpConnection;
-import org.apache.http.nio.protocol.BufferingHttpServiceHandler;
-import org.apache.http.nio.protocol.EventListener;
+import org.apache.http.nio.NHttpConnectionFactory;
+import org.apache.http.nio.NHttpServerConnection;
+import org.apache.http.nio.protocol.BasicAsyncRequestHandler;
+import org.apache.http.nio.protocol.HttpAsyncRequestHandlerRegistry;
+import org.apache.http.nio.protocol.HttpAsyncService;
 import org.apache.http.nio.reactor.IOEventDispatch;
-import org.apache.http.nio.reactor.ListeningIOReactor;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.params.HttpParams;
 import org.apache.http.params.SyncBasicHttpParams;
 import org.apache.http.protocol.HttpProcessor;
-import org.apache.http.protocol.HttpRequestHandlerRegistry;
 import org.apache.http.protocol.ImmutableHttpProcessor;
 import org.apache.http.protocol.ResponseConnControl;
 import org.apache.http.protocol.ResponseContent;
@@ -50,7 +50,7 @@ public class RESTServer extends Thread {
 
 	private Exception error;
 	
-	private ListeningIOReactor ioReactor;
+	private DefaultListeningIOReactor ioReactor;
 
 	private static final int SOCKET_TIMEOUT_MS = 5000;
 	private static final int BUFFER_SIZE = 8 * 1024; // Consider increasing this
@@ -137,24 +137,38 @@ public class RESTServer extends Thread {
 					.setIntParameter(CoreConnectionPNames.SOCKET_BUFFER_SIZE, BUFFER_SIZE)
 					.setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK, false)
 					.setBooleanParameter(CoreConnectionPNames.TCP_NODELAY, true)
-					.setParameter(CoreProtocolPNames.ORIGIN_SERVER, "Hydra Core RESTServer (HttpComponents/1.1)");
+					.setParameter(CoreProtocolPNames.ORIGIN_SERVER, "Hydra Core (Apache HttpComponents 4.2.1/1.1)");
 
-			HttpProcessor httpproc = new ImmutableHttpProcessor(new HttpResponseInterceptor[] { new ResponseDate(),
-					new ResponseServer(), new ResponseContent(), new ResponseConnControl() });
+			HttpProcessor httpproc = new ImmutableHttpProcessor(new HttpResponseInterceptor[] { 
+							new ResponseDate(),
+							new ResponseServer(), 
+							new ResponseContent(),
+							new ResponseConnControl() 
+						});
 
-			BufferingHttpServiceHandler handler = new BufferingHttpServiceHandler(httpproc,
-					new DefaultHttpResponseFactory(), new DefaultConnectionReuseStrategy(), params);
+			HttpAsyncRequestHandlerRegistry registry = new HttpAsyncRequestHandlerRegistry();
+			registry.register("*", new BasicAsyncRequestHandler(requestHandler));
+			
+			HttpAsyncService handler = new HttpAsyncService(httpproc, new DefaultConnectionReuseStrategy(), registry, params) {
+	            @Override
+	            public void connected(final NHttpServerConnection conn) {
+	            	logger.debug("Connection open: " + conn);
+	                super.connected(conn);
+	            }
 
-			// Set up request handlers
-			HttpRequestHandlerRegistry reqistry = new HttpRequestHandlerRegistry();
-			reqistry.register("*", requestHandler);
-			handler.setHandlerResolver(reqistry);
+	            @Override
+	            public void closed(final NHttpServerConnection conn) {
+	            	logger.debug("Connection closed: " + conn);
+	                super.closed(conn);
+	            }
+			};
 
-			// Provide an event logger
-			handler.setEventListener(new EventLogger());
+	        NHttpConnectionFactory<DefaultNHttpServerConnection> connFactory = new DefaultNHttpServerConnectionFactory(params);
+			
 
-			IOEventDispatch ioEventDispatch = new DefaultServerIOEventDispatch(handler, params);
-			ioReactor = new DefaultListeningIOReactor(2, params);
+	        IOEventDispatch ioEventDispatch = new DefaultHttpServerIODispatch(handler, connFactory);
+
+			ioReactor = new DefaultListeningIOReactor();
 
 			ioReactor.listen(new InetSocketAddress(port));
 			executing = true;
@@ -183,7 +197,7 @@ public class RESTServer extends Thread {
 		return getNewStartedRESTServer(injector.getInstance(CoreConfiguration.class).getRestPort(), injector.getInstance(HttpRESTHandler.class));
 	}
 	
-	public static RESTServer getNewStartedRESTServer(int port, HttpRESTHandler restHandler) {
+	public static RESTServer getNewStartedRESTServer(int port, HttpRESTHandler<?> restHandler) {
 		RESTServer rest = new RESTServer(port, restHandler);
 		
 		if(!rest.blockingStart()) {
@@ -191,33 +205,5 @@ public class RESTServer extends Thread {
 		}
 		
 		return rest;
-	}
-
-	static class EventLogger implements EventListener {
-		@Override
-		public void connectionOpen(final NHttpConnection conn) {
-			logger.info("Connection open: " + conn);
-		}
-
-		@Override
-		public void connectionTimeout(final NHttpConnection conn) {
-			logger.info("Connection timed out: " + conn);
-		}
-
-		@Override
-		public void connectionClosed(final NHttpConnection conn) {
-			logger.info("Connection closed: " + conn);
-		}
-
-		@Override
-		public void fatalIOException(final IOException ex, final NHttpConnection conn) {
-			logger.error("I/O error: " + ex.getMessage());
-		}
-
-		@Override
-		public void fatalProtocolException(final HttpException ex, final NHttpConnection conn) {
-			logger.error("HTTP error: " + ex.getMessage());
-		}
-
 	}
 }
