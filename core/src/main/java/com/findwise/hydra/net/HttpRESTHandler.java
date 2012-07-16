@@ -3,15 +3,22 @@ package com.findwise.hydra.net;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpException;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpInetConnection;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.nio.NHttpServerConnection;
 import org.apache.http.nio.reactor.IOSession;
+import org.apache.http.params.CoreConnectionPNames;
+import org.apache.http.params.CoreProtocolPNames;
+import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,25 +117,13 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 			return true;
 		}
 		try {
-			Field f = context.getClass().getDeclaredField("iosession");
-			boolean accessible = f.isAccessible();
-			Field modifiersField = Field.class.getDeclaredField("modifiers");
-			int modifiers = f.getModifiers();
-			modifiersField.setAccessible(true);
-			modifiersField.set(f, f.getModifiers() & ~Modifier.FINAL);
-			modifiersField.set(f, f.getModifiers() & ~Modifier.PRIVATE);
-			f.setAccessible(true);
-			IOSession io = (IOSession) f.get(context);
-			f.setAccessible(accessible);
-			modifiersField.set(f, modifiers);
-			SocketAddress sa = io.getRemoteAddress();
-			if(sa instanceof InetSocketAddress) {
-				if(allowedHosts.contains(((InetSocketAddress) sa).getHostName())) {
-					return true;
-				} else {
-					logger.error("Connection came from somewhere other than the list of allowed hosts ("+sa+"). Refusing the connection.");
-					return false;
-				}
+			HttpInetConnection connection = (HttpInetConnection) context.getAttribute(ExecutionContext.HTTP_CONNECTION);
+			InetAddress ia = connection.getRemoteAddress();
+			if(allowedHosts.contains(ia.getHostName())) {
+				return true;
+			} else {
+				logger.error("Caller adress ("+ia.getHostName()+") not in the list of allowed hosts ("+allowedHosts+"). Refusing the connection.");
+				return false;
 			}
 		} catch (Exception e) {
 			logger.error("Caught an exception while trying to determine remote address. Refusing the connection.");
