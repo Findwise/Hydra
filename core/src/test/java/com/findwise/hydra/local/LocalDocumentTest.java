@@ -1,11 +1,8 @@
 package com.findwise.hydra.local;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,13 +11,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.findwise.hydra.common.Document;
+import com.findwise.hydra.common.Document.Action;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.common.SerializationUtils;
-import com.findwise.hydra.common.Document.Action;
-import com.findwise.hydra.local.LocalDocument;
 import com.findwise.tools.Comparator;
-
-
 
 public class LocalDocumentTest {
 
