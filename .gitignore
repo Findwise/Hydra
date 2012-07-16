@@ -3,3 +3,5 @@ target/
 .classpath
 .project
 examples/src/main/resources/*.jar
+
+bin/

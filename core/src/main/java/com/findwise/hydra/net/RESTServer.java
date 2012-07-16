@@ -63,6 +63,7 @@ public class RESTServer extends Thread {
 	
 	private String id;
 
+	@SuppressWarnings("rawtypes")
 	@Inject
 	public RESTServer(@Named(Configuration.REST_PORT_PARAM) int port, HttpRESTHandler requestHandler) {
 		this.requestHandler = requestHandler;
