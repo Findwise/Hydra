@@ -4,6 +4,7 @@ import static org.junit.Assert.fail;
 
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.sax.BodyContentHandler;
 import org.junit.Before;
+import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.findwise.hydra.local.LocalDocument;
@@ -38,7 +40,7 @@ public class SimpleFetchingTikaStageTest {
 		doc = new LocalDocument();
 	}
 
-//	@Test
+	@Test
 	public void testGetUrls() {
 		doc.putContentField("title", "title");
 		doc.putContentField("attachment_a", "a");
@@ -54,7 +56,7 @@ public class SimpleFetchingTikaStageTest {
 		Assert.assertEquals("c", ret.get("c"));
 	}
 
-//	@Test
+	@Test
 	public void testGetUrlsNoGroup() {
 		doc.putContentField("title", "title");
 		doc.putContentField("attachment_a", "a");
@@ -70,7 +72,7 @@ public class SimpleFetchingTikaStageTest {
 		Assert.assertEquals("c", ret.get("attachment_c"));
 	}
 
-//	@Test
+	@Test
 	public void testGetUrlFromString() throws Exception {
 		Set<URL> urls = TikaUtils.getUrlsFromObject("http://google.com");
 
@@ -79,7 +81,7 @@ public class SimpleFetchingTikaStageTest {
 			Assert.assertEquals("http://google.com", url.toString());
 	}
 
-//	@Test
+	@Test
 	public void testGetUrlsFromList() throws Exception {
 		List<String> exp = Arrays.asList("http://google.com", "http://dn.se");
 		Set<URL> urls = TikaUtils.getUrlsFromObject(exp);
@@ -90,12 +92,12 @@ public class SimpleFetchingTikaStageTest {
 		}
 	}
 
-//	@Test(expected = MalformedURLException.class)
+	@Test(expected = MalformedURLException.class)
 	public void testGetUrlFromIncorrectString() throws Exception {
 		TikaUtils.getUrlsFromObject("a");
 	}
 
-//	@Test
+	@Test
 	public void testAddTextToDocument() {
 		StringWriter textData = new StringWriter();
 		String text = "My text";
@@ -111,7 +113,7 @@ public class SimpleFetchingTikaStageTest {
 		}
 	}
 
-//	@Test
+	@Test
 	public void testAddMetadataToDocument() {
 		Metadata meta = new Metadata();
 		meta.set("author", "Simon");
@@ -136,7 +138,7 @@ public class SimpleFetchingTikaStageTest {
 
 	}
 
-//	@Test
+	@Test
 	public void testAddMultiValueMetadataToDocument() {
 		Metadata meta = new Metadata();
 		meta.add("author", "Anton");
@@ -160,7 +162,7 @@ public class SimpleFetchingTikaStageTest {
 
 	}
 
-//	@Test(expected = RuntimeException.class)
+	@Test(expected = RuntimeException.class)
 	public void testProcess() throws Exception {
 
 		doc.putContentField("attachment_a", "http://www.google.com");
