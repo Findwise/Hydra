@@ -215,6 +215,7 @@ public class RemotePipeline {
 		else {
 			s = d.toJson();
 		}
+		InternalLogger.error("Posting to: "+getWriteUrl(partialUpdate) + " - with content: "+s);
 		HttpResponse response = core.post(getWriteUrl(partialUpdate), s);
 		if(response.getStatusLine().getStatusCode()==HttpStatus.SC_OK) {
 			if(!hasId) {
@@ -377,7 +378,8 @@ public class RemotePipeline {
 	
 	public boolean saveFile(DocumentFile df) throws IOException {
 		HttpResponse response = core.post(getFileUrl(df),  SerializationUtils.toJson(df));
-		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+		int code = response.getStatusLine().getStatusCode();
+		if (code == HttpStatus.SC_OK || code == HttpStatus.SC_NO_CONTENT) {
 			EntityUtils.consume(response.getEntity());
 			return true;
 		} else {

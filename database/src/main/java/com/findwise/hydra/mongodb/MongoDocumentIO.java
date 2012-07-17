@@ -111,14 +111,17 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	 */
 	@Override
 	public DocumentFile getDocumentFile(DatabaseDocument<MongoType> d, String filename) {
-		MongoDocument md = (MongoDocument)d;
-		DBObject query = QueryBuilder.start(DOCUMENT_KEY).is(md.getID()).and(FILENAME_KEY).is(filename).get();
+		return getDocumentFile(d.getID(), filename);
+	}
+	
+	private DocumentFile getDocumentFile(Object id, String filename) {
+		DBObject query = QueryBuilder.start(DOCUMENT_KEY).is(id).and(FILENAME_KEY).is(filename).get();
 		GridFSDBFile file = documentfs.findOne(query);
 		if(file==null) {
 			return null;
 		}
 		
-		DocumentFile df =  new DocumentFile(d.getID(), file.getFilename(), file.getInputStream(), (String)file.get(STAGE_KEY), file.getUploadDate());
+		DocumentFile df =  new DocumentFile(id, file.getFilename(), file.getInputStream(), (String)file.get(STAGE_KEY), file.getUploadDate());
 
 		if(file.containsField(MIMETYPE_KEY)) {
 			df.setMimetype((String) file.get(MIMETYPE_KEY));
@@ -233,6 +236,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	@Override
 	public void deleteAll() {
 		documents.remove(new BasicDBObject());
+		documentfs.remove(new BasicDBObject());
 	}
 	
 	/* (non-Javadoc)
@@ -290,7 +294,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	
 	@Override
 	public void write(DocumentFile df) throws IOException {
-		QueryBuilder qb = QueryBuilder.start().put(DOCUMENT_KEY).is(df.getDocumentId());
+		QueryBuilder qb = QueryBuilder.start().put(DOCUMENT_KEY).is(df.getDocumentId()).and(FILENAME_KEY).is(df.getFileName());
 		documentfs.remove(qb.get());
 		
 		GridFSInputFile input = documentfs.createFile(df.getStream(), df.getFileName());
@@ -299,6 +303,23 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		input.put(MIMETYPE_KEY, df.getMimetype());
 		
 		input.save();
+		
+		/**
+		 * This is here because of random failures when trying to do this query from another thread.
+		 * 
+		 * RemotePipelineTest.testSaveFile() failed 2 or 3 times out of 100.
+		 */
+		long start = System.currentTimeMillis();
+		while(documentfs.findOne(qb.get())==null) {
+			try {
+				if(start+1000>System.currentTimeMillis()) {
+					throw new IOException("Failed to save the file");
+				}
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}
 	}
 
 
