@@ -79,6 +79,8 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 			}
 			
 			dbc.getDocumentWriter().write(df);
+			
+			HttpResponseWriter.printOk(response);
 		} catch (Exception e) {
 			logger.error("An error occurred during file save", e);
 			HttpResponseWriter.printUnhandledException(response, e);
