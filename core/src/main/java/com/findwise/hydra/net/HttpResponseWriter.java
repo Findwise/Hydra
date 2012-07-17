@@ -1,9 +1,8 @@
 package com.findwise.hydra.net;
 
-import java.io.UnsupportedEncodingException;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.entity.ContentType;
 import org.apache.http.nio.entity.NStringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,20 +19,12 @@ import com.findwise.hydra.common.SerializationUtils;
 public final class HttpResponseWriter {
 	private static Logger logger = LoggerFactory.getLogger(HttpResponseWriter.class);
 
-	private static final String DEFAULT_ENCODING = "UTF-8";
-	private static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
-
 	private HttpResponseWriter() {} // Should not be possible to instantiate
+	
+	private static ContentType contentType = ContentType.create("text/html", "UTF-8");
 
 	private static void setStringEntity(HttpResponse response, String content) {
-		try {
-			NStringEntity entity = new NStringEntity(content, DEFAULT_ENCODING);
-			entity.setContentType(DEFAULT_CONTENT_TYPE);
-			response.setEntity(entity);
-		}
-		catch (UnsupportedEncodingException e2) {
-			logger.error("Encoding exception", e2);
-		}
+		response.setEntity(new NStringEntity(content, contentType));
 	}
 	
 	protected static void printDocument(HttpResponse response, Document d, String stage) {
@@ -95,6 +86,10 @@ public final class HttpResponseWriter {
 		response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
 		setStringEntity(response, "Parameter '" + param + "' is missing from request URI");
 	}
+	
+	protected static void printOk(HttpResponse response) {
+		response.setStatusCode(HttpStatus.SC_NO_CONTENT);
+	}
 
 	protected static void printSaveOk(HttpResponse response, Object id) {
 		logger.debug("Successfully saved Document with ID: " + id);
@@ -143,7 +138,6 @@ public final class HttpResponseWriter {
 		response.setStatusCode(HttpStatus.SC_OK);
 		setStringEntity(response, SerializationUtils.toJson(o));
 	}
-	
 
 	protected static void printID(HttpResponse response, String uuid) {
 		logger.info("Got ID ping!");

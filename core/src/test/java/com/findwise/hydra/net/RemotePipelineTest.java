@@ -228,6 +228,11 @@ public class RemotePipelineTest {
 		if(null==rp2.getDocument(query)) {
 			fail("Current document was not saved properly after out of sequence update");
 		}
+	}
+	
+	@Test
+	public void testSaveWithoutId() throws Exception {
+		RemotePipeline rp2 = new RemotePipeline("127.0.0.1", server.getPort(), "stage2");
 		
 		LocalDocument d = new LocalDocument();
 		d.putContentField("aField", "aValue");
@@ -464,7 +469,10 @@ public class RemotePipelineTest {
 		String fileName = "test.txt";
 		DocumentFile df = new DocumentFile(testDoc.getID(), fileName, IOUtils.toInputStream(content, "UTF-8"));
 		df.setEncoding("UTF-8");
-		rp.saveFile(df);
+		
+		if(!rp.saveFile(df)) {
+			fail("RemotePipeline.saveFile() returned false");
+		}
 		
 		DocumentFile df2 = nm.getDatabaseConnector().getDocumentReader().getDocumentFile(testDoc, fileName);
 		
