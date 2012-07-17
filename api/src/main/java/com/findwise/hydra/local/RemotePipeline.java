@@ -215,7 +215,7 @@ public class RemotePipeline {
 		else {
 			s = d.toJson();
 		}
-		InternalLogger.error("Posting to: "+getWriteUrl(partialUpdate) + " - with content: "+s);
+		
 		HttpResponse response = core.post(getWriteUrl(partialUpdate), s);
 		if(response.getStatusLine().getStatusCode()==HttpStatus.SC_OK) {
 			if(!hasId) {
