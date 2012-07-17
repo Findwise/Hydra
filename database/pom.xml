@@ -3,7 +3,7 @@
 	<groupId>com.findwise.hydra</groupId>
 	<artifactId>hydra-database</artifactId>
 	<packaging>jar</packaging>
-	<version>0.2.0</version>
+	<version>0.3.0-SNAPSHOT</version>
 	<name>${project.artifactId}</name>
 	<description>Hydra Database Package - Database interfaces AND MongoDB implementation</description>
 	<url>http://findwise.github.com/Hydra</url>
