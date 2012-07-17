@@ -4,16 +4,10 @@
 	<groupId>com.findwise.hydra</groupId>
 	<artifactId>hydra-api</artifactId>
 	<packaging>jar</packaging>
-	<version>0.2.0-SNAPSHOT</version>
+	<version>0.2.0</version>
 	<name>${project.artifactId}</name>
 	<description>Hydra API</description>
 	<url>http://findwise.github.com/Hydra</url>
-
-	<parent>
-		<groupId>org.sonatype.oss</groupId>
-		<artifactId>oss-parent</artifactId>
-		<version>7</version>
-	</parent>
 
 	<licenses>
 		<license>
@@ -26,7 +20,7 @@
 	<scm>
 		<connection>scm:git:git@github.com:Findwise/Hydra.git</connection>
 		<developerConnection>scm:git:git@github.com:Findwise/Hydra.git</developerConnection>
-		<url>http://github.com/Findwise/Hydra</url>
+		<url>https://github.com/Findwise/Hydra</url>
 	</scm>
 
 	<properties>
@@ -99,8 +93,5 @@
 				</executions>
 			</plugin>
 		</plugins>
-
 	</build>
-
-
 </project>

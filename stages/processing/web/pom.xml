@@ -3,7 +3,7 @@
 	<groupId>com.findwise.hydra</groupId>
 	<artifactId>web-stages</artifactId>
     <name>${project.artifactId}</name>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.2.0</version>
     <properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -11,8 +11,7 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-basic-stages</artifactId>
-			<version>0.2.0-SNAPSHOT</version>
-			
+			<version>0.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jsoup</groupId>
@@ -28,7 +27,7 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.9</version>
-                        <scope>test</scope>
+            <scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
@@ -40,7 +39,6 @@
 
 	<build>
 		<plugins>
-	
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -82,6 +80,30 @@
 		            <encoding>${project.build.sourceEncoding}</encoding>
 		        </configuration>
 		    </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>        
 </project>
