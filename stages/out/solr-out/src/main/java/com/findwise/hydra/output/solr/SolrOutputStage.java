@@ -2,6 +2,7 @@ package com.findwise.hydra.output.solr;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,6 +16,7 @@ import org.apache.http.HttpException;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.common.SolrInputDocument;
 
 import com.findwise.hydra.common.Document;
@@ -32,7 +34,7 @@ public class SolrOutputStage extends AbstractOutputStage {
 	@Parameter
 	private String solrDeployPath;
 	@Parameter
-	private Map<String, String> fieldMappings;
+	private Map<String, String> fieldMappings = new HashMap<String, String>();
 	@Parameter
 	private boolean sendAll = false;
 	@Parameter
@@ -64,7 +66,6 @@ public class SolrOutputStage extends AbstractOutputStage {
 
 	@Override
 	public void init() throws RequiredArgumentMissingException {
-		fieldMappings = new HashMap<String, String>();
 		try {
 			solr = getSolrServer();
 		} catch (MalformedURLException e) {
@@ -136,12 +137,16 @@ public class SolrOutputStage extends AbstractOutputStage {
 		try {
 			addDocs(solrDocMap.values());
 			acceptDocuments(solrDocMap.keySet());
+			
 
 		} catch (Exception e) {
 			Logger.warn(
-					"Could not remove documents in Solr, trying to remove them individually...",
+					"Could not add documents in Solr, trying to add them individually...",
 					e);
 			sendAddsIndividually(solrDocMap);
+		}
+		finally{
+			addDocuments.clear();
 		}
 
 	}
@@ -228,7 +233,7 @@ public class SolrOutputStage extends AbstractOutputStage {
 	}
 
 	private SolrServer getSolrServer() throws MalformedURLException {
-		return new CommonsHttpSolrServer(solrDeployPath);
+		return new HttpSolrServer(solrDeployPath);
 	}
 
 	public void close() throws Exception {
