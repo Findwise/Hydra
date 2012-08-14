@@ -11,15 +11,15 @@ import com.findwise.hydra.common.SerializationUtils;
 import com.google.gson.JsonParseException;
 
 public class LocalQuery implements Query, JsonDeserializer {
-	private Map<String, Object> equalsMap;
-	private Map<String, Boolean> existsMap;
-	private Map<String, Boolean> touchedMap;
+	private Map<String, Object> equals;
+	private Map<String, Boolean> exists;
+	private Map<String, Boolean> touched;
 	private Action action = null;
 	
 	public LocalQuery() {
-		equalsMap = new HashMap<String, Object>();
-		existsMap = new HashMap<String, Boolean>();
-		touchedMap = new HashMap<String, Boolean>();
+		equals = new HashMap<String, Object>();
+		exists = new HashMap<String, Boolean>();
+		touched = new HashMap<String, Boolean>();
 	}
 	
 	public LocalQuery(String json) throws JsonException {
@@ -29,15 +29,15 @@ public class LocalQuery implements Query, JsonDeserializer {
 	
 	
 	public Map<String, Boolean> getContentsExists() {
-		return existsMap;
+		return exists;
 	}
 	
 	public Map<String, Boolean> getTouched() {
-		return touchedMap;
+		return touched;
 	}
 	
 	public Map<String, Object> getContentsEquals() {
-		return equalsMap;
+		return equals;
 	}
 	
 	public Action getAction() {
@@ -76,9 +76,9 @@ public class LocalQuery implements Query, JsonDeserializer {
 
 	public String toJson() {
 		Map<String, Object> x = new HashMap<String, Object>();
-		x.put("equalsMap", equalsMap);
-		x.put("existsMap", existsMap);
-		x.put("touchedMap", touchedMap);
+		x.put("equals", equals);
+		x.put("exists", exists);
+		x.put("touched", touched);
 		
 		if(action!=null) {
 			x.put("action", action.toString());
@@ -92,14 +92,14 @@ public class LocalQuery implements Query, JsonDeserializer {
 	public void fromJson(String json) throws JsonException{
 		try {
 			Map<String, Object> queryObject = (Map<String, Object>) SerializationUtils.fromJson(json);
-			if(queryObject.containsKey("equalsMap")) {
-				equalsMap = (Map<String, Object>) queryObject.get("equalsMap");
+			if(queryObject.containsKey("equals")) {
+				equals = (Map<String, Object>) queryObject.get("equals");
 			}
-			if(queryObject.containsKey("existsMap")) {
-				existsMap = (Map<String, Boolean>) queryObject.get("existsMap");
+			if(queryObject.containsKey("exists")) {
+				exists = (Map<String, Boolean>) queryObject.get("exists");
 			}
-			if(queryObject.containsKey("touchedMap")) {
-				touchedMap = (Map<String, Boolean>) queryObject.get("touchedMap");
+			if(queryObject.containsKey("touched")) {
+				touched = (Map<String, Boolean>) queryObject.get("touched");
 			}
 			if(queryObject.containsKey("action")) {
 				action = Action.valueOf((String)queryObject.get("action"));
