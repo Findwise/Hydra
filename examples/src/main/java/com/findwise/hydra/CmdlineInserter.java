@@ -363,7 +363,7 @@ public class CmdlineInserter {
 		} else if(cmd.getArgs().length>0){
 			filename = cmd.getArgs()[0];
 		} else {
-			filename = name+=".properties";
+			filename = name+".properties";
 		}
 		Map<String, Object> map = readPropertiesFile(filename);
 		
