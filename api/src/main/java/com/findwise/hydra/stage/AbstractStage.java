@@ -7,9 +7,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.findwise.hydra.common.JsonDeserializer;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.common.Logger;
 import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
 
 /**
@@ -29,11 +31,11 @@ public abstract class AbstractStage extends Thread {
 	public static final String ARG_NAME_STAGE_CLASS = "stageClass";
 	public static final String PROPERTY_NAME_COMMANDLINE_ARGS = "cmdline_args";
 	
-	@Parameter
-	private List<String> queryOptions;
+	@Parameter(description="The Query that this stage will recieve documents matching")
+	private LocalQuery query = new LocalQuery();
 	
-	public List<String> getQueryOptions() {
-		return queryOptions;
+	public LocalQuery getQuery() {
+		return query;
 	}
 	
 	public static final int CMDLINE_STAGE_NAME_PARAM = 0;
@@ -125,11 +127,32 @@ public abstract class AbstractStage extends Thread {
 					if (!prevAccessible) {
 						field.setAccessible(true);
 					}
-					field.set(this, map.get(field.getName()));
+					if(hasInterface(field.getType(), JsonDeserializer.class)) {
+						try {
+							JsonDeserializer jd = (JsonDeserializer) field.getType().newInstance();
+							jd.fromJson(SerializationUtils.toJson(map.get(field.getName())));
+							field.set(this, jd);
+						} catch (InstantiationException e) {
+							field.set(this, map.get(field.getName()));
+						} catch (JsonException e) {
+							field.set(this, map.get(field.getName()));
+						}
+					} else {
+						field.set(this, map.get(field.getName()));
+					}
 					field.setAccessible(prevAccessible);
 				}
 			}
 		}
+	}
+	
+	private boolean hasInterface(Class<?> c, Class<?> inf) {
+		for(Class<?> x : c.getInterfaces()) {
+			if(x.equals(inf)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public List<Field> getParameterFields() {
@@ -225,7 +248,7 @@ public abstract class AbstractStage extends Thread {
 			System.exit(1);
 		}
 		stage.start();
-		Logger.info("Started stage: " + stage.getName());
+		Logger.info("Started stage: " + stage.getName()+". Running with the query: "+stage.getQuery());
 	}
 
 	/**
@@ -250,7 +273,7 @@ public abstract class AbstractStage extends Thread {
 
 		public void run() {
 
-			Logger.info("Shutting down stage: " + getStageName());
+			Logger.info("Shutting down stage: " + getName());
 			if (AbstractStage.this.isAlive()) {
 				AbstractStage.this.setContinueRunning(false);
 				try {
