@@ -23,6 +23,7 @@
 	</scm>
 	
 	<dependencies>
+
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-api</artifactId>
@@ -50,6 +51,12 @@
 			<artifactId>hydra-core</artifactId>
 			<version>0.2.0</version>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>hydra-api</artifactId>
+					<groupId>com.findwise.hydra</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
@@ -63,6 +70,11 @@
 			<version>3.0</version>
 			<type>jar</type>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpmime</artifactId>
+			<version>4.2.1</version>
 		</dependency>
 	</dependencies>
 
