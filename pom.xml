@@ -8,6 +8,7 @@
   <modules>
 	<module>api</module>
 	<module>database</module>
+	<module>database-impl/mongodb</module>
 	<module>database-impl/inmemory</module>
 	<module>core</module>
   </modules>
