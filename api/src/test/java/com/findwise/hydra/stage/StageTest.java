@@ -8,12 +8,15 @@ import java.util.List;
 import org.junit.Test;
 import static org.junit.Assert.fail;
 
+import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.common.Document.Action;
 import com.findwise.hydra.local.LocalDocument;
+import com.findwise.hydra.local.LocalQuery;
 
 public class StageTest {
-
+	
 	@Test	
-	public void testProcessPI() throws Exception {
+	public void testProcessParameterInjection() throws Exception {
 		ProcessStage ps = new ProcessStage();
 		HashMap<String, Object> map = new HashMap<String, Object>();
 		map.put("privateString", "1");
@@ -44,7 +47,7 @@ public class StageTest {
 	}
 	
 	@Test
-	public void testInhertiedPI() throws Exception {
+	public void testInhertiedParameterInjection() throws Exception {
 		ExtendedProcessStage ps = new ExtendedProcessStage();
 		HashMap<String, Object> map = new HashMap<String, Object>();
 		map.put("privateString", "1");
@@ -72,6 +75,43 @@ public class StageTest {
 				fail("Mismatch between supplied and found lists in element "+i);
 			}
 		}
+	}
+	
+	@Test 
+	public void testJsonDeserializerParameterInjection() throws Exception {
+		ProcessStage ps = new ProcessStage();
+		
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		LocalQuery query = new LocalQuery();
+		query.requireAction(Action.ADD);
+		query.requireContentFieldEquals("equals", 1);
+		query.requireContentFieldExists("exists");
+		query.requireContentFieldNotExists("notexists");
+		map.put("query", SerializationUtils.fromJson(query.toJson()));
+		ps.setParameters(map);
+		
+		System.out.println(ps.getQuery());
+		
+		if(ps.getQuery().getAction()!=Action.ADD) {
+			fail("Did not get correct action");
+		}
+
+		if(!ps.getQuery().getContentsEquals().keySet().contains("equals")) {
+			fail("Did not have an equals field");
+		}
+		
+		if(!ps.getQuery().getContentsEquals().get("equals").equals(1)) {
+			fail("Did not have correct equals value");
+		}
+		
+		if(!ps.getQuery().getContentsExists().get("exists")) {
+			fail("Did not have correct exists field");
+		}
+		
+		if(ps.getQuery().getContentsExists().get("notexists")) {
+			fail("Did not have correct notexists field");
+		}
+		
 	}
 
 	@Stage

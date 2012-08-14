@@ -8,10 +8,7 @@ import org.apache.http.ParseException;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.common.Logger;
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.local.LocalQuery;
-import com.findwise.hydra.local.QueryParamTranslator;
 import com.findwise.hydra.local.RemotePipeline;
-import com.findwise.hydra.local.StaticQueryParamTranslator;
 
 /**
  * 
@@ -29,28 +26,24 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	
 	public static final int NUM_RESERVED_ARGUMENTS = 3;
 	private long holdInterval = DEFAULT_HOLD_INTERVAL;
-	private static QueryParamTranslator queryParamTranslator = new StaticQueryParamTranslator();
-	private LocalQuery localQuery;
 
 	/**
-	 * Fetches a document to be processes from the RemotePipeline
+	 * Fetches a document to be processed from the RemotePipeline
 	 * 
 	 * @return A document to be processed
 	 * @throws ParseException
 	 * @throws IOException
-	 * @throws HttpException
 	 * @throws JsonException
 	 */
 	protected LocalDocument fetch() throws ParseException, IOException,
 			JsonException {
-		return getRemotePipeline().getDocument(getLocalQuery());
+		return getRemotePipeline().getDocument(getQuery());
 	}
 
 	/**
 	 * Saves the modified document to the RemotePipeline.
 	 * 
 	 * @throws IOException
-	 * @throws HttpException
 	 * @throws JsonException
 	 */
 	protected void persist() throws IOException, JsonException {
@@ -68,7 +61,6 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	 *            The thrown error.
 	 * @throws IOException
 	 * @throws JsonException 
-	 * @throws HttpException
 	 */
 	protected void persistError(LocalDocument d, ProcessException e) throws IOException, JsonException {
 		Logger.error("Trying to release document due to error in processing", e);
@@ -87,28 +79,9 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	 */
 	public abstract void process(LocalDocument doc) throws ProcessException;
 
-	/**
-	 * Associate a local query with this stage
-	 * 
-	 * @param localQuery
-	 */
-	public void setLocalQuery(LocalQuery localQuery) {
-		this.localQuery = localQuery;
-	}
-
-	/**
-	 * 
-	 * @return The localquery associated with this step.
-	 */
-	public LocalQuery getLocalQuery() {
-		return localQuery;
-	}
-
 	@Override
 	public void setUp(RemotePipeline rp, Map<String, Object> properties) throws IllegalArgumentException, IllegalAccessException, IOException {
 		super.setUp(rp, properties);
-		LocalQuery q = queryParamTranslator.createQueryFromList(getQueryOptions());
-		setLocalQuery(q);
 	}
 
 
