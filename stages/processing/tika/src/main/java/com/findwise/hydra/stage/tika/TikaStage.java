@@ -10,10 +10,7 @@ import org.xml.sax.SAXException;
 
 import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.stage.AbstractProcessStage;
-import com.findwise.hydra.stage.ProcessException;
-import com.findwise.hydra.stage.RequiredArgumentMissingException;
-import com.findwise.hydra.stage.Stage;
+import com.findwise.hydra.stage.*;
 import com.findwise.hydra.stage.tika.utils.TikaUtils;
 
 /**
@@ -22,6 +19,10 @@ import com.findwise.hydra.stage.tika.utils.TikaUtils;
 @Stage(description="Stage that fetches any files attached to the document being processed and parses them with Tika. Any fields found by Tika will be stored in <filename>_*")
 public class TikaStage extends AbstractProcessStage {
 	
+    
+        @Parameter(name = "addMetaData", description = "Add the metadata to the document or not. Defaults to true")
+        private boolean addMetaData = true;
+    
 	static private Parser parser = new AutoDetectParser();
 
 	@Override
@@ -30,7 +31,7 @@ public class TikaStage extends AbstractProcessStage {
 			List<String> files = getRemotePipeline().getFileNames(doc.getID());
 			for(String fileName : files) {
 				DocumentFile df = getRemotePipeline().getFile(fileName, doc.getID());
-				TikaUtils.enrichDocumentWithFileContents(doc, fileName.replace('.', '_')+"_", df.getStream(), parser);
+				TikaUtils.enrichDocumentWithFileContents(doc, fileName.replace('.', '_')+"_", df.getStream(), parser, addMetaData);
 			}
 		} catch (IOException e) {
 			throw new ProcessException("Failed opening or reading from stream", e);
