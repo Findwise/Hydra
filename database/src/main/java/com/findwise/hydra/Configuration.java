@@ -1,10 +1,10 @@
 package com.findwise.hydra;
 
 public interface Configuration {
-	final int POLLING_INTERVAL_DEFAULT = 1000;
+	int POLLING_INTERVAL_DEFAULT = 1000;
 	
-	final String POLLING_INTERVAL_PARAM = "polling_interval";
-	final String REST_PORT_PARAM = "rest_port";
+	String POLLING_INTERVAL_PARAM = "polling_interval";
+	String REST_PORT_PARAM = "rest_port";
 	
 	int getRestPort();
 	
