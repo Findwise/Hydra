@@ -56,11 +56,11 @@ public class Stage {
 	}
 	
 	public Date getPropertiesModifiedDate() {
-		return propertiesModifiedDate;
+		return new Date(propertiesModifiedDate.getTime());
 	}
 	
 	public void setPropertiesModifiedDate(Date propertiesModifiedDate) {
-		this.propertiesModifiedDate = propertiesModifiedDate;
+		this.propertiesModifiedDate = new Date(propertiesModifiedDate.getTime());
 	}
 	
 	public void setProperties(Map<String, Object> properties) {
