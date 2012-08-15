@@ -27,11 +27,11 @@ public class DatabaseFile {
 	}
 	
 	public Date getUploadDate() {
-		return uploadDate;
+		return new Date(uploadDate.getTime());
 	}
 
 	public void setUploadDate(Date uploadDate) {
-		this.uploadDate = uploadDate;
+		this.uploadDate = new Date(uploadDate.getTime());
 	}
 	
 	public void attach(InputStream inputStream) {
