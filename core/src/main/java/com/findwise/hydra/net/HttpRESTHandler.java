@@ -86,7 +86,7 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 			return;
 		}
 		try {
-			logger.debug("Parsing incoming request");
+			logger.trace("Parsing incoming request");
 			
 			if(dispatch(request, response, context, getPingHandler())) {
 				return;
