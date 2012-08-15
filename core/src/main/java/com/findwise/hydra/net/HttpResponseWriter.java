@@ -40,7 +40,7 @@ public final class HttpResponseWriter {
 	}
 
 	protected static void printNoDocument(HttpResponse response) {
-		logger.debug("Printing no document found");
+		logger.trace("Printing no document found");
 		response.setStatusCode(HttpStatus.SC_NOT_FOUND);
 		setStringEntity(response, "No document found matching your query");
 	}
