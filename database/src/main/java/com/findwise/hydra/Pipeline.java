@@ -44,7 +44,7 @@ public class Pipeline<T extends Stage> {
 		List<T> stageList = new ArrayList<T>();
 		
 		Iterator<T> it = stages.values().iterator();
-		for(int i=0; it.hasNext(); i++) {
+		while(it.hasNext()) {
 			stageList.add(it.next());
 		}
 		
