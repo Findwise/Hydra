@@ -12,6 +12,7 @@ import com.findwise.hydra.common.Document.Action;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,7 @@ public class SolrOutputStageTest {
 
 	@Test
 	public void testAdd() throws Exception {
-		solrOutput.setFieldMappings(new HashMap<String, String>());
+		solrOutput.setFieldMappings(new HashMap<String, Object>());
 
 		LocalDocument doc = new LocalDocument();
 		doc.setAction(Action.ADD);
@@ -74,7 +75,7 @@ public class SolrOutputStageTest {
 
 	@Test
 	public void testSendLimit() throws Exception {
-		solrOutput.setFieldMappings(new HashMap<String, String>());
+		solrOutput.setFieldMappings(new HashMap<String, Object>());
 		solrOutput.setSendLimit(5);
 		LocalDocument doc = new LocalDocument();
 		doc.setAction(Action.ADD);
@@ -102,7 +103,7 @@ public class SolrOutputStageTest {
 
 	@Test
 	public void testCommitWithin() throws Exception {
-		solrOutput.setFieldMappings(new HashMap<String, String>());
+		solrOutput.setFieldMappings(new HashMap<String, Object>());
 		solrOutput.setCommitWithin(1337);
 		LocalDocument doc = new LocalDocument();
 		doc.setAction(Action.ADD);
@@ -121,12 +122,14 @@ public class SolrOutputStageTest {
 		multiValued.add("james bond");
 		multiValued.add("heman");
 		doc.putContentField("hero", multiValued);
+		doc.putContentField("explode", "boom");
 
-		Map<String, String> fieldMappings = new HashMap<String, String>();
+		Map<String, Object> fieldMappings = new HashMap<String, Object>();
 		fieldMappings.put("name", "fullname");
 		fieldMappings.put("reference", "url");
 		fieldMappings.put("doesnotexist", "doesnotmatter");
 		fieldMappings.put("hero", "heroes");
+		fieldMappings.put("explode", Arrays.asList(new String[] {"explode1", "explode2", "explode3"}));
 
 		solrOutput.setFieldMappings(fieldMappings);
 		SolrInputDocument inputDoc = solrOutput
@@ -137,6 +140,10 @@ public class SolrOutputStageTest {
 
 		org.junit.Assert.assertArrayEquals(multiValued.toArray(), inputDoc
 				.getFieldValues("heroes").toArray());
+		
+		org.junit.Assert.assertEquals(inputDoc.getFieldValue("explode1"), doc.getContentField("explode"));
+		org.junit.Assert.assertEquals(inputDoc.getFieldValue("explode2"), doc.getContentField("explode"));
+		org.junit.Assert.assertEquals(inputDoc.getFieldValue("explode3"), doc.getContentField("explode"));
 	}
 
 	@Test
