@@ -31,7 +31,7 @@ public class SolrOutputStage extends AbstractOutputStage {
 
 	@Parameter
 	private String solrDeployPath;
-	@Parameter
+	@Parameter(description="A map specifying which fields in the Hydra document becomes which fields in Solr. The value of an entry must be one of either String or List<String>.")
 	private Map<String, Object> fieldMappings = new HashMap<String, Object>();
 	@Parameter
 	private boolean sendAll = false;
