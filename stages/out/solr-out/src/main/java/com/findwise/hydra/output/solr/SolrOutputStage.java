@@ -26,14 +26,14 @@ import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
 
-@Stage
+@Stage(description="Writes documents to Solr")
 public class SolrOutputStage extends AbstractOutputStage {
 
-	@Parameter
+	@Parameter(description="The URL of the Solr to which this stage will post data")
 	private String solrDeployPath;
 	@Parameter(description="A map specifying which fields in the Hydra document becomes which fields in Solr. The value of an entry must be one of either String or List<String>.")
 	private Map<String, Object> fieldMappings = new HashMap<String, Object>();
-	@Parameter
+	@Parameter(description="If set, fieldMappings will be ignored and all fields will be sent to Solr.")
 	private boolean sendAll = false;
 	@Parameter
 	private String idField = "id";
