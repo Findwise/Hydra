@@ -2,7 +2,6 @@ package com.findwise.hydra.output.solr;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,7 +14,6 @@ import java.util.Map.Entry;
 import org.apache.http.HttpException;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.common.SolrInputDocument;
 
@@ -28,14 +26,14 @@ import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
 
-@Stage
+@Stage(description="Writes documents to Solr")
 public class SolrOutputStage extends AbstractOutputStage {
 
-	@Parameter
+	@Parameter(description="The URL of the Solr to which this stage will post data")
 	private String solrDeployPath;
-	@Parameter
-	private Map<String, String> fieldMappings = new HashMap<String, String>();
-	@Parameter
+	@Parameter(description="A map specifying which fields in the Hydra document becomes which fields in Solr. The value of an entry must be one of either String or List<String>.")
+	private Map<String, Object> fieldMappings = new HashMap<String, Object>();
+	@Parameter(description="If set, fieldMappings will be ignored and all fields will be sent to Solr.")
 	private boolean sendAll = false;
 	@Parameter
 	private String idField = "id";
@@ -116,13 +114,25 @@ public class SolrOutputStage extends AbstractOutputStage {
 			}
 		} else {
 			for (String inField : fieldMappings.keySet()) {
-				if (doc.hasContentField(inField)) {
-					docToAdd.addField(fieldMappings.get(inField),
-							doc.getContentField(inField));
-				}
+				addField(doc, docToAdd, inField);
 			}
 		}
 		return docToAdd;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void addField(Document doc, SolrInputDocument inputDoc, String field) {
+		if (doc.hasContentField(field)) {
+			Object toField = fieldMappings.get(field);
+			if(toField instanceof String) {
+				inputDoc.addField((String) toField,
+						doc.getContentField(field));
+			} else if(toField instanceof List){
+				for(String s : (List<String>) toField) {
+					inputDoc.addField(s, doc.getContentField(field));
+				}
+			}
+		}
 	}
 
 	private void send() {
@@ -259,11 +269,11 @@ public class SolrOutputStage extends AbstractOutputStage {
 		this.sendTimeout = sendTimeout;
 	}
 
-	public Map<String, String> getFieldMappings() {
+	public Map<String, Object> getFieldMappings() {
 		return fieldMappings;
 	}
 
-	public void setFieldMappings(Map<String, String> fieldConfigs) {
+	public void setFieldMappings(Map<String, Object> fieldConfigs) {
 		this.fieldMappings = fieldConfigs;
 	}
 
