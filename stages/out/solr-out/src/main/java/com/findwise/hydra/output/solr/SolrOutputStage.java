@@ -2,16 +2,10 @@ package com.findwise.hydra.output.solr;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import org.apache.http.HttpException;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -39,27 +33,27 @@ public class SolrOutputStage extends AbstractOutputStage {
 	private String idField = "id";
 	@Parameter
 	private int commitWithin = 0;
-	@Parameter
-	private int sendLimit;
-	@Parameter
-	private int sendTimeout;
 
-	private int itemCounterSend;
-	private long lastSend = 0;
 	private SolrServer solr;
-	private List<LocalDocument> addDocuments = new ArrayList<LocalDocument>();
-	private List<LocalDocument> removeDocuments = new ArrayList<LocalDocument>();
 
 	@Override
 	public void output(LocalDocument doc) {
 		final Action action = doc.getAction();
 
+		try {
+			
 		if (action == Action.ADD) {
-			addAction(doc);
+			add(doc);
 		} else if (action == Action.DELETE) {
-			deleteAction(doc);
+			delete(doc);
 		}
-		checkTimeouts();
+		} catch (SolrServerException e) {
+			failDocument(doc, e);
+		} catch (IOException e) {
+			failDocument(doc, e);
+		} catch (RequiredArgumentMissingException e) {
+			failDocument(doc, e);
+		}
 	}
 
 	@Override
@@ -67,42 +61,33 @@ public class SolrOutputStage extends AbstractOutputStage {
 		try {
 			solr = getSolrServer();
 		} catch (MalformedURLException e) {
-			Logger.error("Solr URL malformed.");
+			throw new RequiredArgumentMissingException("Solr URL malformed.");
 		}
 	}
-
-	private synchronized void addAction(LocalDocument doc) {
-		addDocuments.add(doc);
-		countUpSend();
-	}
-
-	private synchronized void deleteAction(LocalDocument doc) {
-		removeDocuments.add(doc);
-		countUpSend();
-	}
-
-	protected void notifyInternal() {
-		try {
-			checkTimeouts();
-		} catch (Exception e) {
-			Logger.error("Failed to send or commit, I should probably crash.",
-					e);
+	
+	private void add(LocalDocument doc) throws SolrServerException, IOException {
+		SolrInputDocument solrdoc = createSolrInputDocumentWithFieldConfig(doc);
+		if (getCommitWithin() != 0) {
+			solr.add(solrdoc, getCommitWithin());
 		}
-	}
-
-	private synchronized void checkTimeouts() {
-		long now = new Date().getTime();
-		if (now - lastSend >= sendTimeout && sendTimeout > 0) {
-			send();
+		else {
+			solr.add(solrdoc);
 		}
+		accept(doc);
 	}
-
-	private void countUpSend() {
-		itemCounterSend++;
-		if (itemCounterSend >= sendLimit) {
-			send();
+	
+	private void delete(LocalDocument doc) throws SolrServerException, IOException, RequiredArgumentMissingException {
+		if(!doc.hasContentField(idField)) {
+			throw new RequiredArgumentMissingException("Document has no ID field");
 		}
+		if (getCommitWithin() != 0) {
+			solr.deleteById(doc.getContentField(idField).toString(), getCommitWithin());
+		} else {
+			solr.deleteById(doc.getContentField(idField).toString());
+		}
+		accept(doc);
 	}
+	
 
 	protected SolrInputDocument createSolrInputDocumentWithFieldConfig(
 			Document doc) {
@@ -134,105 +119,7 @@ public class SolrOutputStage extends AbstractOutputStage {
 			}
 		}
 	}
-
-	private void send() {
-		sendAdds();
-		sendRemoves();
-		itemCounterSend = 0;
-		lastSend = new Date().getTime();
-	}
-
-	private void sendAdds() {
-		Map<LocalDocument, SolrInputDocument> solrDocMap = mapToSolrDocuments(addDocuments);
-		try {
-			addDocs(solrDocMap.values());
-			acceptDocuments(solrDocMap.keySet());
-			
-
-		} catch (Exception e) {
-			Logger.warn(
-					"Could not add documents in Solr, trying to add them individually...",
-					e);
-			sendAddsIndividually(solrDocMap);
-		}
-		finally{
-			addDocuments.clear();
-		}
-
-	}
-
-	private void sendAddsIndividually(
-			Map<LocalDocument, SolrInputDocument> solrDocMap) {
-		for (Entry<LocalDocument, SolrInputDocument> docEntry : solrDocMap
-				.entrySet()) {
-			try {
-				addDocs(Collections.singleton(docEntry.getValue()));
-			} catch (Exception e) {
-				failDocument(docEntry.getKey());
-			}
-		}
-	}
-
-	private void addDocs(Collection<SolrInputDocument> docs)
-			throws SolrServerException, IOException {
-		if (getCommitWithin() != 0) {
-			solr.add(docs, getCommitWithin());
-		} else {
-			solr.add(docs);
-		}
-	}
-
-	private Map<LocalDocument, SolrInputDocument> mapToSolrDocuments(
-			List<LocalDocument> docs) {
-		Map<LocalDocument, SolrInputDocument> solrDocMap = new HashMap<LocalDocument, SolrInputDocument>();
-		for (LocalDocument d : docs) {
-			solrDocMap.put(d, createSolrInputDocumentWithFieldConfig(d));
-		}
-		return solrDocMap;
-	}
-
-	private void sendRemoves() {
-		Map<LocalDocument, String> idMap = mapToIds(removeDocuments);
-		try {
-			solr.deleteById(new ArrayList<String>(idMap.values()));
-			acceptDocuments(idMap.keySet());
-		} catch (Exception e) {
-			Logger.warn(
-					"Could not remove documents in Solr, trying to remove them individually...",
-					e);
-			sendRemovesIndividually(idMap);
-		} finally {
-			removeDocuments.clear();
-		}
-	}
-
-	private void acceptDocuments(Collection<LocalDocument> docs)
-			throws IOException, HttpException {
-		for (LocalDocument doc : docs) {
-			accept(doc);
-		}
-	}
-
-	private void sendRemovesIndividually(Map<LocalDocument, String> idMap) {
-		for (Entry<LocalDocument, String> docEntry : idMap.entrySet()) {
-			try {
-				solr.deleteById(docEntry.getValue());
-			} catch (Exception e) {
-				failDocument(docEntry.getKey());
-			}
-
-		}
-	}
-
-	private Map<LocalDocument, String> mapToIds(List<LocalDocument> docs) {
-		Map<LocalDocument, String> idMap = new HashMap<LocalDocument, String>();
-		for (LocalDocument d : docs) {
-			String id = (String) d.getContentField(idField);
-			idMap.put(d, id);
-		}
-		return idMap;
-	}
-
+	
 	private void failDocument(LocalDocument doc) {
 		try {
 			fail(doc);
@@ -242,31 +129,13 @@ public class SolrOutputStage extends AbstractOutputStage {
 		}
 	}
 
+	private void failDocument(LocalDocument doc, Throwable reason) {
+		Logger.error("Failing document due to exception", reason);
+		failDocument(doc);
+	}
+
 	private SolrServer getSolrServer() throws MalformedURLException {
 		return new HttpSolrServer(solrDeployPath);
-	}
-
-	public void close() throws Exception {
-
-		if (itemCounterSend > 0) {
-			send();
-		}
-	}
-
-	public int getSendLimit() {
-		return sendLimit;
-	}
-
-	public void setSendLimit(int sendLimit) {
-		this.sendLimit = sendLimit;
-	}
-
-	public int getSendTimeout() {
-		return sendTimeout;
-	}
-
-	public void setSendTimeout(int sendTimeout) {
-		this.sendTimeout = sendTimeout;
 	}
 
 	public Map<String, Object> getFieldMappings() {
@@ -282,7 +151,7 @@ public class SolrOutputStage extends AbstractOutputStage {
 	 * 
 	 * @param sendAll
 	 */
-	public void setSendAll(boolean sendAll) {
+	protected void setSendAll(boolean sendAll) {
 		this.sendAll = sendAll;
 	}
 
