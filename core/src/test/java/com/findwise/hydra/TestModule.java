@@ -22,15 +22,8 @@ public class TestModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		CoreConfiguration c = getCoreConfiguration();
-		bindConstant().annotatedWith(Names.named(CoreConfiguration.NAMESPACE_PARAM)).to(c.getNamespace());
-		bindConstant().annotatedWith(Names.named(CoreConfiguration.DATABASE_URL_PARAM)).to(c.getDatabaseUrl());
-		bindConstant().annotatedWith(Names.named(CoreConfiguration.POLLING_INTERVAL_PARAM)).to(c.getPollingInterval());
-		bindConstant().annotatedWith(Names.named(CoreConfiguration.REST_PORT_PARAM)).to(c.getRestPort());
-		bindConstant().annotatedWith(Names.named(DatabaseConnector.DATABASE_USER)).to(c.getDatabaseUser());
-		bindConstant().annotatedWith(Names.named(DatabaseConnector.DATABASE_PASSWORD)).to(c.getDatabasePassword());
-
 		bind(DatabaseConnector.class).to(MongoConnector.class);
+		bind(DatabaseConfiguration.class).to(CoreConfiguration.class);
 	}
 	
 	@Provides @Singleton
@@ -39,9 +32,11 @@ public class TestModule extends AbstractModule {
 		mc.setDatabaseUrl("127.0.0.1");
 		mc.setRestPort(12001);
 		mc.setNamespace(namespace);
+		mc.setOldMaxCount(1000);
+		mc.setOldMaxSize(10);
+		
 		return mc;
 	}
-	
 	/*@Provides
 	protected DatabaseConnector getConnector() {
 		Injector inj = Guice.createInjector(this);
@@ -54,7 +49,7 @@ public class TestModule extends AbstractModule {
 	}
 	
 	@Provides
-	protected StoredPipeline getStoredPipeline(@Named(DatabaseConnector.NAMESPACE_PARAM) String namespace) {
+	protected StoredPipeline getStoredPipeline() {
 		try {
 			return new StoredPipeline(CoreModule.PIPELINE_DIRECTORY);
 		} catch (IOException e) {

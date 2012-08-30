@@ -32,12 +32,10 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.findwise.hydra.Configuration;
 import com.findwise.hydra.CoreConfiguration;
 import com.findwise.tools.HttpConnection;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.name.Named;
 
 /**
  * Sets up a REST service on the specified port, or 12001 by default.
@@ -64,13 +62,18 @@ public class RESTServer extends Thread {
 	private String id;
 
 	@SuppressWarnings("rawtypes")
-	@Inject
-	public RESTServer(@Named(Configuration.REST_PORT_PARAM) int port, HttpRESTHandler requestHandler) {
+	public RESTServer(int port, HttpRESTHandler requestHandler) {
 		this.requestHandler = requestHandler;
 		id = UUID.randomUUID().toString();
 		requestHandler.setRestId(id);
 		this.port = port;
 		executing = false;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	@Inject
+	public RESTServer(CoreConfiguration conf, HttpRESTHandler requestHandler) {
+		this(conf.getRestPort(), requestHandler);
 	}
 	
 	public boolean isExecuting() {
