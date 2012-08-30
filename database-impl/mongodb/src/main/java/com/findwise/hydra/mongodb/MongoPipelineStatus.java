@@ -12,8 +12,6 @@ import com.mongodb.DBObject;
 
 public class MongoPipelineStatus implements PipelineStatus, DBObject {
 	private Map<String, Object> map;
-
-	private long numberToKeep = DEFAULT_NUMBER_TO_KEEP;
 	
 	public static final String DISCARDS_OLD_KEY = "discardOld";
 	
@@ -104,16 +102,12 @@ public class MongoPipelineStatus implements PipelineStatus, DBObject {
 
 	@Override
 	public void setDiscardedToKeep(long numberToKeep) {
-		this.numberToKeep = numberToKeep;
-		
-		if(isDiscardingOldDocuments()) {
-			map.put(DISCARDS_OLD_KEY, numberToKeep);
-		}
+		map.put(DISCARDS_OLD_KEY, numberToKeep);
 	}
 
 	@Override
 	public long getNumberToKeep() {
-		return numberToKeep;
+		return (Long) map.get(DISCARDS_OLD_KEY);
 	}
 	
 	public void setCreated(Date date) {
@@ -130,5 +124,15 @@ public class MongoPipelineStatus implements PipelineStatus, DBObject {
 	
 	public boolean isPrepared() {
 		return (Boolean) map.get("prepared");
+	}
+
+	@Override
+	public void setDiscardedMaxSize(int maxSize) {
+		map.put("discard_size", maxSize);
+	}
+
+	@Override
+	public int getDiscardedMaxSize() {
+		return (Integer) map.get("discard_size");
 	}
 }

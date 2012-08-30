@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.findwise.hydra.DatabaseDocument;
@@ -17,6 +18,7 @@ import com.findwise.hydra.common.Document.Action;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.local.LocalQuery;
 import com.google.inject.Guice;
+import com.mongodb.Mongo;
 
 /**
  * Cross-test
@@ -66,10 +68,9 @@ public class QueryTest {
 	}
 	
 	@AfterClass
+	@BeforeClass
 	public static void tearDownClass() throws Exception {
-		QueryTest qt = new QueryTest();
-		qt.setUp();
-		qt.mdc.getDB().dropDatabase();
+		new Mongo().getDB("junit-QueryTest").dropDatabase();
 	}
 
 	@Test

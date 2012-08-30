@@ -22,6 +22,7 @@ import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.mongodb.MongoDocument;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.mongodb.Mongo;
 
 public class RemotePipelineStressTest {
 	private NodeMaster nm;
@@ -61,14 +62,7 @@ public class RemotePipelineStressTest {
 
 	@AfterClass
 	public static void tearDownClass() throws Exception {
-		NodeMaster nm = inj.getInstance(NodeMaster.class);
-		if(!nm.isAlive()) {
-			nm.blockingStart();
-		
-			nm.getDatabaseConnector().waitForWrites(true);
-			nm.getDatabaseConnector().connect();
-		}
-		//((MongoConnector)nm.getDatabaseConnector()).getDB().dropDatabase();
+		new Mongo().getDB("jUnit-RemotePipelineStressTest").dropDatabase();
 	}
 	
 	@Test

@@ -7,6 +7,7 @@ import java.net.UnknownHostException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.findwise.hydra.DatabaseConfiguration;
 import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.PipelineReader;
 import com.findwise.hydra.common.JsonException;
@@ -19,6 +20,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
 
 public class MongoConnector implements DatabaseConnector<MongoType> {
 
@@ -47,14 +49,6 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 
 	private WriteConcern concern = WriteConcern.NORMAL;
 
-	public String getUrl() {
-		return url;
-	}
-
-	public String getPipelineName() {
-		return pipelineName;
-	}
-
 	@Override
 	public MongoPipelineWriter getPipelineWriter() {
 		return pipelineWriter;
@@ -69,12 +63,8 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	public MongoDocumentIO getDocumentWriter() {
 		return documentIO;
 	}
-
-	private String url;
-	private String pipelineName;
 	
-	private String username;
-	private String password;
+	private DatabaseConfiguration conf;
 
 	private MongoPipelineReader pipelineReader;
 	private MongoPipelineWriter pipelineWriter;
@@ -86,38 +76,30 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	public MongoConnector(){
 		
 	}
-	
-	public MongoConnector(String url, String namespace) {
-		this(url, namespace, "", "");
-	}
-	
+
 	@Inject
-	public MongoConnector(@Named(DATABASE_URL_PARAM) String url,
-			@Named(NAMESPACE_PARAM) String namespace, @Named(DATABASE_USER) String username, @Named(DATABASE_PASSWORD) String password) {
-		this.url = url;
-		this.pipelineName = namespace;
-		this.username = username;
-		this.password = password;
+	public MongoConnector(DatabaseConfiguration conf) {
+		this.conf = conf;
 	}
 
 	@Override
 	public void connect() throws IOException {
 		Mongo mongo;
 		try {
-			mongo = new Mongo(url);
+			mongo = new Mongo(conf.getDatabaseUrl());
 		} catch (UnknownHostException e) {
 			logger.error("Failed to establish connection to MongoDB at URL: "
-					+ url, e);
+					+ conf.getDatabaseUrl(), e);
 			throw new ConnectionException(e);
 
 		} catch (MongoException e) {
 			logger.error("A MongoException occurred", e);
 			throw new ConnectionException(e);
 		}
-		db = mongo.getDB(pipelineName);
+		db = mongo.getDB(conf.getNamespace());
 		
 		if(requiresAuthentication(mongo)) {
-			if(!mongo.getDB("admin").authenticate(username, password.toCharArray())) {
+			if(!mongo.getDB("admin").authenticate(conf.getDatabaseUser(), conf.getDatabasePassword().toCharArray())) {
 				logger.error("Failed to authenticate with MongoDB");
 				throw new ConnectionException(new MongoException(""));
 			}
@@ -130,15 +112,16 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 		hydraCollection.setObjectClass(MongoPipelineStatus.class);
 		
 		if(hydraCollection.count()==0) {
-			MongoPipelineStatus conf = getNewPipelineStatus();
-			//TODO: Default behavior is to discard
-			conf.setDiscardOldDocuments(true);
-			hydraCollection.insert(conf);
+			MongoPipelineStatus status = getNewPipelineStatus();
+			status.setDiscardedMaxSize(conf.getOldMaxSize());
+			status.setDiscardedToKeep(conf.getOldMaxCount());
+			
+			WriteResult wr = hydraCollection.insert(status);
 		}
 		
 		MongoPipelineStatus pipelineStatus = getPipelineStatus();
 		
-		documentIO = new MongoDocumentIO(db, concern, pipelineStatus.isDiscardingOldDocuments(), pipelineStatus.getNumberToKeep());
+		documentIO = new MongoDocumentIO(db, concern, pipelineStatus.getNumberToKeep(), pipelineStatus.getDiscardedMaxSize());
 	
 		if(!pipelineStatus.isPrepared()) {
 			logger.info("Database is new, preparing it");
@@ -234,29 +217,5 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	
 	public DB getDB() {
 		return db;
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
-	public void setUrl(String url) {
-		this.url = url;
-	}
-
-	public void setPipelineName(String pipelineName) {
-		this.pipelineName = pipelineName;
 	}
 }
