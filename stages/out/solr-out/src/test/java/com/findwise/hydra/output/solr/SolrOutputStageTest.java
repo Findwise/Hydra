@@ -1,5 +1,11 @@
 package com.findwise.hydra.output.solr;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.common.SolrInputDocument;
 import org.junit.After;
@@ -11,11 +17,6 @@ import org.mockito.Mockito;
 import com.findwise.hydra.common.Document.Action;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class SolrOutputStageTest {
 
@@ -61,7 +62,7 @@ public class SolrOutputStageTest {
 		doc.putContentField("name", "jonas");
 		solrOutput.output(doc);
 		Mockito.verify(mockServer).add(
-				Mockito.anyCollectionOf(SolrInputDocument.class));
+				Mockito.any(SolrInputDocument.class));
 	}
 
 	@Test
@@ -70,37 +71,13 @@ public class SolrOutputStageTest {
 		doc.setAction(Action.DELETE);
 		doc.putContentField("name", "jonas");
 		solrOutput.output(doc);
-		Mockito.verify(mockServer).deleteById(Mockito.anyListOf(String.class));
+		Mockito.verify(mockServer, Mockito.never()).deleteById(Mockito.any(String.class));
+		
+		doc.putContentField("id", "someid");
+		solrOutput.output(doc);
+		Mockito.verify(mockServer).deleteById(Mockito.any(String.class));
 	}
-
-	@Test
-	public void testSendLimit() throws Exception {
-		solrOutput.setFieldMappings(new HashMap<String, Object>());
-		solrOutput.setSendLimit(5);
-		LocalDocument doc = new LocalDocument();
-		doc.setAction(Action.ADD);
-		doc.putContentField("name", "one");
-		solrOutput.output(doc);
-		doc = new LocalDocument();
-		doc.setAction(Action.ADD);
-		doc.putContentField("name", "two");
-		solrOutput.output(doc);
-		doc = new LocalDocument();
-		doc.setAction(Action.ADD);
-		doc.putContentField("name", "three");
-		solrOutput.output(doc);
-		doc = new LocalDocument();
-		doc.setAction(Action.ADD);
-		doc.putContentField("name", "four");
-		solrOutput.output(doc);
-		doc = new LocalDocument();
-		doc.setAction(Action.ADD);
-		doc.putContentField("name", "five");
-		solrOutput.output(doc);
-		Mockito.verify(mockServer, Mockito.times(1)).add(
-				Mockito.anyCollectionOf(SolrInputDocument.class));
-	}
-
+	
 	@Test
 	public void testCommitWithin() throws Exception {
 		solrOutput.setFieldMappings(new HashMap<String, Object>());
@@ -110,7 +87,7 @@ public class SolrOutputStageTest {
 		doc.putContentField("name", "one");
 		solrOutput.output(doc);
 		Mockito.verify(mockServer, Mockito.times(1)).add(
-				Mockito.anyCollectionOf(SolrInputDocument.class), Mockito.eq(1337));
+				Mockito.any(SolrInputDocument.class), Mockito.eq(1337));
 	}
 
 	@Test
@@ -165,7 +142,7 @@ public class SolrOutputStageTest {
 		org.junit.Assert.assertEquals(inputDoc.getFieldValue("reference"), doc
 				.getContentField("reference").toString());
 
-		org.junit.Assert.assertArrayEquals(((ArrayList) doc
+		org.junit.Assert.assertArrayEquals(((ArrayList<?>) doc
 				.getContentField("hero")).toArray(),
 				inputDoc.getFieldValues("hero").toArray());
 

@@ -34,4 +34,8 @@ public interface PipelineStatus {
 	
 	long getNumberToKeep();
 	
+	void setDiscardedMaxSize(int maxSize);
+	
+	int getDiscardedMaxSize();
+	
 }

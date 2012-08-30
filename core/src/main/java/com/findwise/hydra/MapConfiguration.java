@@ -82,4 +82,22 @@ public class MapConfiguration implements CoreConfiguration {
 	public void setDatabasePassword(String password) {
 		map.put(DatabaseConnector.DATABASE_PASSWORD, password);
 	}
+
+	@Override
+	public int getOldMaxSize() {
+		return Integer.parseInt(getParameter(DatabaseConnector.OLD_MAX_SIZE_MB));
+	}
+	
+	public void setOldMaxSize(int size) {
+		map.put(DatabaseConnector.OLD_MAX_SIZE_MB, ""+size);
+	}
+
+	@Override
+	public int getOldMaxCount() {
+		return Integer.parseInt(getParameter(DatabaseConnector.OLD_MAX_COUNT));
+	}
+	
+	public void setOldMaxCount(int count) {
+		map.put(DatabaseConnector.OLD_MAX_COUNT, ""+count);
+	}
 }

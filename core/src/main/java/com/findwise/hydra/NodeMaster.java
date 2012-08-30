@@ -11,7 +11,6 @@ import com.findwise.hydra.mongodb.MongoConnector;
 import com.findwise.hydra.mongodb.MongoType;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 @Singleton
 public final class NodeMaster extends Thread {
@@ -27,12 +26,12 @@ public final class NodeMaster extends Thread {
 	private int port;
 	
 	@Inject
-	private NodeMaster(@Named(Configuration.POLLING_INTERVAL_PARAM) int pollingInterval, MongoConnector dbc, StoredPipeline pipeline, @Named(Configuration.REST_PORT_PARAM) int port) {
+	private NodeMaster(CoreConfiguration conf, MongoConnector dbc, StoredPipeline pipeline) {
 		this.dbc = dbc;
 		sm = StageManager.getStageManager();
 		this.pipeline = pipeline;
-		this.pollingInterval = pollingInterval;
-		this.port = port;
+		this.pollingInterval = conf.getPollingInterval();
+		this.port = conf.getRestPort();
 	}
 	
 	/**

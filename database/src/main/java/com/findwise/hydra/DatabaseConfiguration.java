@@ -10,4 +10,8 @@ public interface DatabaseConfiguration {
 	String getDatabaseUser();
 	
 	String getDatabasePassword();
+	
+	int getOldMaxSize();
+	
+	int getOldMaxCount();
 }
