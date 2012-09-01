@@ -53,14 +53,14 @@ public final class NodeMaster extends Thread {
 	 * Check if the JAR-file is there, in that case start it. 
 	 **/
 	private boolean launchStage(StoredStage stage) {
-		StageRunner wrapper = new StageRunner(stage, port);
-		sm.addWrapper(stage, wrapper);
-		wrapper.start();
+		StageRunner runner = new StageRunner(stage, port);
+		sm.addRunner(stage, runner);
+		runner.start();
 		return true;
 	}
 	
 	private void stopStage(StoredStage stage) {
-		StageRunner sw = sm.getWrapper(stage);
+		StageRunner sw = sm.getRunner(stage.getName());
 		if(sw!=null) {
 			sw.destroy();
 		}
@@ -96,7 +96,7 @@ public final class NodeMaster extends Thread {
 	
 	private void restartStopped() {
 		for(StoredStage s : pipeline.getStages()) {
-			if(!sm.wrapperExists(s)) {
+			if(!sm.hasRunner(s.getName())) {
 				launchStage(s);
 			}
 		}
@@ -126,8 +126,8 @@ public final class NodeMaster extends Thread {
 		
 		List<StoredStage> propUpdated = getPropertiesUpdated(newPipeline);
 		for(StoredStage stage : propUpdated) {
-			sm.getWrapper(stage).destroy();
-			sm.removeWrapper(stage);
+			sm.getRunner(stage.getName()).destroy();
+			sm.removeRunner(stage.getName());
 			addStage(stage.getName(), newPipeline);
 		}
 	}
@@ -144,9 +144,9 @@ public final class NodeMaster extends Thread {
 	}
 	
 	private void stopAndRemove(StoredStage s) {
-		if (sm.wrapperExists(s)) {
+		if (sm.hasRunner(s.getName())) {
 			stopStage(s);
-			sm.removeWrapper(s);
+			sm.removeRunner(s.getName());
 		}
 		patientRemoveStage(s, 500, 10);
 	}

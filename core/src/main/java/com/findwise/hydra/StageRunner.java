@@ -22,12 +22,22 @@ public class StageRunner extends Thread {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	private StageDestroyer stageDestroyer;
 	private int timesToRetry;
-	private int timesRestarted;
+	private int timesStarted;
 	private boolean loggingEnabled;
 	private String jvmParameters;
 	private String startupArgsString;
 	
+	private boolean hasQueried = false;
+	
 	private int pipelinePort;
+	
+	public synchronized void setHasQueried() {
+		hasQueried = true;
+	}
+	
+	public synchronized boolean hasQueried() {
+		return hasQueried;
+	}
 
 	/**
 	 * Expected exit value should be 143 on *NIX systems, the exit value on a
@@ -39,7 +49,7 @@ public class StageRunner extends Thread {
 	public StageRunner(StoredStage stage, int pipelinePort) {
 		this.stage = stage;
 		this.pipelinePort = pipelinePort;
-		timesRestarted = 0;
+		timesStarted = 0;
 		setParameters();
 	}
 
@@ -72,26 +82,23 @@ public class StageRunner extends Thread {
 	}
 
 	public void run() {
-		boolean shutdown = startStage();
-		if (shutdown) {
-			return;
-		}
 
-		while (timesToRetry == -1 || timesToRetry > timesRestarted) {
-			logger.info("Restarting stage " + stage.getName()
-					+ ". Times restarted so far: " + timesRestarted);
-			timesRestarted++;
-			shutdown = startStage();
-			if (shutdown) {
+		do {
+			logger.info("Starting stage " + stage.getName()
+					+ ". Times started so far: " + timesStarted);
+			timesStarted++;
+			boolean cleanShutdown = startStage();
+			if (cleanShutdown) {
+				return;
+			} 
+			if(!hasQueried()) {
+				logger.error("The stage "+stage.getName()+" did not start. It will not be restarted until configuration changes.");
 				return;
 			}
-		}
+		} while (timesToRetry == -1 || timesToRetry >= timesStarted);
 
-		// TODO: What behavior is expected when a stage completely fails? For
-		// now, let's kill the entire Node. Perhaps this should be configurable?
 		logger.error("Stage " + stage.getName()
 				+ " has failed and cannot be restarted. ");
-		System.exit(1);
 	}
 	
 	public void printJavaVersion() {
