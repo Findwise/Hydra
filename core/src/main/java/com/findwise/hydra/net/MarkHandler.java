@@ -26,7 +26,7 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
 
 	private static Logger logger = LoggerFactory.getLogger(MarkHandler.class);
 
-	DatabaseConnector<T> dbc;
+	private DatabaseConnector<T> dbc;
 
 	public MarkHandler(DatabaseConnector<T> dbc) {
 		this.dbc = dbc;

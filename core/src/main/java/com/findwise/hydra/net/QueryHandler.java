@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.DatabaseType;
+import com.findwise.hydra.StageManager;
 import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.local.LocalQuery;
@@ -22,7 +23,7 @@ import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.net.RESTTools.Method;
 
 public class QueryHandler<T extends DatabaseType> implements ResponsibleHandler {
-
+	
 	private DatabaseConnector<T> dbc;
 
 	private static Logger logger = LoggerFactory.getLogger(QueryHandler.class);
@@ -53,6 +54,8 @@ public class QueryHandler<T extends DatabaseType> implements ResponsibleHandler 
 			HttpResponseWriter.printJsonException(response, e);
 			return;
 		}
+
+		reportQuery(stage);		
 
 		Document d;
 
@@ -88,6 +91,13 @@ public class QueryHandler<T extends DatabaseType> implements ResponsibleHandler 
 	@Override
 	public String[] getSupportedUrls() {
 		return new String[] { RemotePipeline.GET_DOCUMENT_URL };
+	}
+	
+	private void reportQuery(String stage) {
+		StageManager sm = StageManager.getStageManager();
+		if(sm.hasRunner(stage)) {
+			sm.getRunner(stage).setHasQueried();
+		}
 	}
 
 }
