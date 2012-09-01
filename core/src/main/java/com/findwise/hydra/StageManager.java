@@ -7,10 +7,10 @@ public final class StageManager {
 	
 	private static volatile StageManager self = null;
 
-	private Map<String, StageRunner> wrapperMap;
+	private Map<String, StageRunner> runnerMap;
 	
 	private StageManager() {
-		wrapperMap = new HashMap<String, StageRunner>();
+		runnerMap = new HashMap<String, StageRunner>();
 	}
 	
 	public static StageManager getStageManager() {
@@ -20,33 +20,33 @@ public final class StageManager {
 		return self;
 	}
 	
-	public StageRunner getWrapper(StoredStage stage) {
-		if(wrapperMap.containsKey(stage.getName())) {
-			return wrapperMap.get(stage.getName());
+	public StageRunner getRunner(String stageName) {
+		if(runnerMap.containsKey(stageName)) {
+			return runnerMap.get(stageName);
 		}
 		return null;
 	}
 	
 	
-	public boolean wrapperExists(StoredStage stage) {
-		return getWrapper(stage)!=null;
+	public boolean hasRunner(String stageName) {
+		return getRunner(stageName)!=null;
 	}
 	
-	public void addWrapper(StoredStage stage, StageRunner stageWrapper) {
-		wrapperMap.put(stage.getName(), stageWrapper);
+	public void addRunner(StoredStage stage, StageRunner stageWrapper) {
+		runnerMap.put(stage.getName(), stageWrapper);
 	}
 	
-	public StageRunner removeWrapper(StoredStage stage) {
-		if(wrapperMap.containsKey(stage.getName())) {
-			StageRunner ret = wrapperMap.get(stage.getName());
-			wrapperMap.remove(stage.getName());
+	public StageRunner removeRunner(String stageName) {
+		if(runnerMap.containsKey(stageName)) {
+			StageRunner ret = runnerMap.get(stageName);
+			runnerMap.remove(stageName);
 			return ret;
 		}
 		return null;
 	}
 	
-	public void findAndDestroy(StoredStage stage) {
-		StageRunner sw = removeWrapper(stage);
+	public void findAndDestroy(String stageName) {
+		StageRunner sw = removeRunner(stageName);
 		if(sw!=null) {
 			sw.destroy();
 		}
