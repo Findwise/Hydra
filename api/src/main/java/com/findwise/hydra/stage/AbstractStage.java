@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import com.findwise.hydra.common.JsonDeserializer;
 import com.findwise.hydra.common.JsonException;
@@ -143,6 +144,8 @@ public abstract class AbstractStage extends Thread {
 					field.setAccessible(prevAccessible);
 				}
 			}
+		} else {
+			throw new NoSuchElementException("No Stage-annotation found on the specified class "+getClass().getCanonicalName());
 		}
 	}
 	
