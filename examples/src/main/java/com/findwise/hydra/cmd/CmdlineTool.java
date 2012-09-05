@@ -86,7 +86,7 @@ public class CmdlineTool {
         if (cmd.getJarFile() != null) {
             File f = new File(cmd.getJarFile().getFilename());
 
-            Module conf = new MongoDBConnectionConfig(cmd.getJarFile().getPipelinename(), cmd.getHost());
+            Module conf = new MongoDBConnectionConfig(cmd.getJarFile().getPipelinename(), cmd.getHost(), "", "");
             MongoConnector mdc = Guice.createInjector(conf).getInstance(MongoConnector.class);
             mdc.connect();
 
@@ -99,7 +99,7 @@ public class CmdlineTool {
             PipelineConfiguration pipelineConfig = jsonReader.fromJson(cmd.getConfig());
             List<Stage> stages = stageFactory.createStages(pipelineConfig);
 
-            Module conf = new MongoDBConnectionConfig(pipelineConfig.getPipelineName(), cmd.getHost());
+            Module conf = new MongoDBConnectionConfig(pipelineConfig.getPipelineName(), cmd.getHost(), "", "");
             MongoConnector mdc = Guice.createInjector(conf).getInstance(MongoConnector.class);
             mdc.connect();
 
