@@ -1,0 +1,16 @@
+{
+    "pipelineName": "contacts",
+    "stages": [{
+        "stageName": "regexdates",
+        "stageClass": "com.findwise.hydra.stage.RegexStage",
+        "queryOptions": ["touched(mergeFields,true)"], 
+        "jarId": "basic", 
+        "regexConfigs" : [
+        {
+            "inField": "releasedatetime",
+            "outField": "releasedatetime",
+            "regex" : "(.*)(\\+\\d{2}):(\\d{2})",
+            "substitute" : "$1$2$3"
+        }]
+    }]
+}

@@ -5,7 +5,6 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
-
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,8 +34,8 @@ public class PipelineConfigurationDeserializer implements JsonDeserializer<Objec
         		return primitive.getAsString();
         	}
         } else if (element.isJsonArray()) {
-            String[] array = jdc.deserialize(element, String[].class);
-            return new ArrayList<String>(Arrays.asList(array));
+            Object[] array = jdc.deserialize(element, Object[].class);
+            return new ArrayList<Object>(Arrays.asList(array));
         } else if (element.isJsonObject()) {
         	Set<Entry<String,JsonElement>> entrySet = element.getAsJsonObject().entrySet();
         	Map<String, Object> map = new HashMap<String, Object>();

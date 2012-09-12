@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.InputStreamReader;
 
 /**
  * A tool to read and produce json from, and to a {@link PipelineConfiguration}. 
@@ -30,7 +31,7 @@ public class JsonPipelineUtil {
      * @return Corresponding <tt>PipelineConfiguration</tt>
      * @throws JsonSyntaxException if json is not a valid representation for a <tt>PipelineConfiguration</tt>
      */
-    public PipelineConfiguration fromJson(FileReader reader) {
+    public PipelineConfiguration fromJson(InputStreamReader reader) {
         PipelineConfiguration pipeline = gson.fromJson(reader, PipelineConfiguration.class);
         return pipeline;
     }
