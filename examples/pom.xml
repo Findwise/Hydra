@@ -64,13 +64,13 @@
         <dependency>
             <groupId>com.findwise.hydra</groupId>
             <artifactId>hydra-database</artifactId>
-            <version>0.2.0</version>
+            <version>0.3.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>com.findwise.hydra</groupId>
             <artifactId>hydra-basic-stages</artifactId>
-            <version>0.2.0</version>
+            <version>0.3.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -91,12 +91,20 @@
             <version>1.2</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.findwise.hydra</groupId>
+            <artifactId>hydra-mongodb</artifactId>
+            <version>0.3.0-SNAPSHOT</version>
+        </dependency>
+
         <!-- Commandline parser -->
         <dependency>
             <groupId>com.beust</groupId>
             <artifactId>jcommander</artifactId>
             <version>1.26</version>
         </dependency>
+
+        <!-- Test deps -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

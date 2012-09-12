@@ -4,8 +4,6 @@ package com.findwise.hydra.common;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import com.findwise.hydra.common.Logger.Level;
-
 /**
  * This class is mirrors the Log4J error levels, providing an interface
  * for logging on stdout which will be redirected to Log4J by 

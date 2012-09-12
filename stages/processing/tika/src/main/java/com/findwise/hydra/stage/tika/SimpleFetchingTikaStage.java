@@ -24,7 +24,9 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 
 	@Parameter(description = "The field name pattern that should be matched where urls will be found. First group plus \"_\" will be used as field prefix. Example: \"attachment_(.*)\" will match for example attachment_a and will use \"a_\" as prefix")
 	private String urlFieldPattern = null;
-
+        @Parameter(name = "addMetaData", description = "Add the metadata to the document or not. Defaults to true")
+        private boolean addMetaData = true;
+        
 	static private Parser parser = new AutoDetectParser();
 
 	@Override
@@ -35,17 +37,17 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 			try {
 				for (URL url : TikaUtils.getUrlsFromObject(urls.get(field))) {
 					TikaUtils.enrichDocumentWithFileContents(doc, field + "_",
-							url.openStream(), parser);
+							url.openStream(), parser, addMetaData);
 				}
 			} catch (MalformedURLException e) {
-				Logger.warn("A field matching the pattern " + field
+				throw new ProcessException("A field matching the pattern " + field
 						+ " contained a malformed url", e);
 			} catch (IOException e) {
-				Logger.warn("Failed opening or reading from stream", e);
+				throw new ProcessException("Failed opening or reading from stream", e);
 			} catch (SAXException e) {
-				Logger.warn("Failed parsing document", e);
+				throw new ProcessException("Failed parsing document", e);
 			} catch (TikaException e) {
-				Logger.warn("Got exception from Tika", e);
+				throw new ProcessException("Got exception from Tika", e);
 			}
 		}
 

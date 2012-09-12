@@ -7,6 +7,7 @@ import java.util.Random;
 import org.bson.types.ObjectId;
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.findwise.hydra.DatabaseDocument;
@@ -18,6 +19,7 @@ import com.findwise.hydra.common.Document.Status;
 import com.google.inject.Guice;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
+import com.mongodb.Mongo;
 
 public class MongoDocumentIOTest {
 	private MongoConnector mdc;
@@ -39,10 +41,9 @@ public class MongoDocumentIOTest {
 	}
 	
 	@AfterClass
+	@BeforeClass
 	public static void tearDown() throws Exception {
-		MongoDocumentIOTest test = new MongoDocumentIOTest();
-		test.createAndConnect();
-		test.mdc.getDB().dropDatabase();
+		new Mongo().getDB("junit-MongoDocumentIO").dropDatabase();
 	}
 	
 	@Test
@@ -84,7 +85,8 @@ public class MongoDocumentIOTest {
 	public void testRollover() throws Exception {
 		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
 		dw.prepare();
-		for(int i=0; i<MongoPipelineStatus.DEFAULT_NUMBER_TO_KEEP; i++) {
+
+		for(int i=0; i<mdc.getPipelineStatus().getNumberToKeep(); i++) {
 			dw.insert(new MongoDocument());
 			DatabaseDocument<MongoType> dd = dw.getAndTag(new MongoQuery(), "tag");
 			dw.markProcessed(dd, "tag");
@@ -93,7 +95,8 @@ public class MongoDocumentIOTest {
 		if(mdc.getDocumentReader().getActiveDatabaseSize()!=0) {
 			fail("Still some active docs..");
 		}
-		if(mdc.getDocumentReader().getInactiveDatabaseSize()!=MongoPipelineStatus.DEFAULT_NUMBER_TO_KEEP) {
+		
+		if(mdc.getDocumentReader().getInactiveDatabaseSize()!=mdc.getPipelineStatus().getNumberToKeep()) {
 			fail("Incorrect number of old documents kept");
 		}
 		
@@ -104,7 +107,7 @@ public class MongoDocumentIOTest {
 		if(mdc.getDocumentReader().getActiveDatabaseSize()!=0) {
 			fail("Still some active docs..");
 		}
-		if(mdc.getDocumentReader().getInactiveDatabaseSize()!=MongoPipelineStatus.DEFAULT_NUMBER_TO_KEEP) {
+		if(mdc.getDocumentReader().getInactiveDatabaseSize()!=mdc.getPipelineStatus().getNumberToKeep()) {
 			fail("Incorrect number of old documents kept: "+ mdc.getDocumentReader().getInactiveDatabaseSize());
 		}
 	}
@@ -230,12 +233,13 @@ public class MongoDocumentIOTest {
 	}
 	
 	
-	int testReadCount = 1000;
+	int testReadCount = 1;
 	@Test
 	public void testReadStatus() throws Exception {
 		mdc.getDocumentWriter().prepare();
 		
-
+		testReadCount = (int)mdc.getPipelineStatus().getNumberToKeep(); 
+		
 		TailReader tr = new TailReader(mdc.getDocumentReader().getInactiveIterator());
 		tr.start();
 		

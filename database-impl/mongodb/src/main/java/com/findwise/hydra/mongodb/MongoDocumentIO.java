@@ -48,17 +48,17 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	
 	private Set<String> seenTags = new HashSet<String>();
 	
-	public static final int OLD_DOCUMENT_AVG_SIZE = 10000;
-	
 	private static Logger logger = LoggerFactory.getLogger(MongoDocumentIO.class);
 
 	private long maxDocumentsToKeep;
+	private int oldDocsSize;
 	
 	public static final String DOCUMENT_COLLECTION = "documents";
 	public static final String OLD_DOCUMENT_COLLECTION ="oldDocuments";
 	public static final String DOCUMENT_FS = "documents";
 
 	public static final int DEFAULT_RECURRING_INTERVAL = 2000;
+	private static final int BYTES_IN_MB = 1048576;
 	
 	public static final String DOCUMENT_KEY = "document";
 	public static final String FILENAME_KEY = "filename";
@@ -66,9 +66,10 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	private static final String MIMETYPE_KEY = "contentType";
 	private static final String ENCODING_KEY = "encoding";
 	
-	public MongoDocumentIO(DB db, WriteConcern concern, boolean discard, long documentsToKeep) {
+	public MongoDocumentIO(DB db, WriteConcern concern, long documentsToKeep, int oldDocsMaxSizeMB) {
 		this.concern = concern;
 		this.maxDocumentsToKeep = documentsToKeep;
+		this.oldDocsSize = oldDocsMaxSizeMB*BYTES_IN_MB;
 		
 		documents = db.getCollection(DOCUMENT_COLLECTION);
 		documents.setObjectClass(MongoDocument.class);
@@ -79,7 +80,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	
 	@Override
 	public void prepare() {
-		capIfNew(documents.getDB(), maxDocumentsToKeep*OLD_DOCUMENT_AVG_SIZE, maxDocumentsToKeep);
+		capIfNew(documents.getDB(), oldDocsSize, maxDocumentsToKeep);
 		oldDocuments = documents.getDB().getCollection(OLD_DOCUMENT_COLLECTION);
 		oldDocuments.setObjectClass(MongoDocument.class);
 	}

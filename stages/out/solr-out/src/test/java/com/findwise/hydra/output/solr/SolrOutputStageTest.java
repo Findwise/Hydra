@@ -1,5 +1,11 @@
 package com.findwise.hydra.output.solr;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.common.SolrInputDocument;
 import org.junit.After;
@@ -11,10 +17,6 @@ import org.mockito.Mockito;
 import com.findwise.hydra.common.Document.Action;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class SolrOutputStageTest {
 
@@ -53,14 +55,14 @@ public class SolrOutputStageTest {
 
 	@Test
 	public void testAdd() throws Exception {
-		solrOutput.setFieldMappings(new HashMap<String, String>());
+		solrOutput.setFieldMappings(new HashMap<String, Object>());
 
 		LocalDocument doc = new LocalDocument();
 		doc.setAction(Action.ADD);
 		doc.putContentField("name", "jonas");
 		solrOutput.output(doc);
 		Mockito.verify(mockServer).add(
-				Mockito.anyCollectionOf(SolrInputDocument.class));
+				Mockito.any(SolrInputDocument.class));
 	}
 
 	@Test
@@ -69,47 +71,23 @@ public class SolrOutputStageTest {
 		doc.setAction(Action.DELETE);
 		doc.putContentField("name", "jonas");
 		solrOutput.output(doc);
-		Mockito.verify(mockServer).deleteById(Mockito.anyListOf(String.class));
+		Mockito.verify(mockServer, Mockito.never()).deleteById(Mockito.any(String.class));
+		
+		doc.putContentField("id", "someid");
+		solrOutput.output(doc);
+		Mockito.verify(mockServer).deleteById(Mockito.any(String.class));
 	}
-
-	@Test
-	public void testSendLimit() throws Exception {
-		solrOutput.setFieldMappings(new HashMap<String, String>());
-		solrOutput.setSendLimit(5);
-		LocalDocument doc = new LocalDocument();
-		doc.setAction(Action.ADD);
-		doc.putContentField("name", "one");
-		solrOutput.output(doc);
-		doc = new LocalDocument();
-		doc.setAction(Action.ADD);
-		doc.putContentField("name", "two");
-		solrOutput.output(doc);
-		doc = new LocalDocument();
-		doc.setAction(Action.ADD);
-		doc.putContentField("name", "three");
-		solrOutput.output(doc);
-		doc = new LocalDocument();
-		doc.setAction(Action.ADD);
-		doc.putContentField("name", "four");
-		solrOutput.output(doc);
-		doc = new LocalDocument();
-		doc.setAction(Action.ADD);
-		doc.putContentField("name", "five");
-		solrOutput.output(doc);
-		Mockito.verify(mockServer, Mockito.times(1)).add(
-				Mockito.anyCollectionOf(SolrInputDocument.class));
-	}
-
+	
 	@Test
 	public void testCommitWithin() throws Exception {
-		solrOutput.setFieldMappings(new HashMap<String, String>());
+		solrOutput.setFieldMappings(new HashMap<String, Object>());
 		solrOutput.setCommitWithin(1337);
 		LocalDocument doc = new LocalDocument();
 		doc.setAction(Action.ADD);
 		doc.putContentField("name", "one");
 		solrOutput.output(doc);
 		Mockito.verify(mockServer, Mockito.times(1)).add(
-				Mockito.anyCollectionOf(SolrInputDocument.class), Mockito.eq(1337));
+				Mockito.any(SolrInputDocument.class), Mockito.eq(1337));
 	}
 
 	@Test
@@ -121,12 +99,14 @@ public class SolrOutputStageTest {
 		multiValued.add("james bond");
 		multiValued.add("heman");
 		doc.putContentField("hero", multiValued);
+		doc.putContentField("explode", "boom");
 
-		Map<String, String> fieldMappings = new HashMap<String, String>();
+		Map<String, Object> fieldMappings = new HashMap<String, Object>();
 		fieldMappings.put("name", "fullname");
 		fieldMappings.put("reference", "url");
 		fieldMappings.put("doesnotexist", "doesnotmatter");
 		fieldMappings.put("hero", "heroes");
+		fieldMappings.put("explode", Arrays.asList(new String[] {"explode1", "explode2", "explode3"}));
 
 		solrOutput.setFieldMappings(fieldMappings);
 		SolrInputDocument inputDoc = solrOutput
@@ -137,6 +117,10 @@ public class SolrOutputStageTest {
 
 		org.junit.Assert.assertArrayEquals(multiValued.toArray(), inputDoc
 				.getFieldValues("heroes").toArray());
+		
+		org.junit.Assert.assertEquals(inputDoc.getFieldValue("explode1"), doc.getContentField("explode"));
+		org.junit.Assert.assertEquals(inputDoc.getFieldValue("explode2"), doc.getContentField("explode"));
+		org.junit.Assert.assertEquals(inputDoc.getFieldValue("explode3"), doc.getContentField("explode"));
 	}
 
 	@Test
@@ -158,7 +142,7 @@ public class SolrOutputStageTest {
 		org.junit.Assert.assertEquals(inputDoc.getFieldValue("reference"), doc
 				.getContentField("reference").toString());
 
-		org.junit.Assert.assertArrayEquals(((ArrayList) doc
+		org.junit.Assert.assertArrayEquals(((ArrayList<?>) doc
 				.getContentField("hero")).toArray(),
 				inputDoc.getFieldValues("hero").toArray());
 

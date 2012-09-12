@@ -81,6 +81,16 @@ public class ExampleModule extends AbstractModule {
 			public String getDatabasePassword() {
 				return password;
 			}
+
+			@Override
+			public int getOldMaxSize() {
+				return 100;
+			}
+
+			@Override
+			public int getOldMaxCount() {
+				return 1000;
+			}
 		};
 	}
 }

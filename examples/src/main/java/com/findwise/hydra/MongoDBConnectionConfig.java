@@ -18,6 +18,8 @@ public class MongoDBConnectionConfig extends AbstractModule {
     private final String connectionUrl;
     private final String username;
     private final String password;
+    private final int OLD_MAX_SIZE = 100;
+    private final int OLD_MAX_COUNT = 1000;
 
     /**
      * Creates a new module with the given namespace and connection string. 
@@ -78,6 +80,16 @@ public class MongoDBConnectionConfig extends AbstractModule {
             @Override
             public String getDatabasePassword() {
                 return password;
+            }
+
+            @Override
+            public int getOldMaxSize() {
+                return OLD_MAX_SIZE;
+            }
+
+            @Override
+            public int getOldMaxCount() {
+                return OLD_MAX_COUNT;
             }
         };
     }

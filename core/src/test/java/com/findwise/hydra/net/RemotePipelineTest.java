@@ -18,12 +18,12 @@ import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
-import com.findwise.hydra.mongodb.MongoConnector;
 import com.findwise.hydra.mongodb.MongoDocument;
 import com.findwise.hydra.mongodb.MongoDocumentIO;
 import com.findwise.hydra.mongodb.MongoType;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.mongodb.Mongo;
 
 public class RemotePipelineTest {
 	private NodeMaster nm;
@@ -34,8 +34,12 @@ public class RemotePipelineTest {
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
+		new Mongo().getDB("jUnit-RemotePipelineTest").dropDatabase();
+		
 		inj =  Guice.createInjector(new TestModule("jUnit-RemotePipelineTest"));
 		server = RESTServer.getNewStartedRESTServer(inj);
+		
+		
 		
 		NodeMaster nm = inj.getInstance(NodeMaster.class);
 		if(!nm.isAlive()) {
@@ -78,14 +82,7 @@ public class RemotePipelineTest {
 	
 	@AfterClass
 	public static void tearDownClass() throws Exception {
-		NodeMaster nm = inj.getInstance(NodeMaster.class);
-		if(!nm.isAlive()) {
-			nm.blockingStart();
-		
-			nm.getDatabaseConnector().waitForWrites(true);
-			nm.getDatabaseConnector().connect();
-		}
-		((MongoConnector)nm.getDatabaseConnector()).getDB().dropDatabase();
+		new Mongo().getDB("jUnit-RemotePipelineTest").dropDatabase();
 	}
 	
 	@Test

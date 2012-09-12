@@ -61,6 +61,16 @@ public class FileConfiguration implements CoreConfiguration {
 	public String getDatabasePassword() {
 		return conf.getString(DatabaseConnector.DATABASE_PASSWORD, "");
 	}
+
+	@Override
+	public int getOldMaxSize() {
+		return conf.getInt(DatabaseConnector.OLD_MAX_SIZE_MB, 100);
+	}
+
+	@Override
+	public int getOldMaxCount() {
+		return conf.getInt(DatabaseConnector.OLD_MAX_COUNT, 1000);
+	}
 	
 	
 }

@@ -15,6 +15,7 @@ import org.junit.Test;
 import com.findwise.hydra.DatabaseFile;
 import com.findwise.hydra.TestModule;
 import com.google.inject.Guice;
+import com.mongodb.Mongo;
 
 public class MongoPipelineIOTest {
 	MongoConnector mdc;
@@ -29,9 +30,7 @@ public class MongoPipelineIOTest {
 	
 	@AfterClass
 	public static void tearDownClass() throws Exception {
-		MongoPipelineIOTest test = new MongoPipelineIOTest();
-		test.createAndConnect();
-		test.mdc.getDB().dropDatabase();
+		new Mongo().getDB("junit-MongoPipelineIOTest").dropDatabase();
 	}
 	
 	@Test

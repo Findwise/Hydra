@@ -25,6 +25,7 @@ import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.common.Document.Status;
 import com.google.inject.Guice;
+import com.mongodb.Mongo;
 
 public class MongoConnectorTest {
 	MongoConnector mdc;
@@ -94,9 +95,7 @@ public class MongoConnectorTest {
 	
 	@AfterClass
 	public static void tearDownClass() throws Exception {
-		MongoConnectorTest test = new MongoConnectorTest();
-		test.createAndConnect();
-		test.mdc.getDB().dropDatabase();
+		new Mongo().getDB("junit-MongoConnectorTest").dropDatabase();
 	}
 
 	@Test
