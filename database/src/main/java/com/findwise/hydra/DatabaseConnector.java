@@ -41,8 +41,8 @@ public interface DatabaseConnector<T extends DatabaseType> {
 
 	boolean isConnected();
 
-	PipelineStatus getPipelineStatus();
-
-	PipelineStatus getNewPipelineStatus();
+	StatusWriter<T> getStatusWriter();
+	
+	StatusReader<T> getStatusReader();
 	
 }
