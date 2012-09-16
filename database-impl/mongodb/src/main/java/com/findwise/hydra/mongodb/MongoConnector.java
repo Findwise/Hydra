@@ -111,6 +111,8 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 		} else {
 			pipelineStatus = statusIO.getStatus();
 		}
+
+		statusUpdater = new StatusUpdater(this);
 		
 		if(!pipelineStatus.isPrepared()) {
 			logger.info("Database is new, preparing it");
@@ -118,18 +120,17 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 			pipelineStatus.setDiscardedMaxSize(conf.getOldMaxSize());
 			pipelineStatus.setDiscardedToKeep(conf.getOldMaxCount());
 			
-			documentIO = new MongoDocumentIO(db, concern, pipelineStatus.getNumberToKeep(), pipelineStatus.getDiscardedMaxSize(), new StatusUpdater(this));
+			documentIO = new MongoDocumentIO(db, concern, pipelineStatus.getNumberToKeep(), pipelineStatus.getDiscardedMaxSize(), statusUpdater);
 			documentIO.prepare();
 			pipelineWriter.prepare();
 			
 			statusIO.save(pipelineStatus);
 		} else {
-			documentIO = new MongoDocumentIO(db, concern, pipelineStatus.getNumberToKeep(), pipelineStatus.getDiscardedMaxSize(), new StatusUpdater(this));
+			documentIO = new MongoDocumentIO(db, concern, pipelineStatus.getNumberToKeep(), pipelineStatus.getDiscardedMaxSize(), statusUpdater);
 		}
 
 		connected = true;
 		
-		statusUpdater = new StatusUpdater(this);
 		statusUpdater.start();
 	}
 

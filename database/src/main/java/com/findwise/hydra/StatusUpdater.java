@@ -1,7 +1,6 @@
 package com.findwise.hydra;
 
 
-
 public class StatusUpdater extends Thread {
 	private int processed;
 	private int failed;
