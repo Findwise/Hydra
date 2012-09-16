@@ -5,8 +5,6 @@ import java.util.Map;
 
 /**
  * Convenience class for map-based implementation of PipelineStatus
- * 
- *
  */
 public abstract class AbstractPipelineStatus<T extends DatabaseType> implements PipelineStatus<T> {
 	private Map<String, Object> map = new HashMap<String, Object>();
