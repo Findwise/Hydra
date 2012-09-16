@@ -1,6 +1,7 @@
 package com.findwise.hydra;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -15,7 +16,8 @@ public class InteractiveOutputStage extends AbstractOutputStage {
 	@Override
 	public void output(LocalDocument document) {
 		try {
-			String s = new Scanner(System.in).nextLine();
+			System.out.print("(p)rocessed, (d)elete, (f)ailed. Select action: ");
+			String s = new Scanner(System.in).nextLine().toLowerCase(Locale.ENGLISH);
 			if(s.equals("d")) {
 				System.out.println("Discarding the document");
 				getRemotePipeline().markDiscarded(document);
