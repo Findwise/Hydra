@@ -137,7 +137,7 @@ public class MongoConnectorTest {
 	}
 
 	@Test
-	public void getDocuments() {
+	public void testGetDocuments() {
 		MongoQuery mdq = new MongoQuery();
 		List<DatabaseDocument<MongoType>> list = mdc.getDocumentReader().getDocuments(mdq, 3);
 		if(list.size()!=3) {
