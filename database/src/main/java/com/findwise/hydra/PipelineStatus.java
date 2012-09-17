@@ -11,7 +11,7 @@ package com.findwise.hydra;
  * @author joel.westberg
  *
  */
-public interface PipelineStatus {
+public interface PipelineStatus<T extends DatabaseType> {
 
 	boolean DEFAULT_DISCARD_OLD = true;
 	long DEFAULT_NUMBER_TO_KEEP = 1000;
@@ -38,4 +38,15 @@ public interface PipelineStatus {
 	
 	int getDiscardedMaxSize();
 	
+	int getDiscardedCount();
+	
+	void setDiscardedCount(int i);
+	
+	int getProcessedCount();
+	
+	void setProcessedCount(int i);
+	
+	int getFailedCount();
+	
+	void setFailedCount(int i);
 }
