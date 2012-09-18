@@ -1,17 +1,18 @@
 package com.findwise.hydra.admin.rest;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.findwise.hydra.admin.ConfigurationService;
 
@@ -34,10 +35,18 @@ public class ConfigurationController {
 		return service.getLibraries();
 	}
 	
+	@ResponseBody
+	@RequestMapping(method=RequestMethod.GET, value="/library/{id}")
+	public Map<String, Object> getLibrary(@PathVariable String id) {
+		return service.getLibrary(id);
+	}
+	
 	@ResponseStatus(value = HttpStatus.ACCEPTED)
-	@RequestMapping(method=RequestMethod.POST, value="/library")
-	public void addLibrary(@RequestParam String id, @RequestBody InputStream stream) {
-		service.addLibrary(id, stream);
+	@RequestMapping(method=RequestMethod.POST, value="/library/{id}")
+	@ResponseBody
+	public Map<String, Object> addLibrary(@PathVariable String id, @RequestParam MultipartFile file) throws IOException {
+		service.addLibrary(id, file.getInputStream());
+		return getLibrary(id);
 	}
 
 	@ResponseBody
