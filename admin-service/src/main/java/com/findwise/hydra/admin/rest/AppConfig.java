@@ -16,9 +16,14 @@ import com.findwise.hydra.mongodb.MongoType;
 @Configuration
 @ComponentScan(basePackages = "com.findwise.hydra.admin.rest")
 public class AppConfig {
+	
 	@Bean(name="multipartResolver")
 	public static CommonsMultipartResolver multipartResolver() {
-		return new CommonsMultipartResolver();
+		CommonsMultipartResolver cmr = new CommonsMultipartResolver();
+		
+		cmr.setMaxUploadSize(1024*1024*1024); //1 Gigabyte...
+		
+		return cmr;
 	}
 	
 	
