@@ -16,6 +16,7 @@ import com.findwise.hydra.mongodb.MongoType;
 @Configuration
 @ComponentScan(basePackages = "com.findwise.hydra.admin.rest")
 public class AppConfig {
+	
 	@Bean(name="multipartResolver")
 	public static CommonsMultipartResolver multipartResolver() {
 		CommonsMultipartResolver cmr = new CommonsMultipartResolver();
