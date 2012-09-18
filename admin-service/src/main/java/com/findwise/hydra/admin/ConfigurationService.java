@@ -53,6 +53,15 @@ public class ConfigurationService<T extends DatabaseType> {
 
 		return map;
 	}
+	
+	public Map<String, Object> getLibrary(String id) {
+		for (DatabaseFile df : pipelineScanner.getLibraryFiles()) {
+			if(df.getId().toString().equals(id)) {
+				return getLibraryMap(df);
+			}
+		}
+		return null;
+	}
 
 	private Map<String, Object> getLibraryMap(DatabaseFile df) {
 		Map<String, Object> map = new HashMap<String, Object>();
