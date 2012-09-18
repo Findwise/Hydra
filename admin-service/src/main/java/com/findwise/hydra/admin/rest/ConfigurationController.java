@@ -45,7 +45,7 @@ public class ConfigurationController {
 	@RequestMapping(method=RequestMethod.POST, value="/library/{id}")
 	@ResponseBody
 	public Map<String, Object> addLibrary(@PathVariable String id, @RequestParam MultipartFile file) throws IOException {
-		service.addLibrary(id, file.getInputStream());
+		service.addLibrary(id, file.getOriginalFilename(), file.getInputStream());
 		return getLibrary(id);
 	}
 

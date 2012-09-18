@@ -40,8 +40,8 @@ public class ConfigurationService<T extends DatabaseType> {
 		connector.connect();
 	}
 
-	public void addLibrary(String id, InputStream stream) {
-		connector.getPipelineWriter().save(id, stream);
+	public void addLibrary(String id, String filename, InputStream stream) {
+		connector.getPipelineWriter().save(id, filename, stream);
 	}
 
 	public Map<String, Object> getLibraries() {
