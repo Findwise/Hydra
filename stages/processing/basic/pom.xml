@@ -60,12 +60,7 @@
             <version>2.1</version>
             <type>jar</type>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-            <version>3.0.2.RELEASE</version>
-        </dependency>                
+        </dependency>               
     </dependencies>
 
     <build>
