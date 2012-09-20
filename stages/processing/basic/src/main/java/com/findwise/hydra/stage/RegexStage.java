@@ -104,11 +104,9 @@ public class RegexStage extends AbstractProcessStage {
         //or with one group and many next finds.
         for (int i = 1; i <= regexMatcher.groupCount(); i++) {
             substitute = substitute.replace("$" + i, regexMatcher.group(i));
-            System.out.println(regexMatcher.group(i));
             if (regexMatcher.groupCount() == 1) {
                 while (regexMatcher.find()) {
                     substitute += regexMatcher.group(i);
-                    System.out.println(regexMatcher.group(i));
                 }
             }
         }
