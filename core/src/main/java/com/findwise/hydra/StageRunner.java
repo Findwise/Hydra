@@ -189,6 +189,7 @@ public class StageRunner extends Thread {
 			throw new IllegalStateException("Orphaned process for "
 					+ stage.getName());
 		}
+		wasKilled = true;
 	}
 
 	/**
