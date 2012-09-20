@@ -72,7 +72,6 @@ public class StatusUpdater extends Thread {
 				interrupt();
 			}
 		}
-		saveStatus();
 	}
 
 	public void saveStatus() {
