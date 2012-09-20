@@ -22,6 +22,7 @@ public class StatusUpdater extends Thread {
 	public StatusUpdater(DatabaseConnector<?> connector, int updateIntervalMs) {
 		this.connector = connector;
 		this.interval = updateIntervalMs;
+		setDaemon(true);
 	}
 	
 	public void setUpdateInterval(int updateIntervalMs) {
@@ -68,10 +69,10 @@ public class StatusUpdater extends Thread {
 				saveStatus();
 				Thread.sleep(interval);
 			} catch (InterruptedException e) {
+				saveStatus();
 				interrupt();
 			}
 		}
-		saveStatus();
 	}
 
 	public void saveStatus() {
