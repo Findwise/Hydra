@@ -69,6 +69,7 @@ public class StatusUpdater extends Thread {
 				saveStatus();
 				Thread.sleep(interval);
 			} catch (InterruptedException e) {
+				saveStatus();
 				interrupt();
 			}
 		}
