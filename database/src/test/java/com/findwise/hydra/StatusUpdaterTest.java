@@ -16,13 +16,13 @@ public class StatusUpdaterTest {
 		Mockito.verify(sw, Mockito.never()).increment(Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt());
 		su.start();
 		
-		Thread.sleep(10);
+		Thread.sleep(500);
 		
 		su.interrupt();
 		
 		Mockito.verify(sw, Mockito.atLeast(2)).increment(Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt());
 		
-		Thread.sleep(10);
+		Thread.sleep(500);
 		Mockito.verifyNoMoreInteractions(sw);
 	}
 	
