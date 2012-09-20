@@ -5,3 +5,4 @@ target/
 examples/src/main/resources/*.jar
 
 bin/
+nbactions.xml

@@ -49,12 +49,14 @@ Now that you have a library inserted, you can add your stage by referencing the 
 #### The configuration
 In order to configure a stage, you'll need to know what stage it is you want to configure. A configuration for a SetStaticField-stage might look like this:
 
-`{
+```
+{
 	stageClass: "com.findwise.hydra.stage.SetStaticFieldStage",
 	query: {"touched" : {"extractTitles" : true}", "exists" : {"source" : true} },
 	fieldNames: ["source"],
 	fieldValues: ["web"]
-}`
+}
+```
 
 * __stageClass__: *Required*. Must be the full name of the stage class to be configured. 
 * __query__: A serialized version of the query, that all documents this stage receives must match. In this example, all documents received by this stage will have already been processed by a stage called _extractTitles_ and they all have a field called _source_.
