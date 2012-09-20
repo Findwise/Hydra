@@ -64,7 +64,7 @@ public class RegexStageTest {
 		Map<String, String> config1 = new HashMap<String, String>();
 		config1.put("inField", "rawcontent");
 		config1.put("outField", "out");
-		config1.put("regex", "(^[A-Za-z0-9]*.[A-Za-z0-9]*).*");
+		config1.put("regex", "(^[A-Za-z0-9]+.[A-Za-z0-9]+){1}.*");
 		config1.put("substitute", "$1.ru");
 		configs.add(config1);
 		regexStage.setRegexConfigsList(configs);
@@ -74,6 +74,56 @@ public class RegexStageTest {
 		assertEquals("www.giantbomb.ru", doc.getContentField("out").toString());
 	}
 
+        @Test
+	public void testReplace3Strings() throws RequiredArgumentMissingException,
+			ProcessException, IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "rawcontent");
+		config1.put("outField", "out");
+		config1.put("regex", "(^[A-Za-z0-9]+)(.)([A-Za-z0-9]+){1}.*");
+		config1.put("substitute", "$1$2$3.ru");
+		configs.add(config1);
+		regexStage.setRegexConfigsList(configs);
+
+		doc.putContentField("rawcontent", "www.giantbomb.com");
+		regexStage.process(doc);
+		assertEquals("www.giantbomb.ru", doc.getContentField("out").toString());
+	}
+        
+	@Test
+	public void testReplaceHTMLStringWithIncludingCharacters() throws RequiredArgumentMissingException,
+			ProcessException, IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "rawcontent");
+		config1.put("outField", "out");
+                config1.put("regex", "\ufffd*(.*)");
+		config1.put("substitute", "$1");
+		configs.add(config1);
+		regexStage.setRegexConfigsList(configs);
+
+		doc.putContentField("rawcontent", "���Test");
+		regexStage.process(doc);
+		assertEquals("Test", doc.getContentField("out").toString());
+	}
+
+        @Test
+	public void testReplaceHTMLStringBracketsAndSuch() throws RequiredArgumentMissingException,
+			ProcessException, IllegalArgumentException, IllegalAccessException {
+		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
+		Map<String, String> config1 = new HashMap<String, String>();
+		config1.put("inField", "rawcontent");
+		config1.put("outField", "out");
+                config1.put("regex", "<[^>]+>([^<]+)");
+		config1.put("substitute", "$1");
+		configs.add(config1);
+		regexStage.setRegexConfigsList(configs);
+
+		doc.putContentField("rawcontent", "<html><div a=\"b\">this is the only text that should remain</div> after html is <b>removed</b><html>");
+		regexStage.process(doc);
+		assertEquals("this is the only text that should remain after html is removed", doc.getContentField("out").toString());
+	}
 	@Test
 	public void testMultipleConfigs() throws RequiredArgumentMissingException,
 			ProcessException, IllegalArgumentException, IllegalAccessException {
