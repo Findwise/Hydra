@@ -22,6 +22,7 @@ public class StatusUpdater extends Thread {
 	public StatusUpdater(DatabaseConnector<?> connector, int updateIntervalMs) {
 		this.connector = connector;
 		this.interval = updateIntervalMs;
+		setDaemon(true);
 	}
 	
 	public void setUpdateInterval(int updateIntervalMs) {
