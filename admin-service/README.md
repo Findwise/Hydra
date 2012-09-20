@@ -11,7 +11,8 @@ Available endpoints
 
 	Lists libraries currently available in the database. For each library, a list of available stages and their parameters are presented. Here's an example of how the returned JSON might look:
 	
-	```solr-out : {
+	```
+	solr-out : {
 		uploaded: 1347989234697,
 		filename: "hydra-solr-out-stage-jar-with-dependencies.jar",
 		stages: {
@@ -57,7 +58,8 @@ Available endpoints
 				}
 			}
 		}
-	},```
+	}
+	```
 	
 * **/library/{library-id}** - Method: GET
 
@@ -73,7 +75,9 @@ Available endpoints
 	
 	An example of how to successfully conform to these parameters would be using this form:
 	
-	```<form method="post" action="http://<host:port>/hydra/library/YOUR-LIBRARY-ID-HERE" enctype="multipart/form-data">
+	```
+	<form method="post" action="http://<host:port>/hydra/library/YOUR-LIBRARY-ID-HERE" enctype="multipart/form-data">
         <input type="file" name="file"/>
         <input type="submit"/>
-    </form>```
+    </form>
+	```
