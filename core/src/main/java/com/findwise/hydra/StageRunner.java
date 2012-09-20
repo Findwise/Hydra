@@ -27,6 +27,8 @@ public class StageRunner extends Thread {
 	private String jvmParameters;
 	private String startupArgsString;
 	
+	private boolean wasKilled;
+	
 	private boolean hasQueried = false;
 	
 	private int pipelinePort;
@@ -51,6 +53,7 @@ public class StageRunner extends Thread {
 		this.pipelinePort = pipelinePort;
 		timesStarted = 0;
 		setParameters();
+		wasKilled = false;
 	}
 
 	public final void setParameters() {
@@ -161,7 +164,7 @@ public class StageRunner extends Thread {
 		}
 
 		int exitValue = resultHandler.getExitValue();
-		if (executor.isFailure(exitValue)) {
+		if (!wasKilled && executor.isFailure(exitValue)) {
 			logger.error("Stage " + stage.getName()
 					+ " terminated unexpectedly with exit value " + exitValue);
 			/** The stage crashed. Restart if we have restarts left */
