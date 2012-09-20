@@ -119,19 +119,14 @@ public class SolrOutputStage extends AbstractOutputStage {
 			}
 		}
 	}
-	
-	private void failDocument(LocalDocument doc) {
-		try {
-			fail(doc);
-		} catch (Exception e) {
-			Logger.error(
-					"Could not fail document with hydra id: " + doc.getID(), e);
-		}
-	}
 
 	private void failDocument(LocalDocument doc, Throwable reason) {
-		Logger.error("Failing document due to exception", reason);
-		failDocument(doc);
+		try {
+			Logger.error("Failing document "+doc.getID(), reason);
+			fail(doc, reason);
+		} catch (Exception e) {
+			Logger.error("Could not fail document with hydra id: " + doc.getID(), e);
+		}
 	}
 
 	private SolrServer getSolrServer() throws MalformedURLException {
