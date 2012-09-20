@@ -73,10 +73,10 @@ Available endpoints
 
 	Posts a jar file into Hydra. If post is successful, the returned response is 202 ACCEPTED and the textual response of a GET for this newly inserted library. 
 	
-	An example of how to successfully conform to these parameters would be using this form:
+	An example of how to successfully conform to these parameters would be by using this form:
 	
 	```
-	<form method="post" action="http://<host:port>/hydra/library/YOUR-LIBRARY-ID-HERE" enctype="multipart/form-data">
+	<form method="post" action="http://<host:port>/hydra/library/<desired-library-id>" enctype="multipart/form-data">
         <input type="file" name="file"/>
         <input type="submit"/>
     </form>
