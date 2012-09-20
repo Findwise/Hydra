@@ -86,6 +86,10 @@ public abstract class AbstractOutputStage extends AbstractProcessStage {
 		return getRemotePipeline().markFailed(document);
 	}
 	
+	protected boolean fail(LocalDocument document, Throwable throwable) throws IOException {
+		return getRemotePipeline().markFailed(document, throwable);
+	}
+	
 	private boolean reject() throws IOException {
 		return getRemotePipeline().releaseLastDocument();
 	}
