@@ -33,6 +33,7 @@
 			<groupId>org.elasticsearch</groupId>
 			<artifactId>elasticsearch</artifactId>
 			<version>0.20.0.Beta1-SNAPSHOT</version>
+			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
