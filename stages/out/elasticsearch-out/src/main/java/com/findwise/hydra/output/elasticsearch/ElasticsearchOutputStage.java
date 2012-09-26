@@ -6,14 +6,13 @@ import java.util.List;
 
 import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.action.ListenableActionFuture;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.common.xcontent.XContentType;
-
 import com.findwise.hydra.common.Document.Action;
 import com.findwise.hydra.common.Logger;
 import com.findwise.hydra.local.LocalDocument;
@@ -40,6 +39,12 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 	@Parameter(description = "Document type")
 	private String documentType = "default";
 	
+	@Parameter(description = "ID field in the document")
+	private String documentIdField = "docId";
+	
+	@Parameter(description = "Timeout for requests in millis")
+	private int requestTimeout = 10000;
+	
 	private Client client;
 	
 	@Override
@@ -49,7 +54,7 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 	
 	@Override
 	public void output(LocalDocument document) {
-		final Action action = Action.ADD;//document.getAction();
+		final Action action = document.getAction();
 		
 		try {
 			Logger.debug(action.toString());
@@ -71,18 +76,29 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 	
 	
 	private void add(LocalDocument document) throws ElasticSearchException, IOException {
-		//String docId = (String)document.getContentField("docId");
+		String docId = (String)document.getContentField(documentIdField);
 		String json = document.contentFieldsToJson(document.getContentFields());
 		Logger.debug("Indexing document to index " + documentIndex + " with type " + documentType);
-		ListenableActionFuture<IndexResponse> actionFuture = client.prepareIndex(documentIndex, documentType)
+		ListenableActionFuture<IndexResponse> actionFuture = client.prepareIndex(documentIndex, documentType, docId)
 			.setSource(json)
 			.execute();
-		IndexResponse response = actionFuture.actionGet(1000);
+		IndexResponse response = actionFuture.actionGet(requestTimeout);
 		Logger.debug("Got response for docId " + response.getId());
 	}
 	
 	private void delete(LocalDocument document) {
 		
+		String docId = (String) document.getContentField(documentIdField);
+		
+		ListenableActionFuture<DeleteResponse> actionFuture = client.prepareDelete(documentIndex, documentType, docId)
+				.execute();
+		DeleteResponse response = actionFuture.actionGet(requestTimeout);
+		if (response.isNotFound()) {
+			Logger.debug("Delete failed, document not found");
+		}
+		else {
+			Logger.debug("Deleted document with id " + response.getId());
+		}
 	}
 
 	private Client constructClient() {
