@@ -49,11 +49,13 @@ public class StageRunner extends Thread {
         } else {
             jvmParameters = null;
         }
+
         if (conf.containsKey("java_location")) {
             java = (String) conf.get("java_location");
         } else {
             java = "java";
         }
+
         if (conf.containsKey("retries")) {
             timesToRetry = (Integer) conf.get("retries");
         } else {
@@ -155,7 +157,7 @@ public class StageRunner extends Thread {
 	                + " terminated unexpectedly with exit value " + exitValue);
 			return false;
 		}
-        return true;
+        return true
     }
 
     /**
