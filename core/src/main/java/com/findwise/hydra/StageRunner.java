@@ -32,21 +32,7 @@ public class StageRunner extends Thread {
     private boolean hasQueried = false;
     private int pipelinePort;
     
-    private boolean wasKilled = false;;
-
-    public synchronized void setHasQueried() {
-        hasQueried = true;
-    }
-
-    public synchronized boolean hasQueried() {
-        return hasQueried;
-    }
-    /**
-     * Expected exit value should be 143 on *NIX systems, the exit value on a
-     * TERM command
-     */
-    /** Checked but not conclusively verified to be 143 on Windows as well. */
-    public static final int TERM_EXITCODE = 143;
+    private boolean wasKilled = false;
 
     public StageRunner(StoredStage stage, int pipelinePort) {
         this.stage = stage;
@@ -85,7 +71,7 @@ public class StageRunner extends Thread {
             logger.info("Starting stage " + stage.getName()
                     + ". Times started so far: " + timesStarted);
             timesStarted++;
-            boolean cleanShutdown = startStage();
+            boolean cleanShutdown = runStage();
             if (cleanShutdown) {
                 return;
             }
@@ -113,7 +99,12 @@ public class StageRunner extends Thread {
         }
     }
 
-    private boolean startStage() {
+    /**
+     * Launches this stage and waits for process termination.
+     * 
+     * @return true if the stage was killed by a call to the destroy()-method. false otherwise.
+     */
+    private boolean runStage() {
         CommandLine cmdLine = new CommandLine("java");
         cmdLine.addArgument(jvmParameters, false);
         cmdLine.addArgument("-jar");
@@ -153,7 +144,7 @@ public class StageRunner extends Thread {
 			return false;
 		}
 		
-		if(!wasKilled || exitValue != TERM_EXITCODE) {
+		if(!wasKilled) {
 	        logger.error("Stage " + stage.getName()
 	                + " terminated unexpectedly with exit value " + exitValue);
 			return false;
@@ -179,6 +170,14 @@ public class StageRunner extends Thread {
         }
         
         wasKilled = true;
+    }
+    
+    public synchronized void setHasQueried() {
+        hasQueried = true;
+    }
+
+    public synchronized boolean hasQueried() {
+        return hasQueried;
     }
 
     /**
