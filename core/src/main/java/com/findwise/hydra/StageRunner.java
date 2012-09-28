@@ -33,7 +33,25 @@ public class StageRunner extends Thread {
     private boolean hasQueried = false;
     private int pipelinePort;
     
+<<<<<<< HEAD
     private boolean wasKilled = false;
+=======
+    private boolean wasKilled = false;;
+
+    public synchronized void setHasQueried() {
+        hasQueried = true;
+    }
+
+    public synchronized boolean hasQueried() {
+        return hasQueried;
+    }
+    /**
+     * Expected exit value should be 143 on *NIX systems, the exit value on a
+     * TERM command
+     */
+    /** Checked but not conclusively verified to be 143 on Windows as well. */
+    public static final int TERM_EXITCODE = 143;
+>>>>>>> Fixing the fixes :)
 
     public StageRunner(StoredStage stage, int pipelinePort) {
         this.stage = stage;
@@ -152,12 +170,20 @@ public class StageRunner extends Thread {
 			return false;
 		}
 		
+<<<<<<< HEAD
 		if(!wasKilled) {
+=======
+		if(!wasKilled || exitValue != TERM_EXITCODE) {
+>>>>>>> Fixing the fixes :)
 	        logger.error("Stage " + stage.getName()
 	                + " terminated unexpectedly with exit value " + exitValue);
 			return false;
 		}
+<<<<<<< HEAD
         return true
+=======
+        return true;
+>>>>>>> Fixing the fixes :)
     }
 
     /**
@@ -178,6 +204,7 @@ public class StageRunner extends Thread {
         }
         
         wasKilled = true;
+<<<<<<< HEAD
     }
     
     public synchronized void setHasQueried() {
@@ -186,6 +213,8 @@ public class StageRunner extends Thread {
 
     public synchronized boolean hasQueried() {
         return hasQueried;
+=======
+>>>>>>> Fixing the fixes :)
     }
 
     /**
