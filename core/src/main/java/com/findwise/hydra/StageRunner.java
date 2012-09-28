@@ -31,6 +31,8 @@ public class StageRunner extends Thread {
     private String startupArgsString;
     private boolean hasQueried = false;
     private int pipelinePort;
+    
+    private boolean wasKilled = false;;
 
     public synchronized void setHasQueried() {
         hasQueried = true;
@@ -125,12 +127,13 @@ public class StageRunner extends Thread {
         cmdLine.setSubstitutionMap(map);
         logger.info("Launching with command " + cmdLine.toString());
 
-		// This code will do the stuff the executor-class does, but manually since for some reason it did not work in windows	
         stageDestroyer = new StageDestroyer();
         CommandLauncher cl = CommandLauncherFactory.createVMLauncher();
+        
+        int exitValue = 0;
+        
         try {
-            //Give an empty enviorments-map.
-            Process p = cl.exec(cmdLine,(Map)null);
+            Process p = cl.exec(cmdLine, null);
 
             if (loggingEnabled) {
                 PumpStreamHandler streams = new PumpStreamHandler(new StreamLogger(stage.getName()));
@@ -141,17 +144,21 @@ public class StageRunner extends Thread {
             }
             stageDestroyer.add(p);
             
-            /** Wait untill the process exits */
-            p.waitFor();
+            exitValue = p.waitFor();
 
-        } catch (Exception ex) {
-            //I stopped, restart me if possible!! 
-        }
-
-        logger.error("Stage " + stage.getName()
-                + " terminated unexpectedly");
-        /** The stage crashed. Restart if we have restarts left */
-        return false;
+        } catch (InterruptedException e) {
+			throw new IllegalStateException("Caught Interrupt while waiting for process exit", e);
+		} catch (IOException e) {
+			logger.error("Caught IOException while running command", e);
+			return false;
+		}
+		
+		if(!wasKilled || exitValue != TERM_EXITCODE) {
+	        logger.error("Stage " + stage.getName()
+	                + " terminated unexpectedly with exit value " + exitValue);
+			return false;
+		}
+        return true;
     }
 
     /**
@@ -170,6 +177,8 @@ public class StageRunner extends Thread {
             throw new IllegalStateException("Orphaned process for "
                     + stage.getName());
         }
+        
+        wasKilled = true;
     }
 
     /**
