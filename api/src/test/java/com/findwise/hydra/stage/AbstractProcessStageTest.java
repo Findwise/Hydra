@@ -2,15 +2,15 @@ package com.findwise.hydra.stage;
 
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 import org.junit.After;
@@ -97,44 +97,6 @@ public class AbstractProcessStageTest {
 		}
 		return ret;
 	}
-	 /*
-	@Test
-	public void testReadProperties() {
-		AbstractProcessStage stage = getDummyAbstractStage();
-		Map<String, List<String>> properties = PropertyHandler.readPropertiesFile("CopyStage");
-		stage.setProperties(properties);
-		assertEquals("oldfield", PropertyHandler.getFirstProperty(stage.getPropertiesMap(), "inField"));
-	}
-
-	@Test
-	public void testGetDefaultPipelineHost() {
-		assertEquals(RemotePipeline.DEFAULT_HOST, getDummyAbstractStage().getPipelineHost());
-	}
-
-	@Test
-	public void testGetSpecifiedPipeHost()
-			throws RequiredArgumentMissingException {
-
-		AbstractProcessStage stage = getDummyAbstractStage();
-		Map<String, List<String>> properties = PropertyHandler.readPropertiesFile("CopyStage");
-		stage.setProperties(properties);
-		assertEquals("byggare.bob", stage.getPipelineHost());
-	}
-
-	@Test
-	public void testGetDefaultPipePort() {
-		assertEquals(RemotePipeline.DEFAULT_PORT, getDummyAbstractStage()
-				.getPipelinePort());
-	}
-
-	@Test
-	public void testGetSpecifiedPipePort()
-			throws RequiredArgumentMissingException {
-		AbstractProcessStage stage = getDummyAbstractStage();
-		Map<String, List<String>> properties = PropertyHandler.readPropertiesFile("CopyStage");
-		stage.setProperties(properties);
-		assertEquals(4711, stage.getPipelinePort());
-	} */
 
 	@Test
 	public void testDocumentThroughput() {
@@ -261,36 +223,25 @@ public class AbstractProcessStageTest {
 		}
 	}
 	
-//	@Test
-	public void testPersistError() throws IOException {
+	@Test
+	public void testPersistError() throws Exception {
 		ExceptionStage es = new ExceptionStage();
+		es.setName("stagename");
 		RemotePipeline rp = mock(RemotePipeline.class);
 		es.setRemotePipeline(rp);
 		
 		LocalDocument ld = mock(LocalDocument.class);
 
-		try {
-			when(rp.getDocument(any(LocalQuery.class))).thenReturn(ld);
-			when(rp.releaseLastDocument()).thenReturn(true);
-		} catch (Exception e) {
-			fail(e.getStackTrace().toString());
-		}
+		when(rp.getDocument(any(LocalQuery.class))).thenReturn(ld);
+		when(rp.releaseLastDocument()).thenReturn(true);
 		
 		es.start();
-		try {
-			Thread.sleep(1000);
-			stage.stopStage();
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			fail(e.getStackTrace().toString());
+		
+		while(es.isAlive()) {
+			Thread.sleep(10);
 		}
 		
-		verify(ld, times(1)).addError("es", any(Throwable.class));
-		
-	}
-
-//	@Test
-	public void testFailOnPersistError() {
+		verify(ld, times(1)).addError(eq(es.getStageName()), any(Throwable.class));
 		
 	}
 	
@@ -298,8 +249,11 @@ public class AbstractProcessStageTest {
 
 		@Override
 		public void process(LocalDocument doc) throws ProcessException {
-			System.out.println("throwing");
-			throw new ProcessException("msg");
+			try {
+				throw new ProcessException("msg");
+			} finally {
+				stopStage();
+			}
 		}
 	}
 }
