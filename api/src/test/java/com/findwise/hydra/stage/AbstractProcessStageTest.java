@@ -245,6 +245,32 @@ public class AbstractProcessStageTest {
 		
 	}
 	
+	@Test
+	public void testPersistErrorOnSaveFailiure() throws Exception {
+		Logger.setGlobalLoggingLevel(Level.DEBUG);
+		RemotePipeline rp = mock(RemotePipeline.class);
+		when(rp.getDocument(any(LocalQuery.class))).thenReturn(new LocalDocument());
+		
+		when(rp.save(any(LocalDocument.class))).thenReturn(false);
+		when(rp.markFailed(any(LocalDocument.class), any(Throwable.class))).thenReturn(false);
+		
+		AbstractProcessStage stage = new AbstractProcessStage() {
+			@Override
+			public void process(LocalDocument doc) throws ProcessException {
+				stopStage();
+			}
+		};
+		stage.setRemotePipeline(rp);
+		stage.start();
+		
+		while(stage.isAlive()) {
+			Thread.sleep(10);
+		}
+		
+		verify(rp, times(1)).saveCurrentDocument();
+		verify(rp, times(1)).markFailed(any(LocalDocument.class), any(Throwable.class));
+	}
+	
 	public static class ExceptionStage extends AbstractProcessStage {
 
 		@Override
