@@ -243,6 +243,45 @@ public class MongoDocumentIOTest {
 		
 	}
 	
+	@Test
+	public void testInsertLargeDocument() throws Exception {
+		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
+		dw.prepare();
+		
+		MongoDocument d = new MongoDocument();
+		makeDocumentTooLarge(d);
+		
+		if(dw.insert(d)) {
+			fail("No error inserting big document");
+		}
+	}
+	
+	@Test
+	public void testUpdateLargeDocument() throws Exception {
+
+		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
+		dw.prepare();
+		
+		
+		
+		MongoDocument d = new MongoDocument();
+		d.putContentField("some_field", "some data");
+		
+		dw.insert(d);
+		
+		makeDocumentTooLarge(d);
+		
+		if(dw.update(d)) {
+			fail("No error updating big document");
+		}
+	}
+	
+	private void makeDocumentTooLarge(MongoDocument d) {
+		int maxMongoDBObjectSize = mdc.getDB().getMongo().getConnector().getMaxBsonObjectSize();
+		while(d.toJson().getBytes().length <= maxMongoDBObjectSize) {
+			d.putContentField(getRandomString(5), getRandomString(1000000));
+		}
+	}
 	
 	int testReadCount = 1;
 	@Test
