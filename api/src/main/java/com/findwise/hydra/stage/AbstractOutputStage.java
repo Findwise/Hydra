@@ -95,10 +95,11 @@ public abstract class AbstractOutputStage extends AbstractProcessStage {
 	}
 	
 	@Override
-	protected void persist() {
+	protected boolean persist() {
 		/*
 		 * TODO: Overridden and intentionally left blank. This structure should be refactored. 
 		 * Accept/reject/pending should be used instead for all OutputStages...
 		 */
+		return true;
 	}
 }

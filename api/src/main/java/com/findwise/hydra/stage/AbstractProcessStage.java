@@ -46,10 +46,9 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	 * @throws IOException
 	 * @throws JsonException
 	 */
-	protected void persist() throws IOException, JsonException {
+	protected boolean persist() throws IOException, JsonException {
 		Logger.debug("Saving document to RemotePipeline..");
-		getRemotePipeline().saveCurrentDocument();
-
+		return getRemotePipeline().saveCurrentDocument();
 	}
 
 	/**
@@ -62,10 +61,10 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	 * @throws IOException
 	 * @throws JsonException 
 	 */
-	protected void persistError(LocalDocument d, ProcessException e) throws IOException, JsonException {
+	protected boolean persistError(LocalDocument d, Exception e) throws IOException, JsonException {
 		Logger.error("Trying to release document due to error in processing", e);
 		d.addError(getStageName(), e);
-		getRemotePipeline().saveCurrentDocument();
+		return getRemotePipeline().saveCurrentDocument();
 	}
 	
 	/**
@@ -110,7 +109,13 @@ public abstract class AbstractProcessStage extends AbstractStage {
 						Logger.debug("Got new doc " + doc.getID()
 								+ " to process.");
 						process(doc);
-						persist();
+						if(!persist()) {
+							LocalDocument ld = new LocalDocument(doc.toJson());
+							IOException e = new IOException("Unable to save changes to core");
+							if(!getRemotePipeline().markFailed(ld, e)) {
+								Logger.error("Unable to persist an error to the database", e);
+							}
+						}
 					} catch (ProcessException e) {
 						if(failDocumentOnProcessException) {
 							getRemotePipeline().markFailed(doc, e);

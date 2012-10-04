@@ -97,6 +97,11 @@ public final class HttpResponseWriter {
 		setStringEntity(response, "Document " + id + " successfully saved");
 	}
 	
+	protected static void printSaveFailed(HttpResponse response, Object id) {
+		response.setStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+		setStringEntity(response, "Unable to update document with id:"+id);
+	}
+	
 	protected static void printFileDeleteOk(HttpResponse response, String filename, Object id) {
 		logger.debug("Successfully deleted file with filename: "+filename+" from document " + id);
 		response.setStatusCode(HttpStatus.SC_OK);
