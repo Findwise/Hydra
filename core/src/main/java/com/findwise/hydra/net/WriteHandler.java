@@ -102,7 +102,7 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 		logger.debug("Handling a partial write for document "+md.getID());
 		DatabaseDocument<T> inDB = dbc.getDocumentReader().getDocumentById(md.getID());
 		if(inDB==null) {
-			HttpResponseWriter.printUpdateFailed(response, md.getID());
+			HttpResponseWriter.printNoDocument(response);
 			return false;
 		}
 		inDB.putAll(md);
@@ -113,7 +113,7 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 			return true;
 		} 
 		else {
-			HttpResponseWriter.printUpdateFailed(response, md.getID());
+			HttpResponseWriter.printSaveFailed(response, md.getID());
 			return false;
 		}
 	}
@@ -124,7 +124,7 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 			HttpResponseWriter.printSaveOk(response, md.getID());
 			return true;
 		}
-		HttpResponseWriter.printUpdateFailed(response, md.getID());
+		HttpResponseWriter.printSaveFailed(response, md.getID());
 		return false;
 	}
 	
