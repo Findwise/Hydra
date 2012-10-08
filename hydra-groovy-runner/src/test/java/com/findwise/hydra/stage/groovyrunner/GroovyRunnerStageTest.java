@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.groovy.tools.groovydoc.ClasspathResourceManager;
 import org.junit.Test;
@@ -46,7 +47,11 @@ public class GroovyRunnerStageTest {
 			RequiredArgumentMissingException {
 
 		GroovyRunnerStage runner = new GroovyRunnerStage();
-		String script = readStringFromFile("com/findwise/hydra/stage/groovyrunner/FieldAddingGroovyStage.groovy");
+		String script = readStringFromFile("com" + IOUtils.DIR_SEPARATOR
+				+ "findwise" + IOUtils.DIR_SEPARATOR + "hydra"
+				+ IOUtils.DIR_SEPARATOR + "stage" + IOUtils.DIR_SEPARATOR
+				+ "groovyrunner" + IOUtils.DIR_SEPARATOR
+				+ "FieldAddingGroovyStage.groovy");
 		runner.setGroovyScript(script);
 		runner.init();
 
