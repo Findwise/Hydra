@@ -10,28 +10,26 @@ import org.slf4j.LoggerFactory;
 import com.findwise.hydra.DatabaseConfiguration;
 import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.PipelineReader;
+import com.findwise.hydra.StatusUpdater;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.mongodb.DB;
-import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
-import com.mongodb.WriteResult;
 
 public class MongoConnector implements DatabaseConnector<MongoType> {
-
-	public static final String HYDRA_COLLECTION_NAME = "hydra";
 	public static final int OLD_DOCUMENTS_TO_KEEP_DEFAULT = 1000;
-	
-	private DBCollection hydraCollection;
 	
 	protected static final String TMP_DIR = "tmp";
 	
 	private DB db;
+	
+	private MongoStatusIO statusIO;
+	
+	private StatusUpdater statusUpdater;
 
 	/**
 	 * Creates the tmp dir if it doesn't exist
@@ -72,11 +70,6 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	
 	private boolean connected = false;
 
-	
-	public MongoConnector(){
-		
-	}
-
 	@Inject
 	public MongoConnector(DatabaseConfiguration conf) {
 		this.conf = conf;
@@ -107,31 +100,42 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 
 		pipelineReader = new MongoPipelineReader(db);
 		pipelineWriter = new MongoPipelineWriter(pipelineReader, concern);
-
-		hydraCollection = db.getCollection(HYDRA_COLLECTION_NAME);
-		hydraCollection.setObjectClass(MongoPipelineStatus.class);
 		
-		if(hydraCollection.count()==0) {
-			MongoPipelineStatus status = getNewPipelineStatus();
-			status.setDiscardedMaxSize(conf.getOldMaxSize());
-			status.setDiscardedToKeep(conf.getOldMaxCount());
+		statusIO = new MongoStatusIO(db);
+		
+		MongoPipelineStatus pipelineStatus;
+		if(!statusIO.hasStatus()) {
+			pipelineStatus = new MongoPipelineStatus();
 			
-			WriteResult wr = hydraCollection.insert(status);
+			statusIO.save(pipelineStatus);
+		} else {
+			pipelineStatus = statusIO.getStatus();
 		}
+
+		statusUpdater = new StatusUpdater(this);
 		
-		MongoPipelineStatus pipelineStatus = getPipelineStatus();
-		
-		documentIO = new MongoDocumentIO(db, concern, pipelineStatus.getNumberToKeep(), pipelineStatus.getDiscardedMaxSize());
-	
 		if(!pipelineStatus.isPrepared()) {
 			logger.info("Database is new, preparing it");
+			pipelineStatus.setPrepared(true);
+			pipelineStatus.setDiscardedMaxSize(conf.getOldMaxSize());
+			pipelineStatus.setDiscardedToKeep(conf.getOldMaxCount());
+			
+			documentIO = new MongoDocumentIO(db, concern, pipelineStatus.getNumberToKeep(), pipelineStatus.getDiscardedMaxSize(), statusUpdater);
 			documentIO.prepare();
 			pipelineWriter.prepare();
-			pipelineStatus.setPrepared(true);
-			hydraCollection.save(pipelineStatus);
+			
+			statusIO.save(pipelineStatus);
+		} else {
+			documentIO = new MongoDocumentIO(db, concern, pipelineStatus.getNumberToKeep(), pipelineStatus.getDiscardedMaxSize(), statusUpdater);
 		}
 
 		connected = true;
+		
+		statusUpdater.start();
+	}
+
+	public StatusUpdater getStatusUpdater() {
+		return statusUpdater;
 	}
 	
 	private boolean requiresAuthentication(Mongo mongo) {
@@ -141,16 +145,6 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 		} catch (MongoException e) {
 			return true;
 		}
-	}
-
-	@Override
-	public MongoPipelineStatus getNewPipelineStatus() {
-		return new MongoPipelineStatus();
-	}
-	
-	@Override
-	public MongoPipelineStatus getPipelineStatus() {
-		return (MongoPipelineStatus) hydraCollection.findOne();
 	}
 	
 	@Override
@@ -217,5 +211,15 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	
 	public DB getDB() {
 		return db;
+	}
+
+	@Override
+	public MongoStatusIO getStatusWriter() {
+		return statusIO;
+	}
+
+	@Override
+	public MongoStatusIO getStatusReader() {
+		return statusIO;
 	}
 }

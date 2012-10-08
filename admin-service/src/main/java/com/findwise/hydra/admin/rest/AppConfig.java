@@ -6,6 +6,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
 import com.findwise.hydra.DatabaseConfiguration;
 import com.findwise.hydra.admin.ConfigurationService;
@@ -15,7 +16,17 @@ import com.findwise.hydra.mongodb.MongoType;
 @Configuration
 @ComponentScan(basePackages = "com.findwise.hydra.admin.rest")
 public class AppConfig {
-
+	
+	@Bean(name="multipartResolver")
+	public static CommonsMultipartResolver multipartResolver() {
+		CommonsMultipartResolver cmr = new CommonsMultipartResolver();
+		
+		cmr.setMaxUploadSize(1024*1024*1024); //1 Gigabyte...
+		
+		return cmr;
+	}
+	
+	
 	@Bean
 	public static PropertyPlaceholderConfigurer properties() {
 		PropertyPlaceholderConfigurer ppc = new PropertyPlaceholderConfigurer();

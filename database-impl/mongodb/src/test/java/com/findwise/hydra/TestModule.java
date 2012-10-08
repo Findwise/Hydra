@@ -1,11 +1,9 @@
 package com.findwise.hydra;
 
-import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.mongodb.MongoConnector;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Names;
 
 public class TestModule extends AbstractModule {
 	private String namespace;

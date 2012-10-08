@@ -2,10 +2,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.findwise.hydra</groupId>
-	<artifactId>admin-service</artifactId>
+	<artifactId>hydra-admin-service</artifactId>
 	<version>0.3.0-SNAPSHOT</version>
 	<packaging>war</packaging>
-
 
 	<properties>
 		<spring.version>3.1.1.RELEASE</spring.version>
@@ -13,7 +12,7 @@
 	</properties>
 
 	<build>
-		<finalName>rest</finalName>
+		<finalName>hydra</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -94,6 +93,13 @@
 			<groupId>org.codehaus.jackson</groupId>
 			<artifactId>jackson-mapper-asl</artifactId>
 			<version>1.9.9</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>commons-fileupload</groupId>
+			<artifactId>commons-fileupload</artifactId>
+			<version>1.2.2</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>

@@ -8,8 +8,9 @@ import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.DocumentReader;
 import com.findwise.hydra.DocumentWriter;
 import com.findwise.hydra.PipelineReader;
-import com.findwise.hydra.PipelineStatus;
 import com.findwise.hydra.PipelineWriter;
+import com.findwise.hydra.StatusReader;
+import com.findwise.hydra.StatusWriter;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
@@ -17,6 +18,7 @@ import com.findwise.hydra.local.LocalQuery;
 public class MemoryConnector implements DatabaseConnector<MemoryType> {
 
 	private MemoryDocumentIO docio;
+	private MemoryStatusIO statusio;
 	
 	public MemoryConnector() {
 		docio = new MemoryDocumentIO();
@@ -87,15 +89,13 @@ public class MemoryConnector implements DatabaseConnector<MemoryType> {
 	}
 
 	@Override
-	public PipelineStatus getPipelineStatus() {
-		// TODO Auto-generated method stub
-		return null;
+	public StatusWriter<MemoryType> getStatusWriter() {
+		return statusio;
 	}
 
 	@Override
-	public PipelineStatus getNewPipelineStatus() {
-		// TODO Auto-generated method stub
-		return null;
+	public StatusReader<MemoryType> getStatusReader() {
+		return statusio;
 	}
 
 }

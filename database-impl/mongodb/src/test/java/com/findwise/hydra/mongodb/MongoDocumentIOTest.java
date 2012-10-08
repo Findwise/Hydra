@@ -4,6 +4,8 @@ import static org.junit.Assert.fail;
 
 import java.util.Random;
 
+import junit.framework.Assert;
+
 import org.bson.types.ObjectId;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -14,12 +16,13 @@ import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DocumentWriter;
 import com.findwise.hydra.TailableIterator;
 import com.findwise.hydra.TestModule;
-import com.findwise.hydra.common.SerializationUtils;
 import com.findwise.hydra.common.Document.Status;
+import com.findwise.hydra.common.SerializationUtils;
 import com.google.inject.Guice;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
-import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
+import com.mongodb.WriteConcern;
 
 public class MongoDocumentIOTest {
 	private MongoConnector mdc;
@@ -65,17 +68,25 @@ public class MongoDocumentIOTest {
 	}
 	
 	private boolean isCapped() {
-		DBCollection dbc = mdc.getDB().getCollection(MongoDocumentIO.OLD_DOCUMENT_COLLECTION);
-		if(dbc.getStats().containsField("capped")) {
-			return dbc.getStats().get("capped").equals(1);
-		}
-		return false;
+		return mdc.getDB().getCollection(MongoDocumentIO.OLD_DOCUMENT_COLLECTION).isCapped();
 	}
 	
 	@Test
 	public void testConnectPrepare() throws Exception {
 		mdc.getDB().dropDatabase();
+		while(mdc.getDB().getCollection(MongoStatusIO.HYDRA_COLLECTION_NAME).count()!=0) {
+			mdc.getDB().getCollection(MongoStatusIO.HYDRA_COLLECTION_NAME).remove(new BasicDBObject(), WriteConcern.SAFE);
+			Thread.sleep(50);
+		}
+		
+		if(mdc.getStatusReader().hasStatus()) {
+			fail("Test error");
+		}
+		
+		Assert.assertFalse(isCapped());
+		
 		mdc.connect();
+
 		if(!isCapped()) {
 			fail("Collection was not capped on connect");
 		}
@@ -86,7 +97,7 @@ public class MongoDocumentIOTest {
 		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
 		dw.prepare();
 
-		for(int i=0; i<mdc.getPipelineStatus().getNumberToKeep(); i++) {
+		for(int i=0; i<mdc.getStatusReader().getStatus().getNumberToKeep(); i++) {
 			dw.insert(new MongoDocument());
 			DatabaseDocument<MongoType> dd = dw.getAndTag(new MongoQuery(), "tag");
 			dw.markProcessed(dd, "tag");
@@ -96,7 +107,7 @@ public class MongoDocumentIOTest {
 			fail("Still some active docs..");
 		}
 		
-		if(mdc.getDocumentReader().getInactiveDatabaseSize()!=mdc.getPipelineStatus().getNumberToKeep()) {
+		if(mdc.getDocumentReader().getInactiveDatabaseSize()!=mdc.getStatusReader().getStatus().getNumberToKeep()) {
 			fail("Incorrect number of old documents kept");
 		}
 		
@@ -107,7 +118,7 @@ public class MongoDocumentIOTest {
 		if(mdc.getDocumentReader().getActiveDatabaseSize()!=0) {
 			fail("Still some active docs..");
 		}
-		if(mdc.getDocumentReader().getInactiveDatabaseSize()!=mdc.getPipelineStatus().getNumberToKeep()) {
+		if(mdc.getDocumentReader().getInactiveDatabaseSize()!=mdc.getStatusReader().getStatus().getNumberToKeep()) {
 			fail("Incorrect number of old documents kept: "+ mdc.getDocumentReader().getInactiveDatabaseSize());
 		}
 	}
@@ -232,13 +243,52 @@ public class MongoDocumentIOTest {
 		
 	}
 	
+	@Test
+	public void testInsertLargeDocument() throws Exception {
+		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
+		dw.prepare();
+		
+		MongoDocument d = new MongoDocument();
+		makeDocumentTooLarge(d);
+		
+		if(dw.insert(d)) {
+			fail("No error inserting big document");
+		}
+	}
+	
+	@Test
+	public void testUpdateLargeDocument() throws Exception {
+
+		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
+		dw.prepare();
+		
+		
+		
+		MongoDocument d = new MongoDocument();
+		d.putContentField("some_field", "some data");
+		
+		dw.insert(d);
+		
+		makeDocumentTooLarge(d);
+		
+		if(dw.update(d)) {
+			fail("No error updating big document");
+		}
+	}
+	
+	private void makeDocumentTooLarge(MongoDocument d) {
+		int maxMongoDBObjectSize = mdc.getDB().getMongo().getConnector().getMaxBsonObjectSize();
+		while(d.toJson().getBytes().length <= maxMongoDBObjectSize) {
+			d.putContentField(getRandomString(5), getRandomString(1000000));
+		}
+	}
 	
 	int testReadCount = 1;
 	@Test
 	public void testReadStatus() throws Exception {
 		mdc.getDocumentWriter().prepare();
 		
-		testReadCount = (int)mdc.getPipelineStatus().getNumberToKeep(); 
+		testReadCount = (int)mdc.getStatusReader().getStatus().getNumberToKeep(); 
 		
 		TailReader tr = new TailReader(mdc.getDocumentReader().getInactiveIterator());
 		tr.start();

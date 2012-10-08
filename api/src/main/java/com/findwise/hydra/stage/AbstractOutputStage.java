@@ -86,15 +86,20 @@ public abstract class AbstractOutputStage extends AbstractProcessStage {
 		return getRemotePipeline().markFailed(document);
 	}
 	
+	protected boolean fail(LocalDocument document, Throwable throwable) throws IOException {
+		return getRemotePipeline().markFailed(document, throwable);
+	}
+	
 	private boolean reject() throws IOException {
 		return getRemotePipeline().releaseLastDocument();
 	}
 	
 	@Override
-	protected void persist() {
+	protected boolean persist() {
 		/*
 		 * TODO: Overridden and intentionally left blank. This structure should be refactored. 
 		 * Accept/reject/pending should be used instead for all OutputStages...
 		 */
+		return true;
 	}
 }

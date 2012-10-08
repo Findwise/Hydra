@@ -17,6 +17,7 @@ import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.DocumentReader;
 import com.findwise.hydra.DocumentWriter;
+import com.findwise.hydra.StatusUpdater;
 import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.common.JsonException;
@@ -46,6 +47,8 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	private GridFS documentfs;
 	private WriteConcern concern;
 	
+	private StatusUpdater updater;
+	
 	private Set<String> seenTags = new HashSet<String>();
 	
 	private static Logger logger = LoggerFactory.getLogger(MongoDocumentIO.class);
@@ -66,10 +69,11 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	private static final String MIMETYPE_KEY = "contentType";
 	private static final String ENCODING_KEY = "encoding";
 	
-	public MongoDocumentIO(DB db, WriteConcern concern, long documentsToKeep, int oldDocsMaxSizeMB) {
+	public MongoDocumentIO(DB db, WriteConcern concern, long documentsToKeep, int oldDocsMaxSizeMB, StatusUpdater updater) {
 		this.concern = concern;
 		this.maxDocumentsToKeep = documentsToKeep;
 		this.oldDocsSize = oldDocsMaxSizeMB*BYTES_IN_MB;
+		this.updater = updater;
 		
 		documents = db.getCollection(DOCUMENT_COLLECTION);
 		documents.setObjectClass(MongoDocument.class);
@@ -405,12 +409,20 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	
 	@Override
 	public boolean markProcessed(DatabaseDocument<MongoType> d, String stage) {
-		return markDone(d, stage, MongoDocument.PROCESSED_METADATA_FLAG);
+		boolean res = markDone(d, stage, MongoDocument.PROCESSED_METADATA_FLAG);
+		
+		updater.addProcessed(1);
+		
+		return res;
 	}
 	
 	@Override
 	public boolean markDiscarded(DatabaseDocument<MongoType> d, String stage) {
-		return markDone(d, stage,  MongoDocument.DISCARDED_METADATA_FLAG);
+		boolean res = markDone(d, stage,  MongoDocument.DISCARDED_METADATA_FLAG);
+		
+		updater.addDiscarded(1);
+		
+		return res;
 	}
 	
 	@Override
@@ -431,7 +443,11 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	
 	@Override
 	public boolean markFailed(DatabaseDocument<MongoType> d, String stage) {
-		return markDone(d, stage, MongoDocument.FAILED_METADATA_FLAG);
+		boolean res = markDone(d, stage, MongoDocument.FAILED_METADATA_FLAG);
+		
+		updater.addFailed(1);
+		
+		return res;
 	}
 
 
