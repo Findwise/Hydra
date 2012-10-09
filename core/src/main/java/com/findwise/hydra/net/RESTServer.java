@@ -50,7 +50,6 @@ public class RESTServer extends Thread {
 	
 	private DefaultListeningIOReactor ioReactor;
 
-	private static final int SOCKET_TIMEOUT_MS = 5000;
 	private static final int BUFFER_SIZE = 8 * 1024; // Consider increasing this
 														// for performance?
 
@@ -100,7 +99,7 @@ public class RESTServer extends Thread {
 	public boolean blockingStart() {
 		start();
 		try {
-			return isWorking(System.currentTimeMillis(), SOCKET_TIMEOUT_MS*2);
+			return isWorking(System.currentTimeMillis(), 2000);
 		}
 		catch (InterruptedException e) {
 			error = e;
@@ -137,8 +136,7 @@ public class RESTServer extends Thread {
 	public void run() {
 		try {
 			HttpParams params = new SyncBasicHttpParams();
-			params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, SOCKET_TIMEOUT_MS)
-					.setIntParameter(CoreConnectionPNames.SOCKET_BUFFER_SIZE, BUFFER_SIZE)
+			params.setIntParameter(CoreConnectionPNames.SOCKET_BUFFER_SIZE, BUFFER_SIZE)
 					.setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK, false)
 					.setBooleanParameter(CoreConnectionPNames.TCP_NODELAY, true)
 					.setParameter(CoreProtocolPNames.ORIGIN_SERVER, "Hydra Core (Apache HttpComponents 4.2.1/1.1)");
