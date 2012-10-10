@@ -138,8 +138,8 @@ public class MergeFieldsStageTest {
 		mfs.process(doc2);
 		
 		String[] outString = doc2.getContentField("out").toString().split("___");
-		
 		Assert.assertEquals(3, outString.length);
+		
 		for(String s : outString) {
 			Assert.assertTrue(hasValue(doc, s));
 		}
