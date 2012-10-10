@@ -50,7 +50,7 @@ public class HttpRESTHandlerTest {
 	
 	@Test
 	public void testAccessRestrictions() throws InterruptedException {
-		restHandler.setAllowedHosts(Arrays.asList(new String[] {"localhost"}));
+		restHandler.setAllowedHosts(Arrays.asList(new String[] {"localhost","127.0.0.1"}));
 		
 		if(!server.isWorking(System.currentTimeMillis(), 200))
 		{
