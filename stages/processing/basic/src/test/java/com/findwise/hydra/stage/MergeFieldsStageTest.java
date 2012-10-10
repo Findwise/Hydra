@@ -81,7 +81,6 @@ public class MergeFieldsStageTest {
 		Assert.assertEquals(doc.getContentField("in2"), doc2.getContentField("in2"));
 		Assert.assertEquals(doc.getContentField("in3"), doc2.getContentField("in3"));
 		
-		
 		String[] outString = doc2.getContentField("out").toString().split(" ");
 		
 		Assert.assertEquals(4, outString.length);
