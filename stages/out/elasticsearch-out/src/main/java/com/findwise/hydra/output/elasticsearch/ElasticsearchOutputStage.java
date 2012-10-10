@@ -58,11 +58,19 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 		
 		try {
 			Logger.debug(action.toString());
-			if (action == Action.ADD) {
+			switch (action) {
+			case ADD:
 				add(document);
-			}
-			else if (action == Action.DELETE) {
+				break;
+			case DELETE:
 				delete(document);
+				break;
+			case UPDATE:
+				update(document);
+				break;
+			default:
+				fail(document);
+				break;
 			}
 		} catch (ElasticSearchException e) {
 			// TODO Auto-generated catch block
@@ -75,8 +83,13 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 	}
 	
 	
+	private void update(LocalDocument document) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	private void add(LocalDocument document) throws ElasticSearchException, IOException {
-		String docId = (String)document.getContentField(documentIdField);
+		String docId = (String) document.getContentField(documentIdField);
 		String json = document.contentFieldsToJson(document.getContentFields());
 		Logger.debug("Indexing document to index " + documentIndex + " with type " + documentType);
 		ListenableActionFuture<IndexResponse> actionFuture = client.prepareIndex(documentIndex, documentType, docId)
@@ -86,7 +99,7 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 		Logger.debug("Got response for docId " + response.getId());
 	}
 	
-	private void delete(LocalDocument document) {
+	private void delete(LocalDocument document) throws IOException {
 		
 		String docId = (String) document.getContentField(documentIdField);
 		
