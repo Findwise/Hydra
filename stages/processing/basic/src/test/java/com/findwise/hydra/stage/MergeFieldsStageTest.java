@@ -81,7 +81,41 @@ public class MergeFieldsStageTest {
 		Assert.assertEquals(doc.getContentField("in2"), doc2.getContentField("in2"));
 		Assert.assertEquals(doc.getContentField("in3"), doc2.getContentField("in3"));
 		
-		Assert.assertEquals("xyz in1 in2 in3", doc2.getContentField("out"));
+		
+		String[] outString = doc2.getContentField("out").toString().split(" ");
+		
+		Assert.assertEquals(4, outString.length);
+		for(String s : outString) {
+			Assert.assertTrue(hasValue(doc, s));
+		}
+	}
+	
+	@Test
+	public void testProcessMultipleMatches() throws Exception {
+		MergeFieldsStage mfs = new MergeFieldsStage();
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("outputField", "out");
+		
+		List<String> list =  new ArrayList<String>();
+		list.add("in1");
+		list.add("in1");
+		list.add("in2");
+		map.put("fromFields", list);
+		
+		mfs.setParameters(map);
+		
+		LocalDocument doc = getDocument();
+		
+		LocalDocument doc2 = new LocalDocument(doc.toJson());
+		mfs.process(doc2);
+		
+		String[] outString = doc2.getContentField("out").toString().split(" ");
+		
+		Assert.assertEquals(2, outString.length);
+		for(String s : outString) {
+			Assert.assertTrue(hasValue(doc, s));
+		}
 	}
 	
 	@Test
@@ -104,11 +138,15 @@ public class MergeFieldsStageTest {
 		LocalDocument doc2 = new LocalDocument(doc.toJson());
 		mfs.process(doc2);
 		
-		Assert.assertEquals(doc.getContentField("in1"), doc2.getContentField("in1"));
-		Assert.assertEquals(doc.getContentField("in2"), doc2.getContentField("in2"));
-		Assert.assertEquals(doc.getContentField("in3"), doc2.getContentField("in3"));
+		String[] outString = doc2.getContentField("out").toString().split("___");
 		
-		Assert.assertEquals("in1___in2___in3", doc2.getContentField("out"));
+		Assert.assertEquals(3, outString.length);
+		for(String s : outString) {
+			Assert.assertTrue(hasValue(doc, s));
+		}
+		
+		Assert.assertEquals("___", doc2.getContentField("out").toString().substring(3,6));
+		Assert.assertEquals("___", doc2.getContentField("out").toString().substring(9,12));
 	}
 	
 	@Test
@@ -141,7 +179,12 @@ public class MergeFieldsStageTest {
 		doc2 = new LocalDocument(doc.toJson());
 		mfs.process(doc2);
 		
-		Assert.assertEquals("in1 in2 in3", doc2.getContentField("out"));
+		String[] outString = doc2.getContentField("out").toString().split(" ");
+		
+		Assert.assertEquals(3, outString.length);
+		for(String s : outString) {
+			Assert.assertTrue(hasValue(doc, s));
+		}
 	}
 	
 	@Test
@@ -163,15 +206,13 @@ public class MergeFieldsStageTest {
 		LocalDocument doc2 = new LocalDocument(doc.toJson());
 		mfs.process(doc2);
 		
-		Assert.assertEquals(doc.getContentField("in1"), doc2.getContentField("in1"));
-		Assert.assertEquals(doc.getContentField("in2"), doc2.getContentField("in2"));
-		Assert.assertEquals(doc.getContentField("in3"), doc2.getContentField("in3"));
+		String[] outString = doc2.getContentField("out").toString().split(" ");
 		
-		for(String field : doc.getContentFields()) {
-			Assert.assertTrue(doc2.getContentField("out").toString().contains(doc.getContentField(field).toString()));
+		Assert.assertEquals(4, outString.length);
+		
+		for(String s : outString) {
+			Assert.assertTrue(hasValue(doc, s));
 		}
-		
-		Assert.assertEquals(3*4+3, doc2.getContentField("out").toString().length());
 	}
 	
 	@Test
@@ -194,15 +235,12 @@ public class MergeFieldsStageTest {
 		LocalDocument doc2 = new LocalDocument(doc.toJson());
 		mfs.process(doc2);
 
-		Assert.assertEquals(doc.getContentField("out"), doc2.getContentField("out"));
-		Assert.assertEquals(doc.getContentField("in1"), doc2.getContentField("in1"));
-		Assert.assertEquals(doc.getContentField("in2"), doc2.getContentField("in2"));
-		Assert.assertEquals(doc.getContentField("in3"), doc2.getContentField("in3"));
-
-		Assert.assertTrue(doc2.getContentField("newfield").toString().contains(doc.getContentField("in1").toString()));
-		Assert.assertTrue(doc2.getContentField("newfield").toString().contains(doc.getContentField("in3").toString()));
-		Assert.assertFalse(doc2.getContentField("newfield").toString().contains(doc.getContentField("in2").toString()));		
-		Assert.assertFalse(doc2.getContentField("newfield").toString().contains(doc.getContentField("out").toString()));
+		String[] newString = doc2.getContentField("newfield").toString().split(" ");
+		
+		Assert.assertEquals(2, newString.length);
+		for(String s : newString) {
+			Assert.assertTrue(hasValue(doc, s));
+		}
 	}
 	
 	@Test
@@ -228,10 +266,6 @@ public class MergeFieldsStageTest {
 		
 		LocalDocument doc2 = new LocalDocument(doc.toJson());
 		mfs.process(doc2);
-		
-		Assert.assertEquals(doc.getContentField("in1"), doc2.getContentField("in1"));
-		Assert.assertEquals(doc.getContentField("in2"), doc2.getContentField("in2"));
-		Assert.assertEquals(doc.getContentField("in3"), doc2.getContentField("in3"));
 		
 		Assert.assertEquals(1+2+5, doc2.getContentField("out"));
 	}
@@ -260,11 +294,6 @@ public class MergeFieldsStageTest {
 		LocalDocument doc2 = new LocalDocument(doc.toJson());
 		mfs.process(doc2);
 		
-		
-		Assert.assertEquals(doc.getContentField("in1"), doc2.getContentField("in1"));
-		Assert.assertEquals(doc.getContentField("in2"), doc2.getContentField("in2"));
-		Assert.assertEquals(doc.getContentField("in3"), doc2.getContentField("in3"));
-		
 		Assert.assertEquals(8.5, doc2.getContentField("out"));
 	}
 	
@@ -291,11 +320,6 @@ public class MergeFieldsStageTest {
 		
 		LocalDocument doc2 = new LocalDocument(doc.toJson());
 		mfs.process(doc2);
-		
-		
-		Assert.assertEquals(doc.getContentField("in1"), doc2.getContentField("in1"));
-		Assert.assertEquals(doc.getContentField("in2"), doc2.getContentField("in2"));
-		Assert.assertEquals(doc.getContentField("in3"), doc2.getContentField("in3"));
 		
 		Assert.assertEquals(String.class, doc2.getContentField("out").getClass());
 	}
@@ -367,4 +391,14 @@ public class MergeFieldsStageTest {
 		
 		return doc2;
 	}
+	
+	private boolean hasValue(LocalDocument doc, String s) {
+		for(String f : doc.getContentFields()) {
+			if(doc.getContentField(f).equals(s)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 }

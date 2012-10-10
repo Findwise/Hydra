@@ -32,7 +32,7 @@ public class MergeFieldsStage extends AbstractProcessStage {
 			"in the outputField, this list will be appended to. If the outputField " +
 			"contains something else, it will become the first element of the list.")
 	private boolean createList = false;
-
+	
 	public void init() throws RequiredArgumentMissingException {
 		if(outputField == null) {
 			throw new RequiredArgumentMissingException("Missing required parameter 'outputField'");
@@ -48,8 +48,8 @@ public class MergeFieldsStage extends AbstractProcessStage {
 			doc.putContentField(outputField, null);
 		}
 		String[] documentFields = doc.getContentFields().toArray(new String[doc.getContentFields().size()]);
-		for(String fieldRegex : fromFields) {
-			for(String docFieldName : documentFields) {
+		for(String docFieldName : documentFields) {
+			for(String fieldRegex : fromFields) {
 				if(docFieldName.matches(fieldRegex)) {
 					Object content = doc.getContentField(docFieldName);
 					if(createList) {
@@ -65,6 +65,7 @@ public class MergeFieldsStage extends AbstractProcessStage {
 							}
 						}
 					}
+					break;
 				}
 			}
 		}
