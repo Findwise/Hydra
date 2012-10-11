@@ -52,7 +52,7 @@ In order to configure a stage, you'll need to know what stage it is you want to 
 ```
 {
 	stageClass: "com.findwise.hydra.stage.SetStaticFieldStage",
-	query: {"touched" : {"extractTitles" : true}", "exists" : {"source" : true} },
+	query: {"touched" : {"extractTitles" : true}, "exists" : {"source" : true} },
 	fieldNames: ["source"],
 	fieldValues: ["web"]
 }
