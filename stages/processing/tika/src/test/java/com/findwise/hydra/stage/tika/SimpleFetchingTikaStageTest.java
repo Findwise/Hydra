@@ -1,5 +1,6 @@
 package com.findwise.hydra.stage.tika;
 
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Arrays;
 
@@ -15,6 +16,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.findwise.hydra.local.LocalDocument;
+import com.findwise.hydra.stage.ProcessException;
 
 public class SimpleFetchingTikaStageTest {
 
@@ -59,5 +61,17 @@ public class SimpleFetchingTikaStageTest {
 		Assert.assertTrue(doc.hasContentField("links2_content"));
 		Assert.assertTrue(doc.hasContentField("links3_content"));
 	}
+	
+	@Test
+	public void testURIEscaping() throws Exception {
+		doc.putContentField("attachment_a", "http://google.com/ arbitrary path with spaces/");
+		
+		try {
+			stage.process(doc);
+			Assert.fail("Did not throw exception, path was incorrect");
+		} catch(ProcessException e) {
+			Assert.assertEquals(FileNotFoundException.class, e.getCause().getClass());
+		}
+	} 
 
 }
