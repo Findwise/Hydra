@@ -1,8 +1,9 @@
 package com.findwise.hydra.stage.tika;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.tika.exception.TikaException;
@@ -24,22 +25,30 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 
 	@Parameter(description = "The field name pattern that should be matched where urls will be found. First group plus \"_\" will be used as field prefix. Example: \"attachment_(.*)\" will match for example attachment_a and will use \"a_\" as prefix")
 	private String urlFieldPattern = null;
-        @Parameter(name = "addMetaData", description = "Add the metadata to the document or not. Defaults to true")
-        private boolean addMetaData = true;
-        
-	static private Parser parser = new AutoDetectParser();
+       
+	@Parameter(name = "addMetaData", description = "Add the metadata to the document or not. Defaults to true")
+    private boolean addMetaData = true;
+	
+	@Parameter(description = "Set to true, will also do language detection and add the field 'prefix_language' according to the prefix rules. Defaults to true")
+	private boolean addLanguage = true;
+	
+	private Parser parser = new AutoDetectParser();
 
 	@Override
 	public void process(LocalDocument doc) throws ProcessException {
+		
 		Map<String, Object> urls = TikaUtils.getFieldMatchingPattern(doc,
 				urlFieldPattern);
 		for (String field : urls.keySet()) {
 			try {
-				for (URL url : TikaUtils.getUrlsFromObject(urls.get(field))) {
-					TikaUtils.enrichDocumentWithFileContents(doc, field + "_",
-							url.openStream(), parser, addMetaData);
+				Iterator<URL> it = TikaUtils.getUrlsFromObject(urls.get(field)).iterator();
+				for(int i=1; it.hasNext(); i++) {
+					String num = (i>1) ? ""+i : "";
+					URL url = it.next();
+					TikaUtils.enrichDocumentWithFileContents(doc, field + num + "_",
+							url.openStream(), parser, addMetaData, addLanguage);
 				}
-			} catch (MalformedURLException e) {
+			} catch (URISyntaxException e) {
 				throw new ProcessException("A field matching the pattern " + field
 						+ " contained a malformed url", e);
 			} catch (IOException e) {
@@ -48,7 +57,7 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 				throw new ProcessException("Failed parsing document", e);
 			} catch (TikaException e) {
 				throw new ProcessException("Got exception from Tika", e);
-			}
+			} 
 		}
 
 	}
@@ -56,8 +65,7 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 	@Override
 	public void init() throws RequiredArgumentMissingException {
 		if (urlFieldPattern == null) {
-			throw new RequiredArgumentMissingException(
-					"Missing parameter urlFieldPattern");
+			throw new RequiredArgumentMissingException("Missing parameter urlFieldPattern");
 		}
 
 		Logger.debug("Initiated SimpleTikaStage");
@@ -69,8 +77,8 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 		this.urlFieldPattern = urlFieldPattern;
 	}
 
-	static void setParser(Parser parser) {
-		SimpleFetchingTikaStage.parser = parser;
+	void setParser(Parser parser) {
+		this.parser = parser;
 	}
 
 }

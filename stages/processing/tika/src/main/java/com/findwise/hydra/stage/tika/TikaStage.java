@@ -18,10 +18,11 @@ import com.findwise.hydra.stage.tika.utils.TikaUtils;
  */
 @Stage(description="Stage that fetches any files attached to the document being processed and parses them with Tika. Any fields found by Tika will be stored in <filename>_*")
 public class TikaStage extends AbstractProcessStage {
-	
-    
-        @Parameter(name = "addMetaData", description = "Add the metadata to the document or not. Defaults to true")
-        private boolean addMetaData = true;
+    @Parameter(name = "addMetaData", description = "Add the metadata to the document or not. Defaults to true")
+    private boolean addMetaData = true;
+
+	@Parameter(description = "Set to true, will also do language detection and add the field 'prefix_language' according to the prefix rules. Defaults to true")
+	private boolean addLanguage = true;
     
 	static private Parser parser = new AutoDetectParser();
 
@@ -31,7 +32,7 @@ public class TikaStage extends AbstractProcessStage {
 			List<String> files = getRemotePipeline().getFileNames(doc.getID());
 			for(String fileName : files) {
 				DocumentFile df = getRemotePipeline().getFile(fileName, doc.getID());
-				TikaUtils.enrichDocumentWithFileContents(doc, fileName.replace('.', '_')+"_", df.getStream(), parser, addMetaData);
+				TikaUtils.enrichDocumentWithFileContents(doc, fileName.replace('.', '_')+"_", df.getStream(), parser, addMetaData, addLanguage);
 			}
 		} catch (IOException e) {
 			throw new ProcessException("Failed opening or reading from stream", e);
@@ -41,8 +42,4 @@ public class TikaStage extends AbstractProcessStage {
 			throw new ProcessException("Got exception from Tika", e);
 		}
 	}
-
-	@Override
-	public void init() throws RequiredArgumentMissingException { }
-
 }
