@@ -156,6 +156,10 @@ public class MemoryDocumentIOTest {
 		dbq.requireContentFieldEquals("number", 2);
 		Document d = io.getDocument(dbq);
 		
+		if (d == null) {
+			fail("Did not find any documents matching query");
+		}
+		
 		if(d.isEqual(test) || !d.isEqual(test2)) {
 			fail("Incorrect document returned");
 		}
