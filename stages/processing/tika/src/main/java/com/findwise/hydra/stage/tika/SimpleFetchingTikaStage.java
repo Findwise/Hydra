@@ -29,7 +29,7 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 	@Parameter(name = "addMetaData", description = "Add the metadata to the document or not. Defaults to true")
     private boolean addMetaData = true;
 	
-	static private Parser parser = new AutoDetectParser();
+	private Parser parser = new AutoDetectParser();
 
 	@Override
 	public void process(LocalDocument doc) throws ProcessException {
@@ -75,8 +75,8 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 		this.urlFieldPattern = urlFieldPattern;
 	}
 
-	static void setParser(Parser parser) {
-		SimpleFetchingTikaStage.parser = parser;
+	void setParser(Parser parser) {
+		this.parser = parser;
 	}
 
 }

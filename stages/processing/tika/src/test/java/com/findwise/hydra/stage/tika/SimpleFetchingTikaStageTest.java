@@ -161,14 +161,13 @@ public class SimpleFetchingTikaStageTest {
 
 	}
 
-	//@Test(expected = RuntimeException.class)
+	@Test(expected = RuntimeException.class)
 	public void testProcess() throws Exception {
 
 		doc.putContentField("attachment_a", "http://www.google.com");
-		SimpleFetchingTikaStage mockStage = Mockito.spy(stage);
 
 		Parser parser = Mockito.mock(AutoDetectParser.class);
-		SimpleFetchingTikaStage.setParser(parser);
+		stage.setParser(parser);
 
 		Mockito.doThrow(new RuntimeException())
 				.when(parser)
@@ -176,7 +175,7 @@ public class SimpleFetchingTikaStageTest {
 						Mockito.any(BodyContentHandler.class),
 						Mockito.any(Metadata.class),
 						Mockito.any(ParseContext.class));
-		mockStage.process(doc);
+		stage.process(doc);
 
 	}
 	
