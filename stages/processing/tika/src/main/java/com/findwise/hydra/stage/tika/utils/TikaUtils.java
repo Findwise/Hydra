@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,6 +16,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
@@ -59,9 +63,9 @@ public class TikaUtils {
         }
     }
 
-    public static List<URL> getUrlsFromObject(Object urlsObject) throws MalformedURLException {
+    public static List<URL> getUrlsFromObject(Object urlsObject) throws MalformedURLException, URISyntaxException {
         if (urlsObject instanceof String) {
-            return Arrays.asList(new URL((String) urlsObject));
+            return Arrays.asList(uriFromString((String) urlsObject).toURL());
         }
         if (urlsObject instanceof Iterable<?>) {
             List<URL> urls = new ArrayList<URL>();
@@ -94,5 +98,58 @@ public class TikaUtils {
         }
 
         return fieldToUrl;
+    }
+    
+    public static URI uriFromString(String s) throws URISyntaxException {
+    	String scheme = null;
+    	int port = -1;
+    	String userinfo = null;
+    	String host;
+    	String path = "";
+    	String query = null;
+    	String fragment = null;
+    	URLEncodedUtils.parse(s, Charset.defaultCharset());
+    	Matcher m = Pattern.compile("([^:]+)://.*").matcher(s);
+    	if(m.matches()) {
+    		scheme = m.group(1); 
+    	} 
+    	
+    	m = Pattern.compile("[^:]+://([^@]+)@.*").matcher(s);
+    	if(m.matches()) {
+    		userinfo = m.group(1);
+        	m = Pattern.compile("[^:]+://"+userinfo+"@([^:/]+).*").matcher(s);
+    	} else {
+        	m = Pattern.compile("[^:]+://([^:/]+).*").matcher(s);
+    	}
+    	
+    	if(m.matches()) {
+    		host = m.group(1);
+    		System.out.println("host : "+host);
+    	} else {
+    		throw new URISyntaxException(s, "No host specified");
+    	}
+    	
+    	
+    	m = Pattern.compile("[^:]+://.*"+host+":([0-9]+).*").matcher(s);
+    	if(m.matches()) {
+    		port = Integer.parseInt(m.group(1));
+    	} 
+    	
+    	m = Pattern.compile("[^:]+://[^/]+(/[^?#]*).*").matcher(s);
+    	if(m.matches()) {
+    		path = m.group(1);
+    	} 
+    	
+    	m = Pattern.compile("[^:]+://[^?]+\\?([^#]*).*").matcher(s);
+    	if(m.matches()) {
+    		query = m.group(1);
+    	} 
+    	
+    	m = Pattern.compile("[^:]+://[^#]+#(.*)").matcher(s);
+    	if(m.matches()) {
+    		fragment = m.group(1);
+    	} 
+
+    	return new URI(scheme, userinfo, host, port, path, query, fragment);
     }
 }

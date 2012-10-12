@@ -4,7 +4,8 @@ package com.findwise.hydra.stage.tika.utils;
 import static org.junit.Assert.fail;
 
 import java.io.StringWriter;
-import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -85,9 +86,9 @@ public class TikaUtilsTest {
 		}
 	}
 
-	@Test(expected = MalformedURLException.class)
+	@Test(expected = URISyntaxException.class)
 	public void testGetUrlFromIncorrectString() throws Exception {
-		TikaUtils.getUrlsFromObject("a");
+		System.out.println(TikaUtils.getUrlsFromObject("a"));
 	}
 
 	@Test
@@ -153,5 +154,19 @@ public class TikaUtilsTest {
 			fail("Missing Simon in authors");
 		}
 
+	}
+	
+	@Test
+	public void testURLEncoding() throws Exception {
+		String path = "/some spaces in url/and query";
+		URI uri = TikaUtils.uriFromString("https://user:password@google.com:8080"+path+"?q=some space&some other space#anchor");
+		
+		Assert.assertEquals(8080, uri.getPort());
+		Assert.assertEquals("google.com", uri.getHost());
+		Assert.assertEquals("https", uri.getScheme());
+		Assert.assertEquals(path, uri.getPath());
+		Assert.assertEquals(path.replace(" ", "%20"), uri.getRawPath());
+		
+		
 	}
 }
