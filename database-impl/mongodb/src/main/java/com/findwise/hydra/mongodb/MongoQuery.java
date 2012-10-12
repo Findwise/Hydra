@@ -1,12 +1,16 @@
 package com.findwise.hydra.mongodb;
 
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.common.Document;
+import com.findwise.hydra.common.SerializationUtils;
 import com.findwise.hydra.common.Document.Action;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.local.LocalQuery;
+import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 import com.mongodb.DBObject;
 import com.mongodb.QueryBuilder;
 
@@ -106,11 +110,70 @@ public class MongoQuery implements DatabaseQuery<MongoType> {
 		requireMetadataFieldNotExists("touched."+stageName);
 	}
 	
+	public final void requireFetchedByStage(String stageName) {
+		requireMetadataFieldExists("fetched."+stageName);
+	}
+
+	public final void requireNotFetchedByStage(String stageName) {
+		requireMetadataFieldNotExists("fetched."+stageName);
+	}
+	
+	@SuppressWarnings("unchecked")
 	@Override
 	public final void fromJson(String json) throws JsonException {
-		LocalQuery lq = new LocalQuery();
-		lq.fromJson(json);
-		fromLocalQuery(lq);
+		try {
+			Map<String, Object> queryObject = (Map<String, Object>) SerializationUtils.fromJson(json);
+			if(queryObject.containsKey("equals")) {
+				for (Entry<String, Object> entry : ((Map<String, Object>) queryObject.get("equals")).entrySet()) {
+					requireContentFieldEquals(entry.getKey(), entry.getValue());
+				}
+			}
+			if(queryObject.containsKey("notEquals")) {
+				for (Entry<String, Object> entry : ((Map<String, Object>) queryObject.get("notEquals")).entrySet()) {
+					requireContentFieldNotEquals(entry.getKey(), entry.getValue());
+				}
+			}
+			if(queryObject.containsKey("exists")) {
+				for (Entry<String, Boolean> entry : ((Map<String, Boolean>) queryObject.get("exists")).entrySet()) {
+					if (entry.getValue()) {
+						requireContentFieldExists(entry.getKey());
+					} else {
+						requireContentFieldNotExists(entry.getKey());
+					}
+				}
+			}
+			if(queryObject.containsKey("touched")) {
+				for (Entry<String, Boolean> entry : ((Map<String, Boolean>) queryObject.get("touched")).entrySet()) {
+					if (entry.getValue()) {
+						requireTouchedByStage(entry.getKey());
+					} else {
+						requireNotTouchedByStage(entry.getKey());
+					}
+				}
+			}
+			if(queryObject.containsKey("fetched")) {
+				for (Entry<String, Boolean> entry : ((Map<String, Boolean>) queryObject.get("fetched")).entrySet()) {
+					if (entry.getValue()) {
+						requireFetchedByStage(entry.getKey());
+					} else {
+						requireNotFetchedByStage(entry.getKey());
+					}
+				}
+			}
+			if(queryObject.containsKey("action")) {
+				requireAction(Action.valueOf((String)queryObject.get("action")));
+			}
+			
+		} 
+		catch(JsonParseException jse) {
+			throw new JsonException(jse);
+		}
+	}
+	
+	@Override
+	public String toJson() {
+		Gson gson = new Gson();
+		return gson.toJson(qb.get().toMap());
 	}
 	
 	@Override
@@ -147,4 +210,6 @@ public class MongoQuery implements DatabaseQuery<MongoType> {
 		
 		return true;
 	}
+
+
 }
