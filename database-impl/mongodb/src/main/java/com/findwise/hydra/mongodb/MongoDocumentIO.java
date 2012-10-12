@@ -192,16 +192,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	 */
 	@Override
 	public List<DatabaseDocument<MongoType>> getDocuments(DatabaseQuery<MongoType> dbq, int limit) {
-		DBCursor cursor = documents.find(((MongoQuery)dbq).toDBObject());
-
-		List<DatabaseDocument<MongoType>> list = new ArrayList<DatabaseDocument<MongoType>>();
-		while(list.size()<limit && cursor.hasNext()) {
-			cursor.next();
-			
-			list.add((MongoDocument)cursor.curr());
-		}
-		
-		return list;
+		return getDocuments(dbq, limit, 0);
 	}
 
 	public DBCollection getDocumentCollection() {
@@ -558,5 +549,25 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 			logger.error("Unable to get Tailable Iterator!", e);
 			return null;
 		}
+	}
+
+	@Override
+	public List<DatabaseDocument<MongoType>> getDocuments(
+			DatabaseQuery<MongoType> dbq, int limit, int skip) {
+		DBCursor cursor = documents.find(((MongoQuery)dbq).toDBObject()).skip(skip).limit(limit);
+
+		List<DatabaseDocument<MongoType>> list = new ArrayList<DatabaseDocument<MongoType>>();
+		while(cursor.hasNext()) {
+			cursor.next();
+			
+			list.add((MongoDocument)cursor.curr());
+		}
+		
+		return list;
+	}
+
+	@Override
+	public long getNumberOfDocuments(DatabaseQuery<MongoType> q) {
+		return documents.getCount(((MongoQuery)q).toDBObject());
 	}
 }
