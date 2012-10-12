@@ -9,6 +9,7 @@ import java.util.Map;
 
 import junit.framework.Assert;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
 import com.findwise.hydra.local.LocalDocument;
@@ -401,4 +402,27 @@ public class MergeFieldsStageTest {
 		return false;
 	}
 	
+	@Test
+	public void testInfieldWithListToString() throws Exception {
+		MergeFieldsStage mfs = new MergeFieldsStage();
+		
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("outputField", "out");
+		map.put("createList", false);
+		
+		List<String> list =  new ArrayList<String>();
+		list.add("in");
+		
+		map.put("fromFields", list);
+		
+		mfs.setParameters(map);
+		
+		LocalDocument doc = new LocalDocument();
+		String[] content = new String[] {"x", "y", "random", "content", "etc"};
+		doc.putContentField("in", Arrays.asList(content));
+		
+		mfs.process(doc);
+		
+		Assert.assertEquals(StringUtils.join(content, " "), doc.getContentField("out"));
+	}
 }
