@@ -84,6 +84,17 @@ public class MemoryConnector implements DatabaseConnector<MemoryType> {
 	}
 
 	@Override
+	public DatabaseDocument<MemoryType> convert(DatabaseDocument<?> document) {
+		MemoryDocument md = new MemoryDocument();
+		try {
+			md.fromJson(document.toJson());
+		} catch (JsonException e) {
+			e.printStackTrace();
+		}
+		return md;
+	}
+	
+	@Override
 	public boolean isConnected() {
 		return true;
 	}
@@ -97,5 +108,17 @@ public class MemoryConnector implements DatabaseConnector<MemoryType> {
 	public StatusReader<MemoryType> getStatusReader() {
 		return statusio;
 	}
+
+	@Override
+	public DatabaseQuery<MemoryType> convert(DatabaseQuery<?> query) {
+		try {
+			MemoryQuery memQuery = new MemoryQuery();
+			memQuery.fromJson(query.toJson());
+			return memQuery;
+		} catch (JsonException e) {
+			return null;
+		}
+	}
+
 
 }

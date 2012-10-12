@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.DatabaseConfiguration;
 import com.findwise.hydra.DatabaseConnector;
+import com.findwise.hydra.DatabaseDocument;
+import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.PipelineReader;
 import com.findwise.hydra.StatusUpdater;
 import com.findwise.hydra.common.JsonException;
@@ -221,5 +223,24 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	@Override
 	public MongoStatusIO getStatusReader() {
 		return statusIO;
+	}
+
+	@Override
+	public DatabaseDocument<MongoType> convert(DatabaseDocument<?> document) {
+		try {
+			return new MongoDocument(document.toJson());
+		} catch (JsonException e) {
+			return null;
+		}
+	}
+
+	@Override
+	public DatabaseQuery<MongoType> convert(DatabaseQuery<?> query) {
+		try {
+			return new MongoQuery(query.toJson());
+		} catch (JsonException e) {
+			return null;
+		}
+		
 	}
 }
