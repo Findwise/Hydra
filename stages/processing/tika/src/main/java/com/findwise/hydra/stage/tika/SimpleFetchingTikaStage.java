@@ -1,7 +1,7 @@
 package com.findwise.hydra.stage.tika;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.Map;
@@ -45,7 +45,7 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 					TikaUtils.enrichDocumentWithFileContents(doc, field + num + "_",
 							url.openStream(), parser, addMetaData);
 				}
-			} catch (MalformedURLException e) {
+			} catch (URISyntaxException e) {
 				throw new ProcessException("A field matching the pattern " + field
 						+ " contained a malformed url", e);
 			} catch (IOException e) {
@@ -54,7 +54,7 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 				throw new ProcessException("Failed parsing document", e);
 			} catch (TikaException e) {
 				throw new ProcessException("Got exception from Tika", e);
-			}
+			} 
 		}
 
 	}
