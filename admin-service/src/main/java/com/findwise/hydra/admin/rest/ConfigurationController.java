@@ -77,7 +77,7 @@ public class ConfigurationController {
 	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/documents/list")
 	public Map<String, Object> getDocuments(
-			@RequestParam(required = true, value = "q") String jsonQuery,
+			@RequestParam(required = false, defaultValue = "{}", value = "q") String jsonQuery,
 			@RequestParam(required = false, defaultValue = "10", value = "limit") int limit,
 			@RequestParam(required = false, defaultValue = "0", value = "skip") int skip) {
 		return documentService.getDocuments(jsonQuery, limit, skip);
