@@ -36,9 +36,12 @@ public interface DatabaseConnector<T extends DatabaseType> {
 	DocumentWriter<T> getDocumentWriter();
 	
 	DatabaseQuery<T> convert(LocalQuery query);
+	DatabaseQuery<T> convert(DatabaseQuery<?> query);
 
 	DatabaseDocument<T> convert(LocalDocument document);
 
+	DatabaseDocument<T> convert(DatabaseDocument<?> document);
+	
 	boolean isConnected();
 
 	StatusWriter<T> getStatusWriter();
