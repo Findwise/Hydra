@@ -15,12 +15,23 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.findwise.hydra.admin.ConfigurationService;
+import com.findwise.hydra.admin.documents.DocumentsService;
 
 @Controller("/rest")
 public class ConfigurationController {
 	@Autowired
 	private ConfigurationService<?> service;
 	
+	@Autowired
+	private DocumentsService<?> documentService;
+
+	public DocumentsService<?> getDocumentService() {
+		return documentService;
+	}
+
+	public void setDocumentService(DocumentsService<?> documentService) {
+		this.documentService = documentService;
+	}
 	public ConfigurationService<?> getService() {
 		return service;
 	}
@@ -53,5 +64,22 @@ public class ConfigurationController {
 	@RequestMapping(method=RequestMethod.GET, value="") 
 	public Map<String, Object> getStats() {
 		return service.getStats();
+	}
+	
+
+	@ResponseBody
+	@RequestMapping(method = RequestMethod.GET, value = "/documents/count")
+	public Map<String, Object> getDocumentCount(
+			@RequestParam(required = false, defaultValue="{}", value = "q") String jsonQuery) {
+		return documentService.getNumberOfDocuments(jsonQuery);
+	}
+
+	@ResponseBody
+	@RequestMapping(method = RequestMethod.GET, value = "/documents/list")
+	public Map<String, Object> getDocuments(
+			@RequestParam(required = true, value = "q") String jsonQuery,
+			@RequestParam(required = false, defaultValue = "10", value = "limit") int limit,
+			@RequestParam(required = false, defaultValue = "0", value = "skip") int skip) {
+		return documentService.getDocuments(jsonQuery, limit, skip);
 	}
 }
