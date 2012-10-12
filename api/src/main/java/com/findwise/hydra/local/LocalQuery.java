@@ -12,12 +12,14 @@ import com.google.gson.JsonParseException;
 
 public class LocalQuery implements Query, JsonDeserializer {
 	private Map<String, Object> equals;
+	private Map<String, Object> notEquals;
 	private Map<String, Boolean> exists;
 	private Map<String, Boolean> touched;
 	private Action action = null;
 	
 	public LocalQuery() {
 		equals = new HashMap<String, Object>();
+		notEquals = new HashMap<String, Object>();
 		exists = new HashMap<String, Boolean>();
 		touched = new HashMap<String, Boolean>();
 	}
@@ -77,6 +79,7 @@ public class LocalQuery implements Query, JsonDeserializer {
 	public String toJson() {
 		Map<String, Object> x = new HashMap<String, Object>();
 		x.put("equals", equals);
+		x.put("notEquals", notEquals);
 		x.put("exists", exists);
 		x.put("touched", touched);
 		
@@ -94,6 +97,9 @@ public class LocalQuery implements Query, JsonDeserializer {
 			Map<String, Object> queryObject = (Map<String, Object>) SerializationUtils.fromJson(json);
 			if(queryObject.containsKey("equals")) {
 				equals = (Map<String, Object>) queryObject.get("equals");
+			}
+			if(queryObject.containsKey("notEquals")) {
+				notEquals = (Map<String, Object>) queryObject.get("notEquals");
 			}
 			if(queryObject.containsKey("exists")) {
 				exists = (Map<String, Boolean>) queryObject.get("exists");
@@ -114,5 +120,42 @@ public class LocalQuery implements Query, JsonDeserializer {
 	@Override
 	public String toString() {
 		return toJson();
+	}
+
+	@Override
+	public void requireContentFieldNotEquals(String fieldName, Object o) {
+		notEquals.put(fieldName, o);
+	}
+
+	public Map<String, Object> getEquals() {
+		return equals;
+	}
+
+	public void setEquals(Map<String, Object> equals) {
+		this.equals = equals;
+	}
+
+	public Map<String, Object> getNotEquals() {
+		return notEquals;
+	}
+
+	public void setNotEquals(Map<String, Object> notEquals) {
+		this.notEquals = notEquals;
+	}
+
+	public Map<String, Boolean> getExists() {
+		return exists;
+	}
+
+	public void setExists(Map<String, Boolean> exists) {
+		this.exists = exists;
+	}
+
+	public void setTouched(Map<String, Boolean> touched) {
+		this.touched = touched;
+	}
+
+	public void setAction(Action action) {
+		this.action = action;
 	}
 }
