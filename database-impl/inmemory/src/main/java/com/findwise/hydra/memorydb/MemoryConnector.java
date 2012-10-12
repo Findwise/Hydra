@@ -82,7 +82,7 @@ public class MemoryConnector implements DatabaseConnector<MemoryType> {
 		}
 		return md;
 	}
-
+	
 	@Override
 	public boolean isConnected() {
 		return true;
@@ -97,5 +97,6 @@ public class MemoryConnector implements DatabaseConnector<MemoryType> {
 	public StatusReader<MemoryType> getStatusReader() {
 		return statusio;
 	}
+
 
 }
