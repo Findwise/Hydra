@@ -124,7 +124,6 @@ public class TikaUtils {
     	
     	if(m.matches()) {
     		host = m.group(1);
-    		System.out.println("host : "+host);
     	} else {
     		throw new URISyntaxException(s, "No host specified");
     	}
