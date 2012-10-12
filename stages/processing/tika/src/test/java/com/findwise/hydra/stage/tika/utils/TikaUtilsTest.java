@@ -159,14 +159,25 @@ public class TikaUtilsTest {
 	@Test
 	public void testURLEncoding() throws Exception {
 		String path = "/some spaces in url/and query";
-		URI uri = TikaUtils.uriFromString("https://user:password@google.com:8080"+path+"?q=some space&some other space#anchor");
+		URI uri = TikaUtils.uriFromString("https://user:password@google.com:8080" + 
+				path + "?q=some space&some other space#anchor");
 		
 		Assert.assertEquals(8080, uri.getPort());
 		Assert.assertEquals("google.com", uri.getHost());
 		Assert.assertEquals("https", uri.getScheme());
 		Assert.assertEquals(path, uri.getPath());
 		Assert.assertEquals(path.replace(" ", "%20"), uri.getRawPath());
+	}
+	
+	@Test
+	public void testLanguageDetection() throws Exception {
+		String text = "here is some very english content that is perfectly well " +
+				"formed and not at all contrived to contain the right amounts of " +
+				"e's and what have you";
 		
+		TikaUtils.addLanguageToDocument(doc, "x_", text);
 		
+		Assert.assertTrue(doc.hasContentField("x_language"));
+		Assert.assertEquals("en", doc.getContentField("x_language"));
 	}
 }

@@ -29,6 +29,9 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 	@Parameter(name = "addMetaData", description = "Add the metadata to the document or not. Defaults to true")
     private boolean addMetaData = true;
 	
+	@Parameter(description = "Set to true, will also do language detection and add the field 'prefix_language' according to the prefix rules. Defaults to true")
+	private boolean addLanguage = true;
+	
 	private Parser parser = new AutoDetectParser();
 
 	@Override
@@ -43,7 +46,7 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 					String num = (i>1) ? ""+i : "";
 					URL url = it.next();
 					TikaUtils.enrichDocumentWithFileContents(doc, field + num + "_",
-							url.openStream(), parser, addMetaData);
+							url.openStream(), parser, addMetaData, addLanguage);
 				}
 			} catch (URISyntaxException e) {
 				throw new ProcessException("A field matching the pattern " + field
@@ -62,8 +65,7 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 	@Override
 	public void init() throws RequiredArgumentMissingException {
 		if (urlFieldPattern == null) {
-			throw new RequiredArgumentMissingException(
-					"Missing parameter urlFieldPattern");
+			throw new RequiredArgumentMissingException("Missing parameter urlFieldPattern");
 		}
 
 		Logger.debug("Initiated SimpleTikaStage");

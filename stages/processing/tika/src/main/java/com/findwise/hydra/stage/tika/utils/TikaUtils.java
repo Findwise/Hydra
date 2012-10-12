@@ -18,6 +18,7 @@ import java.util.regex.Pattern;
 
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.tika.exception.TikaException;
+import org.apache.tika.language.LanguageIdentifier;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
@@ -30,7 +31,7 @@ import com.findwise.hydra.local.LocalDocument;
 public class TikaUtils {
 
     public static void enrichDocumentWithFileContents(LocalDocument doc,
-            String fieldPrefix, InputStream stream, Parser parser, boolean addMetaData) throws IOException,
+            String fieldPrefix, InputStream stream, Parser parser, boolean addMetaData, boolean addLanguage) throws IOException,
             SAXException, TikaException {
         Metadata metadata = new Metadata();
         ParseContext parseContext = new ParseContext();
@@ -43,10 +44,12 @@ public class TikaUtils {
         if (addMetaData) {
             addMetadataToDocument(doc, fieldPrefix, metadata);
         }
-
+        if(addLanguage) {
+            addLanguageToDocument(doc, fieldPrefix, textData.toString());        	
+        }
     }
 
-    public static void addTextToDocument(LocalDocument doc, String fieldPrefix,
+	public static void addTextToDocument(LocalDocument doc, String fieldPrefix,
             StringWriter textData) {
         doc.putContentField(fieldPrefix + "content", textData.toString());
     }
@@ -62,7 +65,12 @@ public class TikaUtils {
             }
         }
     }
-
+    
+    public static void addLanguageToDocument(LocalDocument doc,
+			String fieldPrefix, String text) {
+		doc.putContentField(fieldPrefix + "language", new LanguageIdentifier(text).getLanguage());
+	}
+    
     public static List<URL> getUrlsFromObject(Object urlsObject) throws MalformedURLException, URISyntaxException {
         if (urlsObject instanceof String) {
             return Arrays.asList(uriFromString((String) urlsObject).toURL());
