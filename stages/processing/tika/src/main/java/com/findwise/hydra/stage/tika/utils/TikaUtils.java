@@ -5,11 +5,11 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -59,18 +59,18 @@ public class TikaUtils {
         }
     }
 
-    public static Set<URL> getUrlsFromObject(Object urlsObject) throws MalformedURLException {
+    public static List<URL> getUrlsFromObject(Object urlsObject) throws MalformedURLException {
         if (urlsObject instanceof String) {
-            return new HashSet<URL>(Arrays.asList(new URL((String) urlsObject)));
+            return Arrays.asList(new URL((String) urlsObject));
         }
         if (urlsObject instanceof Iterable<?>) {
-            Set<URL> urls = new HashSet<URL>();
+            List<URL> urls = new ArrayList<URL>();
             for (Object urlObj : (Iterable<?>) urlsObject) {
                 urls.addAll(getUrlsFromObject(urlObj));
             }
             return urls;
         }
-        return new HashSet<URL>();
+        return new ArrayList<URL>();
     }
 
     public static Map<String, Object> getFieldMatchingPattern(LocalDocument doc,

@@ -9,7 +9,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import junit.framework.Assert;
 
@@ -74,7 +73,7 @@ public class SimpleFetchingTikaStageTest {
 
 	@Test
 	public void testGetUrlFromString() throws Exception {
-		Set<URL> urls = TikaUtils.getUrlsFromObject("http://google.com");
+		List<URL> urls = TikaUtils.getUrlsFromObject("http://google.com");
 
 		Assert.assertEquals(1, urls.size());
 		for (URL url : urls)
@@ -84,7 +83,7 @@ public class SimpleFetchingTikaStageTest {
 	@Test
 	public void testGetUrlsFromList() throws Exception {
 		List<String> exp = Arrays.asList("http://google.com", "http://dn.se");
-		Set<URL> urls = TikaUtils.getUrlsFromObject(exp);
+		List<URL> urls = TikaUtils.getUrlsFromObject(exp);
 
 		Assert.assertEquals(exp.size(), urls.size());
 		for (URL url : urls) {
@@ -162,7 +161,7 @@ public class SimpleFetchingTikaStageTest {
 
 	}
 
-	@Test(expected = RuntimeException.class)
+	//@Test(expected = RuntimeException.class)
 	public void testProcess() throws Exception {
 
 		doc.putContentField("attachment_a", "http://www.google.com");
@@ -179,6 +178,17 @@ public class SimpleFetchingTikaStageTest {
 						Mockito.any(ParseContext.class));
 		mockStage.process(doc);
 
+	}
+	
+	@Test
+	public void testListAttachments() throws Exception {
+		doc.putContentField("attachment_links", Arrays.asList(new String[] {"http://www.google.com", "http://www.google.com", "http://www.google.com"}));
+		
+		stage.process(doc);
+		
+		Assert.assertTrue(doc.hasContentField("links_content"));
+		Assert.assertTrue(doc.hasContentField("links2_content"));
+		Assert.assertTrue(doc.hasContentField("links3_content"));
 	}
 
 }

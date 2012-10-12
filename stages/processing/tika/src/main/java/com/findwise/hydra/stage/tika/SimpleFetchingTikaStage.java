@@ -3,6 +3,7 @@ package com.findwise.hydra.stage.tika;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.tika.exception.TikaException;
@@ -24,19 +25,24 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 
 	@Parameter(description = "The field name pattern that should be matched where urls will be found. First group plus \"_\" will be used as field prefix. Example: \"attachment_(.*)\" will match for example attachment_a and will use \"a_\" as prefix")
 	private String urlFieldPattern = null;
-        @Parameter(name = "addMetaData", description = "Add the metadata to the document or not. Defaults to true")
-        private boolean addMetaData = true;
-        
+       
+	@Parameter(name = "addMetaData", description = "Add the metadata to the document or not. Defaults to true")
+    private boolean addMetaData = true;
+	
 	static private Parser parser = new AutoDetectParser();
 
 	@Override
 	public void process(LocalDocument doc) throws ProcessException {
+		
 		Map<String, Object> urls = TikaUtils.getFieldMatchingPattern(doc,
 				urlFieldPattern);
 		for (String field : urls.keySet()) {
 			try {
-				for (URL url : TikaUtils.getUrlsFromObject(urls.get(field))) {
-					TikaUtils.enrichDocumentWithFileContents(doc, field + "_",
+				Iterator<URL> it = TikaUtils.getUrlsFromObject(urls.get(field)).iterator();
+				for(int i=1; it.hasNext(); i++) {
+					String num = (i>1) ? ""+i : "";
+					URL url = it.next();
+					TikaUtils.enrichDocumentWithFileContents(doc, field + num + "_",
 							url.openStream(), parser, addMetaData);
 				}
 			} catch (MalformedURLException e) {
