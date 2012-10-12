@@ -179,6 +179,12 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 		return getMetadata().toMap();
 	}
 
+	
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> getContentsMap() {
+		return getContents().toMap();
+	}
+	
 	@Override
 	public final Object putMetadataField(String key, Object v) {
 		touchedMetadata.add(key);
