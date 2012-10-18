@@ -40,7 +40,6 @@ public class AppConfig {
 	public static ConfigurationService<MongoType> service() {
 		return new ConfigurationService<MongoType>(new MongoConnector(
 				new DatabaseConfiguration() {
-
 					public int getOldMaxSize() {
 						return 100;
 					}
