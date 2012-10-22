@@ -54,6 +54,8 @@ public class ExampleModule extends AbstractModule {
 		bindConstant().annotatedWith(Names.named(DatabaseConnector.DATABASE_URL_PARAM)).to(c.getDatabaseUrl());
 		bindConstant().annotatedWith(Names.named(DatabaseConnector.DATABASE_USER)).to(c.getDatabaseUser());
 		bindConstant().annotatedWith(Names.named(DatabaseConnector.DATABASE_PASSWORD)).to(c.getDatabasePassword());
+		bindConstant().annotatedWith(Names.named(DatabaseConnector.OLD_MAX_COUNT)).to(c.getOldMaxCount());
+		bindConstant().annotatedWith(Names.named(DatabaseConnector.OLD_MAX_SIZE_MB)).to(c.getOldMaxSize());
 
 		bind(DatabaseConnector.class).to(MongoConnector.class);
 	}
@@ -84,12 +86,12 @@ public class ExampleModule extends AbstractModule {
 
 			@Override
 			public int getOldMaxSize() {
-				return 100;
+				return 200;
 			}
 
 			@Override
 			public int getOldMaxCount() {
-				return 1000;
+				return 2000;
 			}
 		};
 	}
