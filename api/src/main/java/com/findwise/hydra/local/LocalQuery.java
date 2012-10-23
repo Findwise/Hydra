@@ -142,24 +142,4 @@ public class LocalQuery implements Query, JsonDeserializer {
 	public String toString() {
 		return toJson();
 	}
-
-	public void setEquals(Map<String, Object> equals) {
-		this.equals = equals;
-	}
-
-	public void setNotEquals(Map<String, Object> notEquals) {
-		this.notEquals = notEquals;
-	}
-
-	public void setExists(Map<String, Boolean> exists) {
-		this.exists = exists;
-	}
-
-	public void setTouched(Map<String, Boolean> touched) {
-		this.touched = touched;
-	}
-
-	public void setAction(Action action) {
-		this.action = action;
-	}
 }
