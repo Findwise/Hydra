@@ -42,6 +42,22 @@ public class LocalQuery implements Query, JsonDeserializer {
 		return equals;
 	}
 	
+	public Map<String, Object> getEquals() {
+		return equals;
+	}
+
+	public Map<String, Object> getContentNotEquals() {
+		return notEquals;
+	}
+	
+	public Map<String, Object> getNotEquals() {
+		return notEquals;
+	}
+
+	public Map<String, Boolean> getExists() {
+		return exists;
+	}
+	
 	public Action getAction() {
 		return action;
 	}
@@ -59,6 +75,11 @@ public class LocalQuery implements Query, JsonDeserializer {
 	@Override
 	public void requireContentFieldEquals(String fieldName, Object o) {
 		getContentsEquals().put(fieldName, o);
+	}
+	
+	@Override
+	public void requireContentFieldNotEquals(String fieldName, Object o) {
+		getContentNotEquals().put(fieldName, o);
 	}
 
 	@Override
@@ -122,40 +143,5 @@ public class LocalQuery implements Query, JsonDeserializer {
 		return toJson();
 	}
 
-	@Override
-	public void requireContentFieldNotEquals(String fieldName, Object o) {
-		notEquals.put(fieldName, o);
-	}
 
-	public Map<String, Object> getEquals() {
-		return equals;
-	}
-
-	public void setEquals(Map<String, Object> equals) {
-		this.equals = equals;
-	}
-
-	public Map<String, Object> getNotEquals() {
-		return notEquals;
-	}
-
-	public void setNotEquals(Map<String, Object> notEquals) {
-		this.notEquals = notEquals;
-	}
-
-	public Map<String, Boolean> getExists() {
-		return exists;
-	}
-
-	public void setExists(Map<String, Boolean> exists) {
-		this.exists = exists;
-	}
-
-	public void setTouched(Map<String, Boolean> touched) {
-		this.touched = touched;
-	}
-
-	public void setAction(Action action) {
-		this.action = action;
-	}
 }
