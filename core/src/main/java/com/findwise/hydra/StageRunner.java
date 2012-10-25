@@ -63,7 +63,6 @@ public class StageRunner extends Thread {
         } else {
             java = "java";
         }
-
         if (conf.containsKey("retries")) {
             timesToRetry = (Integer) conf.get("retries");
         } else {
