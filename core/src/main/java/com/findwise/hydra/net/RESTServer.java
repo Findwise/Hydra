@@ -67,6 +67,7 @@ public class RESTServer extends Thread {
 		requestHandler.setRestId(id);
 		this.port = port;
 		executing = false;
+		setDaemon(true);
 	}
 	
 	@SuppressWarnings("rawtypes")
