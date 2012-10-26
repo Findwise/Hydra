@@ -28,6 +28,7 @@ public class StageRunner extends Thread {
     private int timesStarted;
     private boolean loggingEnabled;
     private String jvmParameters;
+    private String java;
     private String startupArgsString;
     private boolean hasQueried = false;
     private int pipelinePort;
@@ -47,6 +48,11 @@ public class StageRunner extends Thread {
             jvmParameters = (String) conf.get("jvm_parameters");
         } else {
             jvmParameters = null;
+        }
+        if (conf.containsKey("java_location")) {
+            java = (String) conf.get("java_location");
+        } else {
+            java = "java";
         }
         if (conf.containsKey("retries")) {
             timesToRetry = (Integer) conf.get("retries");
@@ -105,7 +111,7 @@ public class StageRunner extends Thread {
      * @return true if the stage was killed by a call to the destroy()-method. false otherwise.
      */
     private boolean runStage() {
-        CommandLine cmdLine = new CommandLine("java");
+        CommandLine cmdLine = new CommandLine(java);
         cmdLine.addArgument(jvmParameters, false);
         cmdLine.addArgument("-jar");
         cmdLine.addArgument("${file}");
