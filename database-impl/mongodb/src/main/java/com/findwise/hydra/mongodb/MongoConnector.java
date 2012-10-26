@@ -10,10 +10,11 @@ import org.slf4j.LoggerFactory;
 import com.findwise.hydra.DatabaseConfiguration;
 import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseDocument;
-import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.PipelineReader;
 import com.findwise.hydra.StatusUpdater;
+import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.common.Query;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.google.inject.Inject;
@@ -155,15 +156,15 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	}
 
 	@Override
-	public MongoQuery convert(LocalQuery query) {
-		return staticConvert(query);
+	public MongoQuery convert(Query query) {
+		try {
+			return new MongoQuery(query.toJson());
+		} catch (JsonException e) {
+			return null;
+		}
 	}
 
-	@Override
-	public MongoDocument convert(LocalDocument document) {
-		return staticConvert(document);
-	}
-
+	
 	public static MongoDocument staticConvert(LocalDocument document) {
 		MongoDocument doc;
 		try {
@@ -226,7 +227,7 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	}
 
 	@Override
-	public DatabaseDocument<MongoType> convert(DatabaseDocument<?> document) {
+	public DatabaseDocument<MongoType> convert(Document document) {
 		try {
 			return new MongoDocument(document.toJson());
 		} catch (JsonException e) {
@@ -234,13 +235,4 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 		}
 	}
 
-	@Override
-	public DatabaseQuery<MongoType> convert(DatabaseQuery<?> query) {
-		try {
-			return new MongoQuery(query.toJson());
-		} catch (JsonException e) {
-			return null;
-		}
-		
-	}
 }
