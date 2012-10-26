@@ -11,9 +11,9 @@ import com.findwise.hydra.PipelineReader;
 import com.findwise.hydra.PipelineWriter;
 import com.findwise.hydra.StatusReader;
 import com.findwise.hydra.StatusWriter;
+import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.local.LocalQuery;
+import com.findwise.hydra.common.Query;
 
 public class MemoryConnector implements DatabaseConnector<MemoryType> {
 
@@ -62,7 +62,7 @@ public class MemoryConnector implements DatabaseConnector<MemoryType> {
 	}
 
 	@Override
-	public DatabaseQuery<MemoryType> convert(LocalQuery query) {
+	public DatabaseQuery<MemoryType> convert(Query query) {
 		MemoryQuery mq = new MemoryQuery();
 		try {
 			mq.fromJson(query.toJson());
@@ -73,7 +73,7 @@ public class MemoryConnector implements DatabaseConnector<MemoryType> {
 	}
 
 	@Override
-	public DatabaseDocument<MemoryType> convert(LocalDocument document) {
+	public DatabaseDocument<MemoryType> convert(Document document) {
 		MemoryDocument md = new MemoryDocument();
 		try {
 			md.fromJson(document.toJson());
@@ -83,17 +83,6 @@ public class MemoryConnector implements DatabaseConnector<MemoryType> {
 		return md;
 	}
 
-	@Override
-	public DatabaseDocument<MemoryType> convert(DatabaseDocument<?> document) {
-		MemoryDocument md = new MemoryDocument();
-		try {
-			md.fromJson(document.toJson());
-		} catch (JsonException e) {
-			e.printStackTrace();
-		}
-		return md;
-	}
-	
 	@Override
 	public boolean isConnected() {
 		return true;
@@ -108,17 +97,5 @@ public class MemoryConnector implements DatabaseConnector<MemoryType> {
 	public StatusReader<MemoryType> getStatusReader() {
 		return statusio;
 	}
-
-	@Override
-	public DatabaseQuery<MemoryType> convert(DatabaseQuery<?> query) {
-		try {
-			MemoryQuery memQuery = new MemoryQuery();
-			memQuery.fromJson(query.toJson());
-			return memQuery;
-		} catch (JsonException e) {
-			return null;
-		}
-	}
-
 
 }
