@@ -1,6 +1,7 @@
 package com.findwise.hydra;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,22 +17,27 @@ import org.apache.commons.exec.ProcessDestroyer;
 import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.exec.launcher.CommandLauncher;
 import org.apache.commons.exec.launcher.CommandLauncherFactory;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StageRunner extends Thread {
 
-    private StoredStage stage;
+    private StageGroup stageGroup;
     private Logger logger = LoggerFactory.getLogger(getClass());
     private StageDestroyer stageDestroyer;
-    private int timesToRetry;
+    private boolean prepared = false;
+    private int timesToRetry = -1;
     private int timesStarted;
-    private boolean loggingEnabled;
-    private String jvmParameters;
-    private String java;
-    private String startupArgsString;
-    private boolean hasQueried = false;
     private int pipelinePort;
+    private boolean loggingEnabled = true;
+    private List<File> files = null;
+    private String jvmParameters = null;
+    private String startupArgsString = null;
+    private String classPathString = null;
+    private String java = "java";
+    private boolean hasQueried = false;
+    private File targetDirectory;
     
     private boolean wasKilled = false;;
 
@@ -43,11 +49,37 @@ public class StageRunner extends Thread {
         return hasQueried;
     }
 
-    public StageRunner(StoredStage stage, int pipelinePort) {
-        this.stage = stage;
+    public StageRunner(StageGroup stageGroup, File baseDirectory, int pipelinePort) {
+        this.stageGroup = stageGroup;
+        this.targetDirectory = new File(baseDirectory, stageGroup.getName());
         this.pipelinePort = pipelinePort;
         timesStarted = 0;
-        setParameters();
+    }
+    
+    /**
+     * This method must be called prior to a call to start()
+     * @throws IOException
+     */
+    public void prepare() throws IOException {
+        files = new ArrayList<File>();
+        
+    	if(!targetDirectory.isDirectory() && !targetDirectory.mkdir()) {
+    		throw new IOException("Unable to write files, target ("+targetDirectory.getAbsolutePath()+") is not a directory");
+    	}
+    	
+    	for(DatabaseFile df : stageGroup.getDatabaseFiles()) {
+    		File f = new File(targetDirectory, df.getFilename());
+    		files.add(f);
+    		IOUtils.copy(df.getInputStream(), new FileOutputStream(f));
+    	}
+    	
+    	setParameters(stageGroup.toPropertiesMap());
+        if(stageGroup.size()==1) {
+        	//If there is only a single stage in this group, it's configuration takes precedent
+        	setParameters(stageGroup.iterator().next().getProperties());
+        };
+        
+        prepared = true;
     }
 
     public final void setParameters() {
@@ -73,30 +105,33 @@ public class StageRunner extends Thread {
         } else {
             loggingEnabled = true;
         }
-        if (conf.containsKey("cmdline_args")) {
-            startupArgsString = (String) conf.get("cmdline_args");
-        } else {
-            startupArgsString = null;
+        
+        if (conf.containsKey(StageGroup.JAVA_LOCATION_KEY) && conf.get(StageGroup.JAVA_LOCATION_KEY)!=null) {
+        	java = (String) conf.get(StageGroup.JAVA_LOCATION_KEY);
         }
     }
 
     public void run() {
+    	if(!prepared) {
+    		logger.error("The StageRunner was not prepared prior to being started. Aborting!");
+    		return;
+    	}
 
         do {
-            logger.info("Starting stage " + stage.getName()
+            logger.info("Starting stage group " + stageGroup.getName()
                     + ". Times started so far: " + timesStarted);
             timesStarted++;
-            boolean cleanShutdown = runStage();
+            boolean cleanShutdown = runGroup();
             if (cleanShutdown) {
                 return;
             }
             if (!hasQueried()) {
-                logger.error("The stage " + stage.getName() + " did not start. It will not be restarted until configuration changes.");
+                logger.error("The stage group " + stageGroup.getName() + " did not start. It will not be restarted until configuration changes.");
                 return;
             }
         } while (timesToRetry == -1 || timesToRetry >= timesStarted);
 
-        logger.error("Stage " + stage.getName()
+        logger.error("Stage group " + stageGroup.getName()
                 + " has failed and cannot be restarted. ");
     }
 
@@ -119,17 +154,28 @@ public class StageRunner extends Thread {
      * 
      * @return true if the stage was killed by a call to the destroy()-method. false otherwise.
      */
-    private boolean runStage() {
-        CommandLine cmdLine = new CommandLine(java);
+    private boolean runGroup() {
+		CommandLine cmdLine = new CommandLine(java);
         cmdLine.addArgument(jvmParameters, false);
+        if(classPathString==null) {
+        	classPathString = targetDirectory.getAbsolutePath()+File.separator+"*";
+        } else {
+        	classPathString = classPathString+":"+targetDirectory.getAbsolutePath()+File.separator+"*";
+        }
+        
+        cmdLine.addArgument("-cp");
+        cmdLine.addArgument("${classpath}");
         cmdLine.addArgument("-jar");
         cmdLine.addArgument("${file}");
-        cmdLine.addArgument(stage.getName());
+        cmdLine.addArgument(stageGroup.getName());
         cmdLine.addArgument("localhost");
         cmdLine.addArgument("" + pipelinePort);
         cmdLine.addArgument(startupArgsString);
-        HashMap<String, File> map = new HashMap<String, File>();
-        map.put("file", stage.getFile().getAbsoluteFile());
+        
+        HashMap<String, Object> map = new HashMap<String, Object>();
+        map.put("file", files.get(0)); //Any of the files should do as a starting point
+        map.put("classpath", classPathString);
+        
         cmdLine.setSubstitutionMap(map);
         logger.info("Launching with command " + cmdLine.toString());
 
@@ -142,7 +188,7 @@ public class StageRunner extends Thread {
             Process p = cl.exec(cmdLine, null);
 
             if (loggingEnabled) {
-                PumpStreamHandler streams = new PumpStreamHandler(new StreamLogger(stage.getName()));
+                PumpStreamHandler streams = new PumpStreamHandler(new StreamLogger(stageGroup.getName()));
                 streams.setProcessInputStream(p.getOutputStream());
                 streams.setProcessErrorStream(p.getErrorStream());
                 streams.setProcessOutputStream(p.getInputStream());
@@ -160,7 +206,7 @@ public class StageRunner extends Thread {
 		}
 		
 		if(!wasKilled) {
-	        logger.error("Stage " + stage.getName()
+	        logger.error("Stage group " + stageGroup.getName()
 	                + " terminated unexpectedly with exit value " + exitValue);
 			return false;
 		}
@@ -172,16 +218,16 @@ public class StageRunner extends Thread {
      * throw an IllegalStateException.
      */
     public void destroy() {
-        logger.debug("Attempting to destroy JVM running stage "
-                + stage.getName());
+        logger.debug("Attempting to destroy JVM running stage group "
+                + stageGroup.getName());
         boolean success = stageDestroyer.killAll();
         if (success) {
             logger.debug("... destruction successful");
         } else {
-            logger.error("JVM running stage " + stage.getName()
+            logger.error("JVM running stage group " + stageGroup.getName()
                     + " was not killed");
             throw new IllegalStateException("Orphaned process for "
-                    + stage.getName());
+                    + stageGroup.getName());
         }
         
         wasKilled = true;
@@ -203,6 +249,10 @@ public class StageRunner extends Thread {
         return hasQueried;
     }
 
+    public StageGroup getStageGroup() {
+    	return stageGroup;
+    }
+    
     /**
      * Manages the destruction of any Stages launched in this wrapper.
      * Automatically binds to the Runtime to shut down along with the master

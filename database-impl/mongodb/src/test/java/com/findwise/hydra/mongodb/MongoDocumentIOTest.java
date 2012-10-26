@@ -10,6 +10,7 @@ import org.bson.types.ObjectId;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.findwise.hydra.DatabaseDocument;
@@ -243,6 +244,7 @@ public class MongoDocumentIOTest {
 		
 	}
 	
+	@Ignore
 	@Test
 	public void testInsertLargeDocument() throws Exception {
 		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
@@ -257,6 +259,7 @@ public class MongoDocumentIOTest {
 	}
 	
 	@Test
+	@Ignore
 	public void testUpdateLargeDocument() throws Exception {
 
 		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();

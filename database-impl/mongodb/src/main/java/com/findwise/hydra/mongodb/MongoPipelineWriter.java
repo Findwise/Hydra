@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.PipelineWriter;
 import com.findwise.hydra.Stage;
+import com.findwise.hydra.StageGroup;
+import com.findwise.hydra.Stage.Mode;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -38,14 +40,14 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 	public void prepare() {}
 
 	@Override
-	public void write(Pipeline<? extends Stage> p) throws IOException {
-		Pipeline<Stage> old = reader.getPipeline();
+	public void write(Pipeline p) throws IOException {
+		Pipeline old = reader.getPipeline();
 		for(Stage s : old.getStages()) {
 			inactivate(s);
 		}
-
-		for (Stage s : p.getStages()) {
-			write(s);
+		
+		for(StageGroup g : p.getStageGroups()) {
+			write(g);
 		}
 	}
 	
@@ -54,11 +56,51 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 		stages.findAndModify(q, new BasicDBObject("$set", new BasicDBObject(MongoPipelineReader.ACTIVE_KEY, Stage.Mode.INACTIVE.toString())));
 	}
 	
+	private DBObject getGroupDBObject(StageGroup group) {
+		BasicDBObject obj = new BasicDBObject();
+		
+		obj.put(MongoPipelineReader.TYPE_KEY, MongoPipelineReader.GROUP_TYPE);
+		obj.put(MongoPipelineReader.NAME_KEY, group.getName());
+		
+		BasicDBObject props = new BasicDBObject();
+		if(group.isPropertiesChanged()) {
+			props.put(MongoPipelineReader.PROPERTIES_DATE_SUBKEY, new Date());
+		}
+		else {
+			props.put(MongoPipelineReader.PROPERTIES_DATE_SUBKEY, group.getPropertiesModifiedDate());
+		}
+		
+		props.put(MongoPipelineReader.PROPERTIES_MAP_SUBKEY, group.toPropertiesMap());
+
+		obj.put(MongoPipelineReader.PROPERTIES_KEY, props);
+		
+		boolean active = false;
+		boolean debug = false;
+		for(Stage s : group) {
+			if(s.getMode() == Mode.ACTIVE) {
+				active = true;
+			} else if (s.getMode() == Mode.DEBUG) {
+				debug = true;
+			}
+		}
+		if(active) {
+			obj.put(MongoPipelineReader.ACTIVE_KEY, Mode.ACTIVE.toString());
+		} else if(debug) {
+			obj.put(MongoPipelineReader.ACTIVE_KEY, Mode.DEBUG.toString());
+		} else {
+			obj.put(MongoPipelineReader.ACTIVE_KEY, Mode.INACTIVE.toString());
+		}
+		
+		
+		return obj;
+		
+	}
 	
-	
-	private DBObject getPropertyDBObject(Stage s) {
+	private DBObject getStageDBObject(Stage s) {
 		BasicDBObject obj = new BasicDBObject();
 		obj.put(MongoPipelineReader.STAGE_KEY, s.getName());
+		obj.put(MongoPipelineReader.TYPE_KEY, MongoPipelineReader.STAGE_TYPE);
+		
 		BasicDBObject props = new BasicDBObject();
 		if(s.isPropertiesChanged()) {
 			props.put(MongoPipelineReader.PROPERTIES_DATE_SUBKEY, new Date());
@@ -71,15 +113,29 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 		
 		obj.put(MongoPipelineReader.PROPERTIES_KEY, props);
 		obj.put(MongoPipelineReader.ACTIVE_KEY, s.getMode().toString());
+		obj.put(MongoPipelineReader.GROUP_KEY, s.getGroupName());
 		if(s.getDatabaseFile()!=null) {
 			obj.put(MongoPipelineReader.FILE_KEY, s.getDatabaseFile().getId());
 		}
 		return obj;
 	}
 	
+	public void write(StageGroup stageGroup) throws IOException {
+		writeProperties(stageGroup);
+
+		for (Stage s : stageGroup) {
+			write(s);
+		}
+	}
+	
+	private void writeProperties(StageGroup stageGroup) {
+		DBObject q = reader.getGroupQuery(stageGroup.getName());
+		stages.update(q, getGroupDBObject(stageGroup), true, false, concern);
+	}
+	
 	public void write(Stage stage) throws IOException  {
 		DBObject q = reader.getStageQuery(stage.getName());
-		stages.update(q, getPropertyDBObject(stage), true, false, concern);
+		stages.update(q, getStageDBObject(stage), true, false, concern);
 	}
 
 	@Override

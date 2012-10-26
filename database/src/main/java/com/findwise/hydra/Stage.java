@@ -13,6 +13,7 @@ public class Stage {
 	private Map<String, Object> properties;
 	private Date propertiesModifiedDate;
 	private boolean changedProperties;
+	private String groupName;
 	
 	/**
 	 * Creates a stage that is ACTIVE by default.
@@ -22,7 +23,12 @@ public class Stage {
 	}
 	
 	public Stage(String name, DatabaseFile databaseFile, Mode mode) {
+		this(name, name, databaseFile, mode);
+	}
+	
+	public Stage(String name, String groupName, DatabaseFile databaseFile, Mode mode) {
 		this.name = name;
+		this.groupName = groupName;
 		this.databaseFile = databaseFile;
 		this.mode = mode;
 	}
@@ -56,6 +62,9 @@ public class Stage {
 	}
 	
 	public Date getPropertiesModifiedDate() {
+		if(propertiesModifiedDate==null) {
+			propertiesModifiedDate = new Date();
+		}
 		return new Date(propertiesModifiedDate.getTime());
 	}
 	
@@ -85,5 +94,13 @@ public class Stage {
 			return false;
 		}
 		return getDatabaseFile().isEqual(s.getDatabaseFile());
+	}
+	
+	public void setGroupName(String groupName) {
+		this.groupName = groupName;
+	}
+	
+	public String getGroupName() {
+		return groupName;
 	}
 }
