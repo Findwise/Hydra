@@ -17,6 +17,7 @@ import org.apache.commons.exec.ProcessDestroyer;
 import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.exec.launcher.CommandLauncher;
 import org.apache.commons.exec.launcher.CommandLauncherFactory;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -214,8 +215,8 @@ public class StageRunner extends Thread {
     }
 
     /**
-     * Destroys the JVM running this stage. Should a JVM shutdown fail, it will
-     * throw an IllegalStateException.
+     * Destroys the JVM running this stage and removes it's working files. 
+     * Should a JVM shutdown fail, it will throw an IllegalStateException.
      */
     public void destroy() {
         logger.debug("Attempting to destroy JVM running stage group "
@@ -230,9 +231,34 @@ public class StageRunner extends Thread {
                     + stageGroup.getName());
         }
         
+        removeFiles();
+        
         wasKilled = true;
     }
     
+    private void removeFiles() {
+    	long start = System.currentTimeMillis();
+    	IOException ex = null;
+    	do {
+    		try {
+        		FileUtils.deleteDirectory(targetDirectory);
+        		return;
+        	} catch(IOException e) {
+        		ex = e;
+        		try {
+					Thread.sleep(50);
+				} catch (InterruptedException e1) {
+					logger.error("Interrupted while waiting on delete");
+					Thread.currentThread().interrupt();
+					return;
+				}
+        	}
+		} while (start + 5000 > System.currentTimeMillis());
+		logger.error("Unable to delete the directory "
+				+ targetDirectory.getAbsolutePath()
+				+ ", containing Stage Group " + stageGroup.getName(), ex);
+	}
+
     public synchronized void setHasQueried() {
         hasQueried = true;
     }

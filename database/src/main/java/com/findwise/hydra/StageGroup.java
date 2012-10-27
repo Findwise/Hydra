@@ -6,6 +6,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Represents a set of stages that will be run inside the same JVM.
+ * 
+ * @author joel.westberg
+ */
 public class StageGroup extends HashSet<Stage>{
 	private static final long serialVersionUID = -2928443572343949817L;
 	
