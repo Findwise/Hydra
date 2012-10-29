@@ -86,30 +86,26 @@ public class StageRunner extends Thread {
     }
 
     public final void setParameters(Map<String, Object> conf) {
-        if (conf.containsKey("jvm_parameters")) {
-            jvmParameters = (String) conf.get("jvm_parameters");
+        if (conf.containsKey(StageGroup.JVM_PARAMETERS_KEY) && conf.get(StageGroup.JVM_PARAMETERS_KEY)!=null) {
+            jvmParameters = (String) conf.get(StageGroup.JVM_PARAMETERS_KEY);
         } else {
             jvmParameters = null;
         }
 
-        if (conf.containsKey("java_location")) {
-            java = (String) conf.get("java_location");
+        if (conf.containsKey(StageGroup.JAVA_LOCATION_KEY) && conf.get(StageGroup.JAVA_LOCATION_KEY)!=null) {
+            java = (String) conf.get(StageGroup.JAVA_LOCATION_KEY);
         } else {
             java = "java";
         }
-        if (conf.containsKey("retries")) {
-            timesToRetry = (Integer) conf.get("retries");
+        if (conf.containsKey(StageGroup.RETRIES_KEY) && conf.get(StageGroup.RETRIES_KEY)!=null) {
+            timesToRetry = (Integer) conf.get(StageGroup.RETRIES_KEY);
         } else {
             timesToRetry = -1;
         }
-        if (conf.containsKey("logging_enabled")) {
-            loggingEnabled = (Boolean) conf.get("logging_enabled");
+        if (conf.containsKey(StageGroup.LOGGING_KEY) && conf.get(StageGroup.LOGGING_KEY)!=null) {
+            loggingEnabled = (Boolean) conf.get(StageGroup.LOGGING_KEY);
         } else {
             loggingEnabled = true;
-        }
-        
-        if (conf.containsKey(StageGroup.JAVA_LOCATION_KEY) && conf.get(StageGroup.JAVA_LOCATION_KEY)!=null) {
-        	java = (String) conf.get(StageGroup.JAVA_LOCATION_KEY);
         }
     }
 
