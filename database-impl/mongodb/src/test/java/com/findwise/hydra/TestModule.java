@@ -18,7 +18,6 @@ public class TestModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		DatabaseConfiguration c = getConfiguration();
 		bind(DatabaseConnector.class).to(MongoConnector.class);
 	}
 	
