@@ -13,7 +13,6 @@ public class Stage {
 	private Map<String, Object> properties;
 	private Date propertiesModifiedDate;
 	private boolean changedProperties;
-	private String groupName;
 	
 	/**
 	 * Creates a stage that is ACTIVE by default.
@@ -23,12 +22,7 @@ public class Stage {
 	}
 	
 	public Stage(String name, DatabaseFile databaseFile, Mode mode) {
-		this(name, name, databaseFile, mode);
-	}
-	
-	public Stage(String name, String groupName, DatabaseFile databaseFile, Mode mode) {
 		this.name = name;
-		this.groupName = groupName;
 		this.databaseFile = databaseFile;
 		this.mode = mode;
 	}
