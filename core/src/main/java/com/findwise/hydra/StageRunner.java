@@ -73,7 +73,9 @@ public class StageRunner extends Thread {
     		files.add(f);
     		IOUtils.copy(df.getInputStream(), new FileOutputStream(f));
     	}
-    	
+
+        stageDestroyer = new StageDestroyer();
+        
     	setParameters(stageGroup.toPropertiesMap());
         if(stageGroup.getStages().size()==1) {
         	//If there is only a single stage in this group, it's configuration takes precedent
@@ -83,8 +85,7 @@ public class StageRunner extends Thread {
         prepared = true;
     }
 
-    public final void setParameters() {
-        Map<String, Object> conf = stage.getProperties();
+    public final void setParameters(Map<String, Object> conf) {
         if (conf.containsKey("jvm_parameters")) {
             jvmParameters = (String) conf.get("jvm_parameters");
         } else {
@@ -179,8 +180,7 @@ public class StageRunner extends Thread {
         
         cmdLine.setSubstitutionMap(map);
         logger.info("Launching with command " + cmdLine.toString());
-
-        stageDestroyer = new StageDestroyer();
+        
         CommandLauncher cl = CommandLauncherFactory.createVMLauncher();
         
         int exitValue = 0;
@@ -258,23 +258,7 @@ public class StageRunner extends Thread {
 				+ targetDirectory.getAbsolutePath()
 				+ ", containing Stage Group " + stageGroup.getName(), ex);
 	}
-
-    public synchronized void setHasQueried() {
-        hasQueried = true;
-    }
-
-    public synchronized boolean hasQueried() {
-        return hasQueried;
-    }
     
-    public synchronized void setHasQueried() {
-        hasQueried = true;
-    }
-
-    public synchronized boolean hasQueried() {
-        return hasQueried;
-    }
-
     public StageGroup getStageGroup() {
     	return stageGroup;
     }
@@ -333,4 +317,8 @@ public class StageRunner extends Thread {
             return success;
         }
     }
+
+	public void setStageDestroyer(StageDestroyer sd) {
+		stageDestroyer = sd;
+	}
 }
