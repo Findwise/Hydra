@@ -38,10 +38,8 @@ public class RegexStage extends AbstractProcessStage {
 
     @Override
     public void init() throws RequiredArgumentMissingException {
-
         if (this.regexConfigs == null || this.regexConfigs.size() == 0) {
-            throw new RequiredArgumentMissingException(
-                    "regexConf was probably not parsed correctly");
+            throw new RequiredArgumentMissingException("regexConf was probably not parsed correctly");
         }
 
     }
@@ -49,31 +47,30 @@ public class RegexStage extends AbstractProcessStage {
     @Override
     public void process(LocalDocument doc) throws ProcessException {
         for (Map<String, String> regexConf : regexConfigs) {
-            Pattern pattern = Pattern.compile(regexConf.get("regex"),
-                    Pattern.DOTALL);
-
+            Pattern pattern = Pattern.compile(regexConf.get("regex"), Pattern.DOTALL);
             Object value = doc.getContentField(regexConf.get("inField"));
-
             if (value == null) {
                 return;
             }
-
             if (value instanceof String) {
-
                 String stringValue = (String) doc.getContentField(regexConf.get("inField"));
-
                 Matcher regexMatcher = pattern.matcher(stringValue);
-
-                if (regexMatcher.find()) {
-                    doc.putContentField(regexConf.get("outField"),
-                            parseString(doc, regexConf, regexMatcher));
+                List<String> substitutions = new ArrayList<String>();
+                while (regexMatcher.find()) {
+                	substitutions.add(parseString(doc, regexConf, regexMatcher));
+                }
+                if (!substitutions.isEmpty()) {
+                	if (substitutions.size() == 1) {
+                		doc.putContentField(regexConf.get("outField"), substitutions.get(0));
+                	} else {
+                		doc.putContentField(regexConf.get("outField"), substitutions);
+                	}
                 }
             } else if (value instanceof List<?>) {
                 List<String> outData = new ArrayList<String>();
                 for (Object listValue : (List<?>) value) {
                     if (listValue instanceof String) {
                         Matcher regexMatcher = pattern.matcher((String) listValue);
-
                         if (regexMatcher.find()) {
                             outData.add(parseString(doc, regexConf, regexMatcher));
                         }
@@ -96,10 +93,8 @@ public class RegexStage extends AbstractProcessStage {
         this.regexConfigs = regexConfigsList;
     }
 
-    private String parseString(LocalDocument doc,
-            Map<String, String> regexConf, Matcher regexMatcher) {
+    private String parseString(LocalDocument doc, Map<String, String> regexConf, Matcher regexMatcher) {
         String substitute = regexConf.get("substitute");
-        
         //This will only work with either many groups but only one next find
         //or with one group and many next finds.
         for (int i = 1; i <= regexMatcher.groupCount(); i++) {
