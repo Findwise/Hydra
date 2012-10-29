@@ -21,10 +21,10 @@ public final class HttpResponseWriter {
 
 	private HttpResponseWriter() {} // Should not be possible to instantiate
 	
-	private static ContentType contentType = ContentType.create("text/html", "UTF-8");
+	public static final ContentType CONTENT_TYPE = ContentType.create("application/json", "UTF-8");
 
 	private static void setStringEntity(HttpResponse response, String content) {
-		response.setEntity(new NStringEntity(content, contentType));
+		response.setEntity(new NStringEntity(content, CONTENT_TYPE));
 	}
 	
 	protected static void printDocument(HttpResponse response, Document d, String stage) {
