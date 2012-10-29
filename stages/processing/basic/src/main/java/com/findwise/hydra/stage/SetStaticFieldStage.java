@@ -32,11 +32,12 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 	private String overwrite;
 
 	public void init() throws RequiredArgumentMissingException {
-		if (this.fieldNames == null || fieldNames.size() == 0)
+		if (this.fieldNames == null) {
 			throw new RequiredArgumentMissingException("fieldName missing");
-		if (this.fieldValues == null || fieldValues.size() == 0)
+		}
+		if (this.fieldValues == null) {
 			throw new RequiredArgumentMissingException("fieldValue missing");
-
+		}
 		if (overwrite != null) {
 			try {
 				overwritePolicy = Integer.parseInt(overwrite);
