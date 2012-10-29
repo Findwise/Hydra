@@ -16,11 +16,10 @@
 package com.findwise.hydra.stage;
 
 import com.findwise.hydra.local.LocalDocument;
+import static org.junit.Assert.assertEquals;
 import org.junit.*;
-import static org.junit.Assert.*;
 
 /**
- *
  * @author thomas.gabrielsen
  */
 public class CopyStageTest {
@@ -45,11 +44,11 @@ public class CopyStageTest {
     }
 
     /**
-     * 
+     * Tests whether the input field can be successfully copied to the output
+     * field (without the use of pre-/postfixes).
      */
     @Test
     public void testCopyField() throws Exception {
-        System.out.println("processField");
         LocalDocument doc = new LocalDocument();
         doc.putContentField("test_content", "TESTING 1-2-3!");
         String fromField = "test_content";
@@ -60,11 +59,10 @@ public class CopyStageTest {
     }
     
     /**
-     * 
+     * Tests a field copy with added prefix.
      */
     @Test
     public void testCopyFieldWithPrefix() throws Exception {
-        System.out.println("processField");
         LocalDocument doc = new LocalDocument();
         doc.putContentField("test_content", "TESTING 1-2-3!");
         String fromField = "content";
@@ -76,11 +74,10 @@ public class CopyStageTest {
     }
     
     /**
-     * 
+     * Tests a field copy with added postfix.
      */
     @Test
     public void testCopyFieldWithPostfix() throws Exception {
-        System.out.println("processField");
         LocalDocument doc = new LocalDocument();
         doc.putContentField("test_content", "TESTING 1-2-3!");
         String fromField = "test_";

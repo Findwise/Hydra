@@ -1,13 +1,12 @@
 package com.findwise.hydra.stage;
 
-import static org.junit.Assert.fail;
-import org.junit.Test;
-
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.stage.ProcessException;
 import java.util.LinkedList;
 import java.util.List;
 import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import org.junit.Test;
 
 public class PrioritizedCopyStageTest {
     @Test
@@ -175,7 +174,7 @@ public class PrioritizedCopyStageTest {
         }
     }
     
-        @Test
+    @Test
     public void testNotFound() throws ProcessException {
 
         PrioritizedCopyStage s = new PrioritizedCopyStage();
@@ -195,5 +194,40 @@ public class PrioritizedCopyStageTest {
             fail();
         }
     }
-        
+    
+    /**
+     * Tests a field copy with added prefix.
+     */
+    @Test
+    public void testCopyFieldWithPrefix() throws Exception {
+        LocalDocument doc = new LocalDocument();
+        doc.putContentField("test_content", "TESTING 1-2-3!");
+        List<String> inFields = new LinkedList<String>();
+        inFields.add("content");
+        String outField = "content";
+        PrioritizedCopyStage instance = new PrioritizedCopyStage();
+        instance.setPrefix("test_");
+        instance.setInputFields(inFields);
+        instance.setOutputField(outField);
+        instance.process(doc);
+        assertEquals("TESTING 1-2-3!", doc.getContentField(outField));
+    }
+    
+    /**
+     * Tests a field copy with added postfix.
+     */
+    @Test
+    public void testCopyFieldWithPostfix() throws Exception {
+        LocalDocument doc = new LocalDocument();
+        doc.putContentField("test_content", "TESTING 1-2-3!");
+        List<String> inFields = new LinkedList<String>();
+        inFields.add("test_");
+        String outField = "content";
+        PrioritizedCopyStage instance = new PrioritizedCopyStage();
+        instance.setPostfix("content");
+        instance.setInputFields(inFields);
+        instance.setOutputField(outField);
+        instance.process(doc);
+        assertEquals("TESTING 1-2-3!", doc.getContentField(outField));
+    }
 }

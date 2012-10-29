@@ -4,13 +4,13 @@ import com.findwise.hydra.common.Logger;
 import com.findwise.hydra.local.LocalDocument;
 
 /**
- * A basic Copy-stage
+ * A basic Copy-stage.
  */
 @Stage(description = "Copies values from one field to another.")
 public class CopyStage extends AbstractMappingProcessStage {
-    @Parameter(name = "prefix", description = "Prefix condition")
+    @Parameter(name = "prefix", description = "Input field prefix")
     private String prefix = "";
-    @Parameter(name = "postfix", description = "Postfix condition")
+    @Parameter(name = "postfix", description = "Input field postfix")
     private String postfix = "";
     
     @Override

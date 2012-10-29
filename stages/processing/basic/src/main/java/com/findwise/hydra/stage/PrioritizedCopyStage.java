@@ -45,6 +45,10 @@ public class PrioritizedCopyStage extends AbstractProcessStage {
     @Parameter(name = "overWrite", description = "if set to true, will overwrite the contents of "
             + "the outputField even if it alrady has a value. Default false")
     private boolean overWrite = false;
+    @Parameter(name = "prefix", description = "Prefix condition")
+    private String prefix = "";
+    @Parameter(name = "postfix", description = "Postfix condition")
+    private String postfix = "";
 
     @Override
     public void init() throws RequiredArgumentMissingException {
@@ -61,10 +65,11 @@ public class PrioritizedCopyStage extends AbstractProcessStage {
         }
 
         for (String field : inputFields) {
-            if (hasValueAndNotEmptyString(doc, field)) {
-                if (meetsCondition(doc, field)) {
-                    Logger.debug("Found value in field: " + field);
-                    doc.putContentField(outputField, doc.getContentField(field));
+            String fromFieldStr = prefix + field + postfix;
+            if (hasValueAndNotEmptyString(doc, fromFieldStr)) {
+                if (meetsCondition(doc, fromFieldStr)) {
+                    Logger.debug("Found value in field: " + fromFieldStr);
+                    doc.putContentField(outputField, doc.getContentField(fromFieldStr));
                     return;
                 } else {
                     Logger.debug("Field" + outputField + " doesn't meet the condition of "+conditionField + "being" + conditionValue);
@@ -128,5 +133,13 @@ public class PrioritizedCopyStage extends AbstractProcessStage {
             }
             else return false;
         }
+    }
+    
+    public void setPostfix(String postfix) {
+        this.postfix = postfix;
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
     }
 }
