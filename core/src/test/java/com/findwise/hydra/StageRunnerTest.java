@@ -3,27 +3,12 @@ package com.findwise.hydra;
 import java.io.File;
 import java.util.HashMap;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.findwise.hydra.StageRunner.StageDestroyer;
 
 public class StageRunnerTest {
-
-	@Before
-	public void setUp() throws Exception {
-	}
-
-	@After
-	public void tearDown() throws Exception {
-	}
-
-	@Test
-	public void testRun() {
-		
-	}
 
 	@Test
 	public void testDestroy() throws Exception {
@@ -33,7 +18,7 @@ public class StageRunnerTest {
 		
 		StageGroup group = new StageGroup("group");
 		Stage mockedStage = Mockito.mock(Stage.class);
-		group.add(mockedStage);
+		group.addStage(mockedStage);
 		Mockito.when(mockedStage.getProperties()).thenReturn(new HashMap<String, Object>());
 		
 		StageRunner sr = new StageRunner(group, new File("test"), 0);

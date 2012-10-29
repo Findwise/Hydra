@@ -66,7 +66,11 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 		while(cursor.hasNext()) {
 			DBObject obj = cursor.next();
 			if(!obj.containsField(TYPE_KEY) || STAGE_TYPE.equals(obj.get(TYPE_KEY))) {
-				p.addStage(getStage(obj));
+				Stage s = getStage(obj);
+				if(!p.hasGroup(getGroupName(obj))) {
+					p.addGroup(new StageGroup(getGroupName(obj)));
+				}
+				p.getGroup(getGroupName(obj)).addStage(s);
 			} else {
 				addGroup(p, getGroup(obj));
 			}
@@ -76,9 +80,9 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 	}
 
 	private void addGroup(Pipeline p, StageGroup g) {
-		if(p.hasStageGroup(g.getName())) {
-			p.getStageGroup(g.getName()).setProperties(g.toPropertiesMap());
-			p.getStageGroup(g.getName()).setPropertiesModifiedDate(g.getPropertiesModifiedDate());
+		if(p.hasGroup(g.getName())) {
+			p.getGroup(g.getName()).setProperties(g.toPropertiesMap());
+			p.getGroup(g.getName()).setPropertiesModifiedDate(g.getPropertiesModifiedDate());
 		} else {
 			p.addGroup(g);
 		}
@@ -87,12 +91,8 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 	@SuppressWarnings("unchecked")
 	private StageGroup getGroup(DBObject dbo) {
 		((DBObject)dbo.get(PROPERTIES_KEY)).get(PROPERTIES_MAP_SUBKEY);
-		System.out.println("***");
-		System.out.println(dbo);
 		StageGroup sg = new StageGroup((String)dbo.get(NAME_KEY), ((DBObject)((DBObject)dbo.get(PROPERTIES_KEY)).get(PROPERTIES_MAP_SUBKEY)).toMap());
 		sg.setPropertiesModifiedDate(sg.getPropertiesModifiedDate());
-		System.out.println(sg.getName());
-		System.out.println("***");
 		return sg;
 	}
 	
@@ -101,11 +101,6 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 		Stage stage = new Stage((String)dbo.get(STAGE_KEY), getFile(dbo.get(FILE_KEY)));
 		DBObject props = (DBObject) dbo.get(PROPERTIES_KEY);
 		stage.setMode(Mode.valueOf((String)dbo.get(ACTIVE_KEY)));
-		if(dbo.containsField(GROUP_KEY)) {
-			stage.setGroupName((String)dbo.get(GROUP_KEY));
-		} else {
-			stage.setGroupName(stage.getName());
-		}
 		stage.setPropertiesModifiedDate((Date)props.get(PROPERTIES_DATE_SUBKEY));
 		DBObject properties = (DBObject) props.get(PROPERTIES_MAP_SUBKEY);
 		HashMap<String, Object> map = new HashMap<String, Object>();
@@ -115,6 +110,14 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 		stage.setProperties(map);
 		
 		return stage;
+	}
+	
+	private String getGroupName(DBObject dbo) {
+		if(dbo.containsField(GROUP_KEY)) {
+			return (String)dbo.get(GROUP_KEY);
+		} else {
+			return (String)dbo.get(STAGE_KEY);
+		}
 	}
 	
 	public DBObject getStageQuery(String stage) {

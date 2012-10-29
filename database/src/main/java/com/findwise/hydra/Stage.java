@@ -89,18 +89,29 @@ public class Stage {
 		return SerializationUtils.toJson(this);
 	}
 	
-	public boolean isEqual(Stage s) {
-		if(!s.getName().equals(name) || !s.getPropertiesModifiedDate().equals(getPropertiesModifiedDate())) {
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((databaseFile == null) ? 0 : databaseFile.hashCode());
+		result = prime * result + ((mode == null) ? 0 : mode.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((propertiesModifiedDate == null) ? 0 : propertiesModifiedDate.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Stage s = (Stage) obj;
+		if(!s.getName().equals(name) || !s.getPropertiesModifiedDate().equals(getPropertiesModifiedDate()) || !mode.equals(s.getMode())) {
 			return false;
 		}
-		return getDatabaseFile().isEqual(s.getDatabaseFile());
-	}
-	
-	public void setGroupName(String groupName) {
-		this.groupName = groupName;
-	}
-	
-	public String getGroupName() {
-		return groupName;
+		return getDatabaseFile().equals(s.getDatabaseFile());
 	}
 }

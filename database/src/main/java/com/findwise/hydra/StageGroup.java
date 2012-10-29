@@ -11,15 +11,15 @@ import java.util.Set;
  * 
  * @author joel.westberg
  */
-public class StageGroup extends HashSet<Stage>{
-	private static final long serialVersionUID = -2928443572343949817L;
-	
+public class StageGroup {	
 	public static final String JVM_PARAMETERS_KEY = "jvm_parameters";
 	public static final String RETRIES_KEY = "retries";
 	public static final String LOGGING_KEY = "logging";
 	public static final String CMDLINE_ARGS_KEY = "cmdline_args";
 	public static final String CLASSPATH_KEY = "classpath";
 	public static final String JAVA_LOCATION_KEY = "java_location";
+	
+	private Set<Stage> stages;
 	
 	private String jvmParameters;
 	private String classpath;
@@ -32,11 +32,12 @@ public class StageGroup extends HashSet<Stage>{
 	private String javaLocation;
 	
 	public StageGroup(String name) {
+		stages = new HashSet<Stage>();
 		this.name = name;
 	}
 	
 	public StageGroup(String name, Map<String, Object> propertiesMap) {
-		this.name = name;
+		this(name);
 		setProperties(propertiesMap);
 	}
 	
@@ -116,9 +117,6 @@ public class StageGroup extends HashSet<Stage>{
 	}
 
 	public Date getPropertiesModifiedDate() {
-		if(propertiesModifiedDate==null) {
-			propertiesModifiedDate = new Date();
-		}
 		return propertiesModifiedDate;
 	}
 
@@ -134,12 +132,67 @@ public class StageGroup extends HashSet<Stage>{
 	public Set<DatabaseFile> getDatabaseFiles() {
 		Map<Object, DatabaseFile> files = new HashMap<Object, DatabaseFile>();
 		
-		for(Stage s : this) {
+		for(Stage s : stages) {
 			if(!files.containsKey(s.getDatabaseFile().getId())) {
 				files.put(s.getDatabaseFile().getId(), s.getDatabaseFile());
 			}
 		}
 		
 		return new HashSet<DatabaseFile>(files.values());
+	}
+	
+	public Set<String> getStageNames() {
+		HashSet<String> names = new HashSet<String>();
+		for(Stage stage : stages) {
+			names.add(stage.getName());
+		}
+		return names;
+	}
+	
+	public boolean hasStage(String name) {
+		return getStage(name)!=null;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		
+		StageGroup g = (StageGroup) obj;
+		if(g.getStages().size() == stages.size()) {
+			for(Stage s : g.getStages()) {
+				if(!hasStage(s.getName()) || !getStage(s.getName()).equals(s)) {
+					return false;
+				}
+			}
+			if((getPropertiesModifiedDate()==null) != (g.getPropertiesModifiedDate()==null)) {
+				return false;
+			} else if (getPropertiesModifiedDate()==null && g.getPropertiesModifiedDate() == null) {
+				return true;
+			}
+			return getPropertiesModifiedDate().equals(g.getPropertiesModifiedDate());
+		}
+		return false;
+	}
+
+	public Stage getStage(String name) {
+		for(Stage stage : stages) {
+			if(stage.getName().equals(name)) {
+				return stage;
+			}
+		}
+		return null;
+	}
+
+	public Set<Stage> getStages() {
+		return stages;
+	}
+	
+	public boolean addStage(Stage stage) {
+		return stages.add(stage);
 	}
 }

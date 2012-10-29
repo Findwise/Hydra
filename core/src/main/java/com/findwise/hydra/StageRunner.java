@@ -75,9 +75,9 @@ public class StageRunner extends Thread {
     	}
     	
     	setParameters(stageGroup.toPropertiesMap());
-        if(stageGroup.size()==1) {
+        if(stageGroup.getStages().size()==1) {
         	//If there is only a single stage in this group, it's configuration takes precedent
-        	setParameters(stageGroup.iterator().next().getProperties());
+        	setParameters(stageGroup.getStages().iterator().next().getProperties());
         };
         
         prepared = true;

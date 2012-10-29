@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
 import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.PipelineWriter;
 import com.findwise.hydra.Stage;
-import com.findwise.hydra.StageGroup;
 import com.findwise.hydra.Stage.Mode;
+import com.findwise.hydra.StageGroup;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -76,7 +76,7 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 		
 		boolean active = false;
 		boolean debug = false;
-		for(Stage s : group) {
+		for(Stage s : group.getStages()) {
 			if(s.getMode() == Mode.ACTIVE) {
 				active = true;
 			} else if (s.getMode() == Mode.DEBUG) {
@@ -96,7 +96,7 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 		
 	}
 	
-	private DBObject getStageDBObject(Stage s) {
+	private DBObject getStageDBObject(Stage s, String group) {
 		BasicDBObject obj = new BasicDBObject();
 		obj.put(MongoPipelineReader.STAGE_KEY, s.getName());
 		obj.put(MongoPipelineReader.TYPE_KEY, MongoPipelineReader.STAGE_TYPE);
@@ -113,7 +113,7 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 		
 		obj.put(MongoPipelineReader.PROPERTIES_KEY, props);
 		obj.put(MongoPipelineReader.ACTIVE_KEY, s.getMode().toString());
-		obj.put(MongoPipelineReader.GROUP_KEY, s.getGroupName());
+		obj.put(MongoPipelineReader.GROUP_KEY, group);
 		if(s.getDatabaseFile()!=null) {
 			obj.put(MongoPipelineReader.FILE_KEY, s.getDatabaseFile().getId());
 		}
@@ -123,8 +123,8 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 	public void write(StageGroup stageGroup) throws IOException {
 		writeProperties(stageGroup);
 
-		for (Stage s : stageGroup) {
-			write(s);
+		for (Stage s : stageGroup.getStages()) {
+			write(s, stageGroup.getName());
 		}
 	}
 	
@@ -133,9 +133,9 @@ public class MongoPipelineWriter implements PipelineWriter<MongoType> {
 		stages.update(q, getGroupDBObject(stageGroup), true, false, concern);
 	}
 	
-	public void write(Stage stage) throws IOException  {
+	public void write(Stage stage, String group) throws IOException  {
 		DBObject q = reader.getStageQuery(stage.getName());
-		stages.update(q, getStageDBObject(stage), true, false, concern);
+		stages.update(q, getStageDBObject(stage, group), true, false, concern);
 	}
 
 	@Override

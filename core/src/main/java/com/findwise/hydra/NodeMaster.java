@@ -55,7 +55,7 @@ public final class NodeMaster extends Thread {
 	public void run() {
 		while (!isInterrupted()) {
 			Pipeline newPipeline = dbc.getPipelineReader().getPipeline();
-			if(!newPipeline.isEqual(pipeline)) {
+			if(!pipeline.equals(newPipeline)) {
 				logger.info("Pipeline has been updated");
 				try {
 					updatePipeline(newPipeline);
@@ -105,10 +105,8 @@ public final class NodeMaster extends Thread {
 		HashSet<String> list = new HashSet<String>();
 		
 		for(StageGroup group : pipeline.getStageGroups()) {
-			for(Stage stage : group) {
-				if(!newPipeline.hasStage(stage.getName()) || !stage.isEqual(newPipeline.getStage(stage.getName()))) {
-					list.add(group.getName());
-				}
+			if(!newPipeline.hasGroup(group.getName()) || !group.equals(newPipeline.getGroup(group.getName()))) {
+				list.add(group.getName());
 			}
 		}
 		
@@ -130,7 +128,7 @@ public final class NodeMaster extends Thread {
 	
 	private void addMissingGroups(Pipeline newPipeline) {
 		for(StageGroup group : newPipeline.getStageGroups()) {
-			if(!pipeline.hasStageGroup(group.getName())) {
+			if(!pipeline.hasGroup(group.getName())) {
 				pipeline.addGroup(group);
 				attachFiles(group);
 				sm.addRunner(new StageRunner(group, new File(namespace), port));
@@ -143,25 +141,6 @@ public final class NodeMaster extends Thread {
 			file.attach(dbc.getPipelineReader().getStream(file));
 		}
 	}
-	
-	/**
-	 * Should the delete fail, this will retry again after waitMs milliseconds, up to numRetries times.
-	 * Is needed on windows systems due to file locks...
-	 */
-	private void patientRemoveStage(Stage stage, long waitMs, int numRetries) {
-		for(int i=0; !pipeline.removeStage(stage) && i<numRetries; i++) {
-			try {
-				Thread.sleep(waitMs);
-			} catch (InterruptedException e) {
-				logger.error("Interrupted while waiting to remove library file", e);
-				Thread.currentThread().interrupt();
-			}
-		}
-		if(pipeline.hasStage(stage.getName())) {
-			logger.error("patientRemoveStage() : Unable to remove stage "+stage.getName()+ " from the running pipeline");
-		}
-	}
-	
 	
 	public DatabaseConnector<MongoType> getDatabaseConnector() {
 		return dbc;
