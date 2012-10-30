@@ -2,7 +2,6 @@ package com.findwise.hydra;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -17,9 +16,6 @@ public class Pipeline<T extends Stage> {
 	}
 	
 	public boolean removeStage(T s) {
-		if(!stages.containsKey(s.getName())) {
-			return false;
-		}
 		return stages.remove(s.getName())!=null;
 	}
 	
@@ -41,14 +37,7 @@ public class Pipeline<T extends Stage> {
 	}
 
 	public List<T> getStages() {
-		List<T> stageList = new ArrayList<T>();
-		
-		Iterator<T> it = stages.values().iterator();
-		while(it.hasNext()) {
-			stageList.add(it.next());
-		}
-		
-		return stageList;
+		return new ArrayList<T>(stages.values());
 	}
 	
 	protected Map<String, T> getStageMap() {
