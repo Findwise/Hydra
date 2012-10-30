@@ -120,4 +120,15 @@ public class MemoryDocument extends LocalDocument implements DatabaseDocument<Me
 	public Object getID() {
 		return getDocumentMap().get(ID_KEY);
 	}
+
+	@Override
+	public boolean removeFetchedBy(String stage) {
+		return getMetadataSubMap(FETCHED_METADATA_TAG).remove(stage) != null;
+	}
+	
+	@Override
+	public boolean removeTouchedBy(String stage) {
+		return getMetadataSubMap(TOUCHED_METADATA_TAG).remove(stage) != null;
+	}
+	
 }

@@ -11,6 +11,7 @@ import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import com.findwise.hydra.DatabaseConfiguration;
 import com.findwise.hydra.admin.ConfigurationService;
 import com.findwise.hydra.admin.documents.DocumentsService;
+import com.findwise.hydra.admin.stages.StagesService;
 import com.findwise.hydra.mongodb.MongoConnector;
 import com.findwise.hydra.mongodb.MongoType;
 
@@ -30,7 +31,7 @@ public class AppConfig {
 				}
 
 				public String getNamespace() {
-					return "pipeline";
+					return "blogs";
 				}
 
 				public String getDatabaseUser() {
@@ -72,6 +73,12 @@ public class AppConfig {
 	@Bean
 	public static DocumentsService<MongoType> documentsService() {
 		return new DocumentsService<MongoType>(connector);
+
+	}
+	
+	@Bean
+	public static StagesService<MongoType> stagesService() {
+		return new StagesService<MongoType>(connector);
 	}
 
 }
