@@ -7,8 +7,8 @@ import com.findwise.hydra.common.Logger;
 import com.findwise.hydra.local.LocalDocument;
 
 @Stage(description = "Merges lists into a single list, where each item is a concatenation of the corresponding items in the input lists, separated by a separator. " +
-		"This Stage is deprecated, as all its functionality and more is implemented in com.findwise.hydra.stage.MergeFieldsStage")
-@Deprecated
+		"This stage is incredibly specific in it's usecase, and most likely not the one you want, since it merges lists into a list of tuples, rather than merging two lists." +
+		"See MergeFieldsStage for more generic field merging capabilities.")
 public class MergeListsStage extends AbstractProcessStage {
 
 	@Parameter(name = "inFields", description = "List of fields to use")
