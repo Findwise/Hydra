@@ -52,20 +52,30 @@ public class MergeFieldsStage extends AbstractProcessStage {
 			for(String fieldRegex : fromFields) {
 				if(docFieldName.matches(fieldRegex)) {
 					Object content = doc.getContentField(docFieldName);
-					if(createList) {
-						addToOutputList(doc, content);
-					} else {
-						if(!doc.hasContentField(outputField) || doc.getContentField(outputField) == null) {
-							doc.putContentField(outputField, content);
-						} else {
-							if(additionIfNumbers && content instanceof Number && doc.getContentField(outputField) instanceof Number) {
-								doc.putContentField(outputField, addNumbers((Number)doc.getContentField(outputField), (Number) content));
-							} else {
-								doc.putContentField(outputField, doc.getContentField(outputField)+separator+content);
-							}
+					if(content instanceof Iterable<?>) {
+						for(Object o : (Iterable<?>)content) {
+							addObjectToOutput(doc, o);
 						}
+					} else {
+						addObjectToOutput(doc, content);	
 					}
 					break;
+				}
+			}
+		}
+	}
+	
+	private void addObjectToOutput(LocalDocument doc, Object content) {
+		if(createList) {
+			addToOutputList(doc, content);
+		} else {
+			if(!doc.hasContentField(outputField) || doc.getContentField(outputField) == null) {
+				doc.putContentField(outputField, content);
+			} else {
+				if(additionIfNumbers && content instanceof Number && doc.getContentField(outputField) instanceof Number) {
+					doc.putContentField(outputField, addNumbers((Number)doc.getContentField(outputField), (Number) content));
+				} else {
+					doc.putContentField(outputField, doc.getContentField(outputField)+separator+content);
 				}
 			}
 		}
