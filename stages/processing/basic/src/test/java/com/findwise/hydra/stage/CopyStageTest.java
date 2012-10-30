@@ -1,6 +1,4 @@
 /*
- * Copyright 2012 thomas.gabrielsen.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,24 +21,8 @@ import org.junit.*;
  * @author thomas.gabrielsen
  */
 public class CopyStageTest {
-    
+
     public CopyStageTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterClass
-    public static void tearDownClass() throws Exception {
-    }
-    
-    @Before
-    public void setUp() {
-    }
-    
-    @After
-    public void tearDown() {
     }
 
     /**
@@ -57,7 +39,7 @@ public class CopyStageTest {
         instance.processField(doc, fromField, toField);
         assertEquals("TESTING 1-2-3!", doc.getContentField(toField));
     }
-    
+
     /**
      * Tests a field copy with added prefix.
      */
@@ -72,7 +54,7 @@ public class CopyStageTest {
         instance.processField(doc, fromField, toField);
         assertEquals("TESTING 1-2-3!", doc.getContentField(toField));
     }
-    
+
     /**
      * Tests a field copy with added postfix.
      */

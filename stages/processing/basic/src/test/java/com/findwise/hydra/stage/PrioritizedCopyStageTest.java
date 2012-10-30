@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 import org.junit.Test;
 
 public class PrioritizedCopyStageTest {
+
     @Test
     public void testConditionalCopyFalse() throws ProcessException {
 
@@ -35,6 +36,7 @@ public class PrioritizedCopyStageTest {
             fail();
         }
     }
+
     @Test
     public void testConditionalCopyTrue() throws ProcessException {
 
@@ -61,6 +63,7 @@ public class PrioritizedCopyStageTest {
             fail();
         }
     }
+
     @Test
     public void testOverwriteEmptyString() throws ProcessException {
 
@@ -77,12 +80,12 @@ public class PrioritizedCopyStageTest {
         ld.putContentField("emptyfield", "");
         ld.putContentField("copyThis", "stuff_to_be_copied");
         ld.putContentField("copyThis2", "more_stuff_to_be_copied");
-        
+
         s.process(ld);
 
         Assert.assertEquals("stuff_to_be_copied", ld.getContentField("emptyfield"));
     }
-    
+
     @Test
     public void testCopyAlreadyExist() throws ProcessException {
 
@@ -102,7 +105,7 @@ public class PrioritizedCopyStageTest {
         if (!ld.getContentField("a").equals("a")) {
             fail();
         }
-    
+
 
     }
 
@@ -117,7 +120,7 @@ public class PrioritizedCopyStageTest {
 
         s.setInputFields(input);
         s.setOutputField("out1");
-        
+
         s.setOverWrite(true);
 
         LocalDocument ld = new LocalDocument();
@@ -127,10 +130,10 @@ public class PrioritizedCopyStageTest {
         s.process(ld);
 
         Assert.assertEquals("this_is_added", ld.getContentField("out1"));
-    
+
 
     }
-    
+
     @Test
     public void testFoundInFirst() throws ProcessException {
 
@@ -173,7 +176,7 @@ public class PrioritizedCopyStageTest {
             fail();
         }
     }
-    
+
     @Test
     public void testNotFound() throws ProcessException {
 
@@ -194,7 +197,7 @@ public class PrioritizedCopyStageTest {
             fail();
         }
     }
-    
+
     /**
      * Tests a field copy with added prefix.
      */
@@ -212,7 +215,7 @@ public class PrioritizedCopyStageTest {
         instance.process(doc);
         assertEquals("TESTING 1-2-3!", doc.getContentField(outField));
     }
-    
+
     /**
      * Tests a field copy with added postfix.
      */
