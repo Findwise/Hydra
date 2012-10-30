@@ -2,11 +2,6 @@ package com.findwise.hydra.stage;
 
 import com.findwise.hydra.common.Logger;
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.stage.AbstractProcessStage;
-import com.findwise.hydra.stage.Parameter;
-import com.findwise.hydra.stage.ProcessException;
-import com.findwise.hydra.stage.RequiredArgumentMissingException;
-import com.findwise.hydra.stage.Stage;
 import java.util.List;
 
 /**
@@ -23,8 +18,9 @@ import java.util.List;
  * weiter
  *
  * If no value at all is found the value from defaultvalue is used if set
- * 
- * If the output field already has a value, don't overwrite unless overWrite is true
+ *
+ * If the output field already has a value, don't overwrite unless overWrite is
+ * true
  *
  * @author Sture Svensson
  * @author Roar Granevang
@@ -43,8 +39,12 @@ public class PrioritizedCopyStage extends AbstractProcessStage {
     @Parameter(name = "defaultValue", description = "the default value if nothing is found")
     private String defaultValue = null;
     @Parameter(name = "overWrite", description = "if set to true, will overwrite the contents of "
-            + "the outputField even if it alrady has a value. Default false")
+    + "the outputField even if it alrady has a value. Default false")
     private boolean overWrite = false;
+    @Parameter(name = "prefix", description = "Prefix condition")
+    private String prefix = "";
+    @Parameter(name = "postfix", description = "Postfix condition")
+    private String postfix = "";
 
     @Override
     public void init() throws RequiredArgumentMissingException {
@@ -61,13 +61,14 @@ public class PrioritizedCopyStage extends AbstractProcessStage {
         }
 
         for (String field : inputFields) {
-            if (hasValueAndNotEmptyString(doc, field)) {
-                if (meetsCondition(doc, field)) {
-                    Logger.debug("Found value in field: " + field);
-                    doc.putContentField(outputField, doc.getContentField(field));
+            String fromFieldStr = prefix + field + postfix;
+            if (hasValueAndNotEmptyString(doc, fromFieldStr)) {
+                if (meetsCondition(doc, fromFieldStr)) {
+                    Logger.debug("Found value in field: " + fromFieldStr);
+                    doc.putContentField(outputField, doc.getContentField(fromFieldStr));
                     return;
                 } else {
-                    Logger.debug("Field" + outputField + " doesn't meet the condition of "+conditionField + "being" + conditionValue);
+                    Logger.debug("Field" + outputField + " doesn't meet the condition of " + conditionField + "being" + conditionValue);
                 }
 
             }
@@ -110,23 +111,28 @@ public class PrioritizedCopyStage extends AbstractProcessStage {
 
     public void setOverWrite(boolean overWrite) {
         this.overWrite = overWrite;
-    }        
-    
-    
+    }
 
     private boolean meetsCondition(LocalDocument doc, String field) {
-        if (conditionField == null && conditionValue == null){
+        if (conditionField == null && conditionValue == null) {
             return true;
-        }
-        else if (doc.getContentField(conditionField) == null){
-            Logger.debug("conditionfield "+conditionField +" is empty....skipping");            
+        } else if (doc.getContentField(conditionField) == null) {
+            Logger.debug("conditionfield " + conditionField + " is empty....skipping");
             return true;
-        }
-        else{
-            if (doc.getContentField(conditionField).equals(conditionValue)){
+        } else {
+            if (doc.getContentField(conditionField).equals(conditionValue)) {
                 return true;
+            } else {
+                return false;
             }
-            else return false;
         }
+    }
+
+    public void setPostfix(String postfix) {
+        this.postfix = postfix;
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
     }
 }
