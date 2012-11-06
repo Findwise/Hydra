@@ -29,6 +29,8 @@ public interface DocumentReader<T extends DatabaseType> {
 	TailableIterator<T> getInactiveIterator(DatabaseQuery<T> query);
 	
 	List<DatabaseDocument<T>> getDocuments(DatabaseQuery<T> q, int limit);
+	List<DatabaseDocument<T>> getDocuments(DatabaseQuery<T> q, int limit, int skip);
+	long getNumberOfDocuments(DatabaseQuery<T> q);
 
 	DocumentFile getDocumentFile(DatabaseDocument<T> d, String fileName);
 	

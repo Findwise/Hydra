@@ -3,6 +3,6 @@ target/
 .classpath
 .project
 examples/src/main/resources/*.jar
-
+.springBeans
 bin/
 nbactions.xml
