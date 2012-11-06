@@ -42,12 +42,10 @@ public class SolrOutputStage extends AbstractOutputStage {
 
 		try {
 			
-		if (action == Action.ADD) {
+		if (action == Action.ADD || action == Action.UPDATE) {
 			add(doc);
 		} else if (action == Action.DELETE) {
 			delete(doc);
-		} else if (action == Action.UPDATE) {
-			failDocument(doc, new RequiredArgumentMissingException("action UPDATE is not supported. Failing document"));
 		} else{
 			failDocument(doc, new RequiredArgumentMissingException("action not set in document. This document would never be sent to solr"));
 		}
