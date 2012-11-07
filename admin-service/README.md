@@ -262,9 +262,9 @@ Available endpoints
 		
 		- limit: The maximum number of documents to update (*default: 1*)
 	
-	Request content: A json configuration describing the change. Format: {"deletes":{fetched:["staticField"]},touched:["staticField"]}
+	Request content: A json configuration describing the change. Format: {"deletes":{fetched:["staticField"],touched:["staticField"]}}
 	
-	Sample resopnse:
+	Sample response:
 	
 	```
 	{
