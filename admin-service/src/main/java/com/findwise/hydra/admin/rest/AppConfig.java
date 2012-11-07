@@ -10,60 +10,75 @@ import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
 import com.findwise.hydra.DatabaseConfiguration;
 import com.findwise.hydra.admin.ConfigurationService;
+import com.findwise.hydra.admin.documents.DocumentsService;
+import com.findwise.hydra.admin.stages.StagesService;
 import com.findwise.hydra.mongodb.MongoConnector;
 import com.findwise.hydra.mongodb.MongoType;
 
 @Configuration
 @ComponentScan(basePackages = "com.findwise.hydra.admin.rest")
 public class AppConfig {
-	
-	@Bean(name="multipartResolver")
+
+	private static MongoConnector connector = new MongoConnector(
+			new DatabaseConfiguration() {
+
+				public int getOldMaxSize() {
+					return 100;
+				}
+
+				public int getOldMaxCount() {
+					return 10000;
+				}
+
+				public String getNamespace() {
+					return "blogs";
+				}
+
+				public String getDatabaseUser() {
+					return "admin";
+				}
+
+				public String getDatabaseUrl() {
+					return "localhost";
+				}
+
+				public String getDatabasePassword() {
+					return "changeme";
+				}
+			});
+
+	@Bean(name = "multipartResolver")
 	public static CommonsMultipartResolver multipartResolver() {
 		CommonsMultipartResolver cmr = new CommonsMultipartResolver();
-		
-		cmr.setMaxUploadSize(1024*1024*1024); //1 Gigabyte...
-		
+
+		cmr.setMaxUploadSize(1024 * 1024 * 1024); // 1 Gigabyte...
+
 		return cmr;
 	}
-	
-	
+
 	@Bean
 	public static PropertyPlaceholderConfigurer properties() {
 		PropertyPlaceholderConfigurer ppc = new PropertyPlaceholderConfigurer();
-		final Resource[] resources = new ClassPathResource[] { };
+		final Resource[] resources = new ClassPathResource[] {};
 		ppc.setLocations(resources);
 		ppc.setIgnoreUnresolvablePlaceholders(true);
 		return ppc;
 	}
 
 	@Bean
-	public static ConfigurationService<MongoType> service() {
-		return new ConfigurationService<MongoType>(new MongoConnector(
-				new DatabaseConfiguration() {
-					public int getOldMaxSize() {
-						return 100;
-					}
+	public static ConfigurationService<MongoType> configurationService() {
+		return new ConfigurationService<MongoType>(connector);
+	}
 
-					public int getOldMaxCount() {
-						return 10000;
-					}
+	@Bean
+	public static DocumentsService<MongoType> documentsService() {
+		return new DocumentsService<MongoType>(connector);
 
-					public String getNamespace() {
-						return "pipeline";
-					}
-
-					public String getDatabaseUser() {
-						return "admin";
-					}
-
-					public String getDatabaseUrl() {
-						return "localhost";
-					}
-
-					public String getDatabasePassword() {
-						return "changeme";
-					}
-				}));
+	}
+	
+	@Bean
+	public static StagesService<MongoType> stagesService() {
+		return new StagesService<MongoType>(connector);
 	}
 
 }

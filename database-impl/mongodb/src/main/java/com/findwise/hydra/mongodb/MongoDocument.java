@@ -179,6 +179,12 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 		return getMetadata().toMap();
 	}
 
+	
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> getContentsMap() {
+		return getContents().toMap();
+	}
+	
 	@Override
 	public final Object putMetadataField(String key, Object v) {
 		touchedMetadata.add(key);
@@ -395,5 +401,19 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	@Override
 	public boolean fetchedBy(String stage) {
 		return getMetadataSubMap(FETCHED_METADATA_TAG).containsKey(stage);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public boolean removeFetchedBy(String stage) {
+		touchedMetadata.add(FETCHED_METADATA_TAG);
+		return ((Map<String,Object>)getMetadataMap().get(FETCHED_METADATA_TAG)).remove(stage)!=null;
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public boolean removeTouchedBy(String stage) {
+		touchedMetadata.add(TOUCHED_METADATA_TAG);
+		return ((Map<String,Object>)getMetadataMap().get(TOUCHED_METADATA_TAG)).remove(stage)!=null;
 	}
 }

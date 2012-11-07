@@ -89,19 +89,42 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<DatabaseDocument<MemoryType>> getDocuments(
-			DatabaseQuery<MemoryType> q, int limit) {
+			DatabaseQuery<MemoryType> q, int limit, int skip) {
 		ArrayList<MemoryDocument> list = new ArrayList<MemoryDocument>();
-		
-		for (MemoryDocument d : set) {
-			if (list.size() >= limit) {
-				break;
-			}
 
-			if(d.matches((MemoryQuery) q)) {
-				list.add(d);
+		int matching = 0;
+		for (MemoryDocument doc : set) {
+			if (list.size() >= limit)
+				break;
+			
+			if (doc.matches((MemoryQuery) q)) {
+				if (matching >= skip) {
+					list.add(doc);
+				}
+				matching++;
 			}
 		}
+
 		return (List<DatabaseDocument<MemoryType>>) (Object) list;
+	}
+	
+	@Override
+	public List<DatabaseDocument<MemoryType>> getDocuments(
+			DatabaseQuery<MemoryType> q, int limit) {
+		return getDocuments(q, limit, 0);
+	}
+
+	@Override
+	public long getNumberOfDocuments(DatabaseQuery<MemoryType> q) {
+		long matching = 0;
+
+		for (MemoryDocument doc : set) {
+			if (doc.matches((MemoryQuery) q)) {
+				matching++;
+			}
+		}
+
+		return matching;
 	}
 
 	@Override
@@ -312,4 +335,5 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	public TailableIterator<MemoryType> getInactiveIterator(DatabaseQuery<MemoryType> query) {
 		return new MemoryTailableIterator(inactive, b, new MemoryQuery());
 	}
+
 }

@@ -12,12 +12,14 @@ import com.google.gson.JsonParseException;
 
 public class LocalQuery implements Query, JsonDeserializer {
 	private Map<String, Object> equals;
+	private Map<String, Object> notEquals;
 	private Map<String, Boolean> exists;
 	private Map<String, Boolean> touched;
 	private Action action = null;
 	
 	public LocalQuery() {
 		equals = new HashMap<String, Object>();
+		notEquals = new HashMap<String, Object>();
 		exists = new HashMap<String, Boolean>();
 		touched = new HashMap<String, Boolean>();
 	}
@@ -40,6 +42,22 @@ public class LocalQuery implements Query, JsonDeserializer {
 		return equals;
 	}
 	
+	public Map<String, Object> getEquals() {
+		return equals;
+	}
+
+	public Map<String, Object> getContentNotEquals() {
+		return notEquals;
+	}
+	
+	public Map<String, Object> getNotEquals() {
+		return notEquals;
+	}
+
+	public Map<String, Boolean> getExists() {
+		return exists;
+	}
+	
 	public Action getAction() {
 		return action;
 	}
@@ -57,6 +75,11 @@ public class LocalQuery implements Query, JsonDeserializer {
 	@Override
 	public void requireContentFieldEquals(String fieldName, Object o) {
 		getContentsEquals().put(fieldName, o);
+	}
+	
+	@Override
+	public void requireContentFieldNotEquals(String fieldName, Object o) {
+		getContentNotEquals().put(fieldName, o);
 	}
 
 	@Override
@@ -77,6 +100,7 @@ public class LocalQuery implements Query, JsonDeserializer {
 	public String toJson() {
 		Map<String, Object> x = new HashMap<String, Object>();
 		x.put("equals", equals);
+		x.put("notEquals", notEquals);
 		x.put("exists", exists);
 		x.put("touched", touched);
 		
@@ -94,6 +118,9 @@ public class LocalQuery implements Query, JsonDeserializer {
 			Map<String, Object> queryObject = (Map<String, Object>) SerializationUtils.fromJson(json);
 			if(queryObject.containsKey("equals")) {
 				equals = (Map<String, Object>) queryObject.get("equals");
+			}
+			if(queryObject.containsKey("notEquals")) {
+				notEquals = (Map<String, Object>) queryObject.get("notEquals");
 			}
 			if(queryObject.containsKey("exists")) {
 				exists = (Map<String, Boolean>) queryObject.get("exists");
@@ -115,4 +142,6 @@ public class LocalQuery implements Query, JsonDeserializer {
 	public String toString() {
 		return toJson();
 	}
+
+
 }
