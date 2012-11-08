@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -15,6 +16,7 @@ import com.findwise.hydra.DatabaseFile;
 import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.Stage;
+import com.findwise.hydra.StageGroup;
 
 public class ConfigurationService<T extends DatabaseType> {
 	private PipelineScanner<T> pipelineScanner;
@@ -101,7 +103,7 @@ public class ConfigurationService<T extends DatabaseType> {
 		map.put("documents", documentMap);
 
 		Map<String, Object> stageMap = new HashMap<String, Object>();
-		map.put("stages", stageMap);
+		map.put("groups", stageMap);
 
 		stageMap.put("active", getStageConfigMap(connector.getPipelineReader()
 				.getPipeline()));
@@ -114,16 +116,40 @@ public class ConfigurationService<T extends DatabaseType> {
 
 	private Map<String, Object> getStageConfigMap(Pipeline pipeline) {
 		Map<String, Object> map = new HashMap<String, Object>();
-		for (Stage s : pipeline.getStages()) {
-			HashMap<String, Object> stage = new HashMap<String, Object>();
-			stage.put("properties", s.getProperties());
+		for (StageGroup group : pipeline.getStageGroups()) {
+			HashMap<String, Object> groupmap = new HashMap<String, Object>();
+			HashMap<String, Object> stages = new HashMap<String, Object>();
+			for(Stage s : group.getStages()) {
+				HashMap<String, Object> stage = new HashMap<String, Object>();
+				stage.put("properties", s.getProperties());
 
-			HashMap<String, Object> file = new HashMap<String, Object>();
-			file.put("id", s.getDatabaseFile().getId());
-			file.put("name", s.getDatabaseFile().getFilename());
-			stage.put("file", file);
-			map.put(s.getName(), stage);
+				HashMap<String, Object> file = new HashMap<String, Object>();
+				file.put("id", s.getDatabaseFile().getId());
+				file.put("name", s.getDatabaseFile().getFilename());
+				stage.put("file", file);
+				stages.put(s.getName(), stage);
+			}
+			groupmap.put("properties", getMapWithoutDefaults(group));
+			groupmap.put("stages", stages);
+			map.put(group.getName(), groupmap);
 		}
 		return map;
+	}
+
+	private Map<String, Object> getMapWithoutDefaults(StageGroup group) {
+		Map<String, Object> propertiesMap = group.toPropertiesMap();
+		Iterator<Map.Entry<String, Object>> it = propertiesMap.entrySet().iterator();
+		while(it.hasNext()) {
+			if(it.next().getValue()==null) {
+				it.remove();
+			}
+		}
+		if(propertiesMap.get(StageGroup.RETRIES_KEY).equals(-1)) {
+			propertiesMap.remove(StageGroup.RETRIES_KEY);
+		}
+		if(propertiesMap.get(StageGroup.LOGGING_KEY).equals(false)) {
+			propertiesMap.remove(StageGroup.LOGGING_KEY);
+		}
+		return propertiesMap;
 	}
 }
