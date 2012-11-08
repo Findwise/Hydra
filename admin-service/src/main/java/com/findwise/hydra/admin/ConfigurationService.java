@@ -144,10 +144,10 @@ public class ConfigurationService<T extends DatabaseType> {
 				it.remove();
 			}
 		}
-		if(propertiesMap.get(StageGroup.RETRIES_KEY).equals(-1)) {
+		if(group.getRetries() == -1) {
 			propertiesMap.remove(StageGroup.RETRIES_KEY);
 		}
-		if(propertiesMap.get(StageGroup.LOGGING_KEY).equals(false)) {
+		if(!group.isLogging()) {
 			propertiesMap.remove(StageGroup.LOGGING_KEY);
 		}
 		return propertiesMap;
