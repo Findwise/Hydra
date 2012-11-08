@@ -142,4 +142,6 @@ public class LocalQuery implements Query, JsonDeserializer {
 	public String toString() {
 		return toJson();
 	}
+
+
 }
