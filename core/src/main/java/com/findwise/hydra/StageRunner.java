@@ -39,6 +39,7 @@ public class StageRunner extends Thread {
     private String java = "java";
     private boolean hasQueried = false;
     private File targetDirectory;
+    private File baseDirectory;
     
     private boolean wasKilled = false;;
 
@@ -52,6 +53,7 @@ public class StageRunner extends Thread {
 
     public StageRunner(StageGroup stageGroup, File baseDirectory, int pipelinePort) {
         this.stageGroup = stageGroup;
+        this.baseDirectory = baseDirectory;
         this.targetDirectory = new File(baseDirectory, stageGroup.getName());
         this.pipelinePort = pipelinePort;
         timesStarted = 0;
@@ -64,7 +66,9 @@ public class StageRunner extends Thread {
     public void prepare() throws IOException {
         files = new ArrayList<File>();
         
-    	if(!targetDirectory.isDirectory() && !targetDirectory.mkdir()) {
+        
+    	if((!baseDirectory.isDirectory() && !baseDirectory.mkdir()) || 
+    			(!targetDirectory.isDirectory() && !targetDirectory.mkdir())) {
     		throw new IOException("Unable to write files, target ("+targetDirectory.getAbsolutePath()+") is not a directory");
     	}
     	
