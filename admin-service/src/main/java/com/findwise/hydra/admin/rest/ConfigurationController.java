@@ -78,13 +78,17 @@ public class ConfigurationController {
 	}
 	
 	@ResponseStatus(HttpStatus.ACCEPTED)
-	@RequestMapping(method = RequestMethod.POST, value = "/libraries/{id}/stages/{stageName}")
+	@RequestMapping(method = RequestMethod.POST, value = {
+			"/libraries/{id}/stages/{stageName}", 
+			"/libraries/{id}/stages/{groupName}/{stageName}"
+		})
 	@ResponseBody
 	public Map<String, Object> addStage(
 			@PathVariable(value = "id") String libraryId,
+			@PathVariable(value = "groupName") String groupName,
 			@PathVariable(value = "stageName") String stageName,
 			@RequestBody String jsonConfig) throws JsonException, IOException {
-		return stagesService.addStage(libraryId, stageName, jsonConfig);
+		return stagesService.addStage(libraryId, groupName, stageName, jsonConfig);
 	}
 
 
