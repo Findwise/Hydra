@@ -4,11 +4,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.findwise.hydra.DatabaseQuery;
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.SerializationUtils;
 import com.findwise.hydra.common.Document.Action;
 import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.local.LocalQuery;
+import com.findwise.hydra.common.SerializationUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.mongodb.DBObject;
@@ -180,36 +178,5 @@ public class MongoQuery implements DatabaseQuery<MongoType> {
 	public final void requireAction(Action action) {
 		qb = qb.put(MongoDocument.ACTION_KEY).is(action.toString());
 	}
-
-	private void fromLocalQuery(LocalQuery local) {
-		for(String field : local.getContentsExists().keySet()) {
-			if(local.getContentsExists().get(field)) {
-				requireContentFieldExists(field);
-			}
-			else {
-				requireContentFieldNotExists(field);
-			}
-		}
-		for(Map.Entry<String, Object> entry : local.getContentsEquals().entrySet()) {
-			requireContentFieldEquals(entry.getKey(), entry.getValue());
-		}
-		for(String field : local.getTouched().keySet()) {
-			if(local.getTouched().get(field)) {
-				requireTouchedByStage(field);
-			}
-			else {
-				requireNotTouchedByStage(field);
-			}
-		}
-		if(local.getAction()!=null) {
-			requireAction(local.getAction());
-		}
-	}
-	
-	public boolean matches(Document d) {
-		
-		return true;
-	}
-
 
 }
