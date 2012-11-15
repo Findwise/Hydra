@@ -181,7 +181,8 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 
 	
 	@SuppressWarnings("unchecked")
-	public Map<String, Object> getContentsMap() {
+	@Override
+	public Map<String, Object> getContentMap() {
 		return getContents().toMap();
 	}
 	
@@ -242,8 +243,8 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 			putMetadataField(e.getKey(), e.getValue());
 		}
 		
-		for(String s : d.getContentFields()) {
-			putContentField(s, d.getContentField(s));
+		for(Map.Entry<String, Object> e : d.getContentMap().entrySet()) {
+			putContentField(e.getKey(), e.getValue());
 		}
 	}
 

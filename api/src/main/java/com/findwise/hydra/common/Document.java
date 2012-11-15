@@ -42,6 +42,8 @@ public interface Document extends JsonDeserializer, JsonSerializer {
 	Object getContentField(String fieldName);
 
 	Map<String, Object> getMetadataMap();
+	
+	Map<String, Object> getContentMap();
 
 	void addError(String from, Throwable t);
 

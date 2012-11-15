@@ -88,7 +88,7 @@ public class LocalDocument implements Document {
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected Map<String, Object> getContentMap() {
+	public Map<String, Object> getContentMap() {
 		return ((Map<String, Object>)documentMap.get(CONTENTS_KEY));
 	}
 	
