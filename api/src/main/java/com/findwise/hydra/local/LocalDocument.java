@@ -87,6 +87,11 @@ public class LocalDocument implements Document {
 		return documentMap.get(ID_KEY);
 	}
 	
+	/**
+	 * Returns the backing map of this document. Beware that any changes 
+	 * to this structure directly, will not be saved properly! If you wish
+	 * to modify, use removeContentField() and putContentField() instead.
+	 */
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> getContentMap() {
 		return ((Map<String, Object>)documentMap.get(CONTENTS_KEY));
