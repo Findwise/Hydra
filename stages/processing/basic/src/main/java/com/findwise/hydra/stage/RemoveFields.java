@@ -17,7 +17,7 @@ public class RemoveFields extends AbstractProcessStage {
     @Override
     public void init() throws RequiredArgumentMissingException {
         if (removeFields == null){
-            throw new RequiredArgumentMissingException("You need to specify what fields to remove");
+            throw new RequiredArgumentMissingException("Required parameter 'removeFields' is missing from configuration");
         }
     }
 
