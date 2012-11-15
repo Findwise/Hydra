@@ -55,6 +55,7 @@ public interface Document extends JsonDeserializer, JsonSerializer {
 	
 	/**
 	 * Causes all subsequent requests to hasContentField for this field to return <em>false</em>.
+	 * Subsequent calls to getContentFields() should also exclude this field.
 	 */
 	Object removeContentField(String key);
 
