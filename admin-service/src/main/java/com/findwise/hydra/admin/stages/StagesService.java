@@ -93,20 +93,27 @@ public class StagesService<T extends DatabaseType> {
 		return connector.getPipelineReader().getPipeline().getStage(stageName);
 	}
 
-	public Map<String, Object> deleteStage(String stageName) {
+	public Map<String, Object> deleteStage(String stageName) throws IOException {
+		return deleteStage(stageName, null);
+	}
+	
+	public Map<String, Object> deleteStage(String stageName, String groupName) throws IOException {
 		Stage stageToDelete = getStageInfo(stageName);
 		Map<String, Object> ret = new HashMap<String, Object>();
 		if (stageToDelete == null) {
 			ret.put("stageStatus", "Could not find stage " + stageName);
 		} else {
-			Pipeline<Stage> pipeline = connector.getPipelineReader().getPipeline();
-			pipeline.removeStage(stageToDelete);
-			try {
-				connector.getPipelineWriter().write(pipeline);
-				ret.put("stageStatus", "Deleted stage " + stageName);
-			} catch (IOException ex) {
-				ret.put("stageStatus", "Failed to delete stage " + stageName);
+			Pipeline pipeline = connector.getPipelineReader().getPipeline();
+			if(groupName == null) {
+				groupName = stageToDelete.getName();
 			}
+			if(!pipeline.hasGroup(groupName)) {
+				pipeline.addGroup(new StageGroup(groupName));
+			}
+			pipeline.getGroup(groupName).removeStage(stageName);
+			connector.getPipelineWriter().write(pipeline);
+		
+			ret.put("stageStatus", "Deleted stage " + stageName);
 		}
 		return ret;
 	}

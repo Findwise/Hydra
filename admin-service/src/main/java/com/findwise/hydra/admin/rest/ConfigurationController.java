@@ -103,7 +103,7 @@ public class ConfigurationController {
 	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/stages/{stageName}/delete")
 	public Map<String, Object> deleteStage(
-			@PathVariable(value = "stageName") String stageName){
+			@PathVariable(value = "stageName") String stageName) throws IOException{
 		return stagesService.deleteStage(stageName);
 	}
 
