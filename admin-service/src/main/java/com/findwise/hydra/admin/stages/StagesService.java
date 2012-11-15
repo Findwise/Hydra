@@ -14,6 +14,8 @@ import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.Stage;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.common.SerializationUtils;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class StagesService<T extends DatabaseType> {
 
@@ -26,7 +28,7 @@ public class StagesService<T extends DatabaseType> {
 	public DatabaseConnector<T> getConnector() {
 		return connector;
 	}
-	
+
 	public Map<String, List<Stage>> getStages() {
 		Map<String, List<Stage>> ret = new HashMap<String, List<Stage>>();
 		ret.put("stages", connector.getPipelineReader().getPipeline().getStages());
@@ -67,4 +69,21 @@ public class StagesService<T extends DatabaseType> {
 		return connector.getPipelineReader().getPipeline().getStage(stageName);
 	}
 
+	public Map<String, Object> deleteStage(String deletes) {
+		Stage stageToDelete = getStageInfo(deletes);
+		Map<String, Object> ret = new HashMap<String, Object>();
+		if (stageToDelete == null) {
+			ret.put("stageStatus", "Could not find stage " + deletes);
+		} else {
+			Pipeline<Stage> pipeline = connector.getPipelineReader().getPipeline();
+			pipeline.removeStage(stageToDelete);
+			try {
+				connector.getPipelineWriter().write(pipeline);
+				ret.put("stageStatus", "Deleted stage " + deletes);
+			} catch (IOException ex) {
+				ret.put("stageStatus", "Failed to delete stage " + deletes);
+			}
+		}
+		return ret;
+	}
 }

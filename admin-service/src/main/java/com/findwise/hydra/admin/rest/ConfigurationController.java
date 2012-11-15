@@ -23,18 +23,16 @@ import com.findwise.hydra.admin.documents.DocumentsService;
 import com.findwise.hydra.admin.stages.StagesService;
 import com.findwise.hydra.common.JsonException;
 
-
 @Controller("/rest")
 public class ConfigurationController {
-	@Autowired
-	private ConfigurationService<?> service;
-	
-	@Autowired
-	private DocumentsService<?> documentService;
 
 	@Autowired
+	private ConfigurationService<?> service;
+	@Autowired
+	private DocumentsService<?> documentService;
+	@Autowired
 	private StagesService<?> stagesService;
-	
+
 	public DocumentsService<?> getDocumentService() {
 		return documentService;
 	}
@@ -42,6 +40,7 @@ public class ConfigurationController {
 	public void setDocumentService(DocumentsService<?> documentService) {
 		this.documentService = documentService;
 	}
+
 	public ConfigurationService<?> getService() {
 		return service;
 	}
@@ -50,33 +49,32 @@ public class ConfigurationController {
 		this.service = service;
 	}
 
-	
 	@ResponseBody
-	@RequestMapping(method=RequestMethod.GET, value="") 
+	@RequestMapping(method = RequestMethod.GET, value = "")
 	public Map<String, Object> getStats() {
 		return service.getStats();
 	}
-	
+
 	@ResponseBody
-	@RequestMapping(method=RequestMethod.GET, value="/libraries")
+	@RequestMapping(method = RequestMethod.GET, value = "/libraries")
 	public Map<String, Object> getLibraries() {
 		return service.getLibraries();
 	}
-	
+
 	@ResponseBody
-	@RequestMapping(method=RequestMethod.GET, value="/libraries/{id}")
+	@RequestMapping(method = RequestMethod.GET, value = "/libraries/{id}")
 	public Map<String, Object> getLibrary(@PathVariable String id) {
 		return service.getLibrary(id);
 	}
-	
+
 	@ResponseStatus(HttpStatus.ACCEPTED)
-	@RequestMapping(method=RequestMethod.POST, value="/libraries/{id}")
+	@RequestMapping(method = RequestMethod.POST, value = "/libraries/{id}")
 	@ResponseBody
 	public Map<String, Object> addLibrary(@PathVariable String id, @RequestParam MultipartFile file) throws IOException {
 		service.addLibrary(id, file.getOriginalFilename(), file.getInputStream());
 		return getLibrary(id);
 	}
-	
+
 	@ResponseStatus(HttpStatus.ACCEPTED)
 	@RequestMapping(method = RequestMethod.POST, value = "/libraries/{id}/stages/{stageName}")
 	@ResponseBody
@@ -87,13 +85,19 @@ public class ConfigurationController {
 		return stagesService.addStage(libraryId, stageName, jsonConfig);
 	}
 
-
 	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/stages")
-	public Map<String,List<Stage>> getStages() {
+	public Map<String, List<Stage>> getStages() {
 		return stagesService.getStages();
 	}
-	
+
+	@ResponseBody
+	@RequestMapping(method = RequestMethod.POST, value = "/stages/delete")
+	public Map<String, Object> deleteStage(
+			@RequestBody String deletes) {
+		return stagesService.deleteStage(deletes);
+	}
+
 	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/stages/{stageName}")
 	public Stage getStageInfo(@PathVariable(value = "stageName") String stageName) {
@@ -103,7 +107,7 @@ public class ConfigurationController {
 	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/documents/count")
 	public Map<String, Object> getDocumentCount(
-			@RequestParam(required = false, defaultValue="{}", value = "q") String jsonQuery) {
+			@RequestParam(required = false, defaultValue = "{}", value = "q") String jsonQuery) {
 		return documentService.getNumberOfDocuments(jsonQuery);
 	}
 
@@ -124,5 +128,4 @@ public class ConfigurationController {
 			@RequestBody String changes) {
 		return documentService.updateDocuments(jsonQuery, limit, changes);
 	}
-	
 }
