@@ -5,13 +5,13 @@ import com.findwise.hydra.local.LocalDocument;
 import java.util.List;
 
 /**
- * A stage that sets the desired fields to null (removing them)
- * @author Roar Granevang
+ * A stage that deletes fields matching a list of regular expressions.
+ * @author Roar Granevang & Joel Westberg
  */
 @Stage(description = "Removes fields. (Sets them to null)")
 public class RemoveFields extends AbstractProcessStage {
 
-    @Parameter(name = "removeFields", description = "What fields to remove from a hydra document")
+    @Parameter(name = "removeFields", description = "List of regular expressions defining what fields to remove from the document")
     private List<String> removeFields;
 
     @Override
@@ -22,14 +22,15 @@ public class RemoveFields extends AbstractProcessStage {
     }
 
     @Override
-    public void process(LocalDocument doc)
-            throws ProcessException {
-        for (String field : removeFields) {
-            if (doc.getContentField(field) != null){
-                Logger.debug("removing field "+field);
-                doc.putContentField(field, null);                                        
+    public void process(LocalDocument doc) throws ProcessException {
+    	for(String field : doc.getContentFields()) {
+    		for (String regex : removeFields) {
+    			if(field.matches(regex)) {
+    				Logger.debug("Removing field '"+field+"' matching regular expression '"+regex+"'");
+    				doc.removeContentField(field);
+    			}
             }
-        }
+    	}
     }
 
     public void setRemoveFields(List<String> removeFields) {
