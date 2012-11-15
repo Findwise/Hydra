@@ -25,7 +25,7 @@ public class RemoveFieldsTest {
         
         assertNotNull("Should not have been removed yet", doc.getContentField("title"));
         
-        RemoveFields stage = new RemoveFields();
+        RemoveFieldsStage stage = new RemoveFieldsStage();
         stage.setRemoveFields(removeFields);
         stage.init();
         stage.process(doc);

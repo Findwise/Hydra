@@ -9,7 +9,7 @@ import java.util.List;
  * @author Roar Granevang & Joel Westberg
  */
 @Stage(description = "Removes fields specified by regular expressions.")
-public class RemoveFields extends AbstractProcessStage {
+public class RemoveFieldsStage extends AbstractProcessStage {
 
     @Parameter(name = "removeFields", description = "List of regular expressions defining what fields to remove from the document")
     private List<String> removeFields;
