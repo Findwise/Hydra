@@ -146,7 +146,7 @@ public interface DocumentWriter<T extends DatabaseType> {
 
 	/**
 	 * Updates the document in the database. If any field in document is 
-	 * <pre>null</null>, this field will be ignored and removed. 
+	 * <pre>null</pre>, this field will be ignored and removed. 
 	 * 
 	 * @return false if update fails
 	 */
