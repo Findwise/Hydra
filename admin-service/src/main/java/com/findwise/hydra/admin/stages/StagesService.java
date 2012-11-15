@@ -14,8 +14,6 @@ import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.Stage;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.common.SerializationUtils;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class StagesService<T extends DatabaseType> {
 

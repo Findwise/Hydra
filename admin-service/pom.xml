@@ -9,7 +9,6 @@
 	<properties>
 		<spring.version>3.1.1.RELEASE</spring.version>
 		<cglib.version>2.2.2</cglib.version>
-	 <netbeans.hint.deploy.server>Tomcat</netbeans.hint.deploy.server>
 	</properties>
 
 	<build>
