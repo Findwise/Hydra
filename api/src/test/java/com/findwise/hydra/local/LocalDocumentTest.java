@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import junit.framework.Assert;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,6 +69,26 @@ public class LocalDocumentTest {
 		if(!test.getContentField("x").equals(3)) {
 			fail("Incorrect value in content field");
 		}
+	}
+	
+	@Test
+	public void testRemoveContentField() {
+		test.removeContentField("name");
+		Assert.assertFalse(test.hasContentField("name"));
+		Assert.assertFalse(test.getContentFields().contains("name"));
+		
+		Assert.assertTrue(test.getTouchedContent().contains("name"));
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testRemovedTransfer() throws Exception {
+		test.removeContentField("name");
+		
+		Map<String, Object> map = (Map<String, Object>) SerializationUtils.toObject(test.toJson());
+		Map<String, Object> content = (Map<String, Object>) map.get(LocalDocument.CONTENTS_KEY);
+		Assert.assertTrue(content.containsKey("name"));
+		Assert.assertNull(content.get("name"));
 	}
 
 	@Test

@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -67,10 +68,9 @@ public class LocalDocument implements Document {
 		return (touchedContent.size() + touchedMetadata.size()) == 0 && !touchedAction;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public boolean hasContentField(String fieldName) {
-		return ((Map<String, Object>)documentMap.get(CONTENTS_KEY)).containsKey(fieldName);
+		return getContentMap().containsKey(fieldName) && getContentMap().get(fieldName) != null;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -88,7 +88,7 @@ public class LocalDocument implements Document {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private Map<String, Object> getContentMap() {
+	protected Map<String, Object> getContentMap() {
 		return ((Map<String, Object>)documentMap.get(CONTENTS_KEY));
 	}
 	
@@ -125,7 +125,14 @@ public class LocalDocument implements Document {
 
 	@Override
 	public Set<String> getContentFields() {
-		return getContentMap().keySet();
+		HashSet<String> set = new HashSet<String>(getContentMap().keySet());
+		Iterator<String> it = set.iterator();
+		while(it.hasNext()) {
+			if(!hasContentField(it.next())) {
+				it.remove();
+			}
+		}
+		return set;
 	}
 	
 	@Override
@@ -352,5 +359,10 @@ public class LocalDocument implements Document {
 
 	public boolean isTouchedAction() {
 		return touchedAction;
+	}
+
+	@Override
+	public Object removeContentField(String key) {
+		return putContentField(key, null);
 	}
 }

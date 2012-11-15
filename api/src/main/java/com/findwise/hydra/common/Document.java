@@ -52,6 +52,11 @@ public interface Document extends JsonDeserializer, JsonSerializer {
 	void putAll(Document d);
 
 	boolean isEqual(Document d);
+	
+	/**
+	 * Causes all subsequent requests to hasContentField for this field to return <em>false</em>.
+	 */
+	Object removeContentField(String key);
 
 	void clear();
 
