@@ -196,6 +196,16 @@ public class StageGroup {
 		}
 		return null;
 	}
+	
+	public Stage removeStage(String stageName) {
+		for(Stage stage : stages) {
+			if(stage.getName().equals(stageName)) {
+				stages.remove(stage);
+				return stage;
+			}
+		}
+		return null;
+	}
 
 	public Set<Stage> getStages() {
 		return stages;
