@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import junit.framework.Assert;
+
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -229,6 +231,32 @@ public class MemoryDocumentIOTest {
 		if(old.getStatus()!=Status.DISCARDED) {
 			fail("No discarded flag on the document");
 		}
+	}
+	
+	@Test
+	public void testNullFields() {
+		io.deleteAll();
+		MemoryDocument md = new MemoryDocument();
+		md.putContentField("field", "value");
+		md.putContentField("nullfield", null);
+		io.insert(md);
+		MemoryDocument indb = io.getAndTag(new MemoryQuery(), "tag");
+
+		if(indb.hasContentField("nullfield")) {
+			fail("Null field was persisted in database on insert");
+		}
+		Assert.assertEquals("value", indb.getContentField("field"));
+		
+		md.putContentField("field", null);
+		
+		io.update(md);
+
+		indb = io.getAndTag(new MemoryQuery(), "tag2");
+
+		if(indb.hasContentField("field")) {
+			fail("Null field was persisted in database on update");
+		}
+
 	}
 	
 	@Test

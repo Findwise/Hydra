@@ -251,10 +251,23 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	public boolean insert(DatabaseDocument<MemoryType> d) {
 		MemoryDocument md = (MemoryDocument) d;
 		md.setID(md.hashCode()+""+System.currentTimeMillis());
-		
+		removeNullFields(md);
 		set.add(md);
 		md.markSynced();
 		return true;
+	}
+	
+	private void removeNullFields(MemoryDocument md) {
+		HashSet<String> fields = new HashSet<String>();
+		for(String entry : md.getTouchedContent()) {
+			if(!md.hasContentField(entry) || md.getContentField(entry).equals(null)) {
+				fields.add(entry);
+			}
+		}
+		
+		for(String field : fields) {
+			md.removeContentField(field);
+		}
 	}
 
 	@Override
@@ -268,7 +281,11 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		}
 		
 		for(String s : md.getTouchedContent()) {
-			inDb.putContentField(s, md.getContentField(s));
+			if(md.getContentField(s)!=null) {
+				inDb.putContentField(s, md.getContentField(s));
+			} else {
+				inDb.removeContentField(s);
+			}
 		}
 		
 		for(String s : md.getTouchedMetadata()) {
