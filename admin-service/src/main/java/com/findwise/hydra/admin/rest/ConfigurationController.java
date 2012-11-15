@@ -91,17 +91,18 @@ public class ConfigurationController {
 		return stagesService.getStages();
 	}
 
-	@ResponseBody
-	@RequestMapping(method = RequestMethod.POST, value = "/stages/delete")
-	public Map<String, Object> deleteStage(
-			@RequestBody String deletes) {
-		return stagesService.deleteStage(deletes);
-	}
 
 	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/stages/{stageName}")
 	public Stage getStageInfo(@PathVariable(value = "stageName") String stageName) {
 		return stagesService.getStageInfo(stageName);
+	}
+
+	@ResponseBody
+	@RequestMapping(method = RequestMethod.GET, value = "/stages/{stageName}/delete")
+	public Map<String, Object> deleteStage(
+			@PathVariable(value = "stageName") String stageName){
+		return stagesService.deleteStage(stageName);
 	}
 
 	@ResponseBody
