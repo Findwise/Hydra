@@ -23,7 +23,7 @@ public interface PipelineReader<T extends DatabaseType> {
 	 */
 	DatabaseFile getFile(String fileName);
 	
-	Pipeline<Stage> getPipeline();
+	Pipeline getPipeline();
 	
-	Pipeline<Stage> getDebugPipeline();
+	Pipeline getDebugPipeline();
 }

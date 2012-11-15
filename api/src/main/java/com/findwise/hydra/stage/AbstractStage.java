@@ -35,6 +35,9 @@ public abstract class AbstractStage extends Thread {
 	@Parameter(description="The Query that this stage will recieve documents matching")
 	private LocalQuery query = new LocalQuery();
 	
+	@Parameter(description="Number of instances (threads) to start of this stage within a single JVM. Defaults to 1.")
+	private int numberOfThreads = 1;
+	
 	public LocalQuery getQuery() {
 		return query;
 	}
@@ -182,31 +185,62 @@ public abstract class AbstractStage extends Thread {
 		this.createAndApplyShutDownHook();
 	}
 	
+	private static boolean isDevMode(String[] args) {
+		return args[0].equals(DEV_MODE_STRING);
+	}
+	
+	public static List<AbstractStage> getInstances(String[] args) {
+		List<AbstractStage> list = new ArrayList<AbstractStage>();
+		
+		int numberOfThreads = 1;
+		
+		do {
+			AbstractStage stage = getInstance(args);
+			if(stage==null) {
+				return null;
+			}
+			numberOfThreads = stage.numberOfThreads;
+
+			list.add(stage);
+		} while(list.size()<numberOfThreads);
+		
+		return list;
+	}
+	
+	public static RemotePipeline getRemotePipeline(String[] args) {
+		int addToIndex = 0;
+			
+		if(isDevMode(args)) {
+			//args[0] is DEV_MODE_STRING, args[1] stageName, args[2]+args[3] host+port, args[4] and on is config
+			addToIndex = 1;
+		}
+		String stageName = (CMDLINE_STAGE_NAME_PARAM+addToIndex<args.length) ? args[CMDLINE_STAGE_NAME_PARAM+addToIndex] : null;
+		String hostName = (CMDLINE_PIPELINE_HOST_PARAM+addToIndex<args.length) ? args[CMDLINE_PIPELINE_HOST_PARAM+addToIndex] : RemotePipeline.DEFAULT_HOST; 
+		String port = (CMDLINE_PIPELINE_PORT_PARAM+addToIndex<args.length) ? args[CMDLINE_PIPELINE_PORT_PARAM+addToIndex] : ""+RemotePipeline.DEFAULT_PORT; 
+		
+		RemotePipeline rp = new RemotePipeline(hostName, Integer.parseInt(port), stageName);
+		return rp;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static AbstractStage getInstance(String[] args) {
-		Logger.debug("Starting AbstractStage with args: " + Arrays.toString(args));
+		Logger.debug("Getting AbstractStage with args: " + Arrays.toString(args));
 		if (args.length < 1) {
 			Logger.error("No stage name found", new RequiredArgumentMissingException("No stage name was specified"));
 			System.exit(1);
 		} 
 		try {
-			int addToIndex = 0;
-			
 			Map<String, Object> properties = null;
-			if(args[0].equals(DEV_MODE_STRING)) {
+			if(isDevMode(args)) {
 				//args[0] is DEV_MODE_STRING, args[1] stageName, args[2]+args[3] host+port, args[4] and on is config
-				addToIndex = 1;
 				String jsonString = "";
 				for(int i=4; i<args.length; i++) {
 					jsonString += args[i]+" ";
 				}
 				properties = SerializationUtils.fromJson(jsonString);
 			}
-			String stageName = (CMDLINE_STAGE_NAME_PARAM+addToIndex<args.length) ? args[CMDLINE_STAGE_NAME_PARAM+addToIndex] : null;
-			String hostName = (CMDLINE_PIPELINE_HOST_PARAM+addToIndex<args.length) ? args[CMDLINE_PIPELINE_HOST_PARAM+addToIndex] : RemotePipeline.DEFAULT_HOST; 
-			String port = (CMDLINE_PIPELINE_PORT_PARAM+addToIndex<args.length) ? args[CMDLINE_PIPELINE_PORT_PARAM+addToIndex] : ""+RemotePipeline.DEFAULT_PORT; 
+			RemotePipeline rp = getRemotePipeline(args);
 			
-			RemotePipeline rp = new RemotePipeline(hostName, Integer.parseInt(port), stageName);
 			if(properties==null) {				
 				properties = rp.getProperties();
 			}
@@ -223,7 +257,7 @@ public abstract class AbstractStage extends Thread {
 					.forName(stageClass);
 			AbstractStage stage = actualClass.newInstance();
 			
-			stage.setName(stageName);
+			stage.setName(rp.getStageName());
 			stage.setUp(rp, properties);
 			stage.init();
 			
@@ -246,12 +280,17 @@ public abstract class AbstractStage extends Thread {
 	}
 
 	public static void main(String args[]) {
-		AbstractStage stage = getInstance(args);
-		if(stage==null) {
-			System.exit(1);
+		List<AbstractStage> stages = getInstances(args);
+		
+		if(stages==null || stages.size()<1) {
+			Logger.error("Unable to instantiate any stages for input: "+Arrays.toString(args));
 		}
-		stage.start();
-		Logger.info("Started stage: " + stage.getName()+". Running with the query: "+stage.getQuery());
+		else {
+			for(AbstractStage stage : stages) {
+				stage.start();
+			}
+			Logger.info("Started "+stages.size()+" instances of stage: " + stages.get(0).getName()+". Running with the query: "+stages.get(0).getQuery());
+		}
 	}
 
 	/**

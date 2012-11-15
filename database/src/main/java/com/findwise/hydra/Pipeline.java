@@ -1,53 +1,41 @@
 package com.findwise.hydra;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import com.findwise.hydra.common.SerializationUtils;
 
-public class Pipeline<T extends Stage> {
-	
-	private Map<String, T> stages;
+public class Pipeline {
+	private Map<String, StageGroup> stageGroups;
 	
 	public Pipeline() {
-		stages = new HashMap<String, T>();
+		stageGroups = new HashMap<String, StageGroup>();
 	}
 	
-	public boolean removeStage(T s) {
-		return stages.remove(s.getName())!=null;
-	}
-	
-	/**
-	 * Creates a new stage in this pipeline and returns it.
-	 * 
-	 * @return A new stage in this pipeline, or null if an exception occurred
-	 */
-	public T addStage(T stage) {
-		return stages.put(stage.getName(), stage);
-	}
-	
-	public Stage getStage(String stage) {
-		return stages.get(stage);
-	}
-	
-	public boolean hasStage(String stage) {
-		return stages.containsKey(stage);
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((stageGroups == null) ? 0 : stageGroups.hashCode());
+		return result;
 	}
 
-	public List<T> getStages() {
-		return new ArrayList<T>(stages.values());
-	}
-	
-	protected Map<String, T> getStageMap() {
-		return stages;
-	}
-	
-	public boolean isEqual(Pipeline<? extends Stage> p) {
-		if(p.getStages().size()==getStages().size()) {
-			for(Stage s : p.getStages()) {
-				if(!hasStage(s.getName()) || !s.isEqual(getStage(s.getName()))) {
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null || getClass() != obj.getClass()) {
+			return false;
+		}
+		
+		Pipeline other = (Pipeline) obj;
+		if(other.getStageGroups().size()==getStageGroups().size()) {
+			for(StageGroup g : other.getStageGroups()) {
+				if(!hasGroup(g.getName()) || !g.equals(getGroup(g.getName()))) {
 					return false;
 				}
 			}
@@ -58,6 +46,47 @@ public class Pipeline<T extends Stage> {
 	
 	@Override
 	public String toString() {
-		return SerializationUtils.toJson(getStages());
+		return SerializationUtils.toJson(stageGroups.values());
+	}
+	
+	public Set<StageGroup> getStageGroups() {
+		return new HashSet<StageGroup>(stageGroups.values());
+	}
+	
+	public boolean hasGroup(String groupName) {
+		return stageGroups.containsKey(groupName);
+	}
+	
+	public StageGroup getGroup(String groupName) {
+		return stageGroups.get(groupName);
+	}
+	
+	public void removeGroup(String group) {
+		stageGroups.remove(group);
+	}
+
+	public void addGroup(StageGroup g) {
+		stageGroups.put(g.getName(), g);
+	}
+	
+	public Set<Stage> getStages() {
+		HashSet<Stage> stages = new HashSet<Stage>();
+		for(StageGroup g : getStageGroups()) {
+			stages.addAll(g.getStages());
+		}
+		return stages;
+	}
+	
+	public Stage getStage(String name) {
+		for(Stage s : getStages()) {
+			if(s.getName().equals(name)) {
+				return s;
+			}
+		}
+		return null;
+	}
+	
+	public boolean hasStage(String name) {
+		return getStage(name) != null;
 	}
 }

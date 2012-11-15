@@ -1,7 +1,9 @@
 package com.findwise.hydra;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public final class StageManager {
 	
@@ -20,35 +22,38 @@ public final class StageManager {
 		return self;
 	}
 	
-	public StageRunner getRunner(String stageName) {
-		if(runnerMap.containsKey(stageName)) {
-			return runnerMap.get(stageName);
+	public StageRunner getRunner(String groupName) {
+		if(runnerMap.containsKey(groupName)) {
+			return runnerMap.get(groupName);
 		}
 		return null;
 	}
 	
-	
-	public boolean hasRunner(String stageName) {
-		return getRunner(stageName)!=null;
+	public boolean hasRunner(String groupName) {
+		return getRunner(groupName)!=null;
 	}
 	
-	public void addRunner(StoredStage stage, StageRunner stageWrapper) {
-		runnerMap.put(stage.getName(), stageWrapper);
+	public void addRunner(StageRunner runner) {
+		runnerMap.put(runner.getStageGroup().getName(), runner);
 	}
 	
-	public StageRunner removeRunner(String stageName) {
-		if(runnerMap.containsKey(stageName)) {
-			StageRunner ret = runnerMap.get(stageName);
-			runnerMap.remove(stageName);
+	public StageRunner removeRunner(String groupName) {
+		if(runnerMap.containsKey(groupName)) {
+			StageRunner ret = runnerMap.get(groupName);
+			runnerMap.remove(groupName);
 			return ret;
 		}
 		return null;
 	}
 	
-	public void findAndDestroy(String stageName) {
-		StageRunner sw = removeRunner(stageName);
+	public void findAndDestroy(String groupName) {
+		StageRunner sw = removeRunner(groupName);
 		if(sw!=null) {
 			sw.destroy();
 		}
+	}
+	
+	public Set<StageRunner> getRunners() {
+		return new HashSet<StageRunner>(runnerMap.values());
 	}
 }
