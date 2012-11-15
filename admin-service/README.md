@@ -175,6 +175,10 @@ Available endpoints
 
 	Same as **/stages** but only for the specified stage name. 
 	
+* **/stages/{stage-name}/delete** - Method: GET
+
+	Deletes the stage by setting it to INACTIVE. 
+	Returns a stageStatus telling you if the delete was successful or not
 
 * **/documents** - Method: GET
 	
