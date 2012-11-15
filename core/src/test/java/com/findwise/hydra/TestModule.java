@@ -1,13 +1,9 @@
 package com.findwise.hydra;
 
-import java.io.IOException;
-
 import com.findwise.hydra.mongodb.MongoConnector;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 
 public class TestModule extends AbstractModule {
 	String namespace;
@@ -46,14 +42,5 @@ public class TestModule extends AbstractModule {
 	@Provides @Singleton
 	protected Configuration getConfiguration(CoreConfiguration core) {
 		return core;
-	}
-	
-	@Provides
-	protected StoredPipeline getStoredPipeline() {
-		try {
-			return new StoredPipeline(CoreModule.PIPELINE_DIRECTORY);
-		} catch (IOException e) {
-			return null;
-		}
 	}
 }

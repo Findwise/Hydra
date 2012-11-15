@@ -4,6 +4,7 @@ import com.beust.jcommander.JCommander;
 import com.findwise.hydra.MongoDBConnectionConfig;
 import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.Stage;
+import com.findwise.hydra.StageGroup;
 import com.findwise.hydra.json.JsonPipelineUtil;
 import com.findwise.hydra.json.PipelineConfiguration;
 import com.findwise.hydra.json.StageFactory;
@@ -103,16 +104,20 @@ public class CmdlineTool {
             MongoConnector mdc = Guice.createInjector(conf).getInstance(MongoConnector.class);
             mdc.connect();
 
-            Pipeline<Stage> pipeline = mdc.getPipelineReader().getPipeline();
+            Pipeline pipeline = mdc.getPipelineReader().getPipeline();
             for (Stage stage : stages) {
                 if (cmd.getStageNames() != null) {
                     if (cmd.getStageNames().contains(stage.getName())) {
                         log.info("Preparing to upload stage, " + stage.getName());
-                        pipeline.addStage(stage);
+                        StageGroup g = new StageGroup(stage.getName());
+                        g.addStage(stage);
+                        pipeline.addGroup(g);
                     }
                 } else {
                     log.info("Preparing to upload stage, " + stage.getName());
-                    pipeline.addStage(stage);
+                    StageGroup g = new StageGroup(stage.getName());
+                    g.addStage(stage);
+                    pipeline.addGroup(g);
                 }
             }
             log.info("Uploading stages");

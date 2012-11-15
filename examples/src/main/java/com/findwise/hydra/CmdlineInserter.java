@@ -286,7 +286,7 @@ public class CmdlineInserter {
 		
 		
 		if(cmd.hasOption("c")) {
-			Pipeline<Stage> pipeline = mdc.getPipelineReader().getPipeline();
+			Pipeline pipeline = mdc.getPipelineReader().getPipeline();
 
 			List<Stage> stagesToDelete = new ArrayList<Stage>();
 			for(Stage s : pipeline.getStages()) {
@@ -296,7 +296,11 @@ public class CmdlineInserter {
 			}
 			
 			for(Stage s : stagesToDelete) {
-				pipeline.removeStage(s);
+				for(StageGroup g : pipeline.getStageGroups()) {
+					if(g.hasStage(s.getName())) {
+						g.removeStage(s.getName());
+					}
+				}
 			}
 			
 			mdc.getPipelineWriter().write(pipeline);
@@ -321,17 +325,26 @@ public class CmdlineInserter {
 		}
 		String name = cmd.getOptionValue("n");
 		
-		Pipeline<Stage> pipeline = mdc.getPipelineReader().getPipeline();
+		Pipeline pipeline = mdc.getPipelineReader().getPipeline();
 
 		if(pipeline.getStage(name) == null) {
 			System.out.println("Specified stage '"+name+"' did not exist\n");
 			return;
 		}
-		pipeline.removeStage(pipeline.getStage(name));
-		mdc.getPipelineWriter().write(pipeline);
-		
-		System.out.println("Successfully removed stage '"+name+"'");
-		
+		boolean found = false;
+		for(StageGroup g : pipeline.getStageGroups()) {
+			if(g.hasStage(name)) {
+				g.removeStage(name);
+				found = true;
+				break;
+			}
+		}
+		if(found) {
+			mdc.getPipelineWriter().write(pipeline);
+			System.out.println("Successfully removed stage '"+name+"'");
+		} else {
+			System.out.println("Unable to delete '"+name+"'. Stage did not exist.");
+		}
 	}
 	
 	private static void addStage(MongoConnector mdc, CommandLine cmd) throws IOException {
@@ -380,9 +393,11 @@ public class CmdlineInserter {
 		} else {
 			s.setMode(Stage.Mode.ACTIVE);
 		}
-		Pipeline<Stage> pipeline = mdc.getPipelineReader()
+		Pipeline pipeline = mdc.getPipelineReader()
 				.getPipeline();
-		pipeline.addStage(s);
+		StageGroup g = new StageGroup(s.getName());
+		g.addStage(s);
+		pipeline.addGroup(g);
 		mdc.getPipelineWriter().write(pipeline);
 		System.out.println("Added stage " + name
 				+ " to the pipeline.");

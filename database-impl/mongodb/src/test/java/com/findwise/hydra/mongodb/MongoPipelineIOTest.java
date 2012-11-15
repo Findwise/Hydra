@@ -9,13 +9,20 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
+import junit.framework.Assert;
+
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Test;
 
 import com.findwise.hydra.DatabaseFile;
+import com.findwise.hydra.Pipeline;
+import com.findwise.hydra.Stage;
+import com.findwise.hydra.StageGroup;
 import com.findwise.hydra.TestModule;
 import com.google.inject.Guice;
 import com.mongodb.Mongo;
+import com.mongodb.WriteConcern;
 
 public class MongoPipelineIOTest {
 	MongoConnector mdc;
@@ -28,7 +35,12 @@ public class MongoPipelineIOTest {
 		mdc.connect();
 	}
 	
-	@AfterClass
+	@After
+	public void tearDown() throws Exception {
+		tearDownClass();
+	}
+	
+	@AfterClass 
 	public static void tearDownClass() throws Exception {
 		new Mongo().getDB("junit-MongoPipelineIOTest").dropDatabase();
 	}
@@ -92,10 +104,78 @@ public class MongoPipelineIOTest {
 				InputStream is = mdc.getPipelineReader().getStream(df);
 				BufferedReader br = new BufferedReader(new InputStreamReader(is));
 				assertEquals(br.readLine(), contents);
+				br.close();
 				return;
 			}
 		}
 		fail("Did not find the file");
 	}
 	
+	@Test
+	public void testGetStageGroups() throws Exception {
+		Pipeline p = new Pipeline();
+		StageGroup singleGroup = new StageGroup("singleStage");
+		StageGroup multiGroup = new StageGroup("multi");
+		Stage single = new Stage("singleStage", new DatabaseFile());
+		Stage multi1 = new Stage("multi1", new DatabaseFile());
+		Stage multi2 = new Stage("multi2", new DatabaseFile());
+		multiGroup.addStage(multi1);
+		multiGroup.addStage(multi2);
+		singleGroup.addStage(single);
+		
+		p.addGroup(multiGroup);
+		p.addGroup(singleGroup);
+		
+		Assert.assertEquals(2, p.getStageGroups().size());
+		Assert.assertTrue(p.hasGroup("multi"));
+		Assert.assertTrue(p.hasGroup("singleStage"));
+		
+		createAndConnect();
+		MongoPipelineReader reader = new MongoPipelineReader(mdc.getDB());
+		MongoPipelineWriter writer = new MongoPipelineWriter(reader, WriteConcern.SAFE);
+		
+		Assert.assertEquals(0, reader.getPipeline().getStages().size());
+		writer.write(p);
+		
+		Assert.assertEquals(3, reader.getPipeline().getStages().size());
+
+		Assert.assertTrue(reader.getPipeline().hasGroup("multi"));
+		Assert.assertTrue(reader.getPipeline().hasGroup("singleStage"));
+
+		Assert.assertEquals(2, reader.getPipeline().getGroup("multi").getStages().size());
+		Assert.assertEquals(1, reader.getPipeline().getGroup("singleStage").getStages().size());
+	}
+	
+	@Test
+	public void testStageGroupProperties() throws Exception {
+		Pipeline p = new Pipeline();
+		StageGroup singleGroup = new StageGroup("singleStage");
+		StageGroup multiGroup = new StageGroup("multi");
+		Stage single = new Stage("singleStage", new DatabaseFile());
+		Stage multi1 = new Stage("multi1", new DatabaseFile());
+		Stage multi2 = new Stage("multi2", new DatabaseFile());
+		multiGroup.addStage(multi1);
+		multiGroup.addStage(multi2);
+		singleGroup.addStage(single);
+		
+		p.addGroup(multiGroup);
+		p.addGroup(singleGroup);
+		
+		multiGroup.setJvmParameters("jvm");
+		multiGroup.setRetries(3);
+		multiGroup.setLogging(false);
+		multiGroup.setCmdlineArgs("cmd");
+		
+		createAndConnect();
+		MongoPipelineReader reader = new MongoPipelineReader(mdc.getDB());
+		MongoPipelineWriter writer = new MongoPipelineWriter(reader, WriteConcern.SAFE);
+		
+		writer.write(p);
+		
+		StageGroup g2 = reader.getPipeline().getGroup("multi");
+		Assert.assertEquals(multiGroup.getJvmParameters(), g2.getJvmParameters());
+		Assert.assertEquals(multiGroup.getRetries(), g2.getRetries());
+		Assert.assertEquals(multiGroup.isLogging(), g2.isLogging());
+		Assert.assertEquals(multiGroup.getCmdlineArgs(), g2.getCmdlineArgs());
+	}
 }

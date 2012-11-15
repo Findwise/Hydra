@@ -90,7 +90,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.findwise.hydra.stage.AbstractStage</mainClass>
+                            <mainClass>com.findwise.hydra.stage.GroupStarter</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

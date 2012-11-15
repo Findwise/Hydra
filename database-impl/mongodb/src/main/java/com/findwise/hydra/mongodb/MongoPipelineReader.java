@@ -11,6 +11,7 @@ import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.PipelineReader;
 import com.findwise.hydra.Stage;
 import com.findwise.hydra.Stage.Mode;
+import com.findwise.hydra.StageGroup;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -27,6 +28,8 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 	
 	public static final String STAGE_KEY = "stage";
 	public static final String TYPE_KEY = "type";
+	public static final String STAGE_TYPE = "stage";
+	public static final String GROUP_TYPE = "group";
 	public static final String ACTIVE_KEY = "active";
 	public static final String PIPELINE_KEY = "pipeline";
 	public static final String FILENAME_KEY = "filename";
@@ -35,6 +38,8 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 	public static final String PROPERTIES_DATE_SUBKEY = "changed";
 	public static final String PROPERTIES_MAP_SUBKEY = "map";
 	public static final String FILE_KEY = "file";
+	public static final String GROUP_KEY = "group";
+	public static final String NAME_KEY = "name";
 	
 	public static final String PIPELINE_FS = "configuration";
 	public static final String STAGES_COLLECTION = "stages";
@@ -45,25 +50,50 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 	}
 
 	@Override
-	public Pipeline<Stage> getPipeline() {
+	public Pipeline getPipeline() {
 		return getPipeline(Stage.Mode.ACTIVE);
 	}
 	
 	@Override 
-	public Pipeline<Stage> getDebugPipeline() {
+	public Pipeline getDebugPipeline() {
 		return getPipeline(Stage.Mode.DEBUG);
 	}
 
-	private Pipeline<Stage> getPipeline(Stage.Mode mode) {
-		Pipeline<Stage> p = new Pipeline<Stage>();
-		
+	private Pipeline getPipeline(Stage.Mode mode) {
+		Pipeline p = new Pipeline();
 		DBCursor cursor = stages.find(new BasicDBObject(ACTIVE_KEY, mode.toString()));
 		
 		while(cursor.hasNext()) {
-			p.addStage(getStage(cursor.next()));
+			DBObject obj = cursor.next();
+			if(!obj.containsField(TYPE_KEY) || STAGE_TYPE.equals(obj.get(TYPE_KEY))) {
+				Stage s = getStage(obj);
+				if(!p.hasGroup(getGroupName(obj))) {
+					p.addGroup(new StageGroup(getGroupName(obj)));
+				}
+				p.getGroup(getGroupName(obj)).addStage(s);
+			} else {
+				addGroup(p, getGroup(obj));
+			}
 		}
 		
 		return p;
+	}
+
+	private void addGroup(Pipeline p, StageGroup g) {
+		if(p.hasGroup(g.getName())) {
+			p.getGroup(g.getName()).setProperties(g.toPropertiesMap());
+			p.getGroup(g.getName()).setPropertiesModifiedDate(g.getPropertiesModifiedDate());
+		} else {
+			p.addGroup(g);
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private StageGroup getGroup(DBObject dbo) {
+		((DBObject)dbo.get(PROPERTIES_KEY)).get(PROPERTIES_MAP_SUBKEY);
+		StageGroup sg = new StageGroup((String)dbo.get(NAME_KEY), ((DBObject)((DBObject)dbo.get(PROPERTIES_KEY)).get(PROPERTIES_MAP_SUBKEY)).toMap());
+		sg.setPropertiesModifiedDate(sg.getPropertiesModifiedDate());
+		return sg;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -74,14 +104,28 @@ public class MongoPipelineReader implements PipelineReader<MongoType> {
 		stage.setPropertiesModifiedDate((Date)props.get(PROPERTIES_DATE_SUBKEY));
 		DBObject properties = (DBObject) props.get(PROPERTIES_MAP_SUBKEY);
 		HashMap<String, Object> map = new HashMap<String, Object>();
-		map.putAll(properties.toMap());
+		if(properties!=null) {
+			map.putAll(properties.toMap());
+		}
 		stage.setProperties(map);
 		
 		return stage;
 	}
 	
+	private String getGroupName(DBObject dbo) {
+		if(dbo.containsField(GROUP_KEY)) {
+			return (String)dbo.get(GROUP_KEY);
+		} else {
+			return (String)dbo.get(STAGE_KEY);
+		}
+	}
+	
 	public DBObject getStageQuery(String stage) {
 		return QueryBuilder.start(MongoPipelineReader.STAGE_KEY).is(stage).get();
+	}
+	
+	public DBObject getGroupQuery(String group) {
+		return QueryBuilder.start(MongoPipelineReader.NAME_KEY).is(group).and(MongoPipelineReader.TYPE_KEY).is(MongoPipelineReader.GROUP_TYPE).get();
 	}
 	
 	public DBCollection getStagesCollection() {
