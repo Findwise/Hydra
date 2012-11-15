@@ -1,7 +1,5 @@
 package com.findwise.hydra;
 
-import java.io.IOException;
-
 import org.apache.commons.configuration.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,16 +28,6 @@ public class CoreModule extends AbstractModule {
 		}
 		catch(ConfigurationException e) {
 			logger.error("Unable to read configuration", e);
-			return null;
-		}
-	}
-	
-	@Provides
-	protected StoredPipeline getStoredPipeline(CoreConfiguration conf) {
-		try {
-			return new StoredPipeline(conf.getNamespace());
-		} catch (IOException e) {
-			logger.error("Pipeline threw IOException", e);
 			return null;
 		}
 	}

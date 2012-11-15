@@ -415,4 +415,8 @@ public class RemotePipeline {
 			return null;
 		}
 	}
+	
+	public String getStageName() {
+		return stageName;
+	}
 }

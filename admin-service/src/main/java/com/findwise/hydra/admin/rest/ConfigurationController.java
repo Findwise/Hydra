@@ -84,7 +84,7 @@ public class ConfigurationController {
 			@PathVariable(value = "id") String libraryId,
 			@PathVariable(value = "stageName") String stageName,
 			@RequestBody String jsonConfig) throws JsonException, IOException {
-		return stagesService.addStage(libraryId, stageName, jsonConfig);
+		return stagesService.addStage(libraryId, null, stageName, jsonConfig);
 	}
 
 

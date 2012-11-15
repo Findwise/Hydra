@@ -10,7 +10,7 @@ public interface PipelineWriter<T extends DatabaseType> {
 	 * individual stages.
 	 * 
 	 */
-	void write(Pipeline<? extends Stage> c) throws IOException;
+	void write(Pipeline c) throws IOException;
 	
 	/**
 	 * Saves a file to the database.

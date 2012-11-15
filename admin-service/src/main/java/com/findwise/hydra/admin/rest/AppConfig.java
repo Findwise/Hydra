@@ -31,7 +31,7 @@ public class AppConfig {
 				}
 
 				public String getNamespace() {
-					return "blogs";
+					return "pipeline";
 				}
 
 				public String getDatabaseUser() {
