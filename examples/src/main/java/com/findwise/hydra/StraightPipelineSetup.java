@@ -24,7 +24,7 @@ public class StraightPipelineSetup {
 		
 		
 		
-		Pipeline<Stage> c = new Pipeline<Stage>();
+		Pipeline c = new Pipeline();
 		Stage s = getStage(c, basicId, "copyStage1", "stage.CopyStage");
 		Map<String, Object> map = s.getProperties();
 		map.put("map", getSingleMap("in", "out1"));
@@ -65,11 +65,12 @@ public class StraightPipelineSetup {
 		return map;
 	}
 	
-	public static Stage getStage(Pipeline<Stage> c, Object id, String stageName, String className, String ... afterStage) throws Exception {
+	public static Stage getStage(Pipeline c, Object id, String stageName, String className, String ... afterStage) throws Exception {
 		Stage s = new Stage(stageName, new DatabaseFile());
 		s.getDatabaseFile().setId(id);
-		
-		c.addStage(s);
+		StageGroup g = new StageGroup(stageName);
+		c.addGroup(g);
+		g.addStage(s);
 		Map<String, Object> props = new HashMap<String, Object>();
 		props.put("stageClass", "com.findwise.hydra."+className);
 		if(afterStage!=null && afterStage.length>0) {
