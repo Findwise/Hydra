@@ -5,41 +5,35 @@ import java.util.LinkedList;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-/**
- *
- * @author Roar Granevang
+/** 
+ * @author Roar Granevang & Joel Westberg
  */
 public class RemoveFieldsTest {
-    
-    public RemoveFieldsTest() {
-    }
-
 
     @Test
     public void testProcess() throws Exception {
         LocalDocument doc = new LocalDocument();
         doc.putContentField("title", "Supertitle");
         doc.putContentField("type", "Supertype");
+        doc.putContentField("some_numeric_3", "");
         
         LinkedList<String> removeFields = new LinkedList<String>();
         removeFields.add("title");
         removeFields.add("otherObject");
         removeFields.add("field_not_existing");
+        removeFields.add(".*[0-9]+");
         
-        doc.putContentField("otherObject", removeFields);
+        assertNotNull("Should not have been removed yet", doc.getContentField("title"));
         
-        assertNotNull("not remove yet", doc.getContentField("title"));
-        assertNotNull("not remove yet", doc.getContentField("otherObject"));
         RemoveFields stage = new RemoveFields();
         stage.setRemoveFields(removeFields);
         stage.init();
         stage.process(doc);
         
-        assertNull("should be removed", doc.getContentField("title"));
-        assertNull("should be removed", doc.getContentField("otherObject"));
+        assertTrue("Should not have been removed", doc.hasContentField("type"));
         
-        
-   
+        assertFalse("Should have been removed", doc.hasContentField("title"));
+        assertFalse("Should have been removed", doc.hasContentField("some_numeric_3"));
     }
 
 }
