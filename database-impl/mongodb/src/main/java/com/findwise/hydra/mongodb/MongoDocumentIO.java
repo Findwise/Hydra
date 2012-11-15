@@ -257,7 +257,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	
 	private Set<String> getNullFields(MongoDocument d) {
 		Set<String> set = new HashSet<String>();
-		for(Map.Entry<String, Object> e : d.getContentsMap().entrySet()) {
+		for(Map.Entry<String, Object> e : d.getContentMap().entrySet()) {
 			if(e.getValue()==null) {
 				set.add(e.getKey());
 			}
