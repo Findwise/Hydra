@@ -8,7 +8,7 @@ import java.util.List;
  * A stage that deletes fields matching a list of regular expressions.
  * @author Roar Granevang & Joel Westberg
  */
-@Stage(description = "Removes fields. (Sets them to null)")
+@Stage(description = "Removes fields specified by regular expressions.")
 public class RemoveFields extends AbstractProcessStage {
 
     @Parameter(name = "removeFields", description = "List of regular expressions defining what fields to remove from the document")
