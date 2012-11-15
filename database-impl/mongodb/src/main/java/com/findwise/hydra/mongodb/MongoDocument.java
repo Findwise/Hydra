@@ -141,7 +141,7 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	
 	@Override
 	public boolean hasContentField(String key) {
-		return getContentField(key)!=null;
+		return getContents().containsField(key);
 	}
 
 	@Override
@@ -189,6 +189,12 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	public final Object putMetadataField(String key, Object v) {
 		touchedMetadata.add(key);
 		return getMetadata().put(key, v);
+	}
+	
+	@Override
+	public final Object removeContentField(String key) {
+		touchedContent.add(key);
+		return getContents().removeField(key);
 	}
 	
 	@Override
