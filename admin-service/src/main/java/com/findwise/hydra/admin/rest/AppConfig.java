@@ -35,7 +35,7 @@ public class AppConfig {
 				}
 
 				public String getDatabaseUser() {
-					return "admin";
+					return "";
 				}
 
 				public String getDatabaseUrl() {
@@ -43,7 +43,7 @@ public class AppConfig {
 				}
 
 				public String getDatabasePassword() {
-					return "changeme";
+					return "";
 				}
 			});
 

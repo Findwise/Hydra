@@ -101,6 +101,13 @@ public class ConfigurationController {
 	}
 
 	@ResponseBody
+	@RequestMapping(method = RequestMethod.GET, value = "/stages/{stageName}/delete")
+	public Map<String, Object> deleteStage(
+			@PathVariable(value = "stageName") String stageName){
+		return stagesService.deleteStage(stageName);
+	}
+
+	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/documents/count")
 	public Map<String, Object> getDocumentCount(
 			@RequestParam(required = false, defaultValue="{}", value = "q") String jsonQuery) {
