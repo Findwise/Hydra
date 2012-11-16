@@ -6,3 +6,4 @@ examples/src/main/resources/*.jar
 .springBeans
 bin/
 nbactions.xml
+nb-configuration.xml
