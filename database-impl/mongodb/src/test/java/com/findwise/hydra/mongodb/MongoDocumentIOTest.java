@@ -125,6 +125,33 @@ public class MongoDocumentIOTest {
 	}
 	
 	@Test
+	public void testNullFields() throws Exception {
+		MongoDocumentIO dw = (MongoDocumentIO) mdc.getDocumentWriter();
+		MongoDocument md = new MongoDocument();
+		md.putContentField("field", "value");
+		md.putContentField("nullfield", null);
+		dw.insert(md);
+		
+		MongoDocument indb = dw.getAndTag(new MongoQuery(), "tag");
+		
+		if(indb.hasContentField("nullfield")) {
+			fail("Null field was persisted in database on insert");
+		}
+		Assert.assertEquals("value", indb.getContentField("field"));
+		
+		md.putContentField("field", null);
+		
+		dw.update(md);
+
+		indb = dw.getAndTag(new MongoQuery(), "tag2");
+
+		if(indb.hasContentField("field")) {
+			fail("Null field was persisted in database on update");
+		}
+		
+	}
+	
+	@Test
 	public void testIdSerialization() throws Exception {
 		ObjectId id = new ObjectId();
 		
@@ -241,7 +268,6 @@ public class MongoDocumentIOTest {
 				fail("Processed document did not have the correct data in the content fields");
 			}
 		}
-		
 	}
 	
 	@Ignore

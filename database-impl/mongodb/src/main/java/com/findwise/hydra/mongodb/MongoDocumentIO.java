@@ -242,6 +242,9 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	public boolean insert(DatabaseDocument<MongoType> d) {
 		if(d.getID()==null) {
 			try {
+				for(String key : getNullFields((MongoDocument)d)) {
+					d.removeContentField(key);
+				}
 				documents.insert((MongoDocument) d, concern);
 				return true;
 			}
@@ -252,6 +255,16 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		return false;
 	}
 	
+	private Set<String> getNullFields(MongoDocument d) {
+		Set<String> set = new HashSet<String>();
+		for(Map.Entry<String, Object> e : d.getContentMap().entrySet()) {
+			if(e.getValue()==null) {
+				set.add(e.getKey());
+			}
+		}
+		return set;
+	}
+
 	private DBObject getUpdateObject(DBObject update) {
 		DBObject dbo = new BasicDBObject();
 		dbo.put("$set", update);
@@ -322,6 +335,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	@Override
 	public boolean update(DatabaseDocument<MongoType> d) {
 		MongoDocument md = (MongoDocument) d;
+		
 		MongoQuery mdq = new MongoQuery();
 		mdq.requireID(md.getID());
 		
@@ -332,19 +346,36 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		}
 		
 		for(String s : md.getTouchedContent()) {
-			bob.add(MongoDocument.CONTENTS_KEY+"."+s, md.getContentField(s));
+			if(md.getContentField(s)!=null) {
+				bob.add(MongoDocument.CONTENTS_KEY+"."+s, md.getContentField(s));
+			}
 		}
 		for(String s : md.getTouchedMetadata()){
 			bob.add(MongoDocument.METADATA_KEY+"."+s, md.getMetadataField(s));
 		}
+		
+		DBObject updateObject = getUpdateObject(bob.get());
+		updateObject.putAll(getUnsetObject(getNullFields(md)));
+		
 		try {
-			WriteResult wr = documents.update(mdq.toDBObject(), getUpdateObject(bob.get()), false, false, concern);
+			WriteResult wr = documents.update(mdq.toDBObject(), updateObject, false, false, concern);
 			return wr.getN()==1;
 		}
 		catch (MongoException e) {
 			logger.error("UPDATE FAILED FOR id:"+d.getID(), e);
 			return false;
 		}
+	}
+	
+	private DBObject getUnsetObject(Set<String> fieldsToUnset) {
+		BasicDBObject unsetter = new BasicDBObject();
+		BasicDBObject fields = new BasicDBObject();
+		for(String s : fieldsToUnset) {
+			fields.append(MongoDocument.CONTENTS_KEY+"."+s, 1);
+		}
+		
+		unsetter.put("$unset", fields);
+		return unsetter;
 	}
 
 

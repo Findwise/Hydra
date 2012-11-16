@@ -136,6 +136,8 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 * already has a non-null ID. The document's new ID will be applied to the
 	 * document.
 	 * 
+	 * A field that is <pre>null</pre> is ignored.
+	 * 
 	 * @param d
 	 *            the document to insert
 	 * @return false if the document already has an id, true otherwise.
@@ -143,6 +145,9 @@ public interface DocumentWriter<T extends DatabaseType> {
 	boolean insert(DatabaseDocument<T> d);
 
 	/**
+	 * Updates the document in the database. If any field in document is 
+	 * <pre>null</pre>, this field will be ignored and removed. 
+	 * 
 	 * @return false if update fails
 	 */
 	boolean update(DatabaseDocument<T> d);
