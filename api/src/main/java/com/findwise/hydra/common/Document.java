@@ -42,6 +42,8 @@ public interface Document extends JsonDeserializer, JsonSerializer {
 	Object getContentField(String fieldName);
 
 	Map<String, Object> getMetadataMap();
+	
+	Map<String, Object> getContentMap();
 
 	void addError(String from, Throwable t);
 
@@ -52,6 +54,12 @@ public interface Document extends JsonDeserializer, JsonSerializer {
 	void putAll(Document d);
 
 	boolean isEqual(Document d);
+	
+	/**
+	 * Causes all subsequent requests to hasContentField for this field to return <em>false</em>.
+	 * Subsequent calls to getContentFields() should also exclude this field.
+	 */
+	Object removeContentField(String key);
 
 	void clear();
 

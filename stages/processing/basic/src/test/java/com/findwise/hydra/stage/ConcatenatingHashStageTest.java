@@ -28,7 +28,6 @@ public class ConcatenatingHashStageTest {
      */
     @Test
     public void testProcess() throws Exception {
-        LocalDocument doc = new LocalDocument();
         ConcatenatingHashStage chs = new ConcatenatingHashStage();
                 
         List<String> fields = new ArrayList<String>();

@@ -141,7 +141,7 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	
 	@Override
 	public boolean hasContentField(String key) {
-		return getContentField(key)!=null;
+		return getContents().containsField(key);
 	}
 
 	@Override
@@ -181,7 +181,8 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 
 	
 	@SuppressWarnings("unchecked")
-	public Map<String, Object> getContentsMap() {
+	@Override
+	public Map<String, Object> getContentMap() {
 		return getContents().toMap();
 	}
 	
@@ -189,6 +190,12 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	public final Object putMetadataField(String key, Object v) {
 		touchedMetadata.add(key);
 		return getMetadata().put(key, v);
+	}
+	
+	@Override
+	public final Object removeContentField(String key) {
+		touchedContent.add(key);
+		return getContents().removeField(key);
 	}
 	
 	@Override
@@ -236,8 +243,8 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 			putMetadataField(e.getKey(), e.getValue());
 		}
 		
-		for(String s : d.getContentFields()) {
-			putContentField(s, d.getContentField(s));
+		for(Map.Entry<String, Object> e : d.getContentMap().entrySet()) {
+			putContentField(e.getKey(), e.getValue());
 		}
 	}
 

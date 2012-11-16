@@ -1,6 +1,7 @@
 package com.findwise.hydra.net;
 
 import static org.junit.Assert.fail;
+import junit.framework.Assert;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
@@ -485,5 +486,24 @@ public class RemotePipelineTest {
 		if(!fc.equals(content)) {
 			fail("File had wrong contents");
 		}
+	}
+	
+	@Test
+	public void testRemoveField() throws Exception {
+		nm.getDatabaseConnector().getDocumentWriter().deleteAll();
+		MongoDocument testDoc = new MongoDocument();
+		testDoc.putContentField("field", "value");
+		nm.getDatabaseConnector().getDocumentWriter().insert(testDoc);
+		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
+		
+		LocalDocument ld = rp.getDocument(new LocalQuery());
+		Assert.assertTrue(ld.hasContentField("field"));
+		ld.removeContentField("field");
+		
+		rp.save(ld);
+		
+		rp = new RemotePipeline("localhost", server.getPort(), "stage2");
+		ld = rp.getDocument(new LocalQuery());
+		Assert.assertFalse(ld.hasContentField("field"));
 	}
 }
