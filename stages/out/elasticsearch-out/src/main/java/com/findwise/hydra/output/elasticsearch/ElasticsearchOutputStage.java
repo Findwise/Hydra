@@ -83,9 +83,8 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 	}
 	
 	
-	private void update(LocalDocument document) {
-		// TODO Auto-generated method stub
-		
+	private void update(LocalDocument document) throws ElasticSearchException, IOException {
+		add(document);
 	}
 
 	private void add(LocalDocument document) throws ElasticSearchException, IOException {
