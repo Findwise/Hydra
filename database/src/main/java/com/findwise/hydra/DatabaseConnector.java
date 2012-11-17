@@ -16,7 +16,7 @@ public interface DatabaseConnector<T extends DatabaseType> {
 	/**
 	 * Connect to the database.
 	 */
-	void connect() throws IOException;
+	abstract void connect() throws IOException;
 
 	/**
 	 * Will block execution until the latest write has been pushed though.
@@ -37,7 +37,7 @@ public interface DatabaseConnector<T extends DatabaseType> {
 	
 	DatabaseQuery<T> convert(Query query);
 	
-	DatabaseDocument<T> convert(Document document);
+	DatabaseDocument<T> convert(Document document) throws ConversionException;
 	
 	boolean isConnected();
 
@@ -45,4 +45,19 @@ public interface DatabaseConnector<T extends DatabaseType> {
 	
 	StatusReader<T> getStatusReader();
 	
+	public class ConversionException extends Exception {
+		/**
+		 * Auto generated
+		 */
+		private static final long serialVersionUID = -5921377046346967643L;
+		
+		public ConversionException(String msg) {
+			super(msg);
+		}
+		
+		public ConversionException(String msg, Throwable t) {
+			super(msg, t);
+		}
+		
+	}
 }

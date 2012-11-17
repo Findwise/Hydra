@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.DatabaseConnector;
+import com.findwise.hydra.DatabaseConnector.ConversionException;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.common.Document;
@@ -64,7 +65,11 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
         catch(JsonException e) {
         	HttpResponseWriter.printJsonException(response, e);
         	return;
-        }
+        } catch (ConversionException e) {
+			logger.error("Caught Exception when trying to convert "+requestContent, e);
+			HttpResponseWriter.printBadRequestContent(response);
+			return;
+		}
         
         boolean saveRes;
         if(partial.equals("1")) {
