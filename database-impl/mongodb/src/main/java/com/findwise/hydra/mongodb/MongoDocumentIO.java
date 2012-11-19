@@ -364,6 +364,9 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		catch (MongoException e) {
 			logger.error("UPDATE FAILED FOR id:"+d.getID(), e);
 			return false;
+		}   catch (IllegalStateException e) {
+			logger.error("ILLEGAL STATE EXCEPTION", e);
+			return false;
 		}
 	}
 	
