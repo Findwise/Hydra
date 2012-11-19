@@ -3,6 +3,8 @@ package com.findwise.hydra.mongodb;
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -227,11 +229,46 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	}
 
 	@Override
-	public DatabaseDocument<MongoType> convert(Document document) {
+	public DatabaseDocument<MongoType> convert(Document document) throws ConversionException {
 		try {
+			if(contains(document, "\u0000")) {
+				throw new ConversionException("A document cannot contain the NUL character. See https://jira.mongodb.org/browse/SERVER-7691");
+			}
 			return new MongoDocument(document.toJson());
 		} catch (JsonException e) {
-			return null;
+			throw new ConversionException("JSON Exception caught while converting", e);
 		}
+	}
+	
+	private boolean contains(Document haystack, String needle) {
+		for(String field : haystack.getContentFields()) {
+			if(field.contains(needle)) {
+				return true;
+			}
+			if(contains(haystack.getContentField(field), needle)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private boolean contains(Object object, String needle) {
+		if(object instanceof String) {
+			return ((String) object).contains(needle);
+		} else if (object instanceof List<?>) {
+			for(Object o : (List<?>)object) {
+				if(contains(o, needle)) {
+					return true;
+				}
+			}
+		} else if (object instanceof Map<?, ?>) {
+			for(Map.Entry<Object, Object> o : ((Map<Object, Object>) object).entrySet()) {
+				if(contains(o.getKey(), needle) || contains(o.getValue(), needle)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }
