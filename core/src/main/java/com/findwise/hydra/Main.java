@@ -21,8 +21,8 @@ public final class Main {
 	private static Logger logger = LoggerFactory.getLogger(Main.class);
 
 	public static void main(String[] args) {
-		if (args.length > 0) {
-			logger.error("Some parameters were provided on CommandLine. Ignored.");
+		if (args.length > 1) {
+			logger.error("Some parameters on command line were ignored.");
 		}
 
 		CoreConfiguration conf = getConfiguration();
@@ -32,6 +32,7 @@ public final class Main {
 		
 		NodeMaster nm = new NodeMaster(conf, new CachingDatabaseConnector<MongoType, MemoryType>(backing, cache), new Pipeline());
 		RESTServer server = new RESTServer(conf, new HttpRESTHandler<DatabaseType>(nm.getDatabaseConnector()));
+
 
 		if (!server.blockingStart()) {
 			if (server.hasError()) {
