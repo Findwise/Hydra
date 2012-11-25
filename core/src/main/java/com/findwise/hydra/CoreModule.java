@@ -13,6 +13,17 @@ public class CoreModule extends AbstractModule {
 	public static final String PIPELINE_DIRECTORY = "work";
 	
 	private static Logger logger = LoggerFactory.getLogger(CoreModule.class);
+	private boolean propertiesFileNameProvided;
+	private String propertiesFileName;
+
+	public CoreModule(){
+		propertiesFileNameProvided = false;
+	}
+
+	public CoreModule(String propertiesFileName) {
+		propertiesFileNameProvided = true;
+		this.propertiesFileName = propertiesFileName;
+	}
 
 	@Override
 	protected void configure() {
@@ -24,7 +35,11 @@ public class CoreModule extends AbstractModule {
 	@Singleton
 	protected CoreConfiguration getConfiguration() {
 		try {
-			return new FileConfiguration();
+			if (propertiesFileNameProvided) {
+				return new FileConfiguration(propertiesFileName);
+			} else {
+				return new FileConfiguration();
+			}
 		}
 		catch(ConfigurationException e) {
 			logger.error("Unable to read configuration", e);

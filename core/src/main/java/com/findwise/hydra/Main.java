@@ -17,11 +17,16 @@ public final class Main {
 	private static Logger logger = LoggerFactory.getLogger(Main.class);
 
 	public static void main(String[] args) {
-		if (args.length > 0) {
-			logger.error("Some parameters were provided on CommandLine. Ignored.");
+		if (args.length > 1) {
+			logger.error("Some parameters on command line were ignored.");
 		}
 
-		Injector i = Guice.createInjector(new CoreModule());
+		Injector i;
+		if (args.length > 0) {
+			i = Guice.createInjector(new CoreModule(args[0]));
+		} else {
+			i = Guice.createInjector(new CoreModule());
+		}
 
 		RESTServer server = i.getInstance(RESTServer.class);
 
