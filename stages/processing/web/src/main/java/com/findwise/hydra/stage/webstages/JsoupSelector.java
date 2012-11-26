@@ -45,9 +45,6 @@ public class JsoupSelector extends AbstractJsoupSelector {
 	@Parameter(name = "returnHTML", description = "Switch for outputting raw HTML or not, defaults to FALSE")
 	private boolean returnHTML = false;
 
-	@Parameter(name = "jSoupConfigs", description = "List of configs, where each config is a map with the keys 'selector', 'fieldname' and optionally 'singlevalue' (only output the first selected element; false if omitted)")
-	private List<Map<String, String>> jSoupConfigs;
-
 	private static final String HTML_OUTPUT_CLEANUP = "\\n\\s*";
 
 	/**

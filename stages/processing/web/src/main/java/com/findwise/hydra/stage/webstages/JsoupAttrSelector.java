@@ -43,9 +43,6 @@ import com.findwise.hydra.stage.Stage;
 @Stage(description = "This stage uses JSoup and DOM selectors to parse HTML/XML from a field and output the selected elements (text content or raw HTML/XML) as a list (or optionally, the first element that matches).")
 public class JsoupAttrSelector extends AbstractJsoupSelector {
 
-	@Parameter(name = "jSoupConfigs", description = "List of configs, where each config is a map with the keys 'selector', 'fieldname', 'attribute' and optionally 'singlevalue' (only output the first selected element; false if omitted)")
-	private List<Map<String, String>> jSoupConfigs;
- 
 	/**
 	 * Takes a jsoup Document and gets all the elements that matches the 
 	 * selector and returns a list of strings with the elements' attribute 

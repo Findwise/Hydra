@@ -34,7 +34,6 @@ import com.findwise.hydra.stage.Stage;
  * @author jens.bengtsson
  * 
  */
-@Stage(description = "This stage uses JSoup and DOM selectors to parse HTML/XML from a field and output the selected elements (text content or raw HTML/XML) as a list (or optionally, the first element that matches).")
 public abstract class AbstractJsoupSelector extends AbstractProcessStage {
 
 	@Parameter(name = "htmlField", description = "The input field containing HTML/XML, or a listfield with fields containing HTML/XML")
