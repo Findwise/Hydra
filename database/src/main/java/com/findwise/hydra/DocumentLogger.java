@@ -36,7 +36,6 @@ public class DocumentLogger extends Thread {
 			} else {
 				for(String event : getAllEvents(iterator.next())) {
 					System.out.println(event);
-					//logger.info(event);
 				}
 			}
 			

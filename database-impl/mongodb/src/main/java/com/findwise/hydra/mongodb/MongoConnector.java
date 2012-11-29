@@ -209,7 +209,7 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	}
 
 	@Override
-	public PipelineReader<MongoType> getPipelineReader() {
+	public PipelineReader getPipelineReader() {
 		return pipelineReader;
 	}
 	

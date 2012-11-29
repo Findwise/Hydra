@@ -23,7 +23,7 @@ import com.findwise.hydra.stage.GroupStarter;
 public class PropertiesHandlerTest {
 	@SuppressWarnings("rawtypes")
 	private DatabaseConnector dbc;
-	private PipelineReader<?> reader;
+	private PipelineReader reader;
 	private RESTServer server;
 	
 	@SuppressWarnings("unchecked")

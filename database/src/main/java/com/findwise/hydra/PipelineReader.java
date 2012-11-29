@@ -3,7 +3,7 @@ package com.findwise.hydra;
 import java.io.InputStream;
 import java.util.List;
 
-public interface PipelineReader<T extends DatabaseType> {
+public interface PipelineReader {
 	
 	InputStream getStream(DatabaseFile df);
 
