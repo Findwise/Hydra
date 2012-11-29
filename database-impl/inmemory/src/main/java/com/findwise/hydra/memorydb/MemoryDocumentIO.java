@@ -2,6 +2,7 @@ package com.findwise.hydra.memorydb;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -184,6 +185,17 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		}
 		return d;
 	}
+	
+	@Override
+	public Collection<DatabaseDocument<MemoryType>> getAndTag(DatabaseQuery<MemoryType> query, String tag, int n) {
+		((MemoryQuery)query).requireNotFetchedBy(tag);
+		List<DatabaseDocument<MemoryType>> docs = getDocuments(query, n);
+		for(int i=0; i<docs.size() && i<n; i++) {
+			DatabaseDocument<MemoryType> d = docs.get(i);
+			((MemoryDocument)d).tag(Document.FETCHED_METADATA_TAG, tag);
+		}
+		return docs;
+	}
 
 	@Override
 	public DatabaseDocument<MemoryType> getAndTagRecurring(
@@ -275,6 +287,11 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		MemoryDocument md = (MemoryDocument) d;
 		
 		MemoryDocument inDb = getDocumentById(d.getID());
+		
+		if(inDb == null) {
+			set.add(md);
+			inDb = getDocumentById(d.getID());
+		}
 		
 		if(md.isTouchedAction()) {
 			inDb.setAction(md.getAction());

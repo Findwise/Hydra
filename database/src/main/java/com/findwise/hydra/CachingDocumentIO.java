@@ -1,6 +1,7 @@
 package com.findwise.hydra;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -11,6 +12,8 @@ import com.findwise.hydra.common.DocumentFile;
 
 public class CachingDocumentIO<CacheType extends DatabaseType, BackingType extends DatabaseType> implements DocumentReader<CacheType>, DocumentWriter<CacheType> {
 	private static final Logger logger = LoggerFactory.getLogger(CachingDocumentIO.class);
+
+	private static final int DEFAULT_BATCH_SIZE = 10;
 	
 	private DocumentWriter<CacheType> cacheWriter;
 	private DocumentReader<CacheType> cacheReader;
@@ -19,13 +22,22 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	private DatabaseConnector<BackingType> backingConnector;
 	private DatabaseConnector<CacheType> cacheConnector;
 	
+	private int batchSize;
+
 	public CachingDocumentIO(DatabaseConnector<CacheType> cacheConnector, DatabaseConnector<BackingType> backingConnector) {
+		this(cacheConnector, backingConnector, DEFAULT_BATCH_SIZE);
+	}
+	
+	public CachingDocumentIO(DatabaseConnector<CacheType> cacheConnector, DatabaseConnector<BackingType> backingConnector, int batchSize) {
 		this.cacheConnector = cacheConnector;
 		this.backingConnector = backingConnector;
-		this.cacheWriter = cacheConnector.getDocumentWriter();
-		this.cacheReader = cacheConnector.getDocumentReader();
-		this.backingReader = backingConnector.getDocumentReader();
-		this.backingWriter = backingConnector.getDocumentWriter();
+
+		cacheWriter = cacheConnector.getDocumentWriter();
+		cacheReader = cacheConnector.getDocumentReader();
+		backingReader = backingConnector.getDocumentReader();
+		backingWriter = backingConnector.getDocumentWriter();
+		
+		this.batchSize = batchSize;
 	}
 	
 	private DatabaseDocument<BackingType> convert(DatabaseDocument<CacheType> d) {
@@ -48,10 +60,6 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 			logger.error("Unable to convert document: '"+d+"' from cache to underlying type", e);
 			return null;
 		}
-	}
-	
-	private DatabaseQuery<CacheType> converToCache(DatabaseQuery<BackingType> q) {
-		return cacheConnector.convert(q);
 	}
 	
 	@Override
@@ -100,26 +108,26 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 
 	@Override
 	public boolean markProcessed(DatabaseDocument<CacheType> d, String stage) {
-		if(!cacheWriter.markProcessed(d, stage)) {
-			return backingWriter.markProcessed(convert(d), stage);
-		}
-		return true;
+		DatabaseDocument<CacheType> inCache = cacheReader.getDocumentById(d.getID());
+		cacheWriter.markProcessed(d, stage);
+		inCache.putAll(d);
+		return backingWriter.markProcessed(convert(inCache), stage);
 	}
 
 	@Override
 	public boolean markDiscarded(DatabaseDocument<CacheType> d, String stage) {
-		if(!cacheWriter.markDiscarded(d, stage)) {
-			return backingWriter.markDiscarded(convert(d), stage);
-		}
-		return true;
+		DatabaseDocument<CacheType> inCache = cacheReader.getDocumentById(d.getID());
+		cacheWriter.markDiscarded(d, stage);
+		inCache.putAll(d);
+		return backingWriter.markDiscarded(convert(inCache), stage);
 	}
 
 	@Override
 	public boolean markFailed(DatabaseDocument<CacheType> d, String stage) {
-		if(!cacheWriter.markFailed(d, stage)) {
-			return backingWriter.markFailed(convert(d), stage);
-		}
-		return true;
+		DatabaseDocument<CacheType> inCache = cacheReader.getDocumentById(d.getID());
+		cacheWriter.markFailed(d, stage);
+		inCache.putAll(d);
+		return backingWriter.markFailed(convert(inCache), stage);
 	}
 
 	@Override
@@ -219,69 +227,86 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 
 	@Override
 	public List<DatabaseDocument<CacheType>> getDocuments(DatabaseQuery<CacheType> q, int limit) {
-		List<DatabaseDocument<CacheType>> list = cacheReader.getDocuments(q, limit);
-		if(list.size()<1) {
-			
-		}
+		return getDocuments(q, limit, 0);
 	}
 
 	@Override
-	public List<DatabaseDocument<CacheType>> getDocuments(
-			DatabaseQuery<CacheType> q, int limit, int skip) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<DatabaseDocument<CacheType>> getDocuments(DatabaseQuery<CacheType> q, int limit, int skip) {
+		List<DatabaseDocument<CacheType>> list = cacheReader.getDocuments(q, limit, skip);
+		if(list.size()<1) {
+			fillCache(q);
+			list = cacheReader.getDocuments(q, limit, skip);
+		}
+		return list;
 	}
 
 	@Override
 	public long getNumberOfDocuments(DatabaseQuery<CacheType> q) {
-		// TODO Auto-generated method stub
-		return 0;
+		return cacheReader.getNumberOfDocuments(q);
 	}
 
 	@Override
-	public DocumentFile getDocumentFile(DatabaseDocument<CacheType> d,
-			String fileName) {
-		// TODO Auto-generated method stub
-		return null;
+	public DocumentFile getDocumentFile(DatabaseDocument<CacheType> d, String fileName) {
+		DocumentFile df = cacheReader.getDocumentFile(d, fileName);
+		if(df == null) {
+			try {
+				addToCache(backingReader.getDocumentFile(convert(d), fileName));
+			} catch (IOException e) {
+				logger.error("Caught IOException while trying to cache a document file: "+d, e);
+			}
+			df = cacheReader.getDocumentFile(d, fileName);
+		}
+		return df;
 	}
 
 	@Override
 	public List<String> getDocumentFileNames(DatabaseDocument<CacheType> d) {
-		// TODO Auto-generated method stub
-		return null;
+		List<String> list = cacheReader.getDocumentFileNames(d);
+		list.addAll(backingReader.getDocumentFileNames(convert(d)));
+		return list;
 	}
 
 	@Override
 	public long getActiveDatabaseSize() {
-		// TODO Auto-generated method stub
-		return 0;
+		return cacheReader.getActiveDatabaseSize() + backingReader.getActiveDatabaseSize();
 	}
 
 	@Override
 	public long getInactiveDatabaseSize() {
-		// TODO Auto-generated method stub
-		return 0;
+		return cacheReader.getInactiveDatabaseSize() + backingReader.getInactiveDatabaseSize();
 	}
 
 	@Override
 	public Object toDocumentId(Object jsonPrimitive) {
-		// TODO Auto-generated method stub
-		return null;
+		return cacheReader.toDocumentId(jsonPrimitive);
 	}
 
 	@Override
 	public Object toDocumentIdFromJson(String json) {
-		// TODO Auto-generated method stub
-		return null;
+		return cacheReader.toDocumentIdFromJson(json);
 	}
 
-	private void fillCache(DatabaseQuery<CacheType> query) {
-		// TODO Auto-generated method stub
-		
+	protected void fillCache(DatabaseQuery<CacheType> query) {
+		for(DatabaseDocument<BackingType> dd : backingWriter.getAndTag(convert(query), "_cache", batchSize)) {
+			addToCache(convertToCache(dd));
+		}
 	}
 
-	private void addToCache(DatabaseDocument<CacheType> convertToCache) {
-		// TODO Auto-generated method stub
-		
+	protected void addToCache(DatabaseDocument<CacheType> d) {
+		cacheWriter.update(d);
+	}
+
+	protected void addToCache(DocumentFile documentFile) throws IOException {
+		cacheWriter.write(documentFile);
+	}
+
+	@Override
+	public Collection<DatabaseDocument<CacheType>> getAndTag(DatabaseQuery<CacheType> query, String tag, int n) {
+		Collection<DatabaseDocument<CacheType>> col = cacheWriter.getAndTag(query, tag, n);
+		if(col.size()<n) {
+			fillCache(query);
+			col.addAll(cacheWriter.getAndTag(query, tag, n));
+		}
+		return col;
 	}
 }

@@ -15,7 +15,6 @@ public class CachingDatabaseConnector<BackingType extends DatabaseType, CacheTyp
 			DatabaseConnector<CacheType> cache) {
 		this.backing = backing;
 		this.cache = cache;
-		documentio = new CachingDocumentIO<CacheType, BackingType>(cache, backing);
 
 	}
 
@@ -23,6 +22,7 @@ public class CachingDatabaseConnector<BackingType extends DatabaseType, CacheTyp
 	public void connect() throws IOException {
 		backing.connect();
 		cache.connect();
+		documentio = new CachingDocumentIO<CacheType, BackingType>(cache, backing);
 	}
 
 	@Override
