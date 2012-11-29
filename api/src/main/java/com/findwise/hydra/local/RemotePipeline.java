@@ -112,11 +112,13 @@ public class RemotePipeline {
 		}
 
 		long startSerialize = System.currentTimeMillis();
+		long startJson = 0L;
 		LocalDocument ld = null;
 		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-			startSerialize = System.currentTimeMillis();
+			String s = EntityUtils.toString(response.getEntity());
 			try {
-				ld = new LocalDocument(EntityUtils.toString(response.getEntity()));
+				startJson = System.currentTimeMillis();
+				ld = new LocalDocument(s);
 			} catch (JsonException e) {
 				throw new IOException(e);
 			}
@@ -131,7 +133,7 @@ public class RemotePipeline {
 		long end = System.currentTimeMillis();
 		// TODO don't use id
 		Object docId = ld != null ? ld.getContentField("id") : null;
-		Logger.debug(String.format("turbo event=query stage_name=%s doc_id=%s start=%d fetch=%d serialize=%d end=%d total=%d", stageName, docId, start, startSerialize - start, end - startSerialize, end, end - start));
+		Logger.debug(String.format("turbo event=query stage_name=%s doc_id=%s start=%d fetch=%d entitystring=%d serialize=%d end=%d total=%d", stageName, docId, start, startSerialize - start, startJson - startSerialize, end - startJson, end, end - start));
 		return ld;
 	}
 	
