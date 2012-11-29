@@ -129,7 +129,8 @@ public class RemotePipeline {
 			logUnexpected(response);
 		}
 		long end = System.currentTimeMillis();
-		String docId = ld != null ? ld.getContentField("id").toString() : "null";
+		// TODO don't use id
+		Object docId = ld != null ? ld.getContentField("id") : null;
 		Logger.debug(String.format("turbo event=query stage_name=%s doc_id=%s start=%d fetch=%d serialize=%d end=%d total=%d", stageName, docId, start, startSerialize - start, end - startSerialize, end, end - start));
 		return ld;
 	}
@@ -236,7 +237,8 @@ public class RemotePipeline {
 		
 		logUnexpected(response);
 		long end = System.currentTimeMillis();
-		String docId = d != null ? d.getContentField("id").toString() : "null";
+		// TODO don't use id
+		Object docId = d != null ? d.getContentField("id") : null;
 		Logger.debug(String.format("turbo event=update stage_name=%s doc_id=%s start=%d serialize=%d post=%d end=%d total=%d", stageName, docId, start, startPost - start, end - startPost, end, end - start));
 		return false;
 	}
