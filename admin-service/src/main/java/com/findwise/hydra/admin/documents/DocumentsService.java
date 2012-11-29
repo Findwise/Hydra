@@ -5,16 +5,20 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import com.findwise.hydra.DatabaseConnector;
+import com.findwise.hydra.DatabaseConnector.ConversionException;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.admin.database.AdminServiceQuery;
 import com.findwise.hydra.admin.database.AdminServiceType;
+import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.local.LocalDocument;
 
 public class DocumentsService<T extends DatabaseType> {
 
@@ -153,4 +157,34 @@ public class DocumentsService<T extends DatabaseType> {
 		return ret;
 	}
 
+	public Map<String, Object> putDocument(String action, String contentAsJson) {
+		Map<String, Object> ret = new HashMap<String, Object>();
+		LocalDocument doc = new LocalDocument();
+		
+		try {
+			doc.setAction(Document.Action.valueOf(action));
+			Map<String, Object> content = SerializationUtils.fromJson(contentAsJson);
+			doc.getContentMap().putAll(content);
+			
+			DatabaseDocument<T> dbDoc = connector.convert(doc);
+			
+			connector.getDocumentWriter().insert(dbDoc);
+		} catch (IllegalArgumentException e) {
+			Map<String, Object> error = new HashMap<String, Object>();
+			error.put("Invalid action", action);
+			error.put("Allowed values", Document.Action.values());
+			ret.put("error", error);
+		} catch (JsonException e) {
+			Map<String, Object> error = new HashMap<String, Object>();
+			error.put("Invalid JSON document", contentAsJson);
+			error.put("Expected format:", "{\"fieldname\":\"value\",\"otherfield\":\"otherfieldvalue\"}");
+			ret.put("error", error);
+		} catch (ConversionException e) {
+			Map<String, Object> error = new HashMap<String, Object>();
+			error.put("Could not convert to database document", e);
+			ret.put("error", error);
+		}
+		
+		return ret;
+	}
 }
