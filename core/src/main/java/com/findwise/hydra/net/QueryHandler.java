@@ -35,12 +35,14 @@ public class QueryHandler<T extends DatabaseType> implements ResponsibleHandler 
 	@Override
 	public void handle(HttpRequest request, HttpResponse response,
 			HttpContext arg2) throws HttpException, IOException {
+		long start = System.currentTimeMillis();
 		logger.trace("handleGetDocument()");
 		HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request)
 				.getEntity();
 		String requestContent = EntityUtils.toString(requestEntity);
+		long tostring = System.currentTimeMillis();
 		String stage = RESTTools.getParam(request, RemotePipeline.STAGE_PARAM);
-
+		
 		if (stage == null) {
 			HttpResponseWriter.printMissingParameter(response,
 					RemotePipeline.STAGE_PARAM);
@@ -54,26 +56,35 @@ public class QueryHandler<T extends DatabaseType> implements ResponsibleHandler 
 			HttpResponseWriter.printJsonException(response, e);
 			return;
 		}
-
+		
+		long parse = System.currentTimeMillis();
+		
 		reportQuery(stage);		
+		
 
 		Document d;
 
 		String recurring = RESTTools.getParam(request,
 				RemotePipeline.RECURRING_PARAM);
 
+		
 		if (recurring != null && recurring.equals("1")) {
 			d = dbc.getDocumentWriter().getAndTagRecurring(dbq, stage);
 		} else {
 			d = dbc.getDocumentWriter().getAndTag(dbq, stage);
 		}
-
+		
+		long query = System.currentTimeMillis();
+		
 		if (d != null) {
 			HttpResponseWriter.printDocument(response, d, stage);
 		} else {
 			HttpResponseWriter.printNoDocument(response);
 		}
 
+		long serialize = System.currentTimeMillis();
+		Object id = d != null ? d.getID() : null;
+		logger.info(String.format("turbo event=query stage_name=%s doc_id=%s start=%d end=%d total=%d entitystring=%d parse=%d query=%d serialize=%d", stage, id, start, serialize, serialize-start, tostring-start, parse-tostring, query-parse, serialize-query));
 	}
 
 	private DatabaseQuery<T> requestToQuery(String requestContent)

@@ -36,10 +36,11 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
 	@Override
 	public void handle(HttpRequest request, HttpResponse response,
 			HttpContext context) throws HttpException, IOException {
+		long start = System.currentTimeMillis();
 		HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request)
 				.getEntity();
 		String requestContent = EntityUtils.toString(requestEntity);
-
+		long tostring = System.currentTimeMillis();
 		String stage = RESTTools.getParam(request, RemotePipeline.STAGE_PARAM);
 		if (stage == null) {
 			HttpResponseWriter.printMissingParameter(response, RemotePipeline.STAGE_PARAM);
@@ -57,9 +58,10 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
 			HttpResponseWriter.printBadRequestContent(response);
 			return;
 		}
+		long convert = System.currentTimeMillis();
 		
 		DatabaseDocument<T> dbdoc = dbc.getDocumentReader().getDocumentById(md.getID());
-		
+		long query = System.currentTimeMillis();
 		if(dbdoc==null) {
 			HttpResponseWriter.printNoDocument(response);
 			return;
@@ -72,6 +74,8 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
 		} else {
 			HttpResponseWriter.printSaveOk(response, md.getID());
 		}
+		long end = System.currentTimeMillis();
+		logger.info(String.format("turbo event=processed stage_name=%s doc_id=%s start=%d end=%d diff=%d entitystring=%d parse=%d query=%d serialize=%d", stage, md.getID(), start, end, end-start, tostring-start, convert-tostring, query-convert, end-query));
 	}
 	
 	private Mark getMark(HttpRequest request) {

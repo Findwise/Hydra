@@ -37,9 +37,11 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 	public void handle(HttpRequest request, HttpResponse response, HttpContext arg2)
 			throws HttpException, IOException {
 		logger.trace("handleWriteDocument()");
-        HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request).getEntity();
+        long start = System.currentTimeMillis();
+		HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request).getEntity();
         String requestContent = EntityUtils.toString(requestEntity);
-
+        long tostring = System.currentTimeMillis();
+        
         String stage = RESTTools.getParam(request, RemotePipeline.STAGE_PARAM);
         if(stage==null) {
         	HttpResponseWriter.printMissingParameter(response, RemotePipeline.STAGE_PARAM);
@@ -71,9 +73,13 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 			return;
 		}
         
+        long convert = System.currentTimeMillis();
+        
+        String type;
         boolean saveRes;
         if(partial.equals("1")) {
         	saveRes = handlePartialWrite(md, response);
+        	type="update";
         }
         else {
         	if(md.getID()!=null) {
@@ -82,7 +88,9 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
         	else {
         		saveRes = handleInsert(md, response);
         	}
+        	type="insert";
         }
+        long write = System.currentTimeMillis();
 
 		if (saveRes && norelease.equals("0")) {
 			boolean result = release(md, stage);
@@ -91,6 +99,8 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 				return;
 			}
 		}
+		long end = System.currentTimeMillis();
+		logger.info(String.format("turbo event=%s stage_name=%s doc_id=%s start=%d end=%d diff=%d entitystring=%d parse=%d query=%d serialize=%d", type, stage, md.getID(), start, end, end-start, tostring-start, convert-tostring, write-convert, end-write));
 	}
 	
 	private boolean release(Document md, String stage) {
