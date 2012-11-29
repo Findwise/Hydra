@@ -75,7 +75,7 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
 			HttpResponseWriter.printSaveOk(response, md.getID());
 		}
 		long end = System.currentTimeMillis();
-		logger.info(String.format("turbo event=processed stage_name=%s doc_id=%s start=%d end=%d diff=%d entitystring=%d parse=%d query=%d serialize=%d", stage, md.getID(), start, end, end-start, tostring-start, convert-tostring, query-convert, end-query));
+		logger.info(String.format("turbo event=processed stage_name=%s doc_id=%s start=%d end=%d total=%d entitystring=%d parse=%d query=%d serialize=%d", stage, md.getID(), start, end, end-start, tostring-start, convert-tostring, query-convert, end-query));
 	}
 	
 	private Mark getMark(HttpRequest request) {

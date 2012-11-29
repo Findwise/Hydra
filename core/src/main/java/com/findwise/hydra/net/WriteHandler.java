@@ -100,7 +100,7 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 			}
 		}
 		long end = System.currentTimeMillis();
-		logger.info(String.format("turbo event=%s stage_name=%s doc_id=%s start=%d end=%d diff=%d entitystring=%d parse=%d query=%d serialize=%d", type, stage, md.getID(), start, end, end-start, tostring-start, convert-tostring, write-convert, end-write));
+		logger.info(String.format("turbo event=%s stage_name=%s doc_id=%s start=%d end=%d total=%d entitystring=%d parse=%d query=%d serialize=%d", type, stage, md.getID(), start, end, end-start, tostring-start, convert-tostring, write-convert, end-write));
 	}
 	
 	private boolean release(Document md, String stage) {
