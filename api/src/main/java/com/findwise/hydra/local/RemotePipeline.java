@@ -18,6 +18,7 @@ import org.apache.http.util.EntityUtils;
 import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.common.InternalLogger;
 import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.common.Logger;
 import com.findwise.hydra.common.SerializationUtils;
 import com.findwise.tools.HttpConnection;
 
@@ -60,7 +61,7 @@ public class RemotePipeline {
 	private String stageName;
 	
 	private LocalDocument currentDocument;
-	
+
 	/**
 	 * Calls RemotePipeline(String, int, String) with default values for 
 	 * hostName (RemotePipeline.DEFAULT_HOST) and port (RemotePipeline.DEFAULT_PORT).
@@ -102,15 +103,18 @@ public class RemotePipeline {
 
 	public LocalDocument getDocument(LocalQuery query, boolean recurring) throws IOException {
 		HttpResponse response;
+		long start = System.currentTimeMillis();
 		if(recurring) {
 			response = core.post(getRecurringUrl, query.toJson());
 		}
 		else {
 			response = core.post(getUrl, query.toJson());
 		}
-		
+
+		long startSerialize = System.currentTimeMillis();
+		LocalDocument ld = null;
 		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-			LocalDocument ld;
+			startSerialize = System.currentTimeMillis();
 			try {
 				ld = new LocalDocument(EntityUtils.toString(response.getEntity()));
 			} catch (JsonException e) {
@@ -118,15 +122,16 @@ public class RemotePipeline {
 			}
 			InternalLogger.debug("Received document with ID " + ld.getID());
 			currentDocument = ld;
-			return ld;
 		} else if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
 			InternalLogger.debug("No document found matching query");
 			EntityUtils.consume(response.getEntity());
-			return null;
 		} else {
 			logUnexpected(response);
-			return null;
 		}
+		long end = System.currentTimeMillis();
+		String docId = ld != null ? ld.getContentField("id").toString() : "null";
+		Logger.debug(String.format("turbo event=query stage_name=%s doc_id=%s start=%d fetch=%d serialize=%d end=%d total=%d", stageName, docId, start, startSerialize - start, end - startSerialize, end, end - start));
+		return ld;
 	}
 	
 	/**
@@ -209,13 +214,14 @@ public class RemotePipeline {
 	private boolean save(LocalDocument d, boolean partialUpdate) throws IOException, JsonException {
 		boolean hasId = d.getID()!=null;
 		String s;
+		long start = System.currentTimeMillis();
 		if(partialUpdate) {
 			s = d.modifiedFieldsToJson();
 		}
 		else {
 			s = d.toJson();
 		}
-		
+		long startPost = System.currentTimeMillis();
 		HttpResponse response = core.post(getWriteUrl(partialUpdate), s);
 		if(response.getStatusLine().getStatusCode()==HttpStatus.SC_OK) {
 			if(!hasId) {
@@ -229,7 +235,9 @@ public class RemotePipeline {
 		}
 		
 		logUnexpected(response);
-		
+		long end = System.currentTimeMillis();
+		String docId = d != null ? d.getContentField("id").toString() : "null";
+		Logger.debug(String.format("turbo event=update stage_name=%s doc_id=%s start=%d serialize=%d post=%d end=%d total=%d", stageName, docId, start, startPost - start, end - startPost, end, end - start));
 		return false;
 	}
 	
