@@ -179,16 +179,16 @@ public class MemoryDocument extends LocalDocument implements DatabaseDocument<Me
 			done.tag = (String) getMetadataSubMap(FAILED_METADATA_FLAG).get(STAGE_METADATA_SUBKEY);
 		}
 		else if(getMetadataMap().containsKey(DISCARDED_METADATA_FLAG)) {
-			done.date = (Date) getMetadataSubMap(FAILED_METADATA_FLAG).get(DATE_METADATA_SUBKEY);
-			done.tag = (String) getMetadataSubMap(FAILED_METADATA_FLAG).get(STAGE_METADATA_SUBKEY);
+			done.date = (Date) getMetadataSubMap(DISCARDED_METADATA_FLAG).get(DATE_METADATA_SUBKEY);
+			done.tag = (String) getMetadataSubMap(DISCARDED_METADATA_FLAG).get(STAGE_METADATA_SUBKEY);
 		}
 		else if(getMetadataMap().containsKey(PENDING_METADATA_FLAG)) {
-			done.date = (Date) getMetadataSubMap(FAILED_METADATA_FLAG).get(DATE_METADATA_SUBKEY);
-			done.tag = (String) getMetadataSubMap(FAILED_METADATA_FLAG).get(STAGE_METADATA_SUBKEY);
+			done.date = (Date) getMetadataSubMap(DISCARDED_METADATA_FLAG).get(DATE_METADATA_SUBKEY);
+			done.tag = (String) getMetadataSubMap(DISCARDED_METADATA_FLAG).get(STAGE_METADATA_SUBKEY);
 		}
 		else if(getMetadataMap().containsKey(PROCESSED_METADATA_FLAG)) {
-			done.date = (Date) getMetadataSubMap(FAILED_METADATA_FLAG).get(DATE_METADATA_SUBKEY);
-			done.tag = (String) getMetadataSubMap(FAILED_METADATA_FLAG).get(STAGE_METADATA_SUBKEY);
+			done.date = (Date) getMetadataSubMap(DISCARDED_METADATA_FLAG).get(DATE_METADATA_SUBKEY);
+			done.tag = (String) getMetadataSubMap(DISCARDED_METADATA_FLAG).get(STAGE_METADATA_SUBKEY);
 		}
 		return done;
 	}
