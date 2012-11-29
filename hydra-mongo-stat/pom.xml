@@ -53,7 +53,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.findwise.hydra.Log</mainClass>
+                            <mainClass>com.findwise.hydra.SetupSleepyPipeline</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
