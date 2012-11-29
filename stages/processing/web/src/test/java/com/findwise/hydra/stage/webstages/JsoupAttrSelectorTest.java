@@ -97,7 +97,7 @@ public class JsoupAttrSelectorTest {
 
 		jsoup.process(doc);
 						
-		assertEquals("Expected empty result","[]",doc.getContentField("alllinks").toString());
+		assertNull("Expected empty result", doc.getContentField("alllinks"));
 	}
 	
 

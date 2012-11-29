@@ -36,10 +36,10 @@ import com.findwise.hydra.stage.Stage;
  */
 public abstract class AbstractJsoupSelector extends AbstractProcessStage {
 
-	@Parameter(name = "htmlField", description = "The input field containing HTML/XML, or a listfield with fields containing HTML/XML")
+	@Parameter(name = "htmlField", required = true, description = "The input field containing HTML/XML, or a listfield with fields containing HTML/XML")
 	private String htmlField;
 
-	@Parameter(name = "jSoupConfigs", description = "List of configs, where each config is a map with at least the keys 'selector', 'fieldname' and optionally 'singlevalue' (only output the first selected element; false if omitted)")
+	@Parameter(name = "jSoupConfigs", required = true, description = "List of configs, where each config is a map with at least the keys 'selector', 'fieldname' and optionally 'singlevalue' (only output the first selected element; false if omitted)")
 	private List<Map<String, String>> jSoupConfigs;
 
 	@Override
@@ -81,22 +81,24 @@ public abstract class AbstractJsoupSelector extends AbstractProcessStage {
 			Document jsoupDoc = Jsoup.parse(content);
 			
 			for (Map<String, String> jsoupConfig : jSoupConfigs) {
-				if (jsoupConfig.get("singlevalue") != null && jsoupConfig.get("singlevalue").equalsIgnoreCase("true")) {
-					doc.putContentField(jsoupConfig.get("fieldname"),
-							getJsoupElement(jsoupDoc, jsoupConfig));
+				String fieldName = jsoupConfig.get("fieldname");
+				if (jsoupConfig.get("singlevalue") != null && jsoupConfig.get("singlevalue").equalsIgnoreCase("true")){
+					String fieldContent = getJsoupElement(jsoupDoc, jsoupConfig);
+					if (fieldContent != null && !fieldContent.isEmpty()){
+						doc.putContentField(fieldName, fieldContent);
+					}
 				} else {
-					String fieldName = jsoupConfig.get("fieldname");
 					List<String> fieldContent = new ArrayList<String>();
 					List<String> selectedContent = getJsoupElements(jsoupDoc, jsoupConfig);
 					if (append) {
 						@SuppressWarnings("unchecked")
-						List<String> oldFieldContent = (List<String>)doc.getContentField(fieldName);
+						List<String> oldFieldContent = doc.hasContentField(fieldName) ? (List<String>)doc.getContentField(fieldName) : new ArrayList<String>();
 						fieldContent.addAll(oldFieldContent);
-						fieldContent.addAll(selectedContent);
-					} else {
-						fieldContent.addAll(selectedContent);
 					}
-					doc.putContentField(fieldName, fieldContent);
+					fieldContent.addAll(selectedContent);
+					if (!fieldContent.isEmpty()){
+						doc.putContentField(fieldName, fieldContent);
+					}
 				}
 			}
 		}

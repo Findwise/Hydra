@@ -2,6 +2,7 @@ package com.findwise.hydra.stage.webstages;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -120,7 +121,7 @@ public class JsoupSelectorTest {
 
 		jsoup.process(doc);
 						
-		assertEquals("",doc.getContentField("extracted_text").toString());
+		assertNull(doc.getContentField("extracted_text"));
 	}
 	
 	@Test
