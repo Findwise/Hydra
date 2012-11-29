@@ -33,7 +33,6 @@ public final class Main {
 		NodeMaster nm = new NodeMaster(conf, new CachingDatabaseConnector<MongoType, MemoryType>(backing, cache), new Pipeline());
 		RESTServer server = new RESTServer(conf, new HttpRESTHandler<DatabaseType>(nm.getDatabaseConnector()));
 
-
 		if (!server.blockingStart()) {
 			if (server.hasError()) {
 				logger.error("Failed to start REST server: ", server.getError());
