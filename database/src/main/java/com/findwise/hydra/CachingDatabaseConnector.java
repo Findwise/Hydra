@@ -15,9 +15,7 @@ public class CachingDatabaseConnector<BackingType extends DatabaseType, CacheTyp
 			DatabaseConnector<CacheType> cache) {
 		this.backing = backing;
 		this.cache = cache;
-		documentio = new CachingDocumentIO<CacheType, BackingType>(
-				cache.getDocumentWriter(), cache.getDocumentReader(),
-				backing.getDocumentWriter(), backing.getDocumentReader());
+		documentio = new CachingDocumentIO<CacheType, BackingType>(cache, backing);
 
 	}
 
