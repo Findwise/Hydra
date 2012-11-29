@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.DatabaseConnector.ConversionException;
 import com.findwise.hydra.common.DocumentFile;
+import com.findwise.hydra.common.JsonException;
 
 public class CachingDocumentIO<CacheType extends DatabaseType, BackingType extends DatabaseType> implements DocumentReader<CacheType>, DocumentWriter<CacheType> {
 	private static final Logger logger = LoggerFactory.getLogger(CachingDocumentIO.class);
@@ -110,7 +111,11 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	public boolean markProcessed(DatabaseDocument<CacheType> d, String stage) {
 		DatabaseDocument<CacheType> inCache = cacheReader.getDocumentById(d.getID());
 		cacheWriter.markProcessed(d, stage);
-		inCache.putAll(d);
+		if(inCache==null) {
+			inCache = d;
+		} else {
+			inCache.putAll(d);
+		}
 		return backingWriter.markProcessed(convert(inCache), stage);
 	}
 
@@ -118,7 +123,11 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	public boolean markDiscarded(DatabaseDocument<CacheType> d, String stage) {
 		DatabaseDocument<CacheType> inCache = cacheReader.getDocumentById(d.getID());
 		cacheWriter.markDiscarded(d, stage);
-		inCache.putAll(d);
+		if(inCache==null) {
+			inCache = d;
+		} else {
+			inCache.putAll(d);
+		}
 		return backingWriter.markDiscarded(convert(inCache), stage);
 	}
 
@@ -126,7 +135,11 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	public boolean markFailed(DatabaseDocument<CacheType> d, String stage) {
 		DatabaseDocument<CacheType> inCache = cacheReader.getDocumentById(d.getID());
 		cacheWriter.markFailed(d, stage);
-		inCache.putAll(d);
+		if(inCache==null) {
+			inCache = d;
+		} else {
+			inCache.putAll(d);
+		}
 		return backingWriter.markFailed(convert(inCache), stage);
 	}
 
@@ -144,7 +157,9 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 		if(doc==null) {
 			return false;
 		}
-		return backingWriter.insert(doc);
+		boolean result = backingWriter.insert(doc);
+		d.setID(convertToCache(doc).getID());
+		return result;
 	}
 
 	@Override

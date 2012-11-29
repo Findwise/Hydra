@@ -104,8 +104,7 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 	}
 	
 	private boolean release(Document md, String stage) {
-		return dbc.getDocumentWriter()
-				.markTouched(md.getID(), stage);
+		return dbc.getDocumentWriter().markTouched(md.getID(), stage);
 	}
 	
 	private boolean handlePartialWrite(DatabaseDocument<T> md, HttpResponse response) throws UnsupportedEncodingException{

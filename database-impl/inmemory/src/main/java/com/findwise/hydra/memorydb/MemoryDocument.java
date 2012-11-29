@@ -113,6 +113,7 @@ public class MemoryDocument extends LocalDocument implements DatabaseDocument<Me
 		((Map<String, Object>) getMetadataMap().get(tag)).put(stage, new Date());
 	}
 
+	@Override
 	public void setID(Object id) {
 		getDocumentMap().put(ID_KEY, id);
 	}

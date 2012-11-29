@@ -28,4 +28,6 @@ public interface DatabaseDocument<T extends DatabaseType> extends Document {
 	Date getCompletedTime();
 	
 	String getCompletedBy();
+
+	void setID(Object id);
 }

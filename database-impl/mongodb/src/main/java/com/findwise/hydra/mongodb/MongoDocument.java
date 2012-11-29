@@ -481,4 +481,9 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 		}
 		return done;
 	}
+
+	@Override
+	public void setID(Object id) {
+		documentMap.put(ID_KEY, id);
+	}
 }
