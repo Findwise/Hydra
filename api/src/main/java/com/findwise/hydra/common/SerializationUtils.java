@@ -5,12 +5,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
-import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -32,46 +34,14 @@ import com.google.gson.JsonSerializationContext;
  *
  */
 public final class SerializationUtils {
-	private SerializationUtils() {}
 	
-	/**
-	 * Method for Deserializing any Json message into a Map. 
-	 * Should the Json message not be a map, it will be wrapped in a map, corresponding to
-	 * the JSON: <code>{ "" : &lt;original_json&gt; }</code>
-	 */
-	@SuppressWarnings("unchecked")
-	public static Map<String, Object> fromJson(String json) throws JsonException {
-		try {
-			Object o = toObject(json);
-			if(o instanceof HashMap) {
-				return (HashMap<String, Object>) o;
-			}
-			else {
-				HashMap<String, Object> x = new HashMap<String, Object>();
-				x.put("", o);
-				return x;
-			}
-		}
-		catch(JsonParseException e) {
-			throw new JsonException(e);
-		}
+	private static SimpleDateFormat getDateFormat() {
+		return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 	}
 	
-	public static Object toObject(String json) throws JsonException {
-		GsonBuilder gsonBuilder = new GsonBuilder();
-		gsonBuilder.serializeNulls();
-		gsonBuilder.registerTypeAdapter(Object.class, new NaturalGsonDeserializer());
-		gsonBuilder.setDateFormat(DateFormat.FULL);
-		Gson gson = gsonBuilder.create();
-		return gson.fromJson(json, Object.class);
-	}
+	private static Gson gson = getGson();
 	
-	/**
-	 * Serializes any object to Json. 
-	 * @param o
-	 * @return
-	 */
-	public static String toJson(Object o) {
+	private static Gson getGson() {
 		GsonBuilder gsonBuilder = new GsonBuilder();
 		gsonBuilder.registerTypeAdapter(InputStream.class,
 				new com.google.gson.JsonSerializer<InputStream>() {
@@ -93,13 +63,59 @@ public final class SerializationUtils {
 					@Override
 					public JsonElement serialize(Date src, Type typeOfSrc,
 							JsonSerializationContext context) {
-						return src == null ? null : new JsonPrimitive(src
-								.getTime());
+						return src == null ? null : new JsonPrimitive(getDateFormat().format(src));
 					}
 				});
-
-		gsonBuilder.setDateFormat(DateFormat.FULL);
-		return gsonBuilder.serializeNulls().create().toJson(o);
+		
+		return gsonBuilder.serializeNulls().create();
+	}
+	
+	private SerializationUtils() {}
+	
+	/**
+	 * Method for Deserializing any Json message into a Map. 
+	 * Should the Json message not be a map, it will be wrapped in a map, corresponding to
+	 * the JSON: <code>{ "" : &lt;original_json&gt; }</code>
+	 */
+	@SuppressWarnings("unchecked")
+	public static Map<String, Object> fromJson(String json) throws JsonException {
+		try {
+			Object o = toObject(json);
+			if(o instanceof Map) {
+				return (Map<String, Object>) o;
+			}
+			else {
+				HashMap<String, Object> x = new HashMap<String, Object>();
+				x.put("", o);
+				return x;
+			}
+		}
+		catch(JsonParseException e) {
+			throw new JsonException(e);
+		}
+	}
+	
+	public static Object toObject(String json) throws JsonException {
+		GsonBuilder gsonBuilder = new GsonBuilder();
+		gsonBuilder.serializeNulls();
+		gsonBuilder.registerTypeAdapter(Object.class, new NaturalGsonDeserializer());
+		Gson gson = gsonBuilder.create();
+		return gson.fromJson(json, Object.class);
+	}
+	
+	/**
+	 * Serializes any object to Json. 
+	 * @param o
+	 * @return
+	 */
+	public static String toJson(Object o) {
+		while(true) {
+			try {
+				return gson.toJson(o);
+			} catch(ConcurrentModificationException e) {
+				Logger.warn("A ConcurrentModificationException was caught during serialization. Trying again!");
+			}
+		}
 	}
 	
 	/**
@@ -146,12 +162,13 @@ public final class SerializationUtils {
 		private Object handlePrimitive(JsonPrimitive json) {
 			if (json.isBoolean()) {
 				return json.getAsBoolean();
-			}
-			else if (json.isString()) {
-				return json.getAsString();
-			}
-			
-			else {
+			} else if (json.isString()) {
+				try {
+					return getDateFormat().parse(json.getAsString());
+				} catch(ParseException e) {
+					return json.getAsString();
+				}
+			} else {
 				BigDecimal bigDec = json.getAsBigDecimal();
 				
 				try {

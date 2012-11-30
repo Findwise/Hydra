@@ -365,7 +365,7 @@ public class RemotePipeline {
 			
 			@SuppressWarnings("unchecked")
 			Map<String, Object> map = (Map<String, Object>) o;
-			Date d = new Date((Long)map.get("uploadDate"));
+			Date d = (Date) map.get("uploadDate");
 			String encoding = (String) map.get("encoding");
 			String mimetype = (String) map.get("mimetype");
 			String savedByStage = (String) map.get("savedByStage");

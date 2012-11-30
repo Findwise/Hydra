@@ -21,15 +21,13 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.findwise.hydra.DatabaseConnector.ConversionException;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseQuery;
-import com.findwise.hydra.TestModule;
-import com.findwise.hydra.DatabaseConnector.ConversionException;
 import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.common.Document.Status;
+import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.local.LocalDocument;
-import com.google.inject.Guice;
 import com.mongodb.Mongo;
 
 public class MongoConnectorTest {
@@ -40,7 +38,7 @@ public class MongoConnectorTest {
 	File f;
 
 	private void createAndConnect() throws Exception {
-		mdc = Guice.createInjector(new TestModule("junit-MongoConnectorTest")).getInstance(MongoConnector.class);
+		mdc = new MongoConnector(DatabaseConfigurationFactory.getDatabaseConfiguration("junit-MongoConnectorTest"));
 		
 		mdc.waitForWrites(true);
 		

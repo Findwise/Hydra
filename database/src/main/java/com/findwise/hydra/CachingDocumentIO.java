@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.DatabaseConnector.ConversionException;
 import com.findwise.hydra.common.DocumentFile;
-import com.findwise.hydra.common.JsonException;
 
 public class CachingDocumentIO<CacheType extends DatabaseType, BackingType extends DatabaseType> implements DocumentReader<CacheType>, DocumentWriter<CacheType> {
 	private static final Logger logger = LoggerFactory.getLogger(CachingDocumentIO.class);
