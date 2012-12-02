@@ -24,8 +24,13 @@ public final class Main {
 		if (args.length > 1) {
 			logger.error("Some parameters on command line were ignored.");
 		}
-
-		CoreConfiguration conf = getConfiguration();
+		
+		CoreConfiguration conf;
+		if(args.length>0) {
+			conf = getConfiguration(args[0]);
+		} else {
+			conf = getConfiguration(null);
+		}
 		
 		DatabaseConnector<MongoType> backing = new MongoConnector(conf);
 		DatabaseConnector<MemoryType> cache = new MemoryConnector();
@@ -65,9 +70,13 @@ public final class Main {
 		}
 	}
 	
-	protected static CoreConfiguration getConfiguration() {
+	protected static CoreConfiguration getConfiguration(String fileName) {
 		try {
-			return new FileConfiguration();
+			if(fileName!=null) {
+				return new FileConfiguration(fileName);
+			} else {
+				return new FileConfiguration();
+			}
 		}
 		catch(ConfigurationException e) {
 			logger.error("Unable to read configuration", e);
