@@ -127,7 +127,7 @@ public final class NodeMaster<T extends DatabaseType> extends Thread {
 			if(!pipeline.hasGroup(group.getName())) {
 				pipeline.addGroup(group);
 				attachFiles(group);
-				sm.addRunner(new StageRunner(group, new File(namespace), port));
+				sm.addRunner(new StageRunner(group, new File(namespace), port, conf.isPerformanceLogging()));
 			}
 		}
 	}

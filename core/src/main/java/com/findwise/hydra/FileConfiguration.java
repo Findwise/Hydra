@@ -74,11 +74,6 @@ public class FileConfiguration implements CoreConfiguration {
 	
 	@Override
 	public boolean isPerformanceLogging() {
-		System.out.println("DOING ITS THING: "+conf.getString(PERFORMANCE_LOGGING));
-		System.out.println("DOING ITS THING: "+conf.getString(PERFORMANCE_LOGGING));
-		System.out.println("DOING ITS THING: "+conf.getString(PERFORMANCE_LOGGING));
-		System.out.println("DOING ITS THING: "+conf.getString(PERFORMANCE_LOGGING));
-		System.out.println("DOING ITS THING: "+conf.getString(PERFORMANCE_LOGGING));
 		return conf.getBoolean(PERFORMANCE_LOGGING, false);
 	}
 }

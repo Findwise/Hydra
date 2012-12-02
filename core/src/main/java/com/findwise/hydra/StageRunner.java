@@ -40,6 +40,7 @@ public class StageRunner extends Thread {
     private boolean hasQueried = false;
     private File targetDirectory;
     private File baseDirectory;
+    private boolean performanceLogging = false;;
     
     private boolean wasKilled = false;;
 
@@ -51,11 +52,12 @@ public class StageRunner extends Thread {
         return hasQueried;
     }
 
-    public StageRunner(StageGroup stageGroup, File baseDirectory, int pipelinePort) {
+    public StageRunner(StageGroup stageGroup, File baseDirectory, int pipelinePort, boolean performanceLogging) {
         this.stageGroup = stageGroup;
         this.baseDirectory = baseDirectory;
         this.targetDirectory = new File(baseDirectory, stageGroup.getName());
         this.pipelinePort = pipelinePort;
+        this.performanceLogging = performanceLogging;
         timesStarted = 0;
     }
     
@@ -177,6 +179,7 @@ public class StageRunner extends Thread {
         cmdLine.addArgument(stageGroup.getName());
         cmdLine.addArgument("localhost");
         cmdLine.addArgument("" + pipelinePort);
+        cmdLine.addArgument("" + performanceLogging);
         cmdLine.addArgument(startupArgsString);
         
         HashMap<String, Object> map = new HashMap<String, Object>();
