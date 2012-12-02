@@ -43,16 +43,24 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 	@SuppressWarnings("unchecked")
     public HttpRESTHandler(NodeMaster<?> nm) {
         this((DatabaseConnector<T>)nm.getDatabaseConnector());
-        performanceLogging = nm.getConfiguration().isPerformanceLogging();
     }
 	
     public HttpRESTHandler(DatabaseConnector<T> dbc) {
-        this(dbc, null);
+        this(dbc, null, false);
+    }
+    
+    public HttpRESTHandler(DatabaseConnector<T> dbc, boolean isPerformanceLogging) {
+    	this(dbc, null, isPerformanceLogging);
     }
     
     public HttpRESTHandler(DatabaseConnector<T> dbc, List<String> allowedHosts) {
+    	this(dbc, allowedHosts, false);
+    }
+    
+    public HttpRESTHandler(DatabaseConnector<T> dbc, List<String> allowedHosts, boolean isPerformanceLogging) {
         this.dbc = dbc;
         this.setAllowedHosts(allowedHosts);
+        this.performanceLogging = isPerformanceLogging;
     }
 	
 	private void createHandlers() {
