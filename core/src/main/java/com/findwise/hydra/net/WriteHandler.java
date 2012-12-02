@@ -26,11 +26,13 @@ import com.findwise.hydra.net.RESTTools.Method;
 public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler {
 
 	private DatabaseConnector<T> dbc;
-
+	private boolean performanceLogging;
+	
 	private static Logger logger = LoggerFactory.getLogger(WriteHandler.class);
 
-	public WriteHandler(DatabaseConnector<T> dbc) {
+	public WriteHandler(DatabaseConnector<T> dbc, boolean performanceLogging) {
 		this.dbc = dbc;
+		this.performanceLogging = performanceLogging;
 	}
 	
 	@Override
@@ -99,8 +101,10 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 				return;
 			}
 		}
-		long end = System.currentTimeMillis();
-		logger.info(String.format("turbo event=%s stage_name=%s doc_id=%s start=%d end=%d total=%d entitystring=%d parse=%d query=%d serialize=%d", type, stage, md.getID(), start, end, end-start, tostring-start, convert-tostring, write-convert, end-write));
+		if(performanceLogging) {
+			long end = System.currentTimeMillis();
+			logger.info(String.format("type=performance event=%s stage_name=%s doc_id=\"%s\" start=%d end=%d total=%d entitystring=%d parse=%d query=%d serialize=%d", type, stage, md.getID(), start, end, end-start, tostring-start, convert-tostring, write-convert, end-write));	
+		}
 	}
 	
 	private boolean release(Document md, String stage) {

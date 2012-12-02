@@ -75,7 +75,7 @@ public class RemotePipelineTest {
 
 	@After
 	public void tearDown() throws Exception {
-		DatabaseConnector<MongoType> dbc = nm.getDatabaseConnector();
+		DatabaseConnector<?> dbc = nm.getDatabaseConnector();
 		dbc.getDocumentWriter().deleteAll();
 	}
 	

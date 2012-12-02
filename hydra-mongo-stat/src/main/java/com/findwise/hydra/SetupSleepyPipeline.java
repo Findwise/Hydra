@@ -17,7 +17,7 @@ public class SetupSleepyPipeline {
 		URL url = ClassLoader.getSystemResource("sleepy-stage-jar-with-dependencies.jar");
 		File f;
 		if(url == null) {
-			f = new File("/home/findwise/shipit/sleepy-stage-jar-with-dependencies.jar");
+			f = new File("/Users/joel/dev/workspaces/Hydra/hydra-mongo-stat/src/main/resources/sleepy-stage-jar-with-dependencies.jar");
 		} else {
 			f = new File(url.toURI());
 		}

@@ -43,6 +43,8 @@ public class RemotePipeline {
 	public static final int DEFAULT_PORT = 12001;
 	public static final String DEFAULT_HOST = "127.0.0.1";
 	
+	private boolean performanceLogging = false;
+	
 	private HttpConnection core;
 	
 	private boolean keepLock;
@@ -130,10 +132,11 @@ public class RemotePipeline {
 		} else {
 			logUnexpected(response);
 		}
-		long end = System.currentTimeMillis();
-		// TODO don't use id
-		Object docId = ld != null ? ld.getContentField("id") : null;
-		Logger.debug(String.format("turbo event=query stage_name=%s doc_id=%s start=%d fetch=%d entitystring=%d serialize=%d end=%d total=%d", stageName, docId, start, startSerialize - start, startJson - startSerialize, end - startJson, end, end - start));
+		if(isPerformanceLogging()) {
+			long end = System.currentTimeMillis();
+			Object docId = ld != null ? ld.getID() : null;
+			Logger.info(String.format("type=performance event=query stage_name=%s doc_id=\"%s\" start=%d fetch=%d entitystring=%d serialize=%d end=%d total=%d", stageName, docId, start, startSerialize - start, startJson - startSerialize, end - startJson, end, end - start));
+		}
 		return ld;
 	}
 	
@@ -234,10 +237,11 @@ public class RemotePipeline {
 			else {
 				EntityUtils.consume(response.getEntity());
 			}
-			long end = System.currentTimeMillis();
-			// TODO don't use id
-			Object docId = d != null ? d.getContentField("id") : null;
-			Logger.debug(String.format("turbo event=update stage_name=%s doc_id=%s start=%d serialize=%d post=%d end=%d total=%d", stageName, docId, start, startPost - start, end - startPost, end, end - start));
+			if(isPerformanceLogging()) {
+				long end = System.currentTimeMillis();
+				Object docId = d != null ? d.getID() : null;
+				Logger.info(String.format("type=performance event=update stage_name=%s doc_id=\"%s\" start=%d serialize=%d post=%d end=%d total=%d", stageName, docId, start, startPost - start, end - startPost, end, end - start));
+			}
 			return true;
 		}
 		
@@ -430,5 +434,13 @@ public class RemotePipeline {
 	
 	public String getStageName() {
 		return stageName;
+	}
+	
+	public void setPerformanceLogging(boolean performanceLogging) {
+		this.performanceLogging = performanceLogging;
+	}
+	
+	public boolean isPerformanceLogging() {
+		return performanceLogging;
 	}
 }

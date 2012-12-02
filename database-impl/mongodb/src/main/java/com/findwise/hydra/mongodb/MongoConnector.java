@@ -19,7 +19,6 @@ import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.common.Query;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
-import com.google.inject.Inject;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
@@ -75,7 +74,6 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	
 	private boolean connected = false;
 
-	@Inject
 	public MongoConnector(DatabaseConfiguration conf) {
 		this.conf = conf;
 	}

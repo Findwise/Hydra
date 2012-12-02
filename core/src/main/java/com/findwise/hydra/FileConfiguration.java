@@ -72,5 +72,8 @@ public class FileConfiguration implements CoreConfiguration {
 		return conf.getInt(DatabaseConnector.OLD_MAX_COUNT, 1000);
 	}
 	
-	
+	@Override
+	public boolean isPerformanceLogging() {
+		return conf.getBoolean(PERFORMANCE_LOGGING, false);
+	}
 }

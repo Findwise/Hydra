@@ -28,9 +28,11 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
 	private static Logger logger = LoggerFactory.getLogger(MarkHandler.class);
 
 	private DatabaseConnector<T> dbc;
-
-	public MarkHandler(DatabaseConnector<T> dbc) {
+	private boolean performanceLogging = false;
+	
+	public MarkHandler(DatabaseConnector<T> dbc, boolean performanceLogging) {
 		this.dbc = dbc;
+		this.performanceLogging = performanceLogging;
 	}
 
 	@Override
@@ -74,8 +76,10 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
 		} else {
 			HttpResponseWriter.printSaveOk(response, md.getID());
 		}
-		long end = System.currentTimeMillis();
-		logger.info(String.format("turbo event=processed stage_name=%s doc_id=%s start=%d end=%d total=%d entitystring=%d parse=%d query=%d serialize=%d", stage, md.getID(), start, end, end-start, tostring-start, convert-tostring, query-convert, end-query));
+		if(performanceLogging) {
+			long end = System.currentTimeMillis();
+			logger.info(String.format("type=performance event=processed stage_name=%s doc_id=%s start=%d end=%d total=%d entitystring=%d parse=%d query=%d serialize=%d", stage, md.getID(), start, end, end-start, tostring-start, convert-tostring, query-convert, end-query));
+		}
 	}
 	
 	private Mark getMark(HttpRequest request) {

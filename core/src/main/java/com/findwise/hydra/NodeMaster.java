@@ -22,7 +22,10 @@ public final class NodeMaster<T extends DatabaseType> extends Thread {
 
 	private int port;
 	
+	private CoreConfiguration conf;
+	
 	public NodeMaster(CoreConfiguration conf, DatabaseConnector<T> dbc, Pipeline pipeline) {
+		this.conf = conf;
 		this.dbc = dbc;
 		sm = StageManager.getStageManager();
 		this.pipeline = pipeline;
@@ -141,5 +144,9 @@ public final class NodeMaster<T extends DatabaseType> extends Thread {
 	
 	public Pipeline getPipeline() {
 		return pipeline;
+	}
+	
+	public CoreConfiguration getConfiguration() {
+		return conf;
 	}
 }

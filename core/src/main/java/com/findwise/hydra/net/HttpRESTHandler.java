@@ -17,12 +17,13 @@ import org.slf4j.LoggerFactory;
 import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.NodeMaster;
-import com.google.inject.Inject;
 
 public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandler {
 	private Logger logger = LoggerFactory.getLogger(HttpRESTHandler.class);
 	
 	private DatabaseConnector<T> dbc;
+	
+	private boolean performanceLogging = false;
 	
 	private String restId;
 
@@ -40,9 +41,9 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 	}
 	
 	@SuppressWarnings("unchecked")
-	@Inject
-    public HttpRESTHandler(NodeMaster nm) {
+    public HttpRESTHandler(NodeMaster<?> nm) {
         this((DatabaseConnector<T>)nm.getDatabaseConnector());
+        performanceLogging = nm.getConfiguration().isPerformanceLogging();
     }
 	
     public HttpRESTHandler(DatabaseConnector<T> dbc) {
@@ -55,7 +56,7 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
     }
 	
 	private void createHandlers() {
-		handlers = new ResponsibleHandler[] { new FileHandler<T>(dbc), new PropertiesHandler<T>(dbc), new MarkHandler<T>(dbc), new QueryHandler<T>(dbc), new ReleaseHandler<T>(dbc), new WriteHandler<T>(dbc) };
+		handlers = new ResponsibleHandler[] { new FileHandler<T>(dbc), new PropertiesHandler<T>(dbc), new MarkHandler<T>(dbc, performanceLogging), new QueryHandler<T>(dbc, performanceLogging), new ReleaseHandler<T>(dbc), new WriteHandler<T>(dbc, performanceLogging) };
 	}
 	
 	private ResponsibleHandler[] getHandlers() {

@@ -12,8 +12,6 @@ import com.findwise.hydra.mongodb.MongoConnector;
 import com.findwise.hydra.mongodb.MongoType;
 import com.findwise.hydra.net.HttpRESTHandler;
 import com.findwise.hydra.net.RESTServer;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 public final class Main {
 

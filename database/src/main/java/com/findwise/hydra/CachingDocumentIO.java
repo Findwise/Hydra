@@ -13,7 +13,7 @@ import com.findwise.hydra.common.DocumentFile;
 public class CachingDocumentIO<CacheType extends DatabaseType, BackingType extends DatabaseType> implements DocumentReader<CacheType>, DocumentWriter<CacheType> {
 	private static final Logger logger = LoggerFactory.getLogger(CachingDocumentIO.class);
 
-	private static final int DEFAULT_BATCH_SIZE = 10;
+	private static final int DEFAULT_BATCH_SIZE = 40;
 	
 	private DocumentWriter<CacheType> cacheWriter;
 	private DocumentReader<CacheType> cacheReader;
