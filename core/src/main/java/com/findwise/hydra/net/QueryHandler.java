@@ -109,8 +109,9 @@ public class QueryHandler<T extends DatabaseType> implements ResponsibleHandler 
 	
 	private void reportQuery(String stage) {
 		StageManager sm = StageManager.getStageManager();
-		if(sm.hasRunner(stage)) {
-			sm.getRunner(stage).setHasQueried();
+		
+		if(sm.hasRunnerForStage(stage)) {
+			sm.getRunnerForStage(stage).setHasQueried();
 		}
 	}
 

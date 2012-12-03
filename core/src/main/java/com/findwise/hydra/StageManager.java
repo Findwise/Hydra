@@ -33,6 +33,19 @@ public final class StageManager {
 		return getRunner(groupName)!=null;
 	}
 	
+	public StageRunner getRunnerForStage(String stageName) {
+		for(StageRunner runner : runnerMap.values()) {
+			if(runner.getStageGroup().hasStage(stageName)) {
+				return runner;
+			}
+		}
+		return null;
+	}
+	
+	public boolean hasRunnerForStage(String stage) {
+		return getRunnerForStage(stage)!=null;
+	}
+	
 	public void addRunner(StageRunner runner) {
 		runnerMap.put(runner.getStageGroup().getName(), runner);
 	}
