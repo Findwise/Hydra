@@ -118,6 +118,11 @@ public class StageRunner extends Thread {
     		logger.error("The StageRunner was not prepared prior to being started. Aborting!");
     		return;
     	}
+    	
+    	if(stageGroup.getStages().size()<1) {
+    		logger.info("Stage group "+stageGroup.getName() + " has no stages, and can not be started.");
+    		return;
+    	}
 
         do {
             logger.info("Starting stage group " + stageGroup.getName()
@@ -175,6 +180,7 @@ public class StageRunner extends Thread {
         cmdLine.addArgument(startupArgsString);
         
         HashMap<String, Object> map = new HashMap<String, Object>();
+        
         map.put("file", files.get(0)); //Any of the files should do as a starting point
         map.put("classpath", classPathString);
         
