@@ -1,18 +1,12 @@
 package com.findwise.hydra;
 
-import com.findwise.hydra.DatabaseConfiguration;
-import com.findwise.hydra.mongodb.MongoConnector;
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.name.Names;
 
 /**
  * Provides connection details to a mongodb instance. 
  * 
  * @author johan.sjoberg
  */
-public class MongoDBConnectionConfig extends AbstractModule {
+public class MongoDBConnectionConfig {
 
     private final String namespace;
     private final String connectionUrl;
@@ -46,20 +40,7 @@ public class MongoDBConnectionConfig extends AbstractModule {
         this.password = password;
     }
 
-    @Override
-    protected void configure() {
-        // guice wiring
-        DatabaseConfiguration c = getConfiguration();
-        bindConstant().annotatedWith(Names.named(DatabaseConnector.NAMESPACE_PARAM)).to(c.getNamespace());
-        bindConstant().annotatedWith(Names.named(DatabaseConnector.DATABASE_URL_PARAM)).to(c.getDatabaseUrl());
-		bindConstant().annotatedWith(Names.named(DatabaseConnector.DATABASE_USER)).to(c.getDatabaseUser());
-		bindConstant().annotatedWith(Names.named(DatabaseConnector.DATABASE_PASSWORD)).to(c.getDatabasePassword());
-        bind(DatabaseConnector.class).to(MongoConnector.class);
-    }
-
-    @Provides
-    @Singleton
-    protected DatabaseConfiguration getConfiguration() {
+    public DatabaseConfiguration getConfiguration() {
         return new DatabaseConfiguration() {
 
             @Override

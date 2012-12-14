@@ -30,13 +30,16 @@ public class GroupStarter {
 		String host;
 		String port;
 		String groupName = args[0];
+		String logging;
 		if(args.length == 1) {
 			host = "localhost";
 			port = "12001";
+			logging = "false";
 		}
 		else {
 			host = args[1];
 			port = args[2];
+			logging = args[3];
 		}
 		
 		List<String> stages;
@@ -49,7 +52,7 @@ public class GroupStarter {
 		
 		for(String stage : stages) {
 			Logger.debug("Attempting to start stage: "+stage);
-			AbstractStage.main(new String[]{stage, host, port});
+			AbstractStage.main(new String[]{stage, host, port, logging});
 		}
 	}
 	

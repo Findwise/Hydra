@@ -2,9 +2,12 @@ package com.findwise.hydra.memorydb;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.io.IOUtils;
@@ -24,7 +27,7 @@ import com.findwise.hydra.common.SerializationUtils;
 public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		DocumentReader<MemoryType> {
 
-	private HashSet<MemoryDocument> set;
+	private ConcurrentHashMap<MemoryDocument, Boolean> set;
 	private LinkedBlockingQueue<MemoryDocument> inactive;
 	private boolean[] b = new boolean[1];
 	
@@ -35,7 +38,7 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	public static final int inactiveSize = 100;
 
 	public MemoryDocumentIO() {
-		set = new HashSet<MemoryDocument>();
+		set = new ConcurrentHashMap<MemoryDocument, Boolean>();
 		files = new HashSet<DocumentFile>();
 		inactive = new LinkedBlockingQueue<MemoryDocument>(inactiveSize);
 		b[0] = false;
@@ -66,14 +69,18 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	@Override
 	public DatabaseDocument<MemoryType> getDocumentById(Object id,
 			boolean includeInactive) {
-		for (MemoryDocument d : set) {
-			if (d.getID().equals(id)) {
+		if(id==null) {
+			System.out.println("");
+			return null;
+		}
+		for (MemoryDocument d : set.keySet()) {
+			if (id.equals(d.getID())) {
 				return d;
 			}
 		}
 		if (includeInactive) {
 			for (MemoryDocument d : inactive) {
-				if (d.getID().equals(id)) {
+				if (id.equals(d.getID())) {
 					return d;
 				}
 			}
@@ -93,7 +100,7 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		ArrayList<MemoryDocument> list = new ArrayList<MemoryDocument>();
 
 		int matching = 0;
-		for (MemoryDocument doc : set) {
+		for (MemoryDocument doc : set.keySet()) {
 			if (list.size() >= limit)
 				break;
 			
@@ -118,7 +125,7 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	public long getNumberOfDocuments(DatabaseQuery<MemoryType> q) {
 		long matching = 0;
 
-		for (MemoryDocument doc : set) {
+		for (MemoryDocument doc : set.keySet()) {
 			if (doc.matches((MemoryQuery) q)) {
 				matching++;
 			}
@@ -183,6 +190,17 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 			d.tag(Document.FETCHED_METADATA_TAG, tag);
 		}
 		return d;
+	}
+	
+	@Override
+	public Collection<DatabaseDocument<MemoryType>> getAndTag(DatabaseQuery<MemoryType> query, String tag, int n) {
+		((MemoryQuery)query).requireNotFetchedBy(tag);
+		List<DatabaseDocument<MemoryType>> docs = getDocuments(query, n);
+		for(int i=0; i<docs.size() && i<n; i++) {
+			DatabaseDocument<MemoryType> d = docs.get(i);
+			((MemoryDocument)d).tag(Document.FETCHED_METADATA_TAG, tag);
+		}
+		return docs;
 	}
 
 	@Override
@@ -252,7 +270,7 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		MemoryDocument md = (MemoryDocument) d;
 		md.setID(md.hashCode()+""+System.currentTimeMillis());
 		removeNullFields(md);
-		set.add(md);
+		set.put(md, false);
 		md.markSynced();
 		return true;
 	}
@@ -269,6 +287,26 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 			md.removeContentField(field);
 		}
 	}
+	
+	private HashSet<String> getTouchedContentSnapshot(MemoryDocument md) {
+		while(true) {
+			try {
+				return new HashSet<String>(md.getTouchedContent());
+			} catch(ConcurrentModificationException e) {
+				logger.warn("Got concurrent modification in getTouchedContent");
+			}
+		}
+	}
+	
+	private HashSet<String> getTouchedMetadataSnapshot(MemoryDocument md) {
+		while(true) {
+			try {
+				return new HashSet<String>(md.getTouchedMetadata());
+			} catch(ConcurrentModificationException e) {
+				logger.warn("Got concurrent modification in getTouchedContent");
+			}
+		}
+	}
 
 	@Override
 	public boolean update(DatabaseDocument<MemoryType> d) {
@@ -276,11 +314,16 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		
 		MemoryDocument inDb = getDocumentById(d.getID());
 		
+		if(inDb == null) {
+			set.put(md, false);
+			inDb = getDocumentById(d.getID());
+		}
+		
 		if(md.isTouchedAction()) {
 			inDb.setAction(md.getAction());
 		}
 		
-		for(String s : md.getTouchedContent()) {
+		for(String s : getTouchedContentSnapshot(md)) {
 			if(md.getContentField(s)!=null) {
 				inDb.putContentField(s, md.getContentField(s));
 			} else {
@@ -288,7 +331,7 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 			}
 		}
 		
-		for(String s : md.getTouchedMetadata()) {
+		for(String s : getTouchedMetadataSnapshot(md)) {
 			inDb.putMetadataField(s, md.getMetadataMap().get(s));
 		}
 		

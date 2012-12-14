@@ -2,11 +2,11 @@ package com.findwise.hydra.local;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
 
 import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.InternalLogger;
@@ -112,6 +112,9 @@ public class LocalDocument implements Document {
 	private Object putMetadataField(String fieldName, Object value) {
 		fieldName = removePeriodFromKey(fieldName);
 		touchedMetadata.add(fieldName);
+		if(value == null) {
+			System.out.println("null");
+		}
 		return getMetadataMap().put(fieldName, value);
 	}
 
@@ -200,7 +203,9 @@ public class LocalDocument implements Document {
 	@Override
 	public void putAll(Document d) {
 		documentMap.put(ID_KEY, d.getID());
-		documentMap.put(ACTION_KEY, d.getAction());
+		if(d.getAction()!=null) {
+			documentMap.put(ACTION_KEY, d.getAction());
+		}
 		for(Map.Entry<String, Object> e : d.getMetadataMap().entrySet()) {
 			putMetadataField(e.getKey(), e.getValue());
 		}

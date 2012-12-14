@@ -1,5 +1,13 @@
 package com.findwise.hydra.cmd;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.beust.jcommander.JCommander;
 import com.findwise.hydra.MongoDBConnectionConfig;
 import com.findwise.hydra.Pipeline;
@@ -9,14 +17,6 @@ import com.findwise.hydra.json.JsonPipelineUtil;
 import com.findwise.hydra.json.PipelineConfiguration;
 import com.findwise.hydra.json.StageFactory;
 import com.findwise.hydra.mongodb.MongoConnector;
-import com.google.inject.Guice;
-import com.google.inject.Module;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Iool for uploading jar files or stages to mongodb. This can be
@@ -87,8 +87,8 @@ public class CmdlineTool {
         if (cmd.getJarFile() != null) {
             File f = new File(cmd.getJarFile().getFilename());
 
-            Module conf = new MongoDBConnectionConfig(cmd.getJarFile().getPipelinename(), cmd.getHost(), "", "");
-            MongoConnector mdc = Guice.createInjector(conf).getInstance(MongoConnector.class);
+            MongoDBConnectionConfig conf = new MongoDBConnectionConfig(cmd.getJarFile().getPipelinename(), cmd.getHost(), "", "");
+            MongoConnector mdc =new MongoConnector(conf.getConfiguration());
             mdc.connect();
 
             log.info("Uploading jar file");
@@ -100,8 +100,8 @@ public class CmdlineTool {
             PipelineConfiguration pipelineConfig = jsonReader.fromJson(cmd.getConfig());
             List<Stage> stages = stageFactory.createStages(pipelineConfig);
 
-            Module conf = new MongoDBConnectionConfig(pipelineConfig.getPipelineName(), cmd.getHost(), "", "");
-            MongoConnector mdc = Guice.createInjector(conf).getInstance(MongoConnector.class);
+            MongoDBConnectionConfig conf = new MongoDBConnectionConfig(pipelineConfig.getPipelineName(), cmd.getHost(), "", "");
+            MongoConnector mdc =new MongoConnector(conf.getConfiguration());
             mdc.connect();
 
             Pipeline pipeline = mdc.getPipelineReader().getPipeline();

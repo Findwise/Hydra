@@ -8,17 +8,11 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.findwise.hydra.mongodb.MongoConnector;
-import com.findwise.hydra.mongodb.MongoType;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-@Singleton
-public final class NodeMaster extends Thread {
+public final class NodeMaster<T extends DatabaseType> extends Thread {
 	public static final int DEFAULT_POLLING_INTERVAL = 60; //Seconds
 	private Logger logger = LoggerFactory.getLogger(NodeMaster.class);
 	
-	private DatabaseConnector<MongoType> dbc;
+	private DatabaseConnector<T> dbc;
 	
 	private Pipeline pipeline;
 	private int pollingInterval = DEFAULT_POLLING_INTERVAL;
@@ -28,8 +22,10 @@ public final class NodeMaster extends Thread {
 
 	private int port;
 	
-	@Inject
-	private NodeMaster(CoreConfiguration conf, MongoConnector dbc, Pipeline pipeline) {
+	private CoreConfiguration conf;
+	
+	public NodeMaster(CoreConfiguration conf, DatabaseConnector<T> dbc, Pipeline pipeline) {
+		this.conf = conf;
 		this.dbc = dbc;
 		sm = StageManager.getStageManager();
 		this.pipeline = pipeline;
@@ -131,7 +127,7 @@ public final class NodeMaster extends Thread {
 			if(!pipeline.hasGroup(group.getName())) {
 				pipeline.addGroup(group);
 				attachFiles(group);
-				sm.addRunner(new StageRunner(group, new File(namespace), port));
+				sm.addRunner(new StageRunner(group, new File(namespace), port, conf.isPerformanceLogging()));
 			}
 		}
 	}
@@ -142,11 +138,15 @@ public final class NodeMaster extends Thread {
 		}
 	}
 	
-	public DatabaseConnector<MongoType> getDatabaseConnector() {
+	public DatabaseConnector<T> getDatabaseConnector() {
 		return dbc;
 	}
 	
 	public Pipeline getPipeline() {
 		return pipeline;
+	}
+	
+	public CoreConfiguration getConfiguration() {
+		return conf;
 	}
 }

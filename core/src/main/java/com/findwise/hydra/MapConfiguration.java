@@ -100,4 +100,9 @@ public class MapConfiguration implements CoreConfiguration {
 	public void setOldMaxCount(int count) {
 		map.put(DatabaseConnector.OLD_MAX_COUNT, ""+count);
 	}
+
+	@Override
+	public boolean isPerformanceLogging() {
+		return Boolean.parseBoolean(getParameter(PERFORMANCE_LOGGING, "false"));
+	}
 }

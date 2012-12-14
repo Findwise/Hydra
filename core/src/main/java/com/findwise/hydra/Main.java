@@ -2,12 +2,16 @@ package com.findwise.hydra;
 
 import java.io.IOException;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.findwise.hydra.memorydb.MemoryConnector;
+import com.findwise.hydra.memorydb.MemoryType;
+import com.findwise.hydra.mongodb.MongoConnector;
+import com.findwise.hydra.mongodb.MongoType;
+import com.findwise.hydra.net.HttpRESTHandler;
 import com.findwise.hydra.net.RESTServer;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 public final class Main {
 
@@ -20,15 +24,19 @@ public final class Main {
 		if (args.length > 1) {
 			logger.error("Some parameters on command line were ignored.");
 		}
-
-		Injector i;
-		if (args.length > 0) {
-			i = Guice.createInjector(new CoreModule(args[0]));
+		
+		CoreConfiguration conf;
+		if(args.length>0) {
+			conf = getConfiguration(args[0]);
 		} else {
-			i = Guice.createInjector(new CoreModule());
+			conf = getConfiguration(null);
 		}
-
-		RESTServer server = i.getInstance(RESTServer.class);
+		
+		DatabaseConnector<MongoType> backing = new MongoConnector(conf);
+		DatabaseConnector<MemoryType> cache = new MemoryConnector();
+		
+		NodeMaster nm = new NodeMaster(conf, new CachingDatabaseConnector<MongoType, MemoryType>(backing, cache), new Pipeline());
+		RESTServer server = new RESTServer(conf, new HttpRESTHandler<DatabaseType>(nm.getDatabaseConnector(), conf.isPerformanceLogging()));
 
 		if (!server.blockingStart()) {
 			if (server.hasError()) {
@@ -47,8 +55,6 @@ public final class Main {
 			return;
 		}
 
-		NodeMaster nm = i.getInstance(NodeMaster.class);
-
 		try {
 			nm.blockingStart();
 		}
@@ -61,6 +67,20 @@ public final class Main {
 				logger.error("IOException caught while shutting down", e2);
 				System.exit(1);
 			}
+		}
+	}
+	
+	protected static CoreConfiguration getConfiguration(String fileName) {
+		try {
+			if(fileName!=null) {
+				return new FileConfiguration(fileName);
+			} else {
+				return new FileConfiguration();
+			}
+		}
+		catch(ConfigurationException e) {
+			logger.error("Unable to read configuration", e);
+			return null;
 		}
 	}
 

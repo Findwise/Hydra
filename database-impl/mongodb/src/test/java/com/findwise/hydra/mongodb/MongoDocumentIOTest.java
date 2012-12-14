@@ -16,10 +16,8 @@ import org.junit.Test;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DocumentWriter;
 import com.findwise.hydra.TailableIterator;
-import com.findwise.hydra.TestModule;
 import com.findwise.hydra.common.Document.Status;
 import com.findwise.hydra.common.SerializationUtils;
-import com.google.inject.Guice;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
@@ -31,8 +29,7 @@ public class MongoDocumentIOTest {
 	private Random r = new Random(System.currentTimeMillis());
 
 	private void createAndConnect() throws Exception {
-	
-		mdc = Guice.createInjector(new TestModule("junit-MongoDocumentIO")).getInstance(MongoConnector.class);
+		mdc = new MongoConnector(DatabaseConfigurationFactory.getDatabaseConfiguration("junit-MongoDocumentIOTest"));
 		
 		mdc.waitForWrites(true);
 		mdc.connect();

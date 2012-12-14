@@ -3,6 +3,7 @@ package com.findwise.hydra.memorydb;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.local.LocalDocument;
@@ -112,6 +113,7 @@ public class MemoryDocument extends LocalDocument implements DatabaseDocument<Me
 		((Map<String, Object>) getMetadataMap().get(tag)).put(stage, new Date());
 	}
 
+	@Override
 	public void setID(Object id) {
 		getDocumentMap().put(ID_KEY, id);
 	}
@@ -134,5 +136,61 @@ public class MemoryDocument extends LocalDocument implements DatabaseDocument<Me
 	@Override
 	public Object removeContentField(String key) {
 		return getContentMap().remove(key);
+	}
+
+	@Override
+	public Set<String> getTouchedBy() {
+		return getMetadataSubMap(TOUCHED_METADATA_TAG).keySet();
+	}
+
+	@Override
+	public Set<String> getFetchedBy() {
+		return getMetadataSubMap(FETCHED_METADATA_TAG).keySet();
+	}
+
+	@Override
+	public Date getTouchedTime(String stage) {
+		return (Date) getMetadataSubMap(TOUCHED_METADATA_TAG).get(stage);
+	}
+
+	@Override
+	public Date getFetchedTime(String stage) {
+		return (Date) getMetadataSubMap(FETCHED_METADATA_TAG).get(stage);
+	}
+	@Override
+	public Date getCompletedTime() {
+		return getDoneTag().date;
+	}
+
+	@Override
+	public String getCompletedBy() {
+		return getDoneTag().tag;
+	}
+	
+	private class DoneTuple {
+		private Date date;
+		private String tag;
+	}
+	
+	private DoneTuple getDoneTag() {
+		DoneTuple done = new DoneTuple();
+		
+		if(getMetadataMap().containsKey(FAILED_METADATA_FLAG)) {
+			done.date = (Date) getMetadataSubMap(FAILED_METADATA_FLAG).get(DATE_METADATA_SUBKEY);
+			done.tag = (String) getMetadataSubMap(FAILED_METADATA_FLAG).get(STAGE_METADATA_SUBKEY);
+		}
+		else if(getMetadataMap().containsKey(DISCARDED_METADATA_FLAG)) {
+			done.date = (Date) getMetadataSubMap(DISCARDED_METADATA_FLAG).get(DATE_METADATA_SUBKEY);
+			done.tag = (String) getMetadataSubMap(DISCARDED_METADATA_FLAG).get(STAGE_METADATA_SUBKEY);
+		}
+		else if(getMetadataMap().containsKey(PENDING_METADATA_FLAG)) {
+			done.date = (Date) getMetadataSubMap(DISCARDED_METADATA_FLAG).get(DATE_METADATA_SUBKEY);
+			done.tag = (String) getMetadataSubMap(DISCARDED_METADATA_FLAG).get(STAGE_METADATA_SUBKEY);
+		}
+		else if(getMetadataMap().containsKey(PROCESSED_METADATA_FLAG)) {
+			done.date = (Date) getMetadataSubMap(DISCARDED_METADATA_FLAG).get(DATE_METADATA_SUBKEY);
+			done.tag = (String) getMetadataSubMap(DISCARDED_METADATA_FLAG).get(STAGE_METADATA_SUBKEY);
+		}
+		return done;
 	}
 }

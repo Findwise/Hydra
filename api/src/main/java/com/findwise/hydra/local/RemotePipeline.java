@@ -18,6 +18,7 @@ import org.apache.http.util.EntityUtils;
 import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.common.InternalLogger;
 import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.common.Logger;
 import com.findwise.hydra.common.SerializationUtils;
 import com.findwise.tools.HttpConnection;
 
@@ -42,6 +43,8 @@ public class RemotePipeline {
 	public static final int DEFAULT_PORT = 12001;
 	public static final String DEFAULT_HOST = "127.0.0.1";
 	
+	private boolean performanceLogging = false;
+	
 	private HttpConnection core;
 	
 	private boolean keepLock;
@@ -60,7 +63,7 @@ public class RemotePipeline {
 	private String stageName;
 	
 	private LocalDocument currentDocument;
-	
+
 	/**
 	 * Calls RemotePipeline(String, int, String) with default values for 
 	 * hostName (RemotePipeline.DEFAULT_HOST) and port (RemotePipeline.DEFAULT_PORT).
@@ -102,31 +105,39 @@ public class RemotePipeline {
 
 	public LocalDocument getDocument(LocalQuery query, boolean recurring) throws IOException {
 		HttpResponse response;
+		long start = System.currentTimeMillis();
 		if(recurring) {
 			response = core.post(getRecurringUrl, query.toJson());
 		}
 		else {
 			response = core.post(getUrl, query.toJson());
 		}
-		
+
+		long startSerialize = System.currentTimeMillis();
+		long startJson = 0L;
+		LocalDocument ld = null;
 		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-			LocalDocument ld;
+			String s = EntityUtils.toString(response.getEntity());
 			try {
-				ld = new LocalDocument(EntityUtils.toString(response.getEntity()));
+				startJson = System.currentTimeMillis();
+				ld = new LocalDocument(s);
 			} catch (JsonException e) {
 				throw new IOException(e);
 			}
 			InternalLogger.debug("Received document with ID " + ld.getID());
 			currentDocument = ld;
-			return ld;
 		} else if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
 			InternalLogger.debug("No document found matching query");
 			EntityUtils.consume(response.getEntity());
-			return null;
 		} else {
 			logUnexpected(response);
-			return null;
 		}
+		if(isPerformanceLogging()) {
+			long end = System.currentTimeMillis();
+			Object docId = ld != null ? ld.getID() : null;
+			Logger.info(String.format("type=performance event=query stage_name=%s doc_id=\"%s\" start=%d fetch=%d entitystring=%d serialize=%d end=%d total=%d", stageName, docId, start, startSerialize - start, startJson - startSerialize, end - startJson, end, end - start));
+		}
+		return ld;
 	}
 	
 	/**
@@ -209,13 +220,14 @@ public class RemotePipeline {
 	private boolean save(LocalDocument d, boolean partialUpdate) throws IOException, JsonException {
 		boolean hasId = d.getID()!=null;
 		String s;
+		long start = System.currentTimeMillis();
 		if(partialUpdate) {
 			s = d.modifiedFieldsToJson();
 		}
 		else {
 			s = d.toJson();
 		}
-		
+		long startPost = System.currentTimeMillis();
 		HttpResponse response = core.post(getWriteUrl(partialUpdate), s);
 		if(response.getStatusLine().getStatusCode()==HttpStatus.SC_OK) {
 			if(!hasId) {
@@ -225,11 +237,15 @@ public class RemotePipeline {
 			else {
 				EntityUtils.consume(response.getEntity());
 			}
+			if(isPerformanceLogging()) {
+				long end = System.currentTimeMillis();
+				Object docId = d != null ? d.getID() : null;
+				Logger.info(String.format("type=performance event=update stage_name=%s doc_id=\"%s\" start=%d serialize=%d post=%d end=%d total=%d", stageName, docId, start, startPost - start, end - startPost, end, end - start));
+			}
 			return true;
 		}
 		
 		logUnexpected(response);
-		
 		return false;
 	}
 	
@@ -353,7 +369,7 @@ public class RemotePipeline {
 			
 			@SuppressWarnings("unchecked")
 			Map<String, Object> map = (Map<String, Object>) o;
-			Date d = new Date((Long)map.get("uploadDate"));
+			Date d = (Date) map.get("uploadDate");
 			String encoding = (String) map.get("encoding");
 			String mimetype = (String) map.get("mimetype");
 			String savedByStage = (String) map.get("savedByStage");
@@ -418,5 +434,13 @@ public class RemotePipeline {
 	
 	public String getStageName() {
 		return stageName;
+	}
+	
+	public void setPerformanceLogging(boolean performanceLogging) {
+		this.performanceLogging = performanceLogging;
+	}
+	
+	public boolean isPerformanceLogging() {
+		return performanceLogging;
 	}
 }

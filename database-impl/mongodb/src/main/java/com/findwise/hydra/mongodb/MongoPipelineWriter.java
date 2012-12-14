@@ -21,7 +21,7 @@ import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 
-public class MongoPipelineWriter implements PipelineWriter<MongoType> {
+public class MongoPipelineWriter implements PipelineWriter {
 	private GridFS pipelinefs;
 	private DBCollection stages;
 	private MongoPipelineReader reader;

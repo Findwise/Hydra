@@ -3,7 +3,7 @@ package com.findwise.hydra;
 import java.io.IOException;
 import java.io.InputStream;
 
-public interface PipelineWriter<T extends DatabaseType> {
+public interface PipelineWriter {
 
 	/**
 	 * Writes a pipeline to the database, using the writeStage method for

@@ -19,8 +19,6 @@ import com.findwise.hydra.DatabaseFile;
 import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.Stage;
 import com.findwise.hydra.StageGroup;
-import com.findwise.hydra.TestModule;
-import com.google.inject.Guice;
 import com.mongodb.Mongo;
 import com.mongodb.WriteConcern;
 
@@ -28,7 +26,7 @@ public class MongoPipelineIOTest {
 	MongoConnector mdc;
 	
 	private void createAndConnect() throws Exception {
-		mdc = Guice.createInjector(new TestModule("junit-MongoPipelineIOTest")).getInstance(MongoConnector.class);
+		mdc = new MongoConnector(DatabaseConfigurationFactory.getDatabaseConfiguration("junit-MongoPipelineIOTest"));
 		
 		mdc.waitForWrites(true);
 		

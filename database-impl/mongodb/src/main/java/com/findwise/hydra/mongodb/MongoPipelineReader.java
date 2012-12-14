@@ -21,7 +21,7 @@ import com.mongodb.QueryBuilder;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 
-public class MongoPipelineReader implements PipelineReader<MongoType> {
+public class MongoPipelineReader implements PipelineReader {
 	private GridFS pipelinefs;
 
 	private DBCollection stages = null;

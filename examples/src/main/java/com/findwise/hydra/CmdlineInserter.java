@@ -27,7 +27,6 @@ import org.bson.types.ObjectId;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.common.SerializationUtils;
 import com.findwise.hydra.mongodb.MongoConnector;
-import com.google.inject.Guice;
 
 public class CmdlineInserter {
 	
@@ -224,17 +223,16 @@ public class CmdlineInserter {
 			System.out.println("No MongoDB host specified. Defaulting to "+host);
 		}
 		
-		ExampleModule module = new ExampleModule(cmd.getOptionValue("p"), host);
+		TestConfiguration conf = new TestConfiguration(cmd.getOptionValue("p"), host);
 		
 		if(cmd.hasOption("user")) {
-			module.setUsername(cmd.getOptionValue("user"));
+			conf.setUsername(cmd.getOptionValue("user"));
 		}
 		if(cmd.hasOption("password")) {
-			module.setPassword(cmd.getOptionValue("password"));
+			conf.setPassword(cmd.getOptionValue("password"));
 		}
 		
-		MongoConnector mdc = Guice.createInjector(module)
-				.getInstance(MongoConnector.class);
+		MongoConnector mdc = new MongoConnector(conf);
 
 		mdc.connect();
 		

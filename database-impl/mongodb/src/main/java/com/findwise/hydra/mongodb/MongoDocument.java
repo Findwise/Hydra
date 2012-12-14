@@ -2,6 +2,7 @@ package com.findwise.hydra.mongodb;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -422,5 +423,67 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	public boolean removeTouchedBy(String stage) {
 		touchedMetadata.add(TOUCHED_METADATA_TAG);
 		return ((Map<String,Object>)getMetadataMap().get(TOUCHED_METADATA_TAG)).remove(stage)!=null;
+	}
+
+	@Override
+	public Set<String> getTouchedBy() {
+		return getMetadataSubMap(TOUCHED_METADATA_TAG).keySet();
+	}
+
+	@Override
+	public Set<String> getFetchedBy() {
+		return getMetadataSubMap(FETCHED_METADATA_TAG).keySet();
+	}
+
+	@Override
+	public Date getTouchedTime(String stage) {
+		return (Date) getMetadataSubMap(TOUCHED_METADATA_TAG).get(stage);
+	}
+
+	@Override
+	public Date getFetchedTime(String stage) {
+		return (Date) getMetadataSubMap(FETCHED_METADATA_TAG).get(stage);
+	}
+
+	@Override
+	public Date getCompletedTime() {
+		return getDoneTag().date;
+	}
+
+	@Override
+	public String getCompletedBy() {
+		return getDoneTag().tag;
+	}
+	
+	private class DoneTuple {
+		private Date date;
+		private String tag;
+	}
+	
+	private DoneTuple getDoneTag() {
+		DoneTuple done = new DoneTuple();
+		
+		if(getMetadataMap().containsKey(FAILED_METADATA_FLAG)) {
+			done.date = (Date) getMetadataSubMap(FAILED_METADATA_FLAG).get(DATE_METADATA_SUBKEY);
+			done.tag = (String) getMetadataSubMap(FAILED_METADATA_FLAG).get(STAGE_METADATA_SUBKEY);
+		}
+		else if(getMetadataMap().containsKey(DISCARDED_METADATA_FLAG)) {
+			done.date = (Date) getMetadataSubMap(DISCARDED_METADATA_FLAG).get(DATE_METADATA_SUBKEY);
+			done.tag = (String) getMetadataSubMap(DISCARDED_METADATA_FLAG).get(STAGE_METADATA_SUBKEY);
+		}
+		else if(getMetadataMap().containsKey(PENDING_METADATA_FLAG)) {
+			done.date = (Date) getMetadataSubMap(PENDING_METADATA_FLAG).get(DATE_METADATA_SUBKEY);
+			done.tag = (String) getMetadataSubMap(PENDING_METADATA_FLAG).get(STAGE_METADATA_SUBKEY);
+		}
+		else if(getMetadataMap().containsKey(PROCESSED_METADATA_FLAG)) {
+			done.date = (Date) getMetadataSubMap(PROCESSED_METADATA_FLAG).get(DATE_METADATA_SUBKEY);
+			done.tag = (String) getMetadataSubMap(PROCESSED_METADATA_FLAG).get(STAGE_METADATA_SUBKEY);
+		}
+		return done;
+	}
+
+	@Override
+	public void setID(Object id) {
+		documentMap.put(ID_KEY, id);
 	}
 }

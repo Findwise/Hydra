@@ -16,7 +16,6 @@ public class MongoDocumentTest {
 		ld.removeContentField("field");
 		
 		MongoDocument md = new MongoDocument(ld.toJson());
-		System.out.println(md);
 		
 		Assert.assertEquals(1, md.getTouchedContent().size());
 		Assert.assertNull(md.getContentField("field"));
