@@ -1,28 +1,29 @@
 package com.findwise.hydra.net;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
+
 import org.junit.Test;
 
-import com.findwise.hydra.MapConfiguration;
-import com.findwise.hydra.TestModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import com.findwise.hydra.ConfigurationFactory;
+import com.findwise.hydra.CoreConfiguration;
+import com.findwise.hydra.mongodb.MongoConnector;
 
 public class RESTServerTest {
 
 	@Test
 	public void testBlockingStart() throws IOException, InterruptedException {
-		Injector inj =  Guice.createInjector(new TestModule("jUnit-RESTServerTest"));
-		int port = inj.getInstance(MapConfiguration.class).getRestPort();
-		RESTServer server1 = inj.getInstance(RESTServer.class);
+		CoreConfiguration conf = ConfigurationFactory.getConfiguration("jUnit-RESTServerTest");
+		MongoConnector dbc = new MongoConnector(conf);
+		int port = conf.getRestPort();
+		RESTServer server1 = new RESTServer(conf, new HttpRESTHandler(dbc));
 		
 		if(!server1.blockingStart()) {
-			server1 = RESTServer.getNewStartedRESTServer(inj);
+			server1 = RESTServer.getNewStartedRESTServer(port, new HttpRESTHandler(dbc));
 		}
 		System.out.println("Started server 1 on port "+port);
-		RESTServer server2 = inj.getInstance(RESTServer.class);
+		RESTServer server2 = new RESTServer(conf, new HttpRESTHandler(dbc));
 		if(server2.blockingStart()) {
 			System.out.println("We are failing on port "+server2.getPort());
 			Thread.sleep(1000);
@@ -37,9 +38,9 @@ public class RESTServerTest {
 			
 			fail("blockingStart() returned true when port should already be taken");
 		}
-		server2 = RESTServer.getNewStartedRESTServer(inj);
+		server2 = RESTServer.getNewStartedRESTServer(port, new HttpRESTHandler(new MongoConnector(conf)));
 		System.out.println("Restarted on port "+server2.getPort());
-		server2 = RESTServer.getNewStartedRESTServer(inj);
+		server2 = RESTServer.getNewStartedRESTServer(port, new HttpRESTHandler(new MongoConnector(conf)));
 		System.out.println("Restarted on port "+server2.getPort());
 		server1.shutdown();
 		server2.shutdown();
@@ -47,8 +48,8 @@ public class RESTServerTest {
 
 	@Test
 	public void testShutdown() throws IOException, InterruptedException {
-		Injector inj =  Guice.createInjector(new TestModule("jUnit-RESTServerTest"));
-		RESTServer server = RESTServer.getNewStartedRESTServer(inj);
+		CoreConfiguration conf = ConfigurationFactory.getConfiguration("jUnit-RESTServerTest");
+		RESTServer server = RESTServer.getNewStartedRESTServer(conf.getRestPort(), new HttpRESTHandler(new MongoConnector(conf)));
 		server.shutdown();
 		Thread.sleep(1000);
 		if(server.isAlive()) {

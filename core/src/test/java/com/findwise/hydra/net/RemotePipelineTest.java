@@ -10,50 +10,48 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.findwise.hydra.ConfigurationFactory;
+import com.findwise.hydra.CoreConfiguration;
 import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.NodeMaster;
-import com.findwise.hydra.TestModule;
+import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.common.Document.Action;
 import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
+import com.findwise.hydra.mongodb.MongoConnector;
 import com.findwise.hydra.mongodb.MongoDocument;
 import com.findwise.hydra.mongodb.MongoDocumentIO;
 import com.findwise.hydra.mongodb.MongoType;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.mongodb.Mongo;
 
 public class RemotePipelineTest {
-	private NodeMaster nm;
+	private static NodeMaster nm;
 	private MongoDocument test, test2;
 	
 	private static RESTServer server;
-	private static Injector inj;
-	
+
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		new Mongo().getDB("jUnit-RemotePipelineTest").dropDatabase();
 		
-		inj =  Guice.createInjector(new TestModule("jUnit-RemotePipelineTest"));
-		server = RESTServer.getNewStartedRESTServer(inj);
+		CoreConfiguration conf = ConfigurationFactory.getConfiguration("jUnit-RemotePipelineTest");
 		
-		
-		
-		NodeMaster nm = inj.getInstance(NodeMaster.class);
+		nm = new NodeMaster(conf, new MongoConnector(conf), new Pipeline());
 		if(!nm.isAlive()) {
 			nm.blockingStart();
 		
 			nm.getDatabaseConnector().waitForWrites(true);
 			nm.getDatabaseConnector().connect();
 		}
+		server = new RESTServer(conf, new HttpRESTHandler(nm.getDatabaseConnector()));
+		server.start();
 	}
 	
 	@Before
 	public void setUp() throws Exception {
-		nm = inj.getInstance(NodeMaster.class);
 		if(!nm.isAlive()) {
 			fail("NodeMaster is not running (TEST FAILIURE)");
 		}
@@ -77,7 +75,7 @@ public class RemotePipelineTest {
 
 	@After
 	public void tearDown() throws Exception {
-		DatabaseConnector<MongoType> dbc = nm.getDatabaseConnector();
+		DatabaseConnector<?> dbc = nm.getDatabaseConnector();
 		dbc.getDocumentWriter().deleteAll();
 	}
 	

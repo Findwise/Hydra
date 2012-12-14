@@ -40,13 +40,13 @@ public class MemoryConnector implements DatabaseConnector<MemoryType> {
 	}
 
 	@Override
-	public PipelineReader<MemoryType> getPipelineReader() {
+	public PipelineReader getPipelineReader() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public PipelineWriter<MemoryType> getPipelineWriter() {
+	public PipelineWriter getPipelineWriter() {
 		// TODO Auto-generated method stub
 		return null;
 	}

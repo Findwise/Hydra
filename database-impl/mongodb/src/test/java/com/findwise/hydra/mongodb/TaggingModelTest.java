@@ -8,14 +8,11 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.findwise.hydra.TestModule;
-import com.google.inject.Guice;
-
 public class TaggingModelTest {
 	MongoConnector mdc;
 
 	private void createAndConnect() throws Exception {
-		mdc = Guice.createInjector(new TestModule("junit-TaggingModelTest")).getInstance(MongoConnector.class);
+		mdc = new MongoConnector(DatabaseConfigurationFactory.getDatabaseConfiguration("junit-TaggingModelTest"));
 		
 		mdc.waitForWrites(true);
 		

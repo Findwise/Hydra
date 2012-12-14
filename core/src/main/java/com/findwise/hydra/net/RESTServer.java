@@ -34,8 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.CoreConfiguration;
 import com.findwise.tools.HttpConnection;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 /**
  * Sets up a REST service on the specified port, or 12001 by default.
@@ -71,7 +69,6 @@ public class RESTServer extends Thread {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	@Inject
 	public RESTServer(CoreConfiguration conf, HttpRESTHandler requestHandler) {
 		this(conf.getRestPort(), requestHandler);
 	}
@@ -194,10 +191,6 @@ public class RESTServer extends Thread {
 		logger.info("Caught shutdown command to RESTServer");
 		shutdownCalled = true;
 		ioReactor.shutdown();
-	}
-	
-	public static RESTServer getNewStartedRESTServer(Injector injector) {
-		return getNewStartedRESTServer(injector.getInstance(CoreConfiguration.class).getRestPort(), injector.getInstance(HttpRESTHandler.class));
 	}
 	
 	public static RESTServer getNewStartedRESTServer(int port, HttpRESTHandler<?> restHandler) {

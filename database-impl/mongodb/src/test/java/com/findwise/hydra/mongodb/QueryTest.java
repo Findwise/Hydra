@@ -12,12 +12,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.findwise.hydra.DatabaseDocument;
-import com.findwise.hydra.TestModule;
 import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.Document.Action;
 import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.local.LocalQuery;
-import com.google.inject.Guice;
 import com.mongodb.Mongo;
 
 /**
@@ -34,7 +32,7 @@ public class QueryTest {
 	
 	@Before
 	public void setUp() throws Exception {
-		mdc = Guice.createInjector(new TestModule("junit-QueryTest")).getInstance(MongoConnector.class);
+		mdc = new MongoConnector(DatabaseConfigurationFactory.getDatabaseConfiguration("junit-QueryTest"));
 		mdc.waitForWrites(true);
 		
 		test = new MongoDocument();

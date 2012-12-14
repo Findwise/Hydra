@@ -21,7 +21,7 @@ public class StageRunnerTest {
 		group.addStage(mockedStage);
 		Mockito.when(mockedStage.getProperties()).thenReturn(new HashMap<String, Object>());
 		
-		StageRunner sr = new StageRunner(group, new File("test"), 0);
+		StageRunner sr = new StageRunner(group, new File("test"), 0, false);
 		sr.setStageDestroyer(sd);
 		
 		sr.destroy();

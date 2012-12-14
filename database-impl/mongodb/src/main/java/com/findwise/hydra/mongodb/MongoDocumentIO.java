@@ -299,7 +299,19 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 			seenTags.add(tag);
 		}
 	}
-
+	
+	@Override
+	public List<DatabaseDocument<MongoType>> getAndTag(DatabaseQuery<MongoType> query, String tag, int n) {
+		ArrayList<DatabaseDocument<MongoType>> list = new ArrayList<DatabaseDocument<MongoType>>();
+		for(int i=0; i<n; i++) {
+			MongoDocument d = getAndTag(query, tag);
+			if(d==null) {
+				break;
+			}
+			list.add(d);
+		}
+		return list;
+	} 
 	
 	@Override
 	public void write(DocumentFile df) throws IOException {
@@ -358,7 +370,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		updateObject.putAll(getUnsetObject(getNullFields(md)));
 		
 		try {
-			WriteResult wr = documents.update(mdq.toDBObject(), updateObject, false, false, concern);
+			WriteResult wr = documents.update(mdq.toDBObject(), updateObject, true, false, concern);
 			return wr.getN()==1;
 		}
 		catch (MongoException e) {

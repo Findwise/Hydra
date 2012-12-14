@@ -28,7 +28,6 @@ import com.findwise.hydra.local.RemotePipeline;
  */
 public abstract class AbstractStage extends Thread {
 
-	public static final String DEV_MODE_STRING = "DEV_MODE";
 	public static final String ARG_NAME_STAGE_CLASS = "stageClass";
 	public static final String PROPERTY_NAME_COMMANDLINE_ARGS = "cmdline_args";
 	
@@ -45,6 +44,7 @@ public abstract class AbstractStage extends Thread {
 	public static final int CMDLINE_STAGE_NAME_PARAM = 0;
 	public static final int CMDLINE_PIPELINE_HOST_PARAM = 1;
 	public static final int CMDLINE_PIPELINE_PORT_PARAM = 2;
+	public static final int CMDLINE_PERFORMANCE_LOG_PARAM = 3;
 	
 	public static final int DEFAULT_HOLD_INTERVAL = 2000;
 	private RemotePipeline remotePipeline = null;
@@ -185,10 +185,6 @@ public abstract class AbstractStage extends Thread {
 		this.createAndApplyShutDownHook();
 	}
 	
-	private static boolean isDevMode(String[] args) {
-		return args[0].equals(DEV_MODE_STRING);
-	}
-	
 	public static List<AbstractStage> getInstances(String[] args) {
 		List<AbstractStage> list = new ArrayList<AbstractStage>();
 		
@@ -208,17 +204,13 @@ public abstract class AbstractStage extends Thread {
 	}
 	
 	public static RemotePipeline getRemotePipeline(String[] args) {
-		int addToIndex = 0;
-			
-		if(isDevMode(args)) {
-			//args[0] is DEV_MODE_STRING, args[1] stageName, args[2]+args[3] host+port, args[4] and on is config
-			addToIndex = 1;
-		}
-		String stageName = (CMDLINE_STAGE_NAME_PARAM+addToIndex<args.length) ? args[CMDLINE_STAGE_NAME_PARAM+addToIndex] : null;
-		String hostName = (CMDLINE_PIPELINE_HOST_PARAM+addToIndex<args.length) ? args[CMDLINE_PIPELINE_HOST_PARAM+addToIndex] : RemotePipeline.DEFAULT_HOST; 
-		String port = (CMDLINE_PIPELINE_PORT_PARAM+addToIndex<args.length) ? args[CMDLINE_PIPELINE_PORT_PARAM+addToIndex] : ""+RemotePipeline.DEFAULT_PORT; 
+		String stageName = (CMDLINE_STAGE_NAME_PARAM<args.length) ? args[CMDLINE_STAGE_NAME_PARAM] : null;
+		String hostName = (CMDLINE_PIPELINE_HOST_PARAM<args.length) ? args[CMDLINE_PIPELINE_HOST_PARAM] : RemotePipeline.DEFAULT_HOST; 
+		String port = (CMDLINE_PIPELINE_PORT_PARAM<args.length) ? args[CMDLINE_PIPELINE_PORT_PARAM] : ""+RemotePipeline.DEFAULT_PORT; 
+		boolean logging = (CMDLINE_PERFORMANCE_LOG_PARAM<args.length) ? Boolean.parseBoolean(args[CMDLINE_PERFORMANCE_LOG_PARAM]) : false;
 		
 		RemotePipeline rp = new RemotePipeline(hostName, Integer.parseInt(port), stageName);
+		rp.setPerformanceLogging(logging);
 		return rp;
 	}
 	
@@ -230,20 +222,9 @@ public abstract class AbstractStage extends Thread {
 			System.exit(1);
 		} 
 		try {
-			Map<String, Object> properties = null;
-			if(isDevMode(args)) {
-				//args[0] is DEV_MODE_STRING, args[1] stageName, args[2]+args[3] host+port, args[4] and on is config
-				String jsonString = "";
-				for(int i=4; i<args.length; i++) {
-					jsonString += args[i]+" ";
-				}
-				properties = SerializationUtils.fromJson(jsonString);
-			}
 			RemotePipeline rp = getRemotePipeline(args);
-			
-			if(properties==null) {				
-				properties = rp.getProperties();
-			}
+						
+			Map<String, Object> properties = rp.getProperties();
 	
 			String stageClass;
 			if(properties.containsKey(ARG_NAME_STAGE_CLASS)) {
@@ -271,8 +252,6 @@ public abstract class AbstractStage extends Thread {
 			Logger.error("Could not instantiate the Stage class", e);
 		} catch (IllegalAccessException e) {
 			Logger.error("Could not access constructor of Stage class", e);
-		} catch (JsonException e) {
-			Logger.error("Communication failiure when reading properties", e);
 		} catch (IOException e) {
 			Logger.error("Communication failiure when reading properties", e);
 		}
@@ -308,11 +287,9 @@ public abstract class AbstractStage extends Thread {
 		shutDownHook = new OnDestroyThread();
 		Runtime.getRuntime().addShutdownHook(shutDownHook);
 		return shutDownHook;
-
 	}
-
+	
 	private class OnDestroyThread extends Thread {
-
 		public void run() {
 
 			Logger.info("Shutting down stage: " + getName());

@@ -16,7 +16,7 @@ public interface DatabaseConnector<T extends DatabaseType> {
 	/**
 	 * Connect to the database.
 	 */
-	abstract void connect() throws IOException;
+	void connect() throws IOException;
 
 	/**
 	 * Will block execution until the latest write has been pushed though.
@@ -27,9 +27,9 @@ public interface DatabaseConnector<T extends DatabaseType> {
 	
 	boolean isWaitingForWrites();
 	
-	PipelineReader<T> getPipelineReader();
+	PipelineReader getPipelineReader();
 	
-	PipelineWriter<T> getPipelineWriter();
+	PipelineWriter getPipelineWriter();
 	
 	DocumentReader<T> getDocumentReader();
 	

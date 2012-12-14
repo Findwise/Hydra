@@ -1,6 +1,7 @@
 package com.findwise.hydra;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import com.findwise.hydra.common.DocumentFile;
 
@@ -29,6 +30,15 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 */
 	DatabaseDocument<T> getAndTag(DatabaseQuery<T> query, String tag);
 
+	/**
+	 * Returns a collection containing tagged documents. 
+	 * 
+	 * It is left to the implementation whether this is equivalent to performing
+	 * n requests to getAndTag(DatabaseQuery<T> query, String tag), or something
+	 * more clever.
+	 */
+	Collection<DatabaseDocument<T>> getAndTag(DatabaseQuery<T> query, String tag, int n);
+	
 	/**
 	 * Calls getAndTagRecurring(DatabaseQuery query, String tag, int
 	 * intervalMillis) with a default value specified by the implementing class.
@@ -143,10 +153,13 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 * @return false if the document already has an id, true otherwise.
 	 */
 	boolean insert(DatabaseDocument<T> d);
-
+	
 	/**
 	 * Updates the document in the database. If any field in document is 
 	 * <pre>null</pre>, this field will be ignored and removed. 
+	 * 
+	 * If the document ID does not exist in the database, this document should
+	 * be inserted with the specified supplied document ID.
 	 * 
 	 * @return false if update fails
 	 */
