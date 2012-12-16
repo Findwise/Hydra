@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.findwise.hydra.Stage;
+import com.findwise.hydra.StageGroup;
 import com.findwise.hydra.admin.ConfigurationService;
 import com.findwise.hydra.admin.documents.DocumentsService;
 
@@ -86,12 +87,29 @@ public class ConfigurationController {
 			@RequestBody String jsonConfig) throws JsonException, IOException {
 		return stagesService.addStage(libraryId, null, stageName, jsonConfig);
 	}
+        
+        @ResponseStatus(HttpStatus.ACCEPTED)
+	@RequestMapping(method = RequestMethod.POST, value = "/libraries/{id}/stages/{groupName}/{stageName}")
+	@ResponseBody
+	public Map<String, Object> addStageToGroup(
+			@PathVariable(value = "id") String libraryId,
+			@PathVariable(value = "stageName") String stageName,
+                        @PathVariable(value = "groupName") String groupName,
+			@RequestBody String jsonConfig) throws JsonException, IOException {
+		return stagesService.addStage(libraryId, groupName, stageName, jsonConfig);
+	}
 
 
 	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/stages")
 	public Map<String,List<Stage>> getStages() {
 		return stagesService.getStages();
+	}
+        
+        @ResponseBody
+	@RequestMapping(method = RequestMethod.GET, value = "/stagegroups")
+	public Map<String,List<StageGroup>> getStageGroups() {
+		return stagesService.getStageGroups();
 	}
 	
 	@ResponseBody
