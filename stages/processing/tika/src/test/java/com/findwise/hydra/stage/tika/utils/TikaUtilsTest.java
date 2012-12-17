@@ -7,6 +7,7 @@ import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -179,5 +180,21 @@ public class TikaUtilsTest {
 		
 		Assert.assertTrue(doc.hasContentField("x_language"));
 		Assert.assertEquals("en", doc.getContentField("x_language"));
+	}
+	
+	@Test
+	public void testFilterString() throws Exception {
+		String s = new String(new byte[] {-53});
+		System.out.println("char: "+s);
+		Assert.assertEquals("", TikaUtils.filterInvalidChars(s));
+		
+		List<String> list = new ArrayList<String>();
+		list.add("normal");
+		list.add("string with some cool unicode\u0000");
+		list.add("broken"+new String(new byte[]{-30, -3, -123}));
+
+		Assert.assertEquals("normal", TikaUtils.filterInvalidChars(list).get(0));
+		Assert.assertEquals("string with some cool unicode\u0000", TikaUtils.filterInvalidChars(list).get(1));
+		Assert.assertEquals("broken", TikaUtils.filterInvalidChars(list).get(2));
 	}
 }
