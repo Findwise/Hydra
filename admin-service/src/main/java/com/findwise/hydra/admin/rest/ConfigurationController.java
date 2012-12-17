@@ -111,6 +111,12 @@ public class ConfigurationController {
 	public Map<String,List<StageGroup>> getStageGroups() {
 		return stagesService.getStageGroups();
 	}
+        
+        @ResponseBody
+	@RequestMapping(method = RequestMethod.GET, value = "/stagegroups/{stageGroup}")
+	public StageGroup getStageGroup(@PathVariable(value = "stageGroup") String stageGroup) {
+		return stagesService.getStageGroup(stageGroup);
+	}
 	
 	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/stages/{stageName}")

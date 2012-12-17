@@ -40,6 +40,10 @@ public class StagesService<T extends DatabaseType> {
 		ret.put("stagegroups", new ArrayList<StageGroup>(connector.getPipelineReader().getPipeline().getStageGroups()));
 		return ret;
 	}
+        
+        public StageGroup getStageGroup(String groupName) {
+            return connector.getPipelineReader().getPipeline().getGroup(groupName);
+        }
 	
 	public void addStage(Stage stage) throws IOException {
 		addStage(stage, null);
