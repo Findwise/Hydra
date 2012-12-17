@@ -89,7 +89,15 @@ Available endpoints
 	
 	Request content: Stage configuration in json format
 
-	Adds a stage or replaces a stage in the pipeline with the attached configuration as raw body.
+	Adds a stage or replaces a stage in the pipeline with the attached configuration as raw body. A stage group with the stage name will be created.
+	
+* **/libraries/{library-id}/stages/{stage-group}/{stage-name}** - Method: POST
+
+	Request format: *application/json*
+	
+	Request content: Stage configuration in json format
+
+	Adds/replaces a stage in a stage group to the pipeline with the attached configuration as raw body.
 	
 * **/stages** - Method: GET
 	
@@ -169,7 +177,6 @@ Available endpoints
 	    ]
 	}
 	```
-	
   
 * **/stages/{stage-name}** - Method: GET
 
@@ -179,6 +186,93 @@ Available endpoints
 
 	Deletes the stage by setting it to INACTIVE. 
 	Returns a stageStatus telling you if the delete was successful or not
+	
+* **/stagegroups** - Method: GET
+
+	Lists all active stage groups with stages in the pipeline. Sample response:
+	
+	{
+    "stagegroups": [
+        {
+            "stages": [
+                {
+                    "name": "regex1",
+                    "databaseFile": {
+                        "filename": "hydra-basic-stages-jar-with-dependencies.jar",
+                        "uploadDate": 1355663752601,
+                        "id": "basic",
+                        "inputStream": null
+                    },
+                    "mode": "ACTIVE",
+                    "properties": {
+                        "properties": {
+                            "regexConfigs": [
+                                {
+                                    "outField": "headers",
+                                    "regex": "(.*)",
+                                    "inField": "markdown",
+                                    "substitute": "$1"
+                                }
+                            ]
+                        }
+                    },
+                    "propertiesModifiedDate": 1355664777976,
+                    "propertiesChanged": true
+                },
+                {
+                    "name": "regex2",
+                    "databaseFile": {
+                        "filename": "hydra-basic-stages-jar-with-dependencies.jar",
+                        "uploadDate": 1355663752601,
+                        "id": "basic",
+                        "inputStream": null
+                    },
+                    "mode": "ACTIVE",
+                    "properties": {
+                        "properties": {
+                            "regexConfigs": [
+                                {
+                                    "outField": "headers",
+                                    "regex": "(.*)",
+                                    "inField": "markdown",
+                                    "substitute": "$1"
+                                }
+                            ]
+                        }
+                    },
+                    "propertiesModifiedDate": 1355664777976,
+                    "propertiesChanged": true
+                }
+            ],
+            "jvmParameters": null,
+            "classpath": null,
+            "retries": -1,
+            "cmdlineArgs": null,
+            "logging": false,
+            "propertiesModifiedDate": null,
+            "name": "regexgroup",
+            "javaLocation": null,
+            "propertiesChanged": false,
+            "databaseFiles": [
+                {
+                    "filename": "hydra-basic-stages-jar-with-dependencies.jar",
+                    "uploadDate": 1355663752601,
+                    "id": "basic",
+                    "inputStream": null
+                }
+            ],
+            "stageNames": [
+                "regex1",
+                "regex2"
+            ]
+        }
+    ]
+}
+  
+* **/stagegroups/{group-name}** - Method: GET
+
+	Same as **/stagegroups** but only for a specific stage group
+
 
 * **/documents** - Method: GET
 	
