@@ -51,7 +51,7 @@ public class TikaUtils {
 
 	public static void addTextToDocument(LocalDocument doc, String fieldPrefix,
             StringWriter textData) {
-        doc.putContentField(fieldPrefix + "content", textData.toString());
+        doc.putContentField(fieldPrefix + "content", filterInvalidChars(textData.toString()));
     }
 
     public static void addMetadataToDocument(LocalDocument doc, String fieldPrefix,
@@ -59,14 +59,14 @@ public class TikaUtils {
         for (String name : metadata.names()) {
             if (metadata.getValues(name).length > 1) {
                 doc.putContentField(fieldPrefix + name,
-                        Arrays.asList(metadata.getValues(name)));
+                        filterInvalidChars(Arrays.asList(metadata.getValues(name))));
             } else {
-                doc.putContentField(fieldPrefix + name, metadata.get(name));
+                doc.putContentField(fieldPrefix + name, filterInvalidChars(metadata.get(name)));
             }
         }
     }
-    
-    public static void addLanguageToDocument(LocalDocument doc,
+
+	public static void addLanguageToDocument(LocalDocument doc,
 			String fieldPrefix, String text) {
 		doc.putContentField(fieldPrefix + "language", new LanguageIdentifier(text).getLanguage());
 	}
@@ -159,4 +159,29 @@ public class TikaUtils {
 
     	return new URI(scheme, userinfo, host, port, path, query, fragment);
     }
+    
+    public static String filterInvalidChars(String s) {
+    	if (s == null) return null;
+
+        StringBuilder result = new StringBuilder();
+
+        for (int i = 0; i < s.length(); i++) {
+          char c = s.charAt(i);
+          if(Character.isDefined(c) && c!='\uFFFD') {
+        	  result.append(c);
+          }
+        }
+
+        return result.toString();
+    }
+    
+    /**
+     * Modifies list in place, but also returns it for convenience.
+     */
+    public static List<String> filterInvalidChars(List<String> list) {
+		for(int i=0; i<list.size(); i++) {
+			list.set(i, filterInvalidChars(list.get(i)));
+		}
+		return list;
+	}
 }
