@@ -15,9 +15,9 @@ import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.PipelineReader;
 
 public class PipelineScanner<T extends DatabaseType> {
-	private PipelineReader<T> pipelineReader;
+	private PipelineReader pipelineReader;
 	
-	public PipelineScanner(PipelineReader<T> reader) {
+	public PipelineScanner(PipelineReader reader) {
 		pipelineReader = reader;
 	}
 	
