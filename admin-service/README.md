@@ -190,85 +190,86 @@ Available endpoints
 * **/stagegroups** - Method: GET
 
 	Lists all active stage groups with stages in the pipeline. Sample response:
-	
+	```
 	{
-    "stagegroups": [
-        {
-            "stages": [
-                {
-                    "name": "regex1",
-                    "databaseFile": {
-                        "filename": "hydra-basic-stages-jar-with-dependencies.jar",
-                        "uploadDate": 1355663752601,
-                        "id": "basic",
-                        "inputStream": null
-                    },
-                    "mode": "ACTIVE",
-                    "properties": {
-                        "properties": {
-                            "regexConfigs": [
-                                {
-                                    "outField": "headers",
-                                    "regex": "(.*)",
-                                    "inField": "markdown",
-                                    "substitute": "$1"
-                                }
-                            ]
-                        }
-                    },
-                    "propertiesModifiedDate": 1355664777976,
-                    "propertiesChanged": true
-                },
-                {
-                    "name": "regex2",
-                    "databaseFile": {
-                        "filename": "hydra-basic-stages-jar-with-dependencies.jar",
-                        "uploadDate": 1355663752601,
-                        "id": "basic",
-                        "inputStream": null
-                    },
-                    "mode": "ACTIVE",
-                    "properties": {
-                        "properties": {
-                            "regexConfigs": [
-                                {
-                                    "outField": "headers",
-                                    "regex": "(.*)",
-                                    "inField": "markdown",
-                                    "substitute": "$1"
-                                }
-                            ]
-                        }
-                    },
-                    "propertiesModifiedDate": 1355664777976,
-                    "propertiesChanged": true
-                }
-            ],
-            "jvmParameters": null,
-            "classpath": null,
-            "retries": -1,
-            "cmdlineArgs": null,
-            "logging": false,
-            "propertiesModifiedDate": null,
-            "name": "regexgroup",
-            "javaLocation": null,
-            "propertiesChanged": false,
-            "databaseFiles": [
-                {
-                    "filename": "hydra-basic-stages-jar-with-dependencies.jar",
-                    "uploadDate": 1355663752601,
-                    "id": "basic",
-                    "inputStream": null
-                }
-            ],
-            "stageNames": [
-                "regex1",
-                "regex2"
-            ]
-        }
-    ]
-}
-  
+		"stagegroups": [
+			{
+				"stages": [
+					{
+						"name": "regex1",
+						"databaseFile": {
+							"filename": "hydra-basic-stages-jar-with-dependencies.jar",
+							"uploadDate": 1355663752601,
+							"id": "basic",
+							"inputStream": null
+						},
+						"mode": "ACTIVE",
+						"properties": {
+							"properties": {
+								"regexConfigs": [
+									{
+										"outField": "headers",
+										"regex": "(.*)",
+										"inField": "markdown",
+										"substitute": "$1"
+									}
+								]
+							}
+						},
+						"propertiesModifiedDate": 1355664777976,
+						"propertiesChanged": true
+					},
+					{
+						"name": "regex2",
+						"databaseFile": {
+							"filename": "hydra-basic-stages-jar-with-dependencies.jar",
+							"uploadDate": 1355663752601,
+							"id": "basic",
+							"inputStream": null
+						},
+						"mode": "ACTIVE",
+						"properties": {
+							"properties": {
+								"regexConfigs": [
+									{
+										"outField": "headers",
+										"regex": "(.*)",
+										"inField": "markdown",
+										"substitute": "$1"
+									}
+								]
+							}
+						},
+						"propertiesModifiedDate": 1355664777976,
+						"propertiesChanged": true
+					}
+				],
+				"jvmParameters": null,
+				"classpath": null,
+				"retries": -1,
+				"cmdlineArgs": null,
+				"logging": false,
+				"propertiesModifiedDate": null,
+				"name": "regexgroup",
+				"javaLocation": null,
+				"propertiesChanged": false,
+				"databaseFiles": [
+					{
+						"filename": "hydra-basic-stages-jar-with-dependencies.jar",
+						"uploadDate": 1355663752601,
+						"id": "basic",
+						"inputStream": null
+					}
+				],
+				"stageNames": [
+					"regex1",
+					"regex2"
+				]
+			}
+		]
+	}
+```
+ 
 * **/stagegroups/{group-name}** - Method: GET
 
 	Same as **/stagegroups** but only for a specific stage group
