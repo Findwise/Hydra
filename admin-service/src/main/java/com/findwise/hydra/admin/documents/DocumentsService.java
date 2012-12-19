@@ -168,7 +168,8 @@ public class DocumentsService<T extends DatabaseType> {
 			
 			DatabaseDocument<T> dbDoc = connector.convert(doc);
 			
-			connector.getDocumentWriter().insert(dbDoc);
+			boolean success = connector.getDocumentWriter().insert(dbDoc);
+			ret.put("success", success);
 		} catch (IllegalArgumentException e) {
 			Map<String, Object> error = new HashMap<String, Object>();
 			error.put("Invalid action", action);
