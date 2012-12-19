@@ -217,12 +217,8 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	public DatabaseDocument<CacheType> getDocumentById(Object id, boolean includeInactive) {
 		DatabaseDocument<CacheType> ret = cacheReader.getDocumentById(id);
 		if (ret == null) {
-			if(includeInactive) {
-				addToCache(convertToCache(backingReader.getDocumentById(id, includeInactive)));
-			} else {
-				return null;
-			}
-			return cacheReader.getDocumentById(id);
+			addToCache(convertToCache(backingReader.getDocumentById(id, includeInactive)));
+			ret = cacheReader.getDocumentById(id);
 		}
 		return ret;
 	}
