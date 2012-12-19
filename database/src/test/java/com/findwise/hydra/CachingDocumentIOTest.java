@@ -1,5 +1,6 @@
 package com.findwise.hydra;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -12,9 +13,11 @@ public class CachingDocumentIOTest {
 	DocumentWriter cachingWriter;
 	DatabaseDocument doc1, doc2, doc3;
 	
+	CachingDatabaseConnector<?, ?> connector;
+	
 	
 	@Before
-	public void setup() {
+	public void setup() throws Exception {
 		backing = Mockito.mock(DatabaseConnector.class);
 		caching = Mockito.mock(DatabaseConnector.class);
 		
@@ -32,19 +35,26 @@ public class CachingDocumentIOTest {
 		Mockito.when(doc2.getID()).thenReturn(2);
 		doc3 = Mockito.mock(DatabaseDocument.class);
 		Mockito.when(doc3.getID()).thenReturn(3);
+		
+		connector = new CachingDatabaseConnector(backing, caching);
+		connector.connect();
 	}
 	
 
 	@Test
-	public void testGetDocumentById() throws Exception {
+	public void testGetDocumentById() {
 		Mockito.when(cachingReader.getDocumentById(1)).thenReturn(doc1);
 		Mockito.when(cachingReader.getDocumentById(2)).thenReturn(null);
 		
-		CachingDatabaseConnector<?, ?> cdc = new CachingDatabaseConnector(backing, caching);
-		cdc.connect();
+		
 
-		cdc.getDocumentReader().getDocumentById(1);
-		cdc.getDocumentReader().getDocumentById(2);
+		DatabaseDocument<?> d = connector.getDocumentReader().getDocumentById(1);
+		connector.getDocumentReader().getDocumentById(2);
+		
+		Mockito.verify(cachingReader, Mockito.times(1)).getDocumentById(1);
+		Mockito.verify(backingReader, Mockito.never()).getDocumentById(1);
+		
+		Assert.assertEquals(doc1.getID(), d.getID());
 		
 		//Should be either of these
 		try {
@@ -53,5 +63,4 @@ public class CachingDocumentIOTest {
 			Mockito.verify(backingReader, Mockito.times(1)).getDocumentById(2, false);
 		}
 	}
-
 }
