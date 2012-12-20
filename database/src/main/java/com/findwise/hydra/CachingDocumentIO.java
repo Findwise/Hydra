@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.DatabaseConnector.ConversionException;
 import com.findwise.hydra.common.DocumentFile;
+import com.findwise.hydra.common.SerializationUtils;
 
 public class CachingDocumentIO<CacheType extends DatabaseType, BackingType extends DatabaseType> implements DocumentReader<CacheType>, DocumentWriter<CacheType> {
 	private static final Logger logger = LoggerFactory.getLogger(CachingDocumentIO.class);
@@ -40,7 +41,7 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 		this.batchSize = batchSize;
 	}
 	
-	private DatabaseDocument<BackingType> convert(DatabaseDocument<CacheType> d) {
+	protected DatabaseDocument<BackingType> convert(DatabaseDocument<CacheType> d) {
 		try {
 			return backingConnector.convert(d);
 		} catch (ConversionException e) {
@@ -49,11 +50,14 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 		}
 	}
 	
-	private DatabaseQuery<BackingType> convert(DatabaseQuery<CacheType> q) {
+	protected DatabaseQuery<BackingType> convert(DatabaseQuery<CacheType> q) {
 		return backingConnector.convert(q);
 	}
 	
-	private DatabaseDocument<CacheType> convertToCache(DatabaseDocument<BackingType> d) {
+	protected DatabaseDocument<CacheType> convertToCache(DatabaseDocument<BackingType> d) {
+		if(d==null) {
+			return null;
+		}
 		try {
 			return cacheConnector.convert(d);
 		} catch (ConversionException e) {
@@ -217,10 +221,18 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	public DatabaseDocument<CacheType> getDocumentById(Object id, boolean includeInactive) {
 		DatabaseDocument<CacheType> ret = cacheReader.getDocumentById(id);
 		if (ret == null) {
-			addToCache(convertToCache(backingReader.getDocumentById(id, includeInactive)));
-			ret = cacheReader.getDocumentById(id);
+			id = convertId(id);
+			DatabaseDocument<BackingType> d = backingReader.getDocumentById(id, includeInactive);
+			if(d!=null) {
+				addToCache(convertToCache(d));
+				ret = cacheReader.getDocumentById(id);
+			}
 		}
 		return ret;
+	}
+
+	private Object convertId(Object id) {
+		return backingReader.toDocumentIdFromJson(SerializationUtils.toJson(id));
 	}
 
 	@Override
@@ -318,5 +330,13 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 			col.addAll(cacheWriter.getAndTag(query, tag, n));
 		}
 		return col;
+	}
+
+	public int getBatchSize() {
+		return batchSize;
+	}
+
+	public void setBatchSize(int batchSize) {
+		this.batchSize = batchSize;
 	}
 }
