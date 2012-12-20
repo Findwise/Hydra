@@ -1,11 +1,17 @@
 package com.findwise.hydra;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import com.findwise.hydra.common.DocumentFile;
 
 @SuppressWarnings("rawtypes")
 public class CachingDocumentIOTest {
@@ -34,6 +40,10 @@ public class CachingDocumentIOTest {
 		Mockito.when(backing.getDocumentWriter()).thenReturn(backingWriter);
 		Mockito.when(caching.getDocumentReader()).thenReturn(cachingReader);
 		Mockito.when(caching.getDocumentWriter()).thenReturn(cachingWriter);
+		
+		Mockito.when(backingReader.toDocumentIdFromJson("1")).thenReturn(1);
+		Mockito.when(backingReader.toDocumentIdFromJson("2")).thenReturn(2);
+		Mockito.when(backingReader.toDocumentIdFromJson("3")).thenReturn(3);
 
 		doc1 = Mockito.mock(DatabaseDocument.class);
 		Mockito.when(doc1.getID()).thenReturn(1);
@@ -41,6 +51,10 @@ public class CachingDocumentIOTest {
 		Mockito.when(doc2.getID()).thenReturn(2);
 		doc3 = Mockito.mock(DatabaseDocument.class);
 		Mockito.when(doc3.getID()).thenReturn(3);
+
+		Mockito.when(backing.convert(doc1)).thenReturn(doc1);
+		Mockito.when(backing.convert(doc2)).thenReturn(doc2);
+		Mockito.when(backing.convert(doc3)).thenReturn(doc3);
 		
 		io = new CachingDocumentIO(caching, backing);
 	}
@@ -51,8 +65,6 @@ public class CachingDocumentIOTest {
 		Mockito.when(cachingReader.getDocumentById(2)).thenReturn(null);
 		Mockito.when(cachingReader.getDocumentById(3)).thenReturn(null);
 		
-		Mockito.when(backingReader.toDocumentIdFromJson("2")).thenReturn(2);
-		Mockito.when(backingReader.toDocumentIdFromJson("3")).thenReturn(3);
 		Mockito.when(backingReader.getDocumentById(2, false)).thenReturn(doc2);
 		Mockito.when(backingReader.getDocumentById(3, false)).thenReturn(null);
 		
@@ -80,12 +92,11 @@ public class CachingDocumentIOTest {
 	public void testGetDocument() {
 		DatabaseQuery q1 = Mockito.mock(DatabaseQuery.class);
 		DatabaseQuery q2 = Mockito.mock(DatabaseQuery.class);
+		Mockito.when(io.convert(q2)).thenReturn(q2);
 		String tag = "t";
 		
 		Mockito.when(cachingWriter.getAndTag(q1, tag)).thenReturn(doc1);
 		Mockito.when(cachingWriter.getAndTag(q2, tag)).thenReturn(null);
-		
-		Mockito.when(io.convert(q2)).thenReturn(q2);
 		
 		ArrayList<DatabaseDocument> list = new ArrayList<DatabaseDocument>();
 		list.add(doc2);
@@ -99,6 +110,107 @@ public class CachingDocumentIOTest {
 		Mockito.verify(backingWriter, Mockito.times(1)).getAndTag(Mockito.eq(q2), Mockito.anyString(), Mockito.anyInt());
 		verifyCacheFilledOnce();
 		Mockito.verify(cachingWriter, Mockito.times(2)).getAndTag(Mockito.eq(q2), Mockito.anyString());
+	}
+	
+	@SuppressWarnings({ "unchecked" })
+	@Test
+	public void testGetDocumentFileNamesCached() {
+		ArrayList<String> cache = new ArrayList<String>();
+		cache.add("x");
+		cache.add("y");
+		
+		Mockito.when(cachingReader.getDocumentFileNames(doc1)).thenReturn(cache);
+		
+		List<String> l = io.getDocumentFileNames(doc1);
+		verifyInList(l, "x", "y");
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	@Test
+	public void testGetDocumentFileNamesPartiallyCached() {
+		ArrayList<String> cache = new ArrayList<String>();
+		cache.add("x");
+		Mockito.when(cachingReader.getDocumentFileNames(doc1)).thenReturn(cache);
+		ArrayList<String> back = new ArrayList<String>();
+		back.add("x");
+		back.add("y");
+		Mockito.when(backingReader.getDocumentFileNames(doc1)).thenReturn(back);
+
+		List<String> l = io.getDocumentFileNames(doc1);
+		verifyInList(l, "x", "y");
+	}
+	
+	@SuppressWarnings({ "unchecked" })
+	@Test
+	public void testGetDocumentFileNamesNotCached() {
+		ArrayList<String> cache = new ArrayList<String>();
+		Mockito.when(cachingReader.getDocumentFileNames(doc1)).thenReturn(cache);
+		ArrayList<String> back = new ArrayList<String>();
+		back.add("x");
+		back.add("y");
+		Mockito.when(backingReader.getDocumentFileNames(doc1)).thenReturn(back);
+
+		List<String> l = io.getDocumentFileNames(doc1);
+		verifyInList(l, "x", "y");
+	}
+	
+	@SuppressWarnings({ "unchecked" })
+	@Test
+	public void testGetDocumentFileCached() throws IOException {
+		ArrayList<String> cache = new ArrayList<String>();
+		cache.add("x");
+		cache.add("y");
+		Mockito.when(cachingReader.getDocumentFileNames(doc1)).thenReturn(cache);
+		Mockito.when(cachingReader.getDocumentFile(doc1, "x")).thenReturn(null);
+		
+		ArrayList<String> back = new ArrayList<String>();
+		DocumentFile x = new DocumentFile(doc1.getID(), "x", IOUtils.toInputStream("content"));
+		DocumentFile y = new DocumentFile(doc1.getID(), "y", IOUtils.toInputStream("content"));
+		Mockito.when(backingReader.getDocumentFileNames(doc1)).thenReturn(back);
+		Mockito.when(cachingReader.getDocumentFile(doc1, "x")).thenReturn(x);
+		Mockito.when(cachingReader.getDocumentFile(doc1, "y")).thenReturn(y);
+
+		Assert.assertEquals("x", io.getDocumentFile(doc1, "x").getFileName());
+		Assert.assertEquals("y", io.getDocumentFile(doc1, "y").getFileName());
+		Mockito.verify(cachingWriter, Mockito.times(0)).write(x);
+		Mockito.verify(cachingWriter, Mockito.times(0)).write(y);
+	}
+	
+	@SuppressWarnings({ "unchecked" })
+	@Test
+	public void testGetDocumentFileNotCached() throws IOException {
+		ArrayList<String> cache = new ArrayList<String>();
+		Mockito.when(cachingReader.getDocumentFileNames(doc1)).thenReturn(cache);
+		Mockito.when(cachingReader.getDocumentFile(doc1, "x")).thenReturn(null);
+		
+		ArrayList<String> back = new ArrayList<String>();
+		back.add("x");
+		back.add("y");
+		DocumentFile x = new DocumentFile(doc1.getID(), "x", IOUtils.toInputStream("content"));
+		DocumentFile y = new DocumentFile(doc1.getID(), "y", IOUtils.toInputStream("content"));
+		Mockito.when(backingReader.getDocumentFileNames(doc1)).thenReturn(back);
+		Mockito.when(backingReader.getDocumentFile(doc1, "x")).thenReturn(x);
+		Mockito.when(backingReader.getDocumentFile(doc1, "y")).thenReturn(y);
+		Mockito.when(backingReader.getDocumentFile(doc1, "z")).thenReturn(null);
+
+		io.getDocumentFile(doc1, "x");
+		io.getDocumentFile(doc1, "y");
+		io.getDocumentFile(doc1, "z");
+		Mockito.verify(cachingWriter, Mockito.times(1)).write(x);
+		Mockito.verify(cachingWriter, Mockito.times(1)).write(y);
+		Mockito.verify(cachingWriter, Mockito.times(0)).write(null);
+		Mockito.verify(cachingReader, Mockito.times(2)).getDocumentFile(doc1, "x");
+		Mockito.verify(cachingReader, Mockito.times(2)).getDocumentFile(doc1, "y");
+		Mockito.verify(cachingReader, Mockito.times(1)).getDocumentFile(doc1, "z");
+		Mockito.verify(backingReader, Mockito.times(1)).getDocumentFile(doc1, "z");
+	}
+	
+	private void verifyInList(Collection<String> list, String ... os) {
+		for(String o : os) {
+			if(!list.contains(o)) {
+				Assert.fail("String '"+o+"' is not in list: "+list);
+			}
+		}
 	}
 	
 	@SuppressWarnings("unchecked")
