@@ -49,8 +49,12 @@ public class CachingDocumentIOTest {
 	public void testGetDocumentById()  {
 		Mockito.when(cachingReader.getDocumentById(1)).thenReturn(doc1);
 		Mockito.when(cachingReader.getDocumentById(2)).thenReturn(null);
+		Mockito.when(cachingReader.getDocumentById(3)).thenReturn(null);
 		
 		Mockito.when(backingReader.toDocumentIdFromJson("2")).thenReturn(2);
+		Mockito.when(backingReader.toDocumentIdFromJson("3")).thenReturn(3);
+		Mockito.when(backingReader.getDocumentById(2, false)).thenReturn(doc2);
+		Mockito.when(backingReader.getDocumentById(3, false)).thenReturn(null);
 		
 		DatabaseDocument<?> d = io.getDocumentById(1);
 		io.getDocumentById(2);
@@ -66,6 +70,9 @@ public class CachingDocumentIOTest {
 		} catch(Throwable e) {
 			Mockito.verify(backingReader, Mockito.times(1)).getDocumentById(2, false);
 		}
+		verifyCacheFilledOnce();
+		d = io.getDocumentById(3);
+		verifyCacheFilledOnce();
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -90,12 +97,12 @@ public class CachingDocumentIOTest {
 		io.getAndTag(q2, tag);
 		
 		Mockito.verify(backingWriter, Mockito.times(1)).getAndTag(Mockito.eq(q2), Mockito.anyString(), Mockito.anyInt());
-		verifyCacheFilled();
+		verifyCacheFilledOnce();
 		Mockito.verify(cachingWriter, Mockito.times(2)).getAndTag(Mockito.eq(q2), Mockito.anyString());
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void verifyCacheFilled() {
+	private void verifyCacheFilledOnce() {
 		Mockito.verify(cachingWriter, Mockito.atLeast(1)).update(Mockito.any(DatabaseDocument.class));
 	}
 }
