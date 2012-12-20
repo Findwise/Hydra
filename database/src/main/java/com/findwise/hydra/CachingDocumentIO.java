@@ -272,11 +272,14 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 		DocumentFile df = cacheReader.getDocumentFile(d, fileName);
 		if(df == null) {
 			try {
-				addToCache(backingReader.getDocumentFile(convert(d), fileName));
+				DocumentFile f = backingReader.getDocumentFile(convert(d), fileName);
+				if(f != null) {
+					addToCache(f);
+					df = cacheReader.getDocumentFile(d, fileName);
+				}
 			} catch (IOException e) {
 				logger.error("Caught IOException while trying to cache a document file: "+d, e);
 			}
-			df = cacheReader.getDocumentFile(d, fileName);
 		}
 		return df;
 	}
