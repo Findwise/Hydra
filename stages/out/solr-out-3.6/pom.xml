@@ -32,7 +32,7 @@
 		<dependency>
 			<artifactId>solr-solrj</artifactId>
 			<groupId>org.apache.solr</groupId>
-			<version>4.0.0</version>
+			<version>3.6.0</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -49,7 +49,7 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-core</artifactId>
-			<version>0.3.0-SNAPSHOT</version>
+			<version>0.2.0</version>
 			<scope>test</scope>
 			<exclusions>
 				<exclusion>
