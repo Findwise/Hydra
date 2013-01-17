@@ -6,6 +6,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+
 /**
  * Represents a set of stages that will be run inside the same JVM.
  * 
@@ -30,6 +33,8 @@ public class StageGroup {
 	private Date propertiesModifiedDate;
 	private String name;
 	private String javaLocation;
+	
+	private static final Logger logger = LoggerFactory.getLogger(StageGroup.class);
 	
 	public StageGroup(String name) {
 		stages = new HashSet<Stage>();
@@ -129,11 +134,18 @@ public class StageGroup {
 		setJavaLocation((String)propertiesMap.get(JAVA_LOCATION_KEY));
 	}
 	
+	/**
+	 * May return null if and only if a referenced stage library was not found in the database.
+	 */
 	public Set<DatabaseFile> getDatabaseFiles() {
 		Map<Object, DatabaseFile> files = new HashMap<Object, DatabaseFile>();
 		
 		for(Stage s : stages) {
-			if(!files.containsKey(s.getDatabaseFile().getId())) {
+			if(s.getDatabaseFile()==null) {
+				logger.error("Stage group '"+s.getName()+"' is missing it's library file");
+				return null;
+			}
+			else if(!files.containsKey(s.getDatabaseFile().getId())) {
 				files.put(s.getDatabaseFile().getId(), s.getDatabaseFile());
 			}
 		}
