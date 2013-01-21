@@ -3,18 +3,22 @@ package com.findwise.hydra;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.DatabaseConnector.ConversionException;
+import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.common.SerializationUtils;
 
+//TODO: _core tagging introduces a fetching problem. How do we not fill the cache over and over again with the same documents?
 public class CachingDocumentIO<CacheType extends DatabaseType, BackingType extends DatabaseType> implements DocumentReader<CacheType>, DocumentWriter<CacheType> {
 	private static final Logger logger = LoggerFactory.getLogger(CachingDocumentIO.class);
 
 	private static final int DEFAULT_BATCH_SIZE = 10;
+	private static final int DEFAULT_DOCUMENT_TTL_MS = 10000; 
 	
 	private DocumentWriter<CacheType> cacheWriter;
 	private DocumentReader<CacheType> cacheReader;
@@ -23,13 +27,16 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	private DatabaseConnector<BackingType> backingConnector;
 	private DatabaseConnector<CacheType> cacheConnector;
 	
+	private String cacheTag = "_cache";
+	
 	private int batchSize;
+	private int cacheTTL;
 
 	public CachingDocumentIO(DatabaseConnector<CacheType> cacheConnector, DatabaseConnector<BackingType> backingConnector) {
-		this(cacheConnector, backingConnector, DEFAULT_BATCH_SIZE);
+		this(cacheConnector, backingConnector, DEFAULT_BATCH_SIZE, DEFAULT_DOCUMENT_TTL_MS);
 	}
 	
-	public CachingDocumentIO(DatabaseConnector<CacheType> cacheConnector, DatabaseConnector<BackingType> backingConnector, int batchSize) {
+	public CachingDocumentIO(DatabaseConnector<CacheType> cacheConnector, DatabaseConnector<BackingType> backingConnector, int batchSize, int documentTTL) {
 		this.cacheConnector = cacheConnector;
 		this.backingConnector = backingConnector;
 
@@ -39,6 +46,7 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 		backingWriter = backingConnector.getDocumentWriter();
 		
 		this.batchSize = batchSize;
+		this.cacheTTL = cacheTTL;
 	}
 	
 	protected DatabaseDocument<BackingType> convert(DatabaseDocument<CacheType> d) {
@@ -312,7 +320,7 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	}
 
 	protected void fillCache(DatabaseQuery<CacheType> query) {
-		for(DatabaseDocument<BackingType> dd : backingWriter.getAndTag(convert(query), "_cache", batchSize)) {
+		for(DatabaseDocument<BackingType> dd : backingWriter.getAndTag(convert(query), cacheTag, batchSize)) {
 			addToCache(convertToCache(dd));
 		}
 	}
@@ -334,6 +342,18 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 		}
 		return col;
 	}
+	
+	/**
+	 * Saves the document in the backing connector, and removes it from the cache.
+	 */
+	public void expire(DatabaseDocument<CacheType> doc) {
+		cacheWriter.delete(doc);
+		Map<String, Object> fetched = (Map<String, Object>) doc.getMetadataMap().get(Document.FETCHED_METADATA_TAG);
+		if(fetched.containsKey(cacheTag)) {
+			fetched.remove(cacheTag);
+		}
+		backingWriter.update(convert(doc));
+	}
 
 	public int getBatchSize() {
 		return batchSize;
@@ -341,5 +361,13 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 
 	public void setBatchSize(int batchSize) {
 		this.batchSize = batchSize;
+	}
+
+	public int getCacheTTL() {
+		return cacheTTL;
+	}
+
+	public void setCacheTTL(int cacheTTL) {
+		this.cacheTTL = cacheTTL;
 	}
 }

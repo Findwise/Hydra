@@ -205,6 +205,31 @@ public class CachingDocumentIOTest {
 		Mockito.verify(backingReader, Mockito.times(1)).getDocumentFile(doc1, "z");
 	}
 	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testCacheExpiration() throws Exception {
+		
+		DatabaseQuery q = Mockito.mock(DatabaseQuery.class);
+		Mockito.when(io.convert(q)).thenReturn(q);
+		String tag = "t";
+		
+		Mockito.when(cachingWriter.getAndTag(q, tag)).thenReturn(null);
+
+		ArrayList<DatabaseDocument> list = new ArrayList<DatabaseDocument>();
+		list.add(doc1);
+		Mockito.when(backingWriter.getAndTag(Mockito.eq(q), Mockito.anyString(), Mockito.anyInt())).thenReturn(list);
+		
+		io.getDocument(q);
+		
+		verifyCacheFilledOnce();
+		
+		Thread.sleep(io.getCacheTTL()+1000);
+		
+		Mockito.verify(cachingWriter, Mockito.times(1)).delete(doc1);
+		Mockito.verify(backingWriter, Mockito.times(1)).update(doc1);
+		
+	}
+	
 	private void verifyInList(Collection<String> list, String ... os) {
 		for(String o : os) {
 			if(!list.contains(o)) {

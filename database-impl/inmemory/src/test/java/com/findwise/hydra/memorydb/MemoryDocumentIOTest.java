@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import junit.framework.Assert;
@@ -192,6 +193,34 @@ public class MemoryDocumentIOTest {
 		if(d!=null) {
 			fail("Expected all documents to be tagged, but found "+d);
 		}
+	}
+
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testFetchRemoval() throws Exception {
+		MemoryDocument md = new MemoryDocument();
+		md.putContentField("field", "value");
+		MemoryDocumentIO io = new MemoryDocumentIO();
+		io.insert(md);
+
+		io.getAndTag(new MemoryQuery(), "tag");
+
+		MemoryDocument d2 = io.getDocumentById(md.getID());
+		
+		Assert.assertTrue(d2.getMetadataMap().containsKey(MemoryDocument.FETCHED_METADATA_TAG));
+		Map<String, Object> fetched = (Map<String, Object>)d2.getMetadataMap().get(MemoryDocument.FETCHED_METADATA_TAG);
+		
+		Assert.assertTrue(fetched.containsKey("tag"));
+		fetched.remove("tag");
+		
+		MemoryDocument d3 = new MemoryDocument();
+		d3.fromJson(d2.toJson());
+		io.update(d3);
+
+		Assert.assertFalse((
+				(Map<String, Object>) io.getDocumentById(d2.getID()).getMetadataMap().get(MemoryDocument.FETCHED_METADATA_TAG))
+				.containsKey("tag"));
 	}
 
 	@Test
