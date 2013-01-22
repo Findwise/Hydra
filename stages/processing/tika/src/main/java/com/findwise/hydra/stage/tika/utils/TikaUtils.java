@@ -160,20 +160,20 @@ public class TikaUtils {
     	return new URI(scheme, userinfo, host, port, path, query, fragment);
     }
     
-    public static String filterInvalidChars(String s) {
-    	if (s == null) return null;
+	public static String filterInvalidChars(String s) {
+		if (s == null) return null;
 
-        StringBuilder result = new StringBuilder();
+		StringBuilder result = new StringBuilder();
 
-        for (int i = 0; i < s.length(); i++) {
-          char c = s.charAt(i);
-          if(Character.isDefined(c) && c!='\uFFFD') {
-        	  result.append(c);
-          }
-        }
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if (Character.isDefined(c) && c != '\uFFFD' && c != '\u0000') {
+				result.append(c);
+			}
+		}
 
-        return result.toString();
-    }
+		return result.toString();
+	}
     
     /**
      * Modifies list in place, but also returns it for convenience.

@@ -190,11 +190,13 @@ public class TikaUtilsTest {
 		
 		List<String> list = new ArrayList<String>();
 		list.add("normal");
-		list.add("string with some cool unicode\u0000");
+		list.add("string with some cool unicode\u2603");
 		list.add("broken"+new String(new byte[]{-30, -3, -123}));
+		list.add("string \u0000with\u0000 NUL\u0000");
 
 		Assert.assertEquals("normal", TikaUtils.filterInvalidChars(list).get(0));
-		Assert.assertEquals("string with some cool unicode\u0000", TikaUtils.filterInvalidChars(list).get(1));
+		Assert.assertEquals("string with some cool unicode\u2603", TikaUtils.filterInvalidChars(list).get(1));
 		Assert.assertEquals("broken", TikaUtils.filterInvalidChars(list).get(2));
+		Assert.assertEquals("string with NUL", TikaUtils.filterInvalidChars(list).get(3));
 	}
 }
