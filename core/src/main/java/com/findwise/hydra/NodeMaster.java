@@ -126,16 +126,24 @@ public final class NodeMaster<T extends DatabaseType> extends Thread {
 		for(StageGroup group : newPipeline.getStageGroups()) {
 			if(!pipeline.hasGroup(group.getName())) {
 				pipeline.addGroup(group);
-				attachFiles(group);
-				sm.addRunner(new StageRunner(group, new File(namespace), port, conf.isPerformanceLogging()));
+				if(attachFiles(group)) {
+					sm.addRunner(new StageRunner(group, new File(namespace), port, conf.isPerformanceLogging()));
+				} else {
+					logger.error("Was unable to start the stage group '"+group.getName()+"' due to missing libraries.");
+				}
 			}
 		}
 	}
 	
-	private void attachFiles(StageGroup group) {
+	private boolean attachFiles(StageGroup group) {
+		Set<DatabaseFile> files = group.getDatabaseFiles();
+		if(files == null) {
+			return false;
+		}
 		for(DatabaseFile file : group.getDatabaseFiles()) {
 			file.attach(dbc.getPipelineReader().getStream(file));
 		}
+		return true;
 	}
 	
 	public DatabaseConnector<T> getDatabaseConnector() {
