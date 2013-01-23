@@ -15,7 +15,6 @@ import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.common.SerializationUtils;
 import com.findwise.hydra.local.LocalQuery;
 
-//TODO: _core tagging introduces a fetching problem. How do we not fill the cache over and over again with the same documents?
 public class CachingDocumentIO<CacheType extends DatabaseType, BackingType extends DatabaseType> implements DocumentReader<CacheType>, DocumentWriter<CacheType> {
 	private static final Logger logger = LoggerFactory.getLogger(CachingDocumentIO.class);
 
