@@ -13,4 +13,6 @@ public interface DatabaseQuery<T extends DatabaseType> extends Query {
 	void requireMetadataFieldExists(String fieldName);
 	
 	void requireMetadataFieldNotExists(String fieldName);
+
+	void requireNotFetchedByStage(String tag);
 }
