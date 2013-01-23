@@ -35,7 +35,6 @@ public final class Main {
 		DatabaseConnector<MongoType> backing = new MongoConnector(conf);
 		DatabaseConnector<MemoryType> cache = new MemoryConnector();
 		
-		//NodeMaster nm = new NodeMaster(conf, backing, new Pipeline());
 		NodeMaster<MemoryType> nm = new NodeMaster<MemoryType>(conf, new CachingDatabaseConnector<MongoType, MemoryType>(backing, cache), new Pipeline());
 		RESTServer server = new RESTServer(conf, new HttpRESTHandler<MemoryType>(nm.getDatabaseConnector(), conf.isPerformanceLogging()));
 
