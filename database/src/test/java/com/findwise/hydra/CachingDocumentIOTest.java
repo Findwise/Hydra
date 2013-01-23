@@ -3,7 +3,11 @@ package com.findwise.hydra;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
@@ -11,6 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.DocumentFile;
 
 @SuppressWarnings("rawtypes")
@@ -55,6 +60,9 @@ public class CachingDocumentIOTest {
 		Mockito.when(backing.convert(doc1)).thenReturn(doc1);
 		Mockito.when(backing.convert(doc2)).thenReturn(doc2);
 		Mockito.when(backing.convert(doc3)).thenReturn(doc3);
+		Mockito.when(caching.convert(doc1)).thenReturn(doc1);
+		Mockito.when(caching.convert(doc2)).thenReturn(doc2);
+		Mockito.when(caching.convert(doc3)).thenReturn(doc3);
 		
 		io = new CachingDocumentIO(caching, backing);
 	}
@@ -208,10 +216,16 @@ public class CachingDocumentIOTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testCacheExpiration() throws Exception {
+		CachingDocumentIO io = new CachingDocumentIO(caching, backing, 10, 0);
+		io.prepare();
 		
 		DatabaseQuery q = Mockito.mock(DatabaseQuery.class);
 		Mockito.when(io.convert(q)).thenReturn(q);
 		String tag = "t";
+		
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		map.put(CachingDocumentIO.CACHED_TIME_METADATA_KEY, new Date());
+		Mockito.when(doc1.getMetadataMap()).thenReturn(map);
 		
 		Mockito.when(cachingWriter.getAndTag(q, tag)).thenReturn(null);
 
@@ -219,15 +233,71 @@ public class CachingDocumentIOTest {
 		list.add(doc1);
 		Mockito.when(backingWriter.getAndTag(Mockito.eq(q), Mockito.anyString(), Mockito.anyInt())).thenReturn(list);
 		
+		Mockito.when(cachingReader.getDocuments(Mockito.any(DatabaseQuery.class), Mockito.anyInt())).thenReturn(list);
+		
 		io.getDocument(q);
 		
 		verifyCacheFilledOnce();
 		
-		Thread.sleep(io.getCacheTTL()+1000);
+		Thread.sleep(io.getCacheTTL()+1500);
+		
+		Mockito.verify(cachingWriter, Mockito.never()).delete(doc1);
+		Mockito.verify(backingWriter, Mockito.never()).update(doc1);
+		
+		io.setCacheTTL(100); //Purge cache every 100ms...
+		Thread.sleep(1300);
 		
 		Mockito.verify(cachingWriter, Mockito.times(1)).delete(doc1);
 		Mockito.verify(backingWriter, Mockito.times(1)).update(doc1);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testCacheExpirationForFetchedDocument() throws Exception {
+		CachingDocumentIO io = new CachingDocumentIO(caching, backing, 10, 0);
+		io.prepare();
 		
+		DatabaseQuery q = Mockito.mock(DatabaseQuery.class);
+		Mockito.when(io.convert(q)).thenReturn(q);
+		String tag = "t";
+		
+		Mockito.when(cachingWriter.getAndTag(q, tag)).thenReturn(null);
+
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		map.put(CachingDocumentIO.CACHED_TIME_METADATA_KEY, new Date());
+		Mockito.when(doc1.getMetadataMap()).thenReturn(map);
+		Mockito.when(doc2.getMetadataMap()).thenReturn(map);
+		HashSet<String> set = new HashSet<String>();
+		set.add("x");
+		Mockito.when(doc1.getFetchedBy()).thenReturn(set);
+		Mockito.when(doc1.getFetchedTime(Mockito.eq("x"))).thenReturn(new Date());
+		Mockito.when(doc2.getFetchedBy()).thenReturn(set);
+		Mockito.when(doc2.getFetchedTime(Mockito.eq("x"))).thenReturn(new Date(System.currentTimeMillis()+100000)); //Fetched in the future
+
+		ArrayList<DatabaseDocument> list = new ArrayList<DatabaseDocument>();
+		list.add(doc1);
+		list.add(doc2);
+		
+		Mockito.when(backingWriter.getAndTag(Mockito.eq(q), Mockito.anyString(), Mockito.anyInt())).thenReturn(list);
+		
+		Mockito.when(cachingReader.getDocuments(Mockito.any(DatabaseQuery.class), Mockito.anyInt())).thenReturn(list);
+		
+		io.getDocument(q);
+		
+		verifyCacheFilledOnce();
+		
+		Thread.sleep(io.getCacheTTL()+1500);
+		
+		Mockito.verify(cachingWriter, Mockito.never()).delete(doc1);
+		Mockito.verify(backingWriter, Mockito.never()).update(doc1);
+
+		io.setCacheTTL(100); //Purge cache every 100ms...
+		Thread.sleep(1300);
+		
+		Mockito.verify(cachingWriter, Mockito.times(1)).delete(doc1);
+		Mockito.verify(backingWriter, Mockito.times(1)).update(doc1);
+		Mockito.verify(cachingWriter, Mockito.never()).delete(doc2);
+		Mockito.verify(backingWriter, Mockito.never()).update(doc2);
 	}
 	
 	private void verifyInList(Collection<String> list, String ... os) {
