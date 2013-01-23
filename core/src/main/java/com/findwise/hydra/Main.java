@@ -36,8 +36,8 @@ public final class Main {
 		DatabaseConnector<MemoryType> cache = new MemoryConnector();
 		
 		//NodeMaster nm = new NodeMaster(conf, backing, new Pipeline());
-		NodeMaster nm = new NodeMaster(conf, new CachingDatabaseConnector<MongoType, MemoryType>(backing, cache), new Pipeline());
-		RESTServer server = new RESTServer(conf, new HttpRESTHandler<DatabaseType>(nm.getDatabaseConnector(), conf.isPerformanceLogging()));
+		NodeMaster<MemoryType> nm = new NodeMaster<MemoryType>(conf, new CachingDatabaseConnector<MongoType, MemoryType>(backing, cache), new Pipeline());
+		RESTServer server = new RESTServer(conf, new HttpRESTHandler<MemoryType>(nm.getDatabaseConnector(), conf.isPerformanceLogging()));
 
 		if (!server.blockingStart()) {
 			if (server.hasError()) {
