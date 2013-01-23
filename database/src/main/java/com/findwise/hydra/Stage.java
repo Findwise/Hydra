@@ -106,6 +106,9 @@ public class Stage {
 		if(!s.getName().equals(name) || !s.getPropertiesModifiedDate().equals(getPropertiesModifiedDate()) || !mode.equals(s.getMode())) {
 			return false;
 		}
+		if(getDatabaseFile()==null) {
+			return s.getDatabaseFile() == null;
+		}
 		return getDatabaseFile().equals(s.getDatabaseFile());
 	}
 }
