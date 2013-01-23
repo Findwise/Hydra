@@ -18,11 +18,6 @@ public class MemoryQuery extends LocalQuery implements DatabaseQuery<MemoryType>
 		metadataExistsMap = new HashMap<String, Boolean>();
 		fetchedByMap = new HashMap<String, Boolean>();
 	}
-	
-	@Override
-	public void requireContentFieldNotEquals(String fieldName, Object o) {
-		
-	}
 
 	@Override
 	public void requireMetadataFieldEquals(String fieldName, Object o) {
@@ -56,11 +51,11 @@ public class MemoryQuery extends LocalQuery implements DatabaseQuery<MemoryType>
 		return metadataExistsMap;
 	}
 	
-	public void requireFetchedBy(String tag) {
+	public void requireFetchedByStage(String tag) {
 		fetchedByMap.put(tag, true);
 	}
 
-	public void requireNotFetchedBy(String tag) {
+	public void requireNotFetchedByStage(String tag) {
 		fetchedByMap.put(tag, false);
 	}
 
