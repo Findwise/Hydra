@@ -84,7 +84,7 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 			DatabaseQuery<CacheType> query, String tag) {
 		DatabaseDocument<CacheType> ret = cacheWriter.getAndTag(query, tag);
 		if(ret==null) {
-			fillCache(query);
+			fillCache(query, tag);
 			
 			ret = cacheWriter.getAndTag(query, tag);
 		}
@@ -96,7 +96,7 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 			DatabaseQuery<CacheType> query, String tag) {
 		DatabaseDocument<CacheType> ret = cacheWriter.getAndTagRecurring(query, tag);
 		if(ret==null) {
-			fillCache(query);
+			fillCache(query, tag);
 			
 			ret = cacheWriter.getAndTagRecurring(query, tag);
 		}
@@ -108,7 +108,7 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 			DatabaseQuery<CacheType> query, String tag, int intervalMillis) {
 		DatabaseDocument<CacheType> ret = cacheWriter.getAndTagRecurring(query, tag, intervalMillis);
 		if(ret==null) {
-			fillCache(query);
+			fillCache(query, tag);
 			
 			ret = cacheWriter.getAndTagRecurring(query, tag, intervalMillis);
 		}
@@ -330,9 +330,19 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	public Object toDocumentIdFromJson(String json) {
 		return cacheReader.toDocumentIdFromJson(json);
 	}
-
+	
 	protected void fillCache(DatabaseQuery<CacheType> query) {
-		for(DatabaseDocument<BackingType> dd : backingWriter.getAndTag(convert(query), cacheTag, batchSize)) {
+		fillCache(query, null);
+	}
+	
+	protected void fillCache(DatabaseQuery<CacheType> query, String tag) {
+		DatabaseQuery<BackingType> backQuery = convert(query);
+
+		if (tag != null) {
+			backQuery.requireNotFetchedByStage(tag);
+		}
+
+		for (DatabaseDocument<BackingType> dd : backingWriter.getAndTag(backQuery, cacheTag, batchSize)) {
 			addToCache(convertToCache(dd));
 		}
 	}
@@ -352,7 +362,7 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	public Collection<DatabaseDocument<CacheType>> getAndTag(DatabaseQuery<CacheType> query, String tag, int n) {
 		Collection<DatabaseDocument<CacheType>> col = cacheWriter.getAndTag(query, tag, n);
 		if(col.size()<n) {
-			fillCache(query);
+			fillCache(query, tag);
 			col.addAll(cacheWriter.getAndTag(query, tag, n));
 		}
 		return col;
@@ -414,9 +424,15 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	private class CacheMonitor extends Thread {
 		CacheMonitor() {
 			setDaemon(true);
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				public void run() {
+					shutdown();
+				}
+			});
 		}
 		
 		public void run() {
+			logger.info("Starting up cache monitor thread");
 			DatabaseQuery<CacheType> query = cacheConnector.convert(new LocalQuery());
 			while(!isInterrupted()) {
 				try {
@@ -433,8 +449,14 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 					interrupt();
 				}
 			}
-			logger.info("Shutting down cache monitor thread. Attempting to save local changes.");
-			expire();
+			shutdown();
+		}
+		
+		private void shutdown() {
+			if(isAlive()) {
+				logger.info("Shutting down cache monitor thread. Attempting to save local changes.");
+				expire();
+			}
 		}
 
 		private boolean hasExpired(DatabaseDocument<CacheType> doc) {

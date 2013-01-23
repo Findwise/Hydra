@@ -23,6 +23,7 @@ public class CachingDatabaseConnector<BackingType extends DatabaseType, CacheTyp
 		backing.connect();
 		cache.connect();
 		documentio = new CachingDocumentIO<CacheType, BackingType>(cache, backing);
+		documentio.prepare();
 	}
 
 	@Override
