@@ -16,6 +16,7 @@ import java.util.Map;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrInputDocument;
 
 @Stage(description="Writes documents to Solr")
@@ -39,14 +40,15 @@ public class SolrOutputStage extends AbstractOutputStage {
 		final Action action = doc.getAction();
 
 		try {
-			
-		if (action == Action.ADD || action == Action.UPDATE) {
-			add(doc);
-		} else if (action == Action.DELETE) {
-			delete(doc);
-		} else{
-			failDocument(doc, new RequiredArgumentMissingException("action not set in document. This document would never be sent to solr"));
-		}
+			if (action == Action.ADD || action == Action.UPDATE) {
+				add(doc);
+			} else if (action == Action.DELETE) {
+				delete(doc);
+			} else {
+				failDocument(doc, new RequiredArgumentMissingException("action not set in document. This document would never be sent to solr"));
+			}
+		} catch (SolrException e) {
+			failDocument(doc, e);
 		} catch (SolrServerException e) {
 			failDocument(doc, e);
 		} catch (IOException e) {
@@ -65,7 +67,7 @@ public class SolrOutputStage extends AbstractOutputStage {
 		}
 	}
 	
-	private void add(LocalDocument doc) throws SolrServerException, IOException {
+	private void add(LocalDocument doc) throws SolrException, SolrServerException, IOException {
 		SolrInputDocument solrdoc = createSolrInputDocumentWithFieldConfig(doc);
 		if (getCommitWithin() != 0) {
 			solr.add(solrdoc, getCommitWithin());
