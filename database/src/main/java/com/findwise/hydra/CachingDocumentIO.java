@@ -21,6 +21,7 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	private static final int DEFAULT_BATCH_SIZE = 10;
 	private static final int DEFAULT_DOCUMENT_TTL_MS = 10000; 
 	public static final String CACHED_TIME_METADATA_KEY = "cached";
+	public static final String CACHE_TAG = "_cache";
 	
 	private DocumentWriter<CacheType> cacheWriter;
 	private DocumentReader<CacheType> cacheReader;
@@ -30,8 +31,6 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	private DatabaseConnector<CacheType> cacheConnector;
 	
 	private CacheMonitor monitor;
-	
-	private String cacheTag = "_cache";
 	
 	private int batchSize;
 	private int cacheTTL;
@@ -341,7 +340,7 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 			backQuery.requireNotFetchedByStage(tag);
 		}
 
-		for (DatabaseDocument<BackingType> dd : backingWriter.getAndTag(backQuery, cacheTag, batchSize)) {
+		for (DatabaseDocument<BackingType> dd : backingWriter.getAndTag(backQuery, CACHE_TAG, batchSize)) {
 			addToCache(convertToCache(dd));
 		}
 	}
@@ -386,8 +385,8 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 		cacheWriter.delete(doc);
 		@SuppressWarnings("unchecked")
 		Map<String, Object> fetched = (Map<String, Object>) doc.getMetadataMap().get(Document.FETCHED_METADATA_TAG);
-		if(fetched!=null && fetched.containsKey(cacheTag)) {
-			fetched.remove(cacheTag);
+		if(fetched!=null && fetched.containsKey(CACHE_TAG)) {
+			fetched.remove(CACHE_TAG);
 		}
 		backingWriter.update(convert(doc));
 	}
