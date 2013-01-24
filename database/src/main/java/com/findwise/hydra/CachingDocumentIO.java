@@ -2,19 +2,26 @@ package com.findwise.hydra;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.DatabaseConnector.ConversionException;
+import com.findwise.hydra.common.Document;
 import com.findwise.hydra.common.DocumentFile;
 import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.local.LocalQuery;
 
 public class CachingDocumentIO<CacheType extends DatabaseType, BackingType extends DatabaseType> implements DocumentReader<CacheType>, DocumentWriter<CacheType> {
 	private static final Logger logger = LoggerFactory.getLogger(CachingDocumentIO.class);
 
 	private static final int DEFAULT_BATCH_SIZE = 10;
+	private static final int DEFAULT_DOCUMENT_TTL_MS = 10000; 
+	public static final String CACHED_TIME_METADATA_KEY = "cached";
+	public static final String CACHE_TAG = "_cache";
 	
 	private DocumentWriter<CacheType> cacheWriter;
 	private DocumentReader<CacheType> cacheReader;
@@ -23,13 +30,16 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	private DatabaseConnector<BackingType> backingConnector;
 	private DatabaseConnector<CacheType> cacheConnector;
 	
+	private CacheMonitor monitor;
+	
 	private int batchSize;
+	private int cacheTTL;
 
 	public CachingDocumentIO(DatabaseConnector<CacheType> cacheConnector, DatabaseConnector<BackingType> backingConnector) {
-		this(cacheConnector, backingConnector, DEFAULT_BATCH_SIZE);
+		this(cacheConnector, backingConnector, DEFAULT_BATCH_SIZE, DEFAULT_DOCUMENT_TTL_MS);
 	}
 	
-	public CachingDocumentIO(DatabaseConnector<CacheType> cacheConnector, DatabaseConnector<BackingType> backingConnector, int batchSize) {
+	public CachingDocumentIO(DatabaseConnector<CacheType> cacheConnector, DatabaseConnector<BackingType> backingConnector, int batchSize, int cacheTTL) {
 		this.cacheConnector = cacheConnector;
 		this.backingConnector = backingConnector;
 
@@ -39,6 +49,7 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 		backingWriter = backingConnector.getDocumentWriter();
 		
 		this.batchSize = batchSize;
+		this.cacheTTL = cacheTTL;
 	}
 	
 	protected DatabaseDocument<BackingType> convert(DatabaseDocument<CacheType> d) {
@@ -71,7 +82,7 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 			DatabaseQuery<CacheType> query, String tag) {
 		DatabaseDocument<CacheType> ret = cacheWriter.getAndTag(query, tag);
 		if(ret==null) {
-			fillCache(query);
+			fillCache(query, tag);
 			
 			ret = cacheWriter.getAndTag(query, tag);
 		}
@@ -83,7 +94,7 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 			DatabaseQuery<CacheType> query, String tag) {
 		DatabaseDocument<CacheType> ret = cacheWriter.getAndTagRecurring(query, tag);
 		if(ret==null) {
-			fillCache(query);
+			fillCache(query, tag);
 			
 			ret = cacheWriter.getAndTagRecurring(query, tag);
 		}
@@ -95,7 +106,7 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 			DatabaseQuery<CacheType> query, String tag, int intervalMillis) {
 		DatabaseDocument<CacheType> ret = cacheWriter.getAndTagRecurring(query, tag, intervalMillis);
 		if(ret==null) {
-			fillCache(query);
+			fillCache(query, tag);
 			
 			ret = cacheWriter.getAndTagRecurring(query, tag, intervalMillis);
 		}
@@ -200,6 +211,13 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	public void prepare() {
 		cacheWriter.prepare();
 		backingWriter.prepare();
+		
+		if(monitor==null) {
+			monitor = new CacheMonitor();
+		} 
+		if(!monitor.isAlive()) {
+			monitor.start();
+		}
 	}
 
 	@Override
@@ -310,15 +328,28 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	public Object toDocumentIdFromJson(String json) {
 		return cacheReader.toDocumentIdFromJson(json);
 	}
-
+	
 	protected void fillCache(DatabaseQuery<CacheType> query) {
-		for(DatabaseDocument<BackingType> dd : backingWriter.getAndTag(convert(query), "_cache", batchSize)) {
+		fillCache(query, null);
+	}
+	
+	protected void fillCache(DatabaseQuery<CacheType> query, String tag) {
+		DatabaseQuery<BackingType> backQuery = convert(query);
+
+		if (tag != null) {
+			backQuery.requireNotFetchedByStage(tag);
+		}
+
+		for (DatabaseDocument<BackingType> dd : backingWriter.getAndTag(backQuery, CACHE_TAG, batchSize)) {
 			addToCache(convertToCache(dd));
 		}
 	}
 
 	protected void addToCache(DatabaseDocument<CacheType> d) {
-		cacheWriter.update(d);
+		if(d!=null) {
+			d.putMetadataField(CACHED_TIME_METADATA_KEY, new Date());
+			cacheWriter.update(d);
+		}
 	}
 
 	protected void addToCache(DocumentFile documentFile) throws IOException {
@@ -329,10 +360,35 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	public Collection<DatabaseDocument<CacheType>> getAndTag(DatabaseQuery<CacheType> query, String tag, int n) {
 		Collection<DatabaseDocument<CacheType>> col = cacheWriter.getAndTag(query, tag, n);
 		if(col.size()<n) {
-			fillCache(query);
+			fillCache(query, tag);
 			col.addAll(cacheWriter.getAndTag(query, tag, n));
 		}
 		return col;
+	}
+	
+	/**
+	 * Removes all documents from the cache through the expire(DatabaseDocument) function.
+	 */
+	public void expire() {
+		DatabaseQuery<CacheType> q = cacheConnector.convert(new LocalQuery());
+		while(cacheReader.getActiveDatabaseSize()>0) {
+			for(DatabaseDocument<CacheType> doc : cacheReader.getDocuments(q, 10)) {
+				expire(doc);
+			}
+		}
+	}
+	
+	/**
+	 * Saves the document in the backing connector, and removes it from the cache.
+	 */
+	public void expire(DatabaseDocument<CacheType> doc) {
+		cacheWriter.delete(doc);
+		@SuppressWarnings("unchecked")
+		Map<String, Object> fetched = (Map<String, Object>) doc.getMetadataMap().get(Document.FETCHED_METADATA_TAG);
+		if(fetched!=null && fetched.containsKey(CACHE_TAG)) {
+			fetched.remove(CACHE_TAG);
+		}
+		backingWriter.update(convert(doc));
 	}
 
 	public int getBatchSize() {
@@ -341,5 +397,94 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 
 	public void setBatchSize(int batchSize) {
 		this.batchSize = batchSize;
+	}
+
+	public int getCacheTTL() {
+		return cacheTTL;
+	}
+	
+	/**
+	 * Set 0 to never expire. Changes to this are picked up on the 
+	 * fly by the monitor thread, but may take a little time to take effect,
+	 * depending on how often CacheMonitor is woken up.
+	 * 
+	 * @param cacheTTL
+	 */
+	public void setCacheTTL(int cacheTTL) {
+		this.cacheTTL = cacheTTL;
+	}
+	
+	/**
+	 * Monitor thread, responsible for upholding the Cache TTL.
+	 * 
+	 * Stop by interrupting.
+	 */
+	private class CacheMonitor extends Thread {
+		CacheMonitor() {
+			setDaemon(true);
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				public void run() {
+					shutdown();
+				}
+			});
+		}
+		
+		public void run() {
+			logger.info("Starting up cache monitor thread");
+			DatabaseQuery<CacheType> query = cacheConnector.convert(new LocalQuery());
+			while(!isInterrupted()) {
+				try {
+					if(cacheTTL!=0) {
+						for(DatabaseDocument<CacheType> doc : cacheReader.getDocuments(query, (int)cacheReader.getActiveDatabaseSize())) {
+							if(hasExpired(doc)) {
+								expire(doc);
+								logger.debug("Document with id '"+doc.getID()+"' has expired from the cache");
+							}
+						}
+					}
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					interrupt();
+				}
+			}
+			shutdown();
+		}
+		
+		private void shutdown() {
+			if(isAlive()) {
+				logger.info("Shutting down cache monitor thread. Attempting to save local changes.");
+				expire();
+			}
+		}
+
+		private boolean hasExpired(DatabaseDocument<CacheType> doc) {
+			Date cached = (Date) doc.getMetadataMap().get(CACHED_TIME_METADATA_KEY);
+			
+			// Document has been in the cache shorter than the cacheTTL
+			if(System.currentTimeMillis() - cached.getTime() < cacheTTL) {
+				return false;
+			}
+			
+			Date fetched = lastFetched(doc);
+			
+			// Document has been fetched, and that time was a shorter time ago than the cacheTTL
+			if(fetched != null && System.currentTimeMillis() - fetched.getTime() < cacheTTL) {
+				return false;
+			}
+
+			return true;
+		}
+		
+		private Date lastFetched(DatabaseDocument<CacheType> doc) {
+			Date res = null;
+			
+			for(String stage : doc.getFetchedBy()) {
+				Date d = doc.getFetchedTime(stage);
+				if(res == null || d.after(res)) {
+					res = d;
+				}
+			}
+			return res;
+		}
 	}
 }

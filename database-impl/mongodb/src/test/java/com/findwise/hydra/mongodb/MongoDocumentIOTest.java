@@ -2,6 +2,7 @@ package com.findwise.hydra.mongodb;
 
 import static org.junit.Assert.fail;
 
+import java.util.Map;
 import java.util.Random;
 
 import junit.framework.Assert;
@@ -265,6 +266,32 @@ public class MongoDocumentIOTest {
 				fail("Processed document did not have the correct data in the content fields");
 			}
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testFetchRemoval() throws Exception {
+		MongoDocumentIO dw = (MongoDocumentIO) mdc.getDocumentWriter();
+		MongoDocument md = new MongoDocument();
+		md.putContentField("field", "value");
+		dw.insert(md);
+
+		dw.getAndTag(new MongoQuery(), "tag");
+
+		MongoDocument d2 = dw.getDocumentById(md.getID());
+		
+		System.out.println(d2);
+		Assert.assertTrue(d2.getMetadataMap().containsKey(MongoDocument.FETCHED_METADATA_TAG));
+		Map<String, Object> fetched = (Map<String, Object>)d2.getMetadataMap().get(MongoDocument.FETCHED_METADATA_TAG);
+		
+		Assert.assertTrue(fetched.containsKey("tag"));
+		fetched.remove("tag");
+		
+		dw.update(new MongoDocument(d2.toJson()));
+		
+		Assert.assertFalse((
+				(Map<String, Object>) dw.getDocumentById(d2.getID()).getMetadataMap().get(MongoDocument.FETCHED_METADATA_TAG))
+				.containsKey("tag"));
 	}
 	
 	@Ignore
