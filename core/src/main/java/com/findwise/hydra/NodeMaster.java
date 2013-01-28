@@ -110,7 +110,7 @@ public final class NodeMaster<T extends DatabaseType> extends Thread {
 	}
 	
 	private void stopGroup(String group) {
-		if(sm.getRunner(group).isAlive()) {
+		if(sm.hasRunner(group) && sm.getRunner(group).isAlive()) {
 			sm.getRunner(group).destroy();
 		} else {
 			logger.debug("StageGroup "+group+" had already terminated");
