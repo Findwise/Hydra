@@ -87,35 +87,22 @@ public class ConfigurationController {
 			@RequestBody String jsonConfig) throws JsonException, IOException {
 		return stagesService.addStage(libraryId, null, stageName, jsonConfig);
 	}
-        
-        @ResponseStatus(HttpStatus.ACCEPTED)
+
+	@ResponseStatus(HttpStatus.ACCEPTED)
 	@RequestMapping(method = RequestMethod.POST, value = "/libraries/{id}/stages/{groupName}/{stageName}")
 	@ResponseBody
 	public Map<String, Object> addStageToGroup(
 			@PathVariable(value = "id") String libraryId,
 			@PathVariable(value = "stageName") String stageName,
-                        @PathVariable(value = "groupName") String groupName,
+			@PathVariable(value = "groupName") String groupName,
 			@RequestBody String jsonConfig) throws JsonException, IOException {
 		return stagesService.addStage(libraryId, groupName, stageName, jsonConfig);
 	}
-
 
 	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/stages")
 	public Map<String,List<Stage>> getStages() {
 		return stagesService.getStages();
-	}
-        
-        @ResponseBody
-	@RequestMapping(method = RequestMethod.GET, value = "/stagegroups")
-	public Map<String,List<StageGroup>> getStageGroups() {
-		return stagesService.getStageGroups();
-	}
-        
-        @ResponseBody
-	@RequestMapping(method = RequestMethod.GET, value = "/stagegroups/{stageGroup}")
-	public StageGroup getStageGroup(@PathVariable(value = "stageGroup") String stageGroup) {
-		return stagesService.getStageGroup(stageGroup);
 	}
 	
 	@ResponseBody
@@ -131,6 +118,18 @@ public class ConfigurationController {
 		return stagesService.deleteStage(stageName);
 	}
 
+	@ResponseBody
+	@RequestMapping(method = RequestMethod.GET, value = "/stagegroups")
+	public Map<String,List<StageGroup>> getStageGroups() {
+		return stagesService.getStageGroups();
+	}
+	
+	@ResponseBody
+	@RequestMapping(method = RequestMethod.GET, value = "/stagegroups/{stageGroup}")
+	public StageGroup getStageGroup(@PathVariable(value = "stageGroup") String stageGroup) {
+		return stagesService.getStageGroup(stageGroup);
+	}
+	
 	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/documents/count")
 	public Map<String, Object> getDocumentCount(
@@ -154,6 +153,15 @@ public class ConfigurationController {
 			@RequestParam(required = false, defaultValue = "1", value = "limit") int limit,
 			@RequestBody String changes) {
 		return documentService.updateDocuments(jsonQuery, limit, changes);
+	}
+	
+	@ResponseStatus(HttpStatus.ACCEPTED)
+	@ResponseBody
+	@RequestMapping(method = RequestMethod.POST, value = "/documents/new")
+	public Map<String, Object> newDocument(
+			@RequestParam(required = true, defaultValue = "ADD", value = "_action") String action,
+			@RequestBody String content) {
+		return documentService.putDocument(action, content);
 	}
 	
 }

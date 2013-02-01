@@ -371,3 +371,23 @@ Available endpoints
 	    "changedDocuments": [...] (a list of documents as described above)
 	}
 	```
+
+* **/documents/new** - Method: POST
+
+	Inserts a document.
+
+	Available parameters:
+
+		- action: The document action (`ADD`, `UPDATE`, `DELETE`)
+
+	Request content: A document as flat json, containing the content fields.
+
+	Sample document:
+	```
+	{
+		"title" : "A document",
+		"abstract" : "This document is short and contains little information.",
+		"linked_file" : "http://bogus.url/document.xml",
+		"document_id" : "23432451"
+	}
+	```
