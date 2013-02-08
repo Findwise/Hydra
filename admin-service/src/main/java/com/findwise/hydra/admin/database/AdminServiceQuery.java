@@ -92,5 +92,9 @@ public class AdminServiceQuery extends LocalQuery implements DatabaseQuery<Admin
 	public void requireMetadataFieldNotExists(String fieldName) {
 		requireMetadataFieldExists.put(fieldName, false);
 	}
-	
+
+	@Override
+	public void requireNotFetchedByStage(String tag) {
+		fetched.put(tag, false);
+	}
 }
