@@ -2,17 +2,17 @@ package com.findwise.hydra;
 
 import java.io.IOException;
 
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.Query;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.Query;
 
-public class CachingDatabaseConnector<BackingType extends DatabaseType, CacheType extends DatabaseType>
-		implements DatabaseConnector<CacheType> {
+public class CachingDatabaseConnector<BackingType extends DatabaseType>
+		implements DatabaseConnector<BackingType> {
 	private DatabaseConnector<BackingType> backing;
-	private DatabaseConnector<CacheType> cache;
-	private CachingDocumentIO<CacheType, BackingType> documentio;
+	private Cache<BackingType> cache;
+	private CachingDocumentNIO<BackingType> documentio;
 
 	public CachingDatabaseConnector(DatabaseConnector<BackingType> backing,
-			DatabaseConnector<CacheType> cache) {
+			Cache<BackingType> cache) {
 		this.backing = backing;
 		this.cache = cache;
 
@@ -21,21 +21,18 @@ public class CachingDatabaseConnector<BackingType extends DatabaseType, CacheTyp
 	@Override
 	public void connect() throws IOException {
 		backing.connect();
-		cache.connect();
-		documentio = new CachingDocumentIO<CacheType, BackingType>(cache, backing);
+		documentio = new CachingDocumentNIO<BackingType>(backing, cache);
 		documentio.prepare();
 	}
 
 	@Override
 	public void waitForWrites(boolean alwaysBlocking) {
-		// TODO Auto-generated method stub
-
+		backing.waitForWrites(alwaysBlocking);
 	}
 
 	@Override
 	public boolean isWaitingForWrites() {
-		// TODO Auto-generated method stub
-		return false;
+		return backing.isWaitingForWrites();
 	}
 
 	@Override
@@ -49,41 +46,39 @@ public class CachingDatabaseConnector<BackingType extends DatabaseType, CacheTyp
 	}
 
 	@Override
-	public DocumentReader<CacheType> getDocumentReader() {
+	public DocumentReader<BackingType> getDocumentReader() {
 		return documentio;
 	}
 
 	@Override
-	public DocumentWriter<CacheType> getDocumentWriter() {
+	public DocumentWriter<BackingType> getDocumentWriter() {
 		return documentio;
 	}
 
 	@Override
-	public DatabaseQuery<CacheType> convert(Query query) {
-		return cache.convert(query);
+	public DatabaseQuery<BackingType> convert(Query query) {
+		return backing.convert(query);
 	}
 
 	@Override
-	public DatabaseDocument<CacheType> convert(Document document)
+	public DatabaseDocument<BackingType> convert(Document<?> document)
 			throws ConversionException {
-		return cache.convert(document);
+		return backing.convert(document);
 	}
 
 	@Override
 	public boolean isConnected() {
-		return backing.isConnected() && cache.isConnected();
+		return backing.isConnected();
 	}
 
 	@Override
-	public StatusWriter<CacheType> getStatusWriter() {
-		// TODO Auto-generated method stub
-		return null;
+	public StatusWriter<BackingType> getStatusWriter() {
+		return backing.getStatusWriter();
 	}
 
 	@Override
-	public StatusReader<CacheType> getStatusReader() {
-		// TODO Auto-generated method stub
-		return null;
+	public StatusReader<BackingType> getStatusReader() {
+		return backing.getStatusReader();
 	}
 
 }

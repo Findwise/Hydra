@@ -3,7 +3,7 @@ package com.findwise.hydra.stage;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.findwise.hydra.common.Logger;
+import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 
 @Stage(description = "Merges lists into a single list, where each item is a concatenation of the corresponding items in the input lists, separated by a separator. " +

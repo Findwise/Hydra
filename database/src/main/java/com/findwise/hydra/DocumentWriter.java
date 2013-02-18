@@ -3,7 +3,7 @@ package com.findwise.hydra;
 import java.io.IOException;
 import java.util.Collection;
 
-import com.findwise.hydra.common.DocumentFile;
+import com.findwise.hydra.DocumentFile;
 
 /**
  * This interface covers all Write and combined Read-Write actions that can be
@@ -43,7 +43,7 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 * Calls getAndTagRecurring(DatabaseQuery query, String tag, int
 	 * intervalMillis) with a default value specified by the implementing class.
 	 */
-	DatabaseDocument<T> getAndTagRecurring(DatabaseQuery<T> query, String tag);
+//	DatabaseDocument<T> getAndTagRecurring(DatabaseQuery<T> query, String tag);
 
 	/**
 	 * Functionally the same as getAndTag(), but instead of rejecting all
@@ -51,8 +51,8 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 * should <code>intervalMillis</code> be less than the less than the time
 	 * elapsed since the document was last tagged.
 	 */
-	DatabaseDocument<T> getAndTagRecurring(DatabaseQuery<T> query, String tag,
-			int intervalMillis);
+//	DatabaseDocument<T> getAndTagRecurring(DatabaseQuery<T> query, String tag,
+//			int intervalMillis);
 
 	/**
 	 * Upon returning, will have updated the document with the specified ID with
@@ -72,7 +72,7 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 * @param tag
 	 * @return
 	 */
-	boolean markTouched(Object id, String tag);
+	boolean markTouched(DocumentID<T> id, String tag);
 
 	/**
 	 * Indicates that the document has made it through the pipeline
@@ -177,7 +177,7 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 */
 	void deleteAll();
 
-	void write(DocumentFile df) throws IOException;
+	void write(DocumentFile<T> df) throws IOException;
 	
 	/**
 	 * This method will be run if the Connector determines that the Database is

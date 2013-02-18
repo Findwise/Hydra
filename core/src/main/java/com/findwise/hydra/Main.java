@@ -6,8 +6,6 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.findwise.hydra.memorydb.MemoryConnector;
-import com.findwise.hydra.memorydb.MemoryType;
 import com.findwise.hydra.mongodb.MongoConnector;
 import com.findwise.hydra.mongodb.MongoType;
 import com.findwise.hydra.net.HttpRESTHandler;
@@ -33,9 +31,11 @@ public final class Main {
 		}
 		
 		DatabaseConnector<MongoType> backing = new MongoConnector(conf);
-		DatabaseConnector<MemoryType> cache = new MemoryConnector();
+//		DatabaseConnector<MemoryType> cache = new MemoryConnector();
 		
-		NodeMaster<MongoType> nm = new NodeMaster(conf, backing, new Pipeline());
+		NodeMaster<MongoType> nm = new NodeMaster<MongoType>(conf, backing, new Pipeline());
+		//NodeMaster<MemoryType> nm = new NodeMaster<MemoryType>(conf, new CachingDatabaseConnector<MongoType, MemoryType>(backing, cache), new Pipeline());
+
 		RESTServer server = new RESTServer(conf, new HttpRESTHandler<MongoType>(nm.getDatabaseConnector(), conf.isPerformanceLogging()));
 
 		if (!server.blockingStart()) {

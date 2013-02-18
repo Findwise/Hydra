@@ -2,8 +2,8 @@ package com.findwise.hydra;
 
 import java.io.IOException;
 
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.Query;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.Query;
 
 public interface DatabaseConnector<T extends DatabaseType> {
 	String DATABASE_URL_PARAM = "database_url";
@@ -37,7 +37,7 @@ public interface DatabaseConnector<T extends DatabaseType> {
 	
 	DatabaseQuery<T> convert(Query query);
 	
-	DatabaseDocument<T> convert(Document document) throws ConversionException;
+	DatabaseDocument<T> convert(Document<?> document) throws ConversionException;
 	
 	boolean isConnected();
 

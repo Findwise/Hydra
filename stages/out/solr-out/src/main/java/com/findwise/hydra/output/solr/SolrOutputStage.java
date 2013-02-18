@@ -11,9 +11,9 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.common.SolrInputDocument;
 
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.Document.Action;
-import com.findwise.hydra.common.Logger;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.Logger;
+import com.findwise.hydra.Document.Action;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractOutputStage;
 import com.findwise.hydra.stage.Parameter;

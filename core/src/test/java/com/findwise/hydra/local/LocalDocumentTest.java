@@ -10,10 +10,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.Document.Action;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.SerializationUtils;
+import com.findwise.hydra.Document.Action;
 import com.findwise.tools.Comparator;
 
 public class LocalDocumentTest {

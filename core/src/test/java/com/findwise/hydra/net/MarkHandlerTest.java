@@ -4,7 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-import com.findwise.hydra.common.Document.Status;
+import com.findwise.hydra.Document.Status;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
@@ -40,13 +40,15 @@ public class MarkHandlerTest {
 		
 		doc.putContentField("field3", "value3");
 		
-		rp.markProcessed(doc);
+		if(!rp.markProcessed(doc)) {
+			fail("markProcessed returned false");
+		}
 		
 		MemoryDocument doc2 = (MemoryDocument) mc.getDocumentReader().getDocumentById(d.getID(), true);
 		
 		for(String field : doc.getContentFields()) {
 			if(!doc2.hasContentField(field)) {
-				fail("Missing a field");
+				fail("Missing a field: "+field);
 			}
 			if(!doc.getContentField(field).equals(doc2.getContentField(field))) {
 				fail("Content mismatch");

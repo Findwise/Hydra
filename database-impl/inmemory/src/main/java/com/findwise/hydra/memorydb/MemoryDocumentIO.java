@@ -16,13 +16,14 @@ import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseQuery;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.DocumentReader;
 import com.findwise.hydra.DocumentWriter;
+import com.findwise.hydra.JsonException;
 import com.findwise.hydra.TailableIterator;
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.DocumentFile;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.local.LocalDocumentID;
 
 public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		DocumentReader<MemoryType> {
@@ -30,22 +31,23 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	private ConcurrentHashMap<MemoryDocument, Boolean> set;
 	private LinkedBlockingQueue<MemoryDocument> inactive;
 	private boolean[] b = new boolean[1];
-	
-	private static Logger logger = LoggerFactory.getLogger(MemoryDocumentIO.class); 
-	
-	private HashSet<DocumentFile> files;
+
+	private static Logger logger = LoggerFactory
+			.getLogger(MemoryDocumentIO.class);
+
+	private HashSet<DocumentFile<MemoryType>> files;
 
 	public static final int inactiveSize = 100;
 
 	public MemoryDocumentIO() {
 		set = new ConcurrentHashMap<MemoryDocument, Boolean>();
-		files = new HashSet<DocumentFile>();
+		files = new HashSet<DocumentFile<MemoryType>>();
 		inactive = new LinkedBlockingQueue<MemoryDocument>(inactiveSize);
 		b[0] = false;
 	}
 
 	private void addInactive(MemoryDocument d) {
-		if(!inactive.offer(d)) {
+		if (!inactive.offer(d)) {
 			inactive.poll();
 			b[0] = true;
 			inactive.offer(d);
@@ -62,15 +64,14 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	}
 
 	@Override
-	public MemoryDocument getDocumentById(Object id) {
+	public MemoryDocument getDocumentById(DocumentID<MemoryType> id) {
 		return (MemoryDocument) getDocumentById(id, false);
 	}
 
 	@Override
-	public DatabaseDocument<MemoryType> getDocumentById(Object id,
+	public DatabaseDocument<MemoryType> getDocumentById(DocumentID<MemoryType> id,
 			boolean includeInactive) {
-		if(id==null) {
-			System.out.println("");
+		if (id == null) {
 			return null;
 		}
 		for (MemoryDocument d : set.keySet()) {
@@ -103,7 +104,7 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		for (MemoryDocument doc : set.keySet()) {
 			if (list.size() >= limit)
 				break;
-			
+
 			if (doc.matches((MemoryQuery) q)) {
 				if (matching >= skip) {
 					list.add(doc);
@@ -114,7 +115,7 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 
 		return (List<DatabaseDocument<MemoryType>>) (Object) list;
 	}
-	
+
 	@Override
 	public List<DatabaseDocument<MemoryType>> getDocuments(
 			DatabaseQuery<MemoryType> q, int limit) {
@@ -135,9 +136,11 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	}
 
 	@Override
-	public DocumentFile getDocumentFile(DatabaseDocument<MemoryType> d, String fileName) {
-		for(DocumentFile f : files) {
-			if(f.getDocumentId().equals(d.getID()) && f.getFileName().equals(fileName)) {
+	public DocumentFile<MemoryType> getDocumentFile(
+			DatabaseDocument<MemoryType> d, String fileName) {
+		for (DocumentFile<MemoryType> f : files) {
+			if (f.getDocumentId().getID().equals(d.getID().getID())
+					&& f.getFileName().equals(fileName)) {
 				try {
 					return copy(f);
 				} catch (IOException e) {
@@ -147,11 +150,13 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		}
 		return null;
 	}
-	
+
 	@Override
-	public boolean deleteDocumentFile(DatabaseDocument<MemoryType> d, String fileName) {
-		for(DocumentFile f : files) {
-			if(f.getDocumentId().equals(d.getID()) && f.getFileName().equals(fileName)) {
+	public boolean deleteDocumentFile(DatabaseDocument<MemoryType> d,
+			String fileName) {
+		for (DocumentFile<MemoryType> f : files) {
+			if (f.getDocumentId().equals(d.getID())
+					&& f.getFileName().equals(fileName)) {
 				files.remove(f);
 				return true;
 			}
@@ -162,13 +167,13 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	@Override
 	public List<String> getDocumentFileNames(DatabaseDocument<MemoryType> d) {
 		ArrayList<String> list = new ArrayList<String>();
-		
-		for(DocumentFile f : files) {
-			if(f.getDocumentId().equals(d.getID())) {
+
+		for (DocumentFile<MemoryType> f : files) {
+			if (f.getDocumentId().equals(d.getID())) {
 				list.add(f.getFileName());
 			}
 		}
-		
+
 		return list;
 	}
 
@@ -184,43 +189,45 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 
 	@Override
 	public MemoryDocument getAndTag(DatabaseQuery<MemoryType> query, String tag) {
-		((MemoryQuery)query).requireNotFetchedByStage(tag);
+		((MemoryQuery) query).requireNotFetchedByStage(tag);
 		MemoryDocument d = getDocument(query);
-		if(d!=null) {
+		if (d != null) {
 			d.tag(Document.FETCHED_METADATA_TAG, tag);
 		}
 		return d;
 	}
-	
+
 	@Override
-	public Collection<DatabaseDocument<MemoryType>> getAndTag(DatabaseQuery<MemoryType> query, String tag, int n) {
-		((MemoryQuery)query).requireNotFetchedByStage(tag);
+	public Collection<DatabaseDocument<MemoryType>> getAndTag(
+			DatabaseQuery<MemoryType> query, String tag, int n) {
+		((MemoryQuery) query).requireNotFetchedByStage(tag);
 		List<DatabaseDocument<MemoryType>> docs = getDocuments(query, n);
-		for(int i=0; i<docs.size() && i<n; i++) {
+		for (int i = 0; i < docs.size() && i < n; i++) {
 			DatabaseDocument<MemoryType> d = docs.get(i);
-			((MemoryDocument)d).tag(Document.FETCHED_METADATA_TAG, tag);
+			((MemoryDocument) d).tag(Document.FETCHED_METADATA_TAG, tag);
 		}
 		return docs;
 	}
 
-	@Override
-	public DatabaseDocument<MemoryType> getAndTagRecurring(
-			DatabaseQuery<MemoryType> query, String tag) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	//
+	// @Override
+	// public DatabaseDocument<MemoryType> getAndTagRecurring(
+	// DatabaseQuery<MemoryType> query, String tag) {
+	// // TODO Auto-generated method stub
+	// return null;
+	// }
+	//
+	// @Override
+	// public DatabaseDocument<MemoryType> getAndTagRecurring(
+	// DatabaseQuery<MemoryType> query, String tag, int intervalMillis) {
+	// // TODO Auto-generated method stub
+	// return null;
+	// }
 
 	@Override
-	public DatabaseDocument<MemoryType> getAndTagRecurring(
-			DatabaseQuery<MemoryType> query, String tag, int intervalMillis) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean markTouched(Object id, String tag) {
+	public boolean markTouched(DocumentID<MemoryType> id, String tag) {
 		MemoryDocument d = getDocumentById(id);
-		if(d==null) {
+		if (d == null) {
 			return false;
 		}
 		d.tag(Document.TOUCHED_METADATA_TAG, tag);
@@ -241,68 +248,71 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	public boolean markFailed(DatabaseDocument<MemoryType> d, String stage) {
 		return markDone(d, stage, Document.FAILED_METADATA_FLAG);
 	}
-	
-	private boolean markDone(DatabaseDocument<MemoryType> d, String stage, String flag) {
+
+	private boolean markDone(DatabaseDocument<MemoryType> d, String stage,
+			String flag) {
 		MemoryDocument temp = getDocumentById(d.getID());
-		if(temp==null) {
+		if (temp == null) {
 			return false;
 		}
 		set.remove(temp);
-		((MemoryDocument)d).tag(flag, stage);
+		((MemoryDocument) d).tag(flag, stage);
 		deleteAllFiles(d);
-		addInactive((MemoryDocument)d);
+		addInactive((MemoryDocument) d);
 		return true;
 	}
 
 	@Override
 	public boolean markPending(DatabaseDocument<MemoryType> d, String stage) {
 		MemoryDocument temp = getDocumentById(d.getID());
-		if(temp==null) {
+		if (temp == null) {
 			return false;
 		}
 		temp.tag(Document.PENDING_METADATA_FLAG, stage);
-		
+
 		return true;
 	}
 
 	@Override
 	public boolean insert(DatabaseDocument<MemoryType> d) {
 		MemoryDocument md = (MemoryDocument) d;
-		md.setID(md.hashCode()+""+System.currentTimeMillis());
+		md.setID(new MemoryDocumentID(new LocalDocumentID(md.hashCode() + ""
+				+ System.currentTimeMillis())));
 		removeNullFields(md);
 		set.put(md, false);
 		md.markSynced();
 		return true;
 	}
-	
+
 	private void removeNullFields(MemoryDocument md) {
 		HashSet<String> fields = new HashSet<String>();
-		for(String entry : md.getTouchedContent()) {
-			if(!md.hasContentField(entry) || md.getContentField(entry).equals(null)) {
+		for (String entry : md.getTouchedContent()) {
+			if (!md.hasContentField(entry)
+					|| md.getContentField(entry).equals(null)) {
 				fields.add(entry);
 			}
 		}
-		
-		for(String field : fields) {
+
+		for (String field : fields) {
 			md.removeContentField(field);
 		}
 	}
-	
+
 	private HashSet<String> getTouchedContentSnapshot(MemoryDocument md) {
-		while(true) {
+		while (true) {
 			try {
 				return new HashSet<String>(md.getTouchedContent());
-			} catch(ConcurrentModificationException e) {
+			} catch (ConcurrentModificationException e) {
 				logger.warn("Got concurrent modification in getTouchedContent");
 			}
 		}
 	}
-	
+
 	private HashSet<String> getTouchedMetadataSnapshot(MemoryDocument md) {
-		while(true) {
+		while (true) {
 			try {
 				return new HashSet<String>(md.getTouchedMetadata());
-			} catch(ConcurrentModificationException e) {
+			} catch (ConcurrentModificationException e) {
 				logger.warn("Got concurrent modification in getTouchedContent");
 			}
 		}
@@ -311,32 +321,39 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	@Override
 	public boolean update(DatabaseDocument<MemoryType> d) {
 		MemoryDocument md = (MemoryDocument) d;
-		
+
 		MemoryDocument inDb = getDocumentById(d.getID());
-		
-		if(inDb == null) {
+
+		if (inDb == null) {
 			set.put(md, false);
 			inDb = getDocumentById(d.getID());
+
 		}
-		
-		if(md.isTouchedAction()) {
+
+		if (inDb == null) {
+			logger.error("Can't find document with id '" + d.getID().getID()
+					+ "', unable to update.");
+			return false;
+		}
+
+		if (md.isTouchedAction()) {
 			inDb.setAction(md.getAction());
 		}
-		
-		for(String s : getTouchedContentSnapshot(md)) {
-			if(md.getContentField(s)!=null) {
+
+		for (String s : getTouchedContentSnapshot(md)) {
+			if (md.getContentField(s) != null) {
 				inDb.putContentField(s, md.getContentField(s));
 			} else {
 				inDb.removeContentField(s);
 			}
 		}
-		
-		for(String s : getTouchedMetadataSnapshot(md)) {
+
+		for (String s : getTouchedMetadataSnapshot(md)) {
 			inDb.putMetadataField(s, md.getMetadataMap().get(s));
 		}
-		
+
 		md.markSynced();
-		
+
 		return true;
 	}
 
@@ -347,7 +364,7 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	}
 
 	private void deleteAllFiles(DatabaseDocument<MemoryType> d) {
-		for(String fileName : getDocumentFileNames(d)) {
+		for (String fileName : getDocumentFileNames(d)) {
 			deleteDocumentFile(d, fileName);
 		}
 	}
@@ -358,33 +375,36 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	}
 
 	@Override
-	public void write(DocumentFile df) throws IOException {
+	public void write(DocumentFile<MemoryType> df) throws IOException {
 		df.setUploadDate(new Date());
 		files.add(copy(df));
 		df.getStream().close();
 	}
-	
-	private DocumentFile copy(DocumentFile df) throws IOException {
+
+	private DocumentFile<MemoryType> copy(DocumentFile<MemoryType> df)
+			throws IOException {
 		String s = IOUtils.toString(df.getStream(), df.getEncoding());
 		df.getStream().close();
 		df.setStream(IOUtils.toInputStream(s, df.getEncoding()));
-		return new DocumentFile(df.getDocumentId(), df.getFileName(), IOUtils.toInputStream(s, df.getEncoding()), df.getSavedByStage(), df.getUploadDate());
+		return new DocumentFile<MemoryType>(df.getDocumentId(),
+				df.getFileName(), IOUtils.toInputStream(s, df.getEncoding()),
+				df.getSavedByStage(), df.getUploadDate());
 	}
 
 	@Override
 	public void prepare() {
-		
+
 	}
-	
+
 	@Override
-	public Object toDocumentId(Object jsonPrimitive) {
-		return jsonPrimitive.toString();
+	public DocumentID<MemoryType> toDocumentId(Object jsonPrimitive) {
+		return new MemoryDocumentID(new LocalDocumentID(jsonPrimitive));
 	}
-	
+
 	@Override
-	public Object toDocumentIdFromJson(String json) {
+	public DocumentID<MemoryType> toDocumentIdFromJson(String json) {
 		try {
-			return SerializationUtils.toObject((String) json).toString();
+			return new MemoryDocumentID(LocalDocumentID.getDocumentID(json));
 		} catch (JsonException e) {
 			logger.error("Unable to deserialize document id", e);
 			return null;
@@ -392,7 +412,8 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	}
 
 	@Override
-	public TailableIterator<MemoryType> getInactiveIterator(DatabaseQuery<MemoryType> query) {
+	public TailableIterator<MemoryType> getInactiveIterator(
+			DatabaseQuery<MemoryType> query) {
 		return new MemoryTailableIterator(inactive, b, new MemoryQuery());
 	}
 

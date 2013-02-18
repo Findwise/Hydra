@@ -8,8 +8,8 @@ import java.util.List;
 import org.junit.Test;
 import static org.junit.Assert.fail;
 
-import com.findwise.hydra.common.SerializationUtils;
-import com.findwise.hydra.common.Document.Action;
+import com.findwise.hydra.SerializationUtils;
+import com.findwise.hydra.Document.Action;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 

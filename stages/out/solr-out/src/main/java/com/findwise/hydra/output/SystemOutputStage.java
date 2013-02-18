@@ -2,7 +2,7 @@ package com.findwise.hydra.output;
 
 import java.util.Date;
 
-import com.findwise.hydra.common.Document;
+import com.findwise.hydra.Document;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractOutputStage;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;

@@ -1,4 +1,4 @@
-package com.findwise.hydra.common;
+package com.findwise.hydra;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -64,6 +64,21 @@ public final class SerializationUtils {
 					public JsonElement serialize(Date src, Type typeOfSrc,
 							JsonSerializationContext context) {
 						return src == null ? null : new JsonPrimitive(getDateFormat().format(src));
+					}
+				});
+		gsonBuilder.registerTypeAdapter(DocumentID.class,
+				new com.google.gson.JsonSerializer<DocumentID<?>>() {
+					@Override
+					public JsonElement serialize(DocumentID<?> src, Type typeOfSrc,
+							JsonSerializationContext context) {
+						if(src == null) {
+							return null;
+						}
+						String json = src.toJSON();
+						if(json.startsWith("\"") && json.endsWith("\"")) {
+							json = json.substring(1, json.length()-1);
+						}
+						return new JsonPrimitive(json);
 					}
 				});
 		

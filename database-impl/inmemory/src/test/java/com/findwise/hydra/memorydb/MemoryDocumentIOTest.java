@@ -17,10 +17,10 @@ import org.junit.runner.RunWith;
 
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseQuery;
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.SerializationUtils;
-import com.findwise.hydra.common.Document.Status;
-import com.findwise.hydra.common.DocumentFile;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.Document.Status;
+import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.SerializationUtils;
 
 @RunWith(RepeatRunner.class)
 public class MemoryDocumentIOTest {
@@ -69,6 +69,7 @@ public class MemoryDocumentIOTest {
 		mdq.requireContentFieldEquals("name", "test");
 		DatabaseDocument<MemoryType> d = io.getDocument(mdq);
 		d.putContentField(field, content);
+		System.out.println("D: "+d.toJson());
 		io.update(d);
 		mdq = new MemoryQuery();
 		mdq.requireContentFieldEquals(field, content);
@@ -87,7 +88,7 @@ public class MemoryDocumentIOTest {
 			fail("Did not return all documents. Expected 2, found "+list.size());
 		}
 		boolean test1 = false, test2=false;
-		for(Document d : list) {
+		for(Document<MemoryType> d : list) {
 			if("test".equals(d.getContentField("name"))) {
 				if(((Integer)1).equals(d.getContentField("number")))
 				{
@@ -119,14 +120,14 @@ public class MemoryDocumentIOTest {
 	public void testIdSerialization() throws Exception {
 		MemoryDocument md = new MemoryDocument();
 		io.insert(md);
-		String serialized = SerializationUtils.toJson(md.getID());
-		Object deserialized = io.toDocumentIdFromJson(serialized);
-		if(!md.getID().equals(deserialized)) {
-			fail("Serialization failed from json for "+md.getID().toString() );
+		String serialized = SerializationUtils.toJson(md.getID().getID());
+		Object deserialized = io.toDocumentIdFromJson(serialized).getID();
+		if(!md.getID().getID().equals(deserialized)) {
+			fail("Serialization failed from json for "+md.getID().getID().toString() );
 		}
 		
-		deserialized = io.toDocumentId(SerializationUtils.toObject(serialized));
-		if(!md.getID().equals(deserialized)) {
+		deserialized = io.toDocumentId(SerializationUtils.toObject(serialized)).getID();
+		if(!md.getID().getID().equals(deserialized)) {
 			fail("Serialization failed from primitive");
 		}
 	}
@@ -139,10 +140,10 @@ public class MemoryDocumentIOTest {
 		
 		String content = TestTools.getRandomString(100);
 		String name = TestTools.getRandomString(10);
-		DocumentFile df = new DocumentFile(test2.getID(), name, IOUtils.toInputStream(content), "stage");
+		DocumentFile<MemoryType> df = new DocumentFile<MemoryType>(test2.getID(), name, IOUtils.toInputStream(content), "stage");
 
 		io.write(df);
-		DocumentFile df2 = io.getDocumentFile(test2, name);
+		DocumentFile<MemoryType> df2 = io.getDocumentFile(test2, name);
 
 		if(!IOUtils.toString(df2.getStream()).equals(content)) {
 			fail("Content mismatch between saved and fetched file");
@@ -157,12 +158,15 @@ public class MemoryDocumentIOTest {
 		DatabaseQuery<MemoryType> dbq = new MemoryQuery();
 		dbq.requireContentFieldEquals("name", "test");
 		dbq.requireContentFieldEquals("number", 2);
-		Document d = io.getDocument(dbq);
+		MemoryDocument d = io.getDocument(dbq);
 		
 		if (d == null) {
 			fail("Did not find any documents matching query");
 		}
-		
+		System.out.println(test2.toJson());
+		System.out.println(d.toJson());
+		System.out.println(d.isEqual(test));
+		System.out.println(d.isEqual(test2));
 		if(d.isEqual(test) || !d.isEqual(test2)) {
 			fail("Incorrect document returned");
 		}
@@ -173,7 +177,7 @@ public class MemoryDocumentIOTest {
 	public void testGetAndTagDocumentDatabaseQueryString() {
 		MemoryQuery mdq = new MemoryQuery();
 		mdq.requireContentFieldExists("name");
-		Document d = io.getAndTag(mdq, "tag");
+		Document<MemoryType> d = io.getAndTag(mdq, "tag");
 		if(d==null) {
 			fail("Get and tag could not find any document");
 		}

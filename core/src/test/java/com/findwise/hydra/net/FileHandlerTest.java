@@ -9,7 +9,9 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.findwise.hydra.common.DocumentFile;
+import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.local.Local;
+import com.findwise.hydra.local.LocalDocumentID;
 import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.memorydb.MemoryConnector;
 import com.findwise.hydra.memorydb.MemoryDocument;
@@ -38,9 +40,9 @@ public class FileHandlerTest {
 		String content = "adsafgoaiuhgahgo\ndasdas";
 		String fileName = "test.txt";
 		
-		rp.saveFile(new DocumentFile(testDoc.getID(), fileName, IOUtils.toInputStream(content, "UTF-8")));
+		rp.saveFile(new DocumentFile<Local>(testDoc.getID().getLocalDocumentID(), fileName, IOUtils.toInputStream(content, "UTF-8")));
 		
-		DocumentFile df = mc.getDocumentReader().getDocumentFile(testDoc, fileName);
+		DocumentFile<MemoryType> df = mc.getDocumentReader().getDocumentFile(testDoc, fileName);
 		
 		if(df==null) {
 			fail("File was not properly saved");
@@ -60,14 +62,14 @@ public class FileHandlerTest {
 	@Test
 	public void testFileList() throws Exception {		
 		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
-		if(rp.getFileNames("")!=null) {
+		if(rp.getFileNames(new LocalDocumentID(""))!=null) {
 			fail("Got filenames for non-existant document");
 		}
 		
 		MemoryDocument testDoc = new MemoryDocument();
 		mc.getDocumentWriter().insert(testDoc);
 		
-		List<String> list = rp.getFileNames(testDoc.getID().toString());
+		List<String> list = rp.getFileNames(testDoc.getID());
 		
 		if(list==null) {
 			fail("Got null when requesting filenames for a real document");
@@ -81,10 +83,10 @@ public class FileHandlerTest {
 		String fileName = "test.txt";
 		String fileName2 = "test2.txt";
 		
-		mc.getDocumentWriter().write(new DocumentFile(testDoc.getID(), fileName, IOUtils.toInputStream(content, "UTF-8"), "stage"));
-		mc.getDocumentWriter().write(new DocumentFile(testDoc.getID(), fileName2, IOUtils.toInputStream(content, "UTF-8"), "stage"));
+		mc.getDocumentWriter().write(new DocumentFile<MemoryType>(testDoc.getID(), fileName, IOUtils.toInputStream(content, "UTF-8"), "stage"));
+		mc.getDocumentWriter().write(new DocumentFile<MemoryType>(testDoc.getID(), fileName2, IOUtils.toInputStream(content, "UTF-8"), "stage"));
 		
-		list = rp.getFileNames(testDoc.getID().toString());
+		list = rp.getFileNames(testDoc.getID());
 		if(list.size()!=2) {
 			fail("Didn't get two filenames back");
 		}
@@ -99,14 +101,14 @@ public class FileHandlerTest {
 	@Test
 	public void testGetFile() throws Exception {		
 		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
-		if(rp.getFile("id", "file")!=null) {
+		if(rp.getFile("id", new LocalDocumentID("file"))!=null) {
 			fail("Got non-null for non-existant document and non-existant file");
 		}
 		
 		MemoryDocument testDoc = new MemoryDocument();
 		mc.getDocumentWriter().insert(testDoc);
 
-		if(rp.getFile(testDoc.getID().toString(), "file")!=null) {
+		if(rp.getFile(testDoc.getID().getID().toString(), new LocalDocumentID("file"))!=null) {
 			fail("Got non-null for non-existant file");
 		}
 		
@@ -115,10 +117,10 @@ public class FileHandlerTest {
 		String content2 = "adsagagasdgarqRE13123AFg da\nndasdas";
 		String fileName2 = "test2.txt";
 		
-		mc.getDocumentWriter().write(new DocumentFile(testDoc.getID(), fileName, IOUtils.toInputStream(content, "UTF-8"), "stage"));
-		mc.getDocumentWriter().write(new DocumentFile(testDoc.getID(), fileName2, IOUtils.toInputStream(content2, "UTF-8"), "stage"));
+		mc.getDocumentWriter().write(new DocumentFile<MemoryType>(testDoc.getID(), fileName, IOUtils.toInputStream(content, "UTF-8"), "stage"));
+		mc.getDocumentWriter().write(new DocumentFile<MemoryType>(testDoc.getID(), fileName2, IOUtils.toInputStream(content2, "UTF-8"), "stage"));
 		
-		InputStream s = rp.getFile(fileName, testDoc.getID().toString()).getStream();
+		InputStream s = rp.getFile(fileName, testDoc.getID().getLocalDocumentID()).getStream();
 		if(s==null) {
 			fail("Did not get a file stream for file 1");
 		}
@@ -127,7 +129,7 @@ public class FileHandlerTest {
 			fail("Content of file 1 did not match");
 		}
 		
-		s = rp.getFile(fileName2, testDoc.getID().toString()).getStream();
+		s = rp.getFile(fileName2, testDoc.getID().getLocalDocumentID()).getStream();
 		if(s==null) {
 			fail("Did not get a file stream for file 2");
 		}
@@ -140,14 +142,14 @@ public class FileHandlerTest {
 	@Test
 	public void testDeleteFile() throws Exception {		
 		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
-		if(rp.deleteFile("name", "id")) {
+		if(rp.deleteFile("name", new LocalDocumentID("id"))) {
 			fail("Got positive response for non-existant document and non-existant file");
 		}
 		
 		MemoryDocument testDoc = new MemoryDocument();
 		mc.getDocumentWriter().insert(testDoc);
 
-		if(rp.getFile("file", testDoc.getID().toString())!=null) {
+		if(rp.getFile("file", testDoc.getID().getLocalDocumentID())!=null) {
 			fail("Got positive response for non-existant file");
 		}
 		
@@ -155,10 +157,10 @@ public class FileHandlerTest {
 		String fileName = "test.txt";
 		String fileName2 = "test2.txt";
 		
-		mc.getDocumentWriter().write(new DocumentFile(testDoc.getID(), fileName, IOUtils.toInputStream(content, "UTF-8"), "stage"));
-		mc.getDocumentWriter().write(new DocumentFile(testDoc.getID(), fileName2, IOUtils.toInputStream(content, "UTF-8"), "stage"));
+		mc.getDocumentWriter().write(new DocumentFile<MemoryType>(testDoc.getID(), fileName, IOUtils.toInputStream(content, "UTF-8"), "stage"));
+		mc.getDocumentWriter().write(new DocumentFile<MemoryType>(testDoc.getID(), fileName2, IOUtils.toInputStream(content, "UTF-8"), "stage"));
 		
-		rp.deleteFile(fileName, testDoc.getID().toString());
+		rp.deleteFile(fileName, LocalDocumentID.getDocumentID(testDoc.getID().toJSON()));
 		
 		if(mc.getDocumentReader().getDocumentFileNames(testDoc).size()!=1) {
 			fail("Incorrect amount of files attached to document after delete");
@@ -168,7 +170,7 @@ public class FileHandlerTest {
 			fail("Wrong file left after delete");
 		}
 
-		rp.deleteFile(fileName2, testDoc.getID().toString());
+		rp.deleteFile(fileName2, LocalDocumentID.getDocumentID(testDoc.getID().toJSON()));
 		
 		if(mc.getDocumentReader().getDocumentFileNames(testDoc).size()!=0) {
 			fail("Still some files after both should have been deleted");

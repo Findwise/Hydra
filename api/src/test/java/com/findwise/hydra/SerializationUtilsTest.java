@@ -1,10 +1,12 @@
-package com.findwise.hydra.common;
+package com.findwise.hydra;
 
 import java.util.Date;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
+
+import com.findwise.hydra.SerializationUtils;
 
 public class SerializationUtilsTest {
 

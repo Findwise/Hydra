@@ -15,10 +15,11 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.findwise.hydra.DatabaseDocument;
+import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.DocumentWriter;
+import com.findwise.hydra.SerializationUtils;
 import com.findwise.hydra.TailableIterator;
-import com.findwise.hydra.common.Document.Status;
-import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.Document.Status;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
@@ -154,12 +155,12 @@ public class MongoDocumentIOTest {
 		ObjectId id = new ObjectId();
 		
 		String serialized = SerializationUtils.toJson(id);
-		Object deserialized = mdc.getDocumentReader().toDocumentIdFromJson(serialized);
-		if(!id.equals(deserialized)) {
+		DocumentID<MongoType> deserialized = mdc.getDocumentReader().toDocumentIdFromJson(serialized);
+		if(!id.equals(deserialized.getID())) {
 			fail("Serialization failed from json string");
 		}
 		deserialized = mdc.getDocumentReader().toDocumentId(SerializationUtils.toObject(serialized));
-		if(!id.equals(deserialized)) {
+		if(!id.equals(deserialized.getID())) {
 			fail("Serialization failed from primitive");
 		}
 	}
@@ -279,14 +280,12 @@ public class MongoDocumentIOTest {
 		dw.getAndTag(new MongoQuery(), "tag");
 
 		MongoDocument d2 = dw.getDocumentById(md.getID());
-		
-		System.out.println(d2);
+
 		Assert.assertTrue(d2.getMetadataMap().containsKey(MongoDocument.FETCHED_METADATA_TAG));
 		Map<String, Object> fetched = (Map<String, Object>)d2.getMetadataMap().get(MongoDocument.FETCHED_METADATA_TAG);
 		
 		Assert.assertTrue(fetched.containsKey("tag"));
 		fetched.remove("tag");
-		
 		dw.update(new MongoDocument(d2.toJson()));
 		
 		Assert.assertFalse((

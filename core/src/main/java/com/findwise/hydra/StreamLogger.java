@@ -21,12 +21,12 @@ public class StreamLogger extends OutputStream {
 	/**
 	 * A message written that starts with this string will switch which Log4J Logger is used.
 	 */
-	public static final String SWITCHMESSAGE = com.findwise.hydra.common.Logger.SWITCHMESSAGE;
+	public static final String SWITCHMESSAGE = com.findwise.hydra.Logger.SWITCHMESSAGE;
 	
 	/**
 	 * A message written at the beginning and end of a stacktrace printout.
 	 */
-	public static final String STACKTRACEMESSAGE = com.findwise.hydra.common.Logger.STACKTRACEMESSAGE;
+	public static final String STACKTRACEMESSAGE = com.findwise.hydra.Logger.STACKTRACEMESSAGE;
 	
 	private Logger logger;
 	

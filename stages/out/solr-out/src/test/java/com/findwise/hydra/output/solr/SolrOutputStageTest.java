@@ -14,7 +14,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.findwise.hydra.common.Document.Action;
+import com.findwise.hydra.Document.Action;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
 

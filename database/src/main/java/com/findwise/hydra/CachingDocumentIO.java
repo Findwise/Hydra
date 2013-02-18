@@ -9,10 +9,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.findwise.hydra.Document;
+import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.SerializationUtils;
 import com.findwise.hydra.DatabaseConnector.ConversionException;
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.DocumentFile;
-import com.findwise.hydra.common.SerializationUtils;
 import com.findwise.hydra.local.LocalQuery;
 
 public class CachingDocumentIO<CacheType extends DatabaseType, BackingType extends DatabaseType> implements DocumentReader<CacheType>, DocumentWriter<CacheType> {
@@ -88,33 +88,33 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 		}
 		return ret;
 	}
+//
+//	@Override
+//	public DatabaseDocument<CacheType> getAndTagRecurring(
+//			DatabaseQuery<CacheType> query, String tag) {
+//		DatabaseDocument<CacheType> ret = cacheWriter.getAndTagRecurring(query, tag);
+//		if(ret==null) {
+//			fillCache(query, tag);
+//			
+//			ret = cacheWriter.getAndTagRecurring(query, tag);
+//		}
+//		return ret;
+//	}
+//
+//	@Override
+//	public DatabaseDocument<CacheType> getAndTagRecurring(
+//			DatabaseQuery<CacheType> query, String tag, int intervalMillis) {
+//		DatabaseDocument<CacheType> ret = cacheWriter.getAndTagRecurring(query, tag, intervalMillis);
+//		if(ret==null) {
+//			fillCache(query, tag);
+//			
+//			ret = cacheWriter.getAndTagRecurring(query, tag, intervalMillis);
+//		}
+//		return ret;
+//	}
 
 	@Override
-	public DatabaseDocument<CacheType> getAndTagRecurring(
-			DatabaseQuery<CacheType> query, String tag) {
-		DatabaseDocument<CacheType> ret = cacheWriter.getAndTagRecurring(query, tag);
-		if(ret==null) {
-			fillCache(query, tag);
-			
-			ret = cacheWriter.getAndTagRecurring(query, tag);
-		}
-		return ret;
-	}
-
-	@Override
-	public DatabaseDocument<CacheType> getAndTagRecurring(
-			DatabaseQuery<CacheType> query, String tag, int intervalMillis) {
-		DatabaseDocument<CacheType> ret = cacheWriter.getAndTagRecurring(query, tag, intervalMillis);
-		if(ret==null) {
-			fillCache(query, tag);
-			
-			ret = cacheWriter.getAndTagRecurring(query, tag, intervalMillis);
-		}
-		return ret;
-	}
-
-	@Override
-	public boolean markTouched(Object id, String tag) {
+	public boolean markTouched(DocumentID id, String tag) {
 		if(!cacheWriter.markTouched(id, tag)) {
 			return backingWriter.markTouched(id, tag);
 		}
@@ -231,12 +231,12 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	}
 
 	@Override
-	public DatabaseDocument<CacheType> getDocumentById(Object id) {
+	public DatabaseDocument<CacheType> getDocumentById(DocumentID id) {
 		return getDocumentById(id, false);
 	}
 
 	@Override
-	public DatabaseDocument<CacheType> getDocumentById(Object id, boolean includeInactive) {
+	public DatabaseDocument<CacheType> getDocumentById(DocumentID id, boolean includeInactive) {
 		DatabaseDocument<CacheType> ret = cacheReader.getDocumentById(id);
 		if (ret == null) {
 			id = convertId(id);
@@ -249,7 +249,7 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 		return ret;
 	}
 
-	private Object convertId(Object id) {
+	private DocumentID convertId(Object id) {
 		return backingReader.toDocumentIdFromJson(SerializationUtils.toJson(id));
 	}
 
@@ -320,12 +320,12 @@ public class CachingDocumentIO<CacheType extends DatabaseType, BackingType exten
 	}
 
 	@Override
-	public Object toDocumentId(Object jsonPrimitive) {
+	public DocumentID toDocumentId(Object jsonPrimitive) {
 		return cacheReader.toDocumentId(jsonPrimitive);
 	}
 
 	@Override
-	public Object toDocumentIdFromJson(String json) {
+	public DocumentID toDocumentIdFromJson(String json) {
 		return cacheReader.toDocumentIdFromJson(json);
 	}
 	

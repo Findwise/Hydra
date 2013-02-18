@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.findwise.hydra.common.Logger;
+import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 
 /**
