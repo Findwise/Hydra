@@ -92,7 +92,7 @@ public class SolrOutputStage extends AbstractOutputStage {
 	
 
 	protected SolrInputDocument createSolrInputDocumentWithFieldConfig(
-			Document doc) {
+			Document<?> doc) {
 		SolrInputDocument docToAdd = new SolrInputDocument();
 
 		if (sendAll) {
@@ -108,7 +108,7 @@ public class SolrOutputStage extends AbstractOutputStage {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void addField(Document doc, SolrInputDocument inputDoc, String field) {
+	private void addField(Document<?> doc, SolrInputDocument inputDoc, String field) {
 		if (doc.hasContentField(field)) {
 			Object toField = fieldMappings.get(field);
 			if(toField instanceof String) {
