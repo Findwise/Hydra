@@ -284,13 +284,16 @@ public class StageRunner extends Thread {
 
         private final List<Process> processes = new ArrayList<Process>();
 
+        public StageDestroyer() {
+            Runtime.getRuntime().addShutdownHook(this);
+        }
+        
         @Override
         public boolean add(Process p) {
             /**
              * Register this destroyer to Runtime in order to avoid orphaned
              * processes if the main JVM dies
              */
-            Runtime.getRuntime().addShutdownHook(this);
             processes.add(p);
             return true;
         }
