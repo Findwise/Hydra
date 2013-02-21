@@ -3,6 +3,8 @@ Hydra Processing Framework
 
 Current snapshot: [![Build Status](https://secure.travis-ci.org/Findwise/Hydra.png?branch=master)](https://travis-ci.org/Findwise/Hydra)
 
+Mailing list/group: [hydra-processing google group](https://groups.google.com/forum/#!forum/hydra-processing)
+
 What you'll need
 ----------------
 
