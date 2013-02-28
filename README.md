@@ -1,6 +1,8 @@
 Hydra Processing Framework
 ==========================
 
+Overview: [findwise.github.com/Hydra](http://findwise.github.com/Hydra/)
+
 Current snapshot: [![Build Status](https://secure.travis-ci.org/Findwise/Hydra.png?branch=master)](https://travis-ci.org/Findwise/Hydra)
 
 Mailing list/group: [hydra-processing google group](https://groups.google.com/forum/#!forum/hydra-processing)
@@ -8,9 +10,18 @@ Mailing list/group: [hydra-processing google group](https://groups.google.com/fo
 What you'll need
 ----------------
 
-[MongoDB](http://www.mongodb.org/downloads) 
+* [MongoDB](http://www.mongodb.org/downloads) 
 
 You'll need a database as the central node for Hydra. Currently, the only supported database is MongoDB. Simply install and start MongoDB.
+
+To get output from Hydra, the following systems are supported:
+
+* [Solr](http://lucene.apache.org/solr/)
+
+* [elasticsearch](http://www.elasticsearch.org/)
+
+Check [stages/out](https://github.com/Findwise/Hydra/tree/master/stages/out) to see the implemented outputs.
+You can easily write your own output, as well!
 
 Starting Hydra
 --------------
