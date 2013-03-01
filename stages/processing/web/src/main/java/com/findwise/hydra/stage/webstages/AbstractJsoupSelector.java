@@ -1,6 +1,6 @@
 package com.findwise.hydra.stage.webstages;
 
-import com.findwise.hydra.common.Logger;
+import com.findwise.hydra.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +13,6 @@ import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
-import com.findwise.hydra.stage.Stage;
 
 /**
  * This stage uses JSoup and it's DOM selector queries (http://jsoup.org

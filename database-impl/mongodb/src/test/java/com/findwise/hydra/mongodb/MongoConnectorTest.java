@@ -24,9 +24,10 @@ import org.junit.Test;
 import com.findwise.hydra.DatabaseConnector.ConversionException;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseQuery;
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.Document.Status;
-import com.findwise.hydra.common.DocumentFile;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.Document.Status;
+import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.local.LocalDocument;
 import com.mongodb.Mongo;
 
@@ -77,7 +78,7 @@ public class MongoConnectorTest {
 		mdc.getDocumentWriter().insert(test2);
 		mdc.getDocumentWriter().insert(random);
 		
-		DocumentFile df = new DocumentFile(test.getID(), f.getName(), new FileInputStream(f), "setup");
+		DocumentFile<MongoType> df = new DocumentFile<MongoType>(test.getID(), f.getName(), new FileInputStream(f), "setup");
 		mdc.getDocumentWriter().write(df);	
 	}
 
@@ -115,7 +116,7 @@ public class MongoConnectorTest {
 		
 		mdc.getDocumentWriter().insert(md);
 		
-		Document d = mdc.getDocumentReader().getDocument(mdq);
+		Document<MongoType> d = mdc.getDocumentReader().getDocument(mdq);
 		if(d==null) {
 			fail("No document in test database");
 		}
@@ -147,7 +148,7 @@ public class MongoConnectorTest {
 			fail("Did not return all documents. Expected 3, found "+list.size());
 		}
 		boolean test1 = false, test2=false, random=false;
-		for(Document d : list) {
+		for(Document<MongoType> d : list) {
 			if("test".equals(d.getContentField("name"))) {
 				if(((Integer)1).equals(d.getContentField("number")))
 				{
@@ -184,10 +185,10 @@ public class MongoConnectorTest {
 			fail("Document already had files");
 		}
 		
-		DocumentFile df = new DocumentFile(test2.getID(), f.getName(), new FileInputStream(f), "stage");
+		DocumentFile<MongoType> df = new DocumentFile<MongoType>(test2.getID(), f.getName(), new FileInputStream(f), "stage");
 
 		mdc.getDocumentWriter().write(df);
-		DocumentFile df2 = mdc.getDocumentReader().getDocumentFile(test2, f.getName());
+		DocumentFile<MongoType> df2 = mdc.getDocumentReader().getDocumentFile(test2, f.getName());
 
 		
 		BufferedReader fr = new BufferedReader(new FileReader(f));
@@ -205,7 +206,7 @@ public class MongoConnectorTest {
 
 	@Test
 	public void testGetDocumentFile() throws IOException{
-		DocumentFile fx = mdc.getDocumentReader().getDocumentFile(test, f.getName());
+		DocumentFile<MongoType> fx = mdc.getDocumentReader().getDocumentFile(test, f.getName());
 
 		if(!f.getName().equals(fx.getFileName())) {
 			fail("Couldn't find document file");
@@ -230,7 +231,9 @@ public class MongoConnectorTest {
 		DatabaseQuery<MongoType> dbq = new MongoQuery();
 		dbq.requireContentFieldEquals("name", "test");
 		dbq.requireContentFieldEquals("number", 2);
-		Document d = mdc.getDocumentReader().getDocument(dbq);
+		MongoDocument d = mdc.getDocumentReader().getDocument(dbq);
+		
+		System.out.println(d);
 		
 		if(d.isEqual(test) || !d.isEqual(test2)) {
 			fail("Incorrect document returned");
@@ -242,7 +245,7 @@ public class MongoConnectorTest {
 	public void testGetAndTagDocumentDatabaseQueryString() {
 		MongoQuery mdq = new MongoQuery();
 		mdq.requireContentFieldExists("name");
-		Document d = mdc.getDocumentWriter().getAndTag(mdq, "tag");
+		Document<MongoType> d = mdc.getDocumentWriter().getAndTag(mdq, "tag");
 		if(d==null) {
 			fail("Get and tag could not find any document");
 		}
@@ -269,7 +272,7 @@ public class MongoConnectorTest {
 		MongoQuery query = new MongoQuery();
 		query.requireContentFieldNotEquals("name", "test");
 		MongoDocument d = (MongoDocument) mdc.getDocumentReader().getDocument(query);
-		Object id = d.getID();
+		DocumentID<MongoType> id = d.getID();
 		mdc.getDocumentWriter().delete(d);
 		query.requireID(id);
 		if(mdc.getDocumentReader().getDocument(query)!=null) {
@@ -284,9 +287,9 @@ public class MongoConnectorTest {
 		DatabaseDocument<MongoType> d;
 		List<Object> allDocs = new ArrayList<Object>();
 		while ((d = mdc.getDocumentWriter().getAndTag(new MongoQuery(), "testRet")) != null) {
-			allDocs.add(d.getID());
+			allDocs.add(d.getID().getID());
 		}
-		if (allDocs.contains(discarded_d.getID()) == false) {
+		if (allDocs.contains(discarded_d.getID().getID()) == false) {
 			fail("Discarded document should still be there since it's not yet discarded");
 		}
 		

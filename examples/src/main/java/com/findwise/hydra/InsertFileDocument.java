@@ -9,8 +9,8 @@ import java.net.URL;
 
 import org.apache.http.HttpException;
 
-import com.findwise.hydra.common.DocumentFile;
-import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;

@@ -14,8 +14,8 @@ import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.Stage;
 import com.findwise.hydra.StageGroup;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.SerializationUtils;
 
 public class StagesService<T extends DatabaseType> {
 

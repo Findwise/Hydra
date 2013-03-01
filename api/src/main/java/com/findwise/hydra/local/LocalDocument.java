@@ -8,14 +8,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.HashMap;
 
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.InternalLogger;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.DocumentID;
+import com.findwise.hydra.InternalLogger;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.SerializationUtils;
 import com.findwise.tools.Comparator;
 import com.google.gson.JsonParseException;
 
-public class LocalDocument implements Document {
+public class LocalDocument implements Document<Local> {
 
 	private Map<String, Object> documentMap;
 	private Set<String> touchedContent;
@@ -80,11 +81,15 @@ public class LocalDocument implements Document {
 	}
 
 	@Override
-	public Object getID() {
+	public LocalDocumentID getID() {
 		if(!documentMap.containsKey(ID_KEY)) {
 			return null;
 		}
-		return documentMap.get(ID_KEY);
+		return new LocalDocumentID(documentMap.get(ID_KEY));
+	}
+	
+	public void setID(DocumentID<Local> id) {
+		documentMap.put(ID_KEY, id.getID());
 	}
 	
 	/**
@@ -112,9 +117,6 @@ public class LocalDocument implements Document {
 	private Object putMetadataField(String fieldName, Object value) {
 		fieldName = removePeriodFromKey(fieldName);
 		touchedMetadata.add(fieldName);
-		if(value == null) {
-			System.out.println("null");
-		}
 		return getMetadataMap().put(fieldName, value);
 	}
 
@@ -201,8 +203,11 @@ public class LocalDocument implements Document {
 	}
 	
 	@Override
-	public void putAll(Document d) {
-		documentMap.put(ID_KEY, d.getID());
+	public void putAll(Document<?> d) {
+		if(d.getID() != null) {
+			documentMap.put(ID_KEY, d.getID().getID());
+		}
+		
 		if(d.getAction()!=null) {
 			documentMap.put(ACTION_KEY, d.getAction());
 		}
@@ -224,7 +229,7 @@ public class LocalDocument implements Document {
 	}
 
 	@Override
-	public boolean isEqual(Document d) {
+	public boolean isEqual(Document<?> d) {
 		if(d.getID()!=null) {
 			if(!d.getID().equals(getID())) {
 				return false;
@@ -247,7 +252,7 @@ public class LocalDocument implements Document {
 		return false;
 	}
 	
-	private boolean equalMetadata(Document d) {
+	private boolean equalMetadata(Document<?> d) {
 		Set<String> metadata = getMetadataMap().keySet();
 		if(metadata.size()!=getMetadataFields().size()) {
 			return false;
@@ -266,7 +271,7 @@ public class LocalDocument implements Document {
 		return true;
 	}
 	
-	private boolean equalContent(Document d) {
+	private boolean equalContent(Document<?> d) {
 		Set<String> content = d.getContentFields();
 		if(content.size()!=getContentFields().size()) {
 			return false;
@@ -307,7 +312,11 @@ public class LocalDocument implements Document {
 	 */
 	private String fieldsToJson(Iterable<String> contentFields, Iterable<String> metadataFields) {
 		HashMap<String, Object> map = new HashMap<String, Object>();
-		map.put(ID_KEY, getID());
+		if(getID() != null) {
+			map.put(ID_KEY, getID().getID());
+		} else {
+			map.put(ID_KEY, null);
+		}
 		if(contentFields!=null) {
 			HashMap<String, Object> cmap = new HashMap<String, Object>();
 			for(String s : contentFields) {

@@ -5,15 +5,15 @@ import java.io.IOException;
 import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseQuery;
+import com.findwise.hydra.Document;
 import com.findwise.hydra.DocumentReader;
 import com.findwise.hydra.DocumentWriter;
+import com.findwise.hydra.JsonException;
 import com.findwise.hydra.PipelineReader;
 import com.findwise.hydra.PipelineWriter;
+import com.findwise.hydra.Query;
 import com.findwise.hydra.StatusReader;
 import com.findwise.hydra.StatusWriter;
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.Query;
 
 public class MemoryConnector implements DatabaseConnector<MemoryType> {
 
@@ -73,7 +73,7 @@ public class MemoryConnector implements DatabaseConnector<MemoryType> {
 	}
 
 	@Override
-	public DatabaseDocument<MemoryType> convert(Document document) {
+	public DatabaseDocument<MemoryType> convert(Document<?> document) {
 		MemoryDocument md = new MemoryDocument();
 		try {
 			md.fromJson(document.toJson());

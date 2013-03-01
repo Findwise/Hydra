@@ -24,9 +24,10 @@ import org.slf4j.LoggerFactory;
 import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseType;
-import com.findwise.hydra.common.DocumentFile;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.DocumentID;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.SerializationUtils;
 import com.findwise.hydra.local.RemotePipeline;
 
 public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
@@ -67,11 +68,12 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 	
 	private void handleSaveFile(HttpRequest request, HttpResponse response) {
 		try {
-			DocumentFile df = getDocumentFile(request);
+			DocumentFile<T> df = getDocumentFile(request);
+			System.out.println(df);
 			if (df == null) {
 				HttpResponseWriter.printBadRequestContent(response);
 			}
-
+			
 			DatabaseDocument<T> md = dbc.getDocumentReader().getDocumentById(df.getDocumentId());
 			if (md == null) {
 				HttpResponseWriter.printNoDocument(response);
@@ -99,7 +101,7 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
         	return;
         }
         
-        DocumentFile df = dbc.getDocumentReader().getDocumentFile(md, triple.fileName);
+        DocumentFile<T> df = dbc.getDocumentReader().getDocumentFile(md, triple.fileName);
         
         if(df==null) {
         	HttpResponseWriter.printFileNotFound(response, triple.fileName);
@@ -126,7 +128,7 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private DocumentFile getDocumentFile(HttpRequest request) throws ParseException, IOException, JsonException {
+	private DocumentFile<T> getDocumentFile(HttpRequest request) throws ParseException, IOException, JsonException {
         HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request).getEntity();
         String requestContent = EntityUtils.toString(requestEntity, "UTF-8");
 
@@ -137,12 +139,13 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 		}
 		
 		Map<String, Object> map = (Map<String, Object>) o;
-		Object id = dbc.getDocumentReader().toDocumentId(map.get("documentId"));
+		DocumentID<T> id = dbc.getDocumentReader().toDocumentId(map.get("documentId"));
 		String fileName = (String) map.get("fileName");
 		Date d = (Date) map.get("uploadDate");
 		String encoding = (String) map.get("encoding");
 		String mimetype = (String) map.get("mimetype");
 		String savedByStage = (String) map.get("savedByStage");
+		
 		InputStream is;
 		if(encoding == null) {
 			is = new ByteArrayInputStream(Base64.decodeBase64(((String)map.get("stream")).getBytes("UTF-8")));
@@ -150,7 +153,7 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 			is = new ByteArrayInputStream(Base64.decodeBase64(((String)map.get("stream")).getBytes(encoding)));
 		}
 		
-		DocumentFile df = new DocumentFile(id, fileName, is, savedByStage, d);
+		DocumentFile<T> df = new DocumentFile<T>(id, fileName, is, savedByStage, d);
 		df.setEncoding(encoding);
 		df.setMimetype(mimetype);
 		
@@ -225,12 +228,13 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 	
 	private class Tuple {
 		String stage;
-		Object docid;
+		DocumentID<T> docid;
 	}
 	
 	private class Triple {
+		@SuppressWarnings("unused")
 		String stage;
-		Object docid;
+		DocumentID<T> docid;
 		String fileName;
 	}
 }

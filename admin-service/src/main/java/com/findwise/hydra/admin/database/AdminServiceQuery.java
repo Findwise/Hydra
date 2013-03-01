@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.findwise.hydra.DatabaseQuery;
-import com.findwise.hydra.common.Document.Action;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.Document.Action;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.SerializationUtils;
 import com.findwise.hydra.local.LocalQuery;
 import com.google.gson.JsonParseException;
 

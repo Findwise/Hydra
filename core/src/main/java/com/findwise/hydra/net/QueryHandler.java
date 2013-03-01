@@ -15,9 +15,9 @@ import org.slf4j.LoggerFactory;
 import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.DatabaseType;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.JsonException;
 import com.findwise.hydra.StageManager;
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.JsonException;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.net.RESTTools.Method;
@@ -63,17 +63,7 @@ public class QueryHandler<T extends DatabaseType> implements ResponsibleHandler 
 		reportQuery(stage);		
 		
 
-		Document d;
-
-		String recurring = RESTTools.getParam(request,
-				RemotePipeline.RECURRING_PARAM);
-
-		
-		if (recurring != null && recurring.equals("1")) {
-			d = dbc.getDocumentWriter().getAndTagRecurring(dbq, stage);
-		} else {
-			d = dbc.getDocumentWriter().getAndTag(dbq, stage);
-		}
+		Document<T> d = dbc.getDocumentWriter().getAndTag(dbq, stage);
 		
 		long query = System.currentTimeMillis();
 		

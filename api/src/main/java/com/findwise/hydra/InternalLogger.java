@@ -1,6 +1,6 @@
-package com.findwise.hydra.common;
+package com.findwise.hydra;
 
-import com.findwise.hydra.common.Logger.Level;
+import com.findwise.hydra.Logger.Level;
 
 public final class InternalLogger {
 	private InternalLogger() {}

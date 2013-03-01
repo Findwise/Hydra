@@ -1,6 +1,6 @@
-package com.findwise.hydra.common;
+package com.findwise.hydra;
 
-import com.findwise.hydra.common.Document.Action;
+import com.findwise.hydra.Document.Action;
 
 public interface Query extends JsonDeserializer, JsonSerializer {
 	String TOUCHED_KEY = "touched";

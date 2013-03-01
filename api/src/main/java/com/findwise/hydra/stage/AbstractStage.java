@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import com.findwise.hydra.common.JsonDeserializer;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.Logger;
-import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.JsonDeserializer;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.Logger;
+import com.findwise.hydra.SerializationUtils;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
 

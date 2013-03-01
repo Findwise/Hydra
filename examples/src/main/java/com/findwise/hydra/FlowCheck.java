@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import org.apache.http.HttpException;
 
-import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.RemotePipeline;
 
 public class FlowCheck {

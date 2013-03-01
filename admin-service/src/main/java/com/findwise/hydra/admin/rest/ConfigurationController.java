@@ -22,7 +22,7 @@ import com.findwise.hydra.admin.ConfigurationService;
 import com.findwise.hydra.admin.documents.DocumentsService;
 
 import com.findwise.hydra.admin.stages.StagesService;
-import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.JsonException;
 
 
 @Controller("/rest")

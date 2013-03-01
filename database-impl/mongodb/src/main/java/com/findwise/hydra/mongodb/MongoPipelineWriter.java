@@ -5,9 +5,6 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.PipelineWriter;
 import com.findwise.hydra.Stage;
@@ -26,8 +23,6 @@ public class MongoPipelineWriter implements PipelineWriter {
 	private DBCollection stages;
 	private MongoPipelineReader reader;
 	private WriteConcern concern;
-	
-	private static Logger logger = LoggerFactory.getLogger(MongoPipelineWriter.class);
 	
 	public MongoPipelineWriter(MongoPipelineReader reader, WriteConcern concern) {
 		this.reader = reader;

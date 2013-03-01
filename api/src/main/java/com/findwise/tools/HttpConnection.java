@@ -19,7 +19,7 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.params.SyncBasicHttpParams;
 
-import com.findwise.hydra.common.InternalLogger;
+import com.findwise.hydra.InternalLogger;
 
 public class HttpConnection {
 	private HttpParams params;

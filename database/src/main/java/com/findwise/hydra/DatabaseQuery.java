@@ -1,6 +1,6 @@
 package com.findwise.hydra;
 
-import com.findwise.hydra.common.Query;
+import com.findwise.hydra.Query;
 
 public interface DatabaseQuery<T extends DatabaseType> extends Query {
 	

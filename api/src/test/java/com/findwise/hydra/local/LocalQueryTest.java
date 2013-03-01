@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import com.findwise.hydra.common.Document.Action;
+import com.findwise.hydra.Document.Action;
 
 public class LocalQueryTest {
 

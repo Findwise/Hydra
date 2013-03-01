@@ -3,9 +3,9 @@ package com.findwise.hydra;
 import java.util.Date;
 import java.util.Set;
 
-import com.findwise.hydra.common.Document;
+import com.findwise.hydra.Document;
 
-public interface DatabaseDocument<T extends DatabaseType> extends Document {
+public interface DatabaseDocument<T extends DatabaseType> extends Document<T> {
 
 	Object putMetadataField(String key, Object value);
 
@@ -29,5 +29,5 @@ public interface DatabaseDocument<T extends DatabaseType> extends Document {
 	
 	String getCompletedBy();
 
-	void setID(Object id);
+	void setID(DocumentID<T> id);
 }

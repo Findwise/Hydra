@@ -4,7 +4,7 @@ import java.util.Random;
 
 import org.apache.commons.lang.RandomStringUtils;
 
-import com.findwise.hydra.common.Document.Action;
+import com.findwise.hydra.Document.Action;
 import com.findwise.hydra.local.LocalDocument;
 
 public class LocalDocumentFactory {

@@ -4,9 +4,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.findwise.hydra.DatabaseQuery;
-import com.findwise.hydra.common.Document.Action;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.Document.Action;
+import com.findwise.hydra.DocumentID;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.SerializationUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.mongodb.DBObject;
@@ -41,17 +42,11 @@ public class MongoQuery implements DatabaseQuery<MongoType> {
 		return qb;
 	}
 	
-	@SuppressWarnings("unchecked")
-	public final void requireID(Object o) {
-		Object id;
-		if(o instanceof Map) {
-			id = MongoDocument.toObjectId((Map<String, Object>) o);
+	public final void requireID(DocumentID<MongoType> o) {
+		if(o==null) {
+			return;
 		}
-		else {
-			id = o;
-		}
-		
-		qb = qb.put(MongoDocument.MONGO_ID_KEY).is(id);
+		qb = qb.put(MongoDocument.MONGO_ID_KEY).is(o.getID());
 	}
 
 	@Override

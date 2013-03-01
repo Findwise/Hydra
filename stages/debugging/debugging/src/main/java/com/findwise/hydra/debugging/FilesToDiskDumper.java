@@ -1,6 +1,7 @@
 package com.findwise.hydra.debugging;
 
-import com.findwise.hydra.common.DocumentFile;
+import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.local.Local;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
@@ -43,7 +44,7 @@ public class FilesToDiskDumper extends AbstractProcessStage {
             files = getRemotePipeline().getFileNames(doc.getID());
 
             for (String fileName : files) {
-                DocumentFile df = getRemotePipeline().getFile(fileName, doc.getID());
+                DocumentFile<Local> df = getRemotePipeline().getFile(fileName, doc.getID());
 
                 File dir = new File(path + "/");
                 dir.mkdirs();

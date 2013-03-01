@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import com.findwise.hydra.DatabaseConnector;
@@ -13,11 +12,11 @@ import com.findwise.hydra.DatabaseConnector.ConversionException;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.DatabaseType;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.SerializationUtils;
 import com.findwise.hydra.admin.database.AdminServiceQuery;
 import com.findwise.hydra.admin.database.AdminServiceType;
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.SerializationUtils;
 import com.findwise.hydra.local.LocalDocument;
 
 public class DocumentsService<T extends DatabaseType> {

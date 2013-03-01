@@ -1,6 +1,6 @@
 package com.findwise.hydra.stage;
 
-import com.findwise.hydra.common.Logger;
+import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;

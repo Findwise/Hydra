@@ -1,9 +1,9 @@
-package com.findwise.hydra.common;
+package com.findwise.hydra;
 
 import java.util.Map;
 import java.util.Set;
 
-public interface Document extends JsonDeserializer, JsonSerializer {
+public interface Document<Type> extends JsonDeserializer, JsonSerializer {
 	
 	public enum Action {
 		ADD, DELETE, UPDATE
@@ -35,7 +35,7 @@ public interface Document extends JsonDeserializer, JsonSerializer {
 
 	boolean hasMetadataField(String fieldName);
 
-	Object getID();
+	DocumentID<Type> getID();
 
 	Object putContentField(String fieldName, Object value);
 
@@ -51,9 +51,9 @@ public interface Document extends JsonDeserializer, JsonSerializer {
 
 	Set<String> getContentFields();
 
-	void putAll(Document d);
+	void putAll(Document<?> d);
 
-	boolean isEqual(Document d);
+	boolean isEqual(Document<?> d);
 	
 	/**
 	 * Causes all subsequent requests to hasContentField for this field to return <em>false</em>.
