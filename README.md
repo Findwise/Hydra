@@ -3,8 +3,6 @@ Hydra Processing Framework
 
 Overview: [findwise.github.com/Hydra](http://findwise.github.com/Hydra/)
 
-Current snapshot: [![Build Status](https://secure.travis-ci.org/Findwise/Hydra.png?branch=master)](https://travis-ci.org/Findwise/Hydra)
-
 Mailing list/group: [hydra-processing google group](https://groups.google.com/forum/#!forum/hydra-processing)
 
 What you'll need
