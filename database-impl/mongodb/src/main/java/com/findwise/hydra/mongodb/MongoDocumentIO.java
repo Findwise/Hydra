@@ -496,32 +496,6 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		
 		return res;
 	}
-
-//
-//	@Override
-//	public DatabaseDocument<MongoType> getAndTagRecurring(DatabaseQuery<MongoType> query, String tag) {
-//		return getAndTagRecurring(query, tag, DEFAULT_RECURRING_INTERVAL);
-//	}
-//	
-//	@Override
-//	public MongoDocument getAndTagRecurring(DatabaseQuery<MongoType> query, String tag, int intervalMillis) {
-//		MongoDocument md = getAndTag(query, tag);
-//		if(md!=null) {
-//			return md;
-//		}
-//		
-//		MongoQuery mq = (MongoQuery)query;
-//		BasicDBObjectBuilder dbob = BasicDBObjectBuilder.start(mq.toDBObject().toMap());
-//		dbob.add(MongoDocument.METADATA_KEY+"."+Document.PENDING_METADATA_FLAG, new BasicDBObject("$exists", false));
-//		
-//		Date earlierThan = new Date(new Date().getTime()-intervalMillis);
-//		dbob.add(MongoDocument.METADATA_KEY+"."+DatabaseDocument.FETCHED_METADATA_TAG+"."+tag, new BasicDBObject("$lt", earlierThan));
-//		
-//		DBObject update = new BasicDBObject(MongoDocument.METADATA_KEY+"."+DatabaseDocument.FETCHED_METADATA_TAG+"."+tag, new Date());
-//		
-//		return findAndModify(dbob.get(), getUpdateObject(update));
-//	}
-
 	
 	private MongoDocument findAndModify(DBObject query, DBObject modification) {
 		DBObject c = (DBObject)documents.findAndModify(query, modification);

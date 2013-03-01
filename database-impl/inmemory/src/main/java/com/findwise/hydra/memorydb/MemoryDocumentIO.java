@@ -209,21 +209,6 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		return docs;
 	}
 
-	//
-	// @Override
-	// public DatabaseDocument<MemoryType> getAndTagRecurring(
-	// DatabaseQuery<MemoryType> query, String tag) {
-	// // TODO Auto-generated method stub
-	// return null;
-	// }
-	//
-	// @Override
-	// public DatabaseDocument<MemoryType> getAndTagRecurring(
-	// DatabaseQuery<MemoryType> query, String tag, int intervalMillis) {
-	// // TODO Auto-generated method stub
-	// return null;
-	// }
-
 	@Override
 	public boolean markTouched(DocumentID<MemoryType> id, String tag) {
 		MemoryDocument d = getDocumentById(id);
