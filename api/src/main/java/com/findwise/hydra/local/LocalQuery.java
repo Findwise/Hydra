@@ -3,11 +3,11 @@ package com.findwise.hydra.local;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.findwise.hydra.common.Document.Action;
-import com.findwise.hydra.common.JsonDeserializer;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.Query;
-import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.JsonDeserializer;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.Query;
+import com.findwise.hydra.SerializationUtils;
+import com.findwise.hydra.Document.Action;
 import com.google.gson.JsonParseException;
 
 public class LocalQuery implements Query, JsonDeserializer {

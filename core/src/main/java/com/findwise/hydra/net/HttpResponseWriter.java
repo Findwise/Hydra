@@ -7,9 +7,9 @@ import org.apache.http.nio.entity.NStringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.SerializationUtils;
 
 /**
  * This class provides methods for writing output to a HttpResponse.
@@ -27,7 +27,7 @@ public final class HttpResponseWriter {
 		response.setEntity(new NStringEntity(content, CONTENT_TYPE));
 	}
 	
-	protected static void printDocument(HttpResponse response, Document d, String stage) {
+	protected static void printDocument(HttpResponse response, Document<?> d, String stage) {
 		logger.debug("Printing document with ID " + d.getID() + " to stage " + stage);
 		response.setStatusCode(HttpStatus.SC_OK);
 		setStringEntity(response, d.toJson());
@@ -108,7 +108,7 @@ public final class HttpResponseWriter {
 		setStringEntity(response, "File " + id + " successfully deleted");
 	}
 
-	protected static void printInsertOk(HttpResponse response, Document d) {
+	protected static void printInsertOk(HttpResponse response, Document<?> d) {
 		logger.debug("Successfully inserted a document with ID: " + d.getID());
 		response.setStatusCode(HttpStatus.SC_OK);
 		setStringEntity(response, d.contentFieldsToJson(null));

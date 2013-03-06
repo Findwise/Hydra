@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.findwise.hydra.common.Logger;
+import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 
 /**
@@ -63,7 +63,7 @@ public class DocumentDiscardStage extends AbstractProcessStage {
 				try {
 					alreadyDiscarded = getRemotePipeline().markDiscarded(doc);
 				} catch (Exception e) {
-					throw new ProcessException("Couldn't mark document with id: " + (String)doc.getID() + " as discarded.");
+					throw new ProcessException("Couldn't mark document with id: " + doc.getID().toJSON() + " as discarded.");
 				}
 			}
 		}

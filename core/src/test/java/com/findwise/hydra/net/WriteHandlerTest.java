@@ -16,13 +16,15 @@ import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.DocumentReader;
 import com.findwise.hydra.DocumentWriter;
 import com.findwise.hydra.local.LocalDocument;
+import com.findwise.hydra.local.LocalDocumentID;
 import com.findwise.hydra.local.RemotePipeline;
 
 public class WriteHandlerTest {
 	@SuppressWarnings("rawtypes")
 	private DatabaseConnector dbc;
 	private DocumentWriter<?> writer;
-	private DocumentReader<?> reader;
+	@SuppressWarnings("rawtypes")
+	private DocumentReader reader;
 	private RESTServer server;
 	
 	@SuppressWarnings("unchecked")
@@ -68,8 +70,10 @@ public class WriteHandlerTest {
 		DatabaseDocument dbdoc = mock(DatabaseDocument.class);
 		when(dbc.convert(any(LocalDocument.class))).thenReturn(dbdoc);
 		
-		when(dbdoc.getID()).thenReturn(1);
-		when(reader.getDocumentById(1)).thenReturn(dbdoc);
+		LocalDocumentID id = new LocalDocumentID(1);
+		
+		when(dbdoc.getID()).thenReturn(id);
+		when(reader.getDocumentById(id)).thenReturn(dbdoc);
 		
 		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
 		LocalDocument ld = new LocalDocument();

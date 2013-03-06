@@ -14,8 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.DatabaseDocument;
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.DocumentID;
+import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.tools.Comparator;
 import com.mongodb.BasicDBObject;
@@ -200,8 +201,11 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	}
 	
 	@Override
-	public Object getID() {
-		return get(MONGO_ID_KEY);
+	public MongoDocumentID getID() {
+		if(get(MONGO_ID_KEY) == null) {
+			return null;
+		}
+		return new MongoDocumentID((ObjectId) get(MONGO_ID_KEY));
 	}
 
 	public String getIDKey() {
@@ -213,28 +217,29 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	public final void putAll(Map m) {
 		documentMap.putAll(m);
 	}
-	
-	protected static ObjectId toObjectId(Map<String, Object> m) {
-		if(m.containsKey("_time") && m.containsKey("_machine") && m.containsKey("_inc")) {
-			return new ObjectId((Integer)m.get("_time"), (Integer)m.get("_machine"), (Integer)m.get("_inc"));
-		}
-		return null;
-	}
 
-	@SuppressWarnings({ "unchecked" })
 	@Override
-	public final void putAll(Document d) {
+	public final void putAll(Document<?> d) {
 		if(d==null) {
 			logger.warn("null passed to MongoDocument.putAll(), doing nothing.");
 			return;
 		}
 		
-		if(d.getID() instanceof Map) {
-			documentMap.put(MONGO_ID_KEY, toObjectId((Map<String, Object>) d.getID()));
+		if(d.getID() == null) {
+			//Do nothing.
 		}
-		else {
-			documentMap.put(MONGO_ID_KEY, d.getID());
+		else if(d.getID() instanceof MongoDocumentID) {
+			documentMap.put(MONGO_ID_KEY, d.getID().getID());
+		} else {
+			try {
+				ObjectId id = MongoDocumentID.getObjectId(d.getID().toJSON());
+				documentMap.put(MONGO_ID_KEY, id);
+			} catch (JsonException e) {
+				logger.error("Unable to convert ID of type "+d.getID().getClass()+ " to MongoDucumentID", e);
+				return;
+			}
 		}
+		
 		
 		if(d.getAction()!=null) {
 			setAction(d.getAction());
@@ -280,9 +285,9 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	}
 
 	@Override
-	public boolean isEqual(Document d) {
+	public boolean isEqual(Document<?> d) {
 		if(d.getID()!=null) {
-			if(!d.getID().equals(getID())) {
+			if(!d.getID().getID().equals(getID().getID())) {
 				return false;
 			}
 		}
@@ -303,7 +308,7 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 		return false;
 	}
 	
-	private boolean equalMetadata(Document d) {
+	private boolean equalMetadata(Document<?> d) {
 		Set<String> metadata = d.getMetadataMap().keySet();
 		if(metadata.size()!=getMetadataFields().size()) {
 			return false;
@@ -322,7 +327,7 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 		return true;
 	}
 	
-	private boolean equalContent(Document d) {
+	private boolean equalContent(Document<?> d) {
 		Set<String> content = d.getContentFields();
 		if(content.size()!=getContentFields().size()) {
 			return false;
@@ -483,7 +488,7 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	}
 
 	@Override
-	public void setID(Object id) {
-		documentMap.put(ID_KEY, id);
+	public void setID(DocumentID<MongoType> id) {
+		documentMap.put(ID_KEY, id.getID());
 	}
 }

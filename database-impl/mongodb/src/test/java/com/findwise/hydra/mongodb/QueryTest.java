@@ -12,9 +12,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.findwise.hydra.DatabaseDocument;
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.Document.Action;
-import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.Document.Action;
 import com.findwise.hydra.local.LocalQuery;
 import com.mongodb.Mongo;
 
@@ -78,7 +78,7 @@ public class QueryTest {
 		lq.requireNotTouchedByStage("test2");
 		lq.requireContentFieldExists("exists");
 		MongoQuery q = new MongoQuery(lq.toJson());
-		Document d = mdc.getDocumentReader().getDocument(q);
+		Document<MongoType> d = mdc.getDocumentReader().getDocument(q);
 		if(d!=null) {
 			fail("Expected no document to be returned");
 		}
@@ -90,7 +90,7 @@ public class QueryTest {
 	
 	@Test
 	public void testRequireID() {
-		Document d = mdc.getDocumentReader().getDocument(new MongoQuery());
+		Document<MongoType> d = mdc.getDocumentReader().getDocument(new MongoQuery());
 		MongoQuery mdq = new MongoQuery();
 		mdq.requireID(d.getID());
 		if(null==mdc.getDocumentReader().getDocument(mdq)) {
@@ -142,7 +142,7 @@ public class QueryTest {
 			fail("Got documents, shouldn't have.");
 		}
 		
-		Document d = mdc.getDocumentWriter().getAndTag(new MongoQuery(), "xyz");
+		Document<MongoType> d = mdc.getDocumentWriter().getAndTag(new MongoQuery(), "xyz");
 		if(d==null) {
 			fail("Should have gotten a document back...");
 		}
@@ -163,7 +163,7 @@ public class QueryTest {
 			fail("Received incorrect number of documents..");
 		}
 		
-		Document d = mdc.getDocumentWriter().getAndTag(new MongoQuery(), "xyz");
+		Document<MongoType> d = mdc.getDocumentWriter().getAndTag(new MongoQuery(), "xyz");
 		if(d==null) {
 			fail("Should have gotten a document back...");
 		}
@@ -221,7 +221,7 @@ public class QueryTest {
 		if(list.size()!=2) {
 			fail("Expected to find two documents");
 		}
-		for(Document d : list) {
+		for(Document<MongoType> d : list) {
 			if(!d.hasContentField("name")) {
 				fail("Fetched document is missing content field name");
 			}

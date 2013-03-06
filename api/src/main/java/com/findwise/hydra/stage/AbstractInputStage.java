@@ -2,7 +2,7 @@ package com.findwise.hydra.stage;
 
 import java.io.IOException;
 
-import com.findwise.hydra.common.Logger;
+import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 

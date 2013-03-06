@@ -14,21 +14,22 @@ import com.findwise.hydra.ConfigurationFactory;
 import com.findwise.hydra.CoreConfiguration;
 import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseDocument;
+import com.findwise.hydra.Document.Action;
+import com.findwise.hydra.DocumentFile;
 import com.findwise.hydra.NodeMaster;
 import com.findwise.hydra.Pipeline;
-import com.findwise.hydra.common.Document.Action;
-import com.findwise.hydra.common.DocumentFile;
+import com.findwise.hydra.local.Local;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.mongodb.MongoConnector;
 import com.findwise.hydra.mongodb.MongoDocument;
-import com.findwise.hydra.mongodb.MongoDocumentIO;
+import com.findwise.hydra.mongodb.MongoDocumentID;
 import com.findwise.hydra.mongodb.MongoType;
 import com.mongodb.Mongo;
 
 public class RemotePipelineTest {
-	private static NodeMaster nm;
+	private static NodeMaster<MongoType> nm;
 	private MongoDocument test, test2;
 	
 	private static RESTServer server;
@@ -39,14 +40,14 @@ public class RemotePipelineTest {
 		
 		CoreConfiguration conf = ConfigurationFactory.getConfiguration("jUnit-RemotePipelineTest");
 		
-		nm = new NodeMaster(conf, new MongoConnector(conf), new Pipeline());
+		nm = new NodeMaster<MongoType>(conf, new MongoConnector(conf), new Pipeline());
 		if(!nm.isAlive()) {
 			nm.blockingStart();
 		
 			nm.getDatabaseConnector().waitForWrites(true);
 			nm.getDatabaseConnector().connect();
 		}
-		server = new RESTServer(conf, new HttpRESTHandler(nm.getDatabaseConnector()));
+		server = new RESTServer(conf, new HttpRESTHandler<MongoType>(nm.getDatabaseConnector()));
 		server.start();
 	}
 	
@@ -156,7 +157,10 @@ public class RemotePipelineTest {
 		}
 		
 		rp1.getDocument(new LocalQuery());
-		rp1.releaseLastDocument();
+		if(!rp1.releaseLastDocument()) {
+			fail("releaseLastDocument() returned false");
+		}
+		
 		LocalDocument ld = rp2.getDocument(lq);
 		if(null==ld) {
 			fail("Was expecting a document, but got null. One document has been touched by stage1");
@@ -247,7 +251,7 @@ public class RemotePipelineTest {
 		}
 		
 		LocalDocument ld = rp1.getDocument(new LocalQuery());
-		res = rp1.save(new LocalDocument("{_id : "+ld.getID()+"}"));
+		res = rp1.save(new LocalDocument("{_id : "+ld.getID().getID()+"}"));
 		if(!res) {
 			fail("Save returned false, but it should be ok");
 		}
@@ -339,25 +343,6 @@ public class RemotePipelineTest {
 			fail("The document should have been marked as touched by stage1 now");
 		}
 	}
-
-	@Test
-	public void testGetRecurring() throws Exception {
-		RemotePipeline rp1 = new RemotePipeline("127.0.0.1", server.getPort(), "stage1");
-		if(rp1.getDocument(new LocalQuery(), true)==null) {
-			fail("getDocument returned null");
-		}
-		if(rp1.getDocument(new LocalQuery(), true)==null) {
-			fail("getDocument returned null");
-		}
-		if(rp1.getDocument(new LocalQuery(), true)!=null) {
-			fail("Got document, but was expecting null. Not enough time should have passed for the recurring getDocument to return a doc.");
-		}
-		
-		Thread.sleep(MongoDocumentIO.DEFAULT_RECURRING_INTERVAL+1000);
-		if(rp1.getDocument(new LocalQuery(), true)==null) {
-			fail("Didn't get a document, the timeout should have been over by now.");
-		}
-	}
 	
 	@Test
 	public void testMarkProcessed() throws Exception {
@@ -431,8 +416,9 @@ public class RemotePipelineTest {
 		if (!rp.markFailed(testDoc)) {
 			fail("markFailed returned false");
 		}
-
-		if(nm.getDatabaseConnector().getDocumentReader().getDocumentById(testDoc.getID())!=null) {
+		
+		MongoDocumentID mid = MongoDocumentID.getDocumentID(testDoc.getID().toJSON());
+		if(nm.getDatabaseConnector().getDocumentReader().getDocumentById(mid)!=null) {
 			fail("Document was found even though markFailed had been called");
 		}
 		
@@ -441,12 +427,12 @@ public class RemotePipelineTest {
 			fail("markFailed(Doc, Throwable) returned false");
 		}
 		
-
-		if(nm.getDatabaseConnector().getDocumentReader().getDocumentById(testDoc.getID())!=null) {
+		mid = MongoDocumentID.getDocumentID(testDoc.getID().toJSON());
+		if(nm.getDatabaseConnector().getDocumentReader().getDocumentById(mid)!=null) {
 			fail("Document was found even though markFailed(Doc, Throwable) had been called");
 		}
 		
-		DatabaseDocument<MongoType> dbdoc = nm.getDatabaseConnector().getDocumentReader().getDocumentById(testDoc.getID(), true);
+		DatabaseDocument<MongoType> dbdoc = nm.getDatabaseConnector().getDocumentReader().getDocumentById(mid, true);
 		
 		if(!dbdoc.hasErrors()) {
 			fail("dbdocument had no errors");
@@ -463,14 +449,14 @@ public class RemotePipelineTest {
 		String content = "xäöåx";
 
 		String fileName = "test.txt";
-		DocumentFile df = new DocumentFile(testDoc.getID(), fileName, IOUtils.toInputStream(content, "UTF-8"));
+		DocumentFile<Local> df = new DocumentFile<Local>(new LocalDocument(testDoc.toJson()).getID(), fileName, IOUtils.toInputStream(content, "UTF-8"));
 		df.setEncoding("UTF-8");
 		
 		if(!rp.saveFile(df)) {
 			fail("RemotePipeline.saveFile() returned false");
 		}
 		
-		DocumentFile df2 = nm.getDatabaseConnector().getDocumentReader().getDocumentFile(testDoc, fileName);
+		DocumentFile<?> df2 = nm.getDatabaseConnector().getDocumentReader().getDocumentFile(testDoc, fileName);
 		
 		if(df2==null) {
 			fail("File was not properly saved");

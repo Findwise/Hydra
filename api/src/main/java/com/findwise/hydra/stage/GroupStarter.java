@@ -8,9 +8,9 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.util.EntityUtils;
 
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.Logger;
-import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.Logger;
+import com.findwise.hydra.SerializationUtils;
 import com.findwise.tools.HttpConnection;
 
 /**

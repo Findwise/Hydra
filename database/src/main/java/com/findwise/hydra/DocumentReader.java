@@ -2,7 +2,7 @@ package com.findwise.hydra;
 
 import java.util.List;
 
-import com.findwise.hydra.common.DocumentFile;
+import com.findwise.hydra.DocumentFile;
 
 /**
  * The implementation of this interface should be side-effect free, allowing the
@@ -16,9 +16,9 @@ public interface DocumentReader<T extends DatabaseType> {
 
 	DatabaseDocument<T> getDocument(DatabaseQuery<T> q);
 
-	DatabaseDocument<T> getDocumentById(Object id);
+	DatabaseDocument<T> getDocumentById(DocumentID<T> id);
 
-	DatabaseDocument<T> getDocumentById(Object id, boolean includeInactive);
+	DatabaseDocument<T> getDocumentById(DocumentID<T> id, boolean includeInactive);
 	
 	/**
 	 * Returns a TailableIterator over all inactive documents, no longer being
@@ -32,7 +32,7 @@ public interface DocumentReader<T extends DatabaseType> {
 	List<DatabaseDocument<T>> getDocuments(DatabaseQuery<T> q, int limit, int skip);
 	long getNumberOfDocuments(DatabaseQuery<T> q);
 
-	DocumentFile getDocumentFile(DatabaseDocument<T> d, String fileName);
+	DocumentFile<T> getDocumentFile(DatabaseDocument<T> d, String fileName);
 	
 	List<String> getDocumentFileNames(DatabaseDocument<T> d);
 	
@@ -46,7 +46,7 @@ public interface DocumentReader<T extends DatabaseType> {
 	 */
 	long getInactiveDatabaseSize();
 	
-	Object toDocumentId(Object jsonPrimitive);
+	DocumentID<T> toDocumentId(Object jsonPrimitive);
 	
-	Object toDocumentIdFromJson(String json);
+	DocumentID<T> toDocumentIdFromJson(String json);
 }

@@ -1,26 +1,26 @@
-package com.findwise.hydra.common;
+package com.findwise.hydra;
 
 import java.io.InputStream;
 import java.util.Date;
 
-public class DocumentFile {
+public class DocumentFile<T> {
 	private InputStream stream;
 	private String fileName;
 	private Date uploadDate;
-	private Object documentId;
+	private DocumentID<T> documentId;
 	private String savedByStage;
 	private String encoding = "UTF-8";
 	private String mimetype;
 
-	public DocumentFile(Object documentId, String fileName, InputStream stream) {
+	public DocumentFile(DocumentID<T> documentId, String fileName, InputStream stream) {
 		this(documentId, fileName, stream, null, null);
 	}
 	
-	public DocumentFile(Object documentId, String fileName, InputStream stream, String savedByStage) {
+	public DocumentFile(DocumentID<T> documentId, String fileName, InputStream stream, String savedByStage) {
 		this(documentId, fileName, stream, savedByStage, null);
 	}
 	
-	public DocumentFile(Object documentId, String fileName, InputStream stream, String savedByStage, Date uploadDate) {
+	public DocumentFile(DocumentID<T> documentId, String fileName, InputStream stream, String savedByStage, Date uploadDate) {
 		this.documentId = documentId;
 		this.fileName = fileName;
 		this.stream = stream;
@@ -52,11 +52,11 @@ public class DocumentFile {
 		this.uploadDate = uploadDate;
 	}
 
-	public Object getDocumentId() {
+	public DocumentID<T> getDocumentId() {
 		return documentId;
 	}
 
-	public void setDocumentId(Object documentId) {
+	public void setDocumentId(DocumentID<T> documentId) {
 		this.documentId = documentId;
 	}
 
@@ -84,4 +84,28 @@ public class DocumentFile {
 		return encoding;
 	}
 	
+//	@Override
+//	public String toJson() {
+//		HashMap<String, Object> map = new HashMap<String, Object>();
+//		
+//		map.put("stream", stream);
+//		map.put("fileName", fileName);
+//		map.put("uploadDate", uploadDate);
+//		map.put("documentId", documentId.getID());
+//		map.put("savedByStage", savedByStage);
+//		map.put("encoding", encoding);
+//		map.put("mimetype", mimetype);
+//		
+//		return SerializationUtils.toJson(map);
+//	}
+
+//	@Override
+//	public void fromJson(String json) throws JsonException {
+//		Map<String, Object> map = SerializationUtils.fromJson(json);
+//		
+//		stream = (InputStream) map.get("stream");
+//		fileName = (String) map.get("fileName");
+//		uploadDate = (Date) map.get("uploadDate");
+//		documentId = new map.get("stream");
+//	}
 }

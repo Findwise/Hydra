@@ -13,9 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.DatabaseConnector;
+import com.findwise.hydra.DatabaseConnector.ConversionException;
 import com.findwise.hydra.DatabaseType;
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.net.RESTTools.Method;
@@ -47,12 +48,15 @@ public class ReleaseHandler<T extends DatabaseType> implements ResponsibleHandle
 		}
 
 		try {
-			boolean x = release(new LocalDocument(requestContent), stage);
+			boolean x = release(dbc.convert(new LocalDocument(requestContent)), stage);
 			if (!x) {
 				HttpResponseWriter.printNoDocument(response);
 			}
 		} catch (JsonException e) {
 			HttpResponseWriter.printJsonException(response, e);
+			return;
+		} catch (ConversionException e) {
+			HttpResponseWriter.printUnhandledException(response, e);
 			return;
 		}
 
@@ -60,7 +64,7 @@ public class ReleaseHandler<T extends DatabaseType> implements ResponsibleHandle
 
 	}
 
-	private boolean release(Document md, String stage) {
+	private boolean release(Document<T> md, String stage) {
 		return dbc.getDocumentWriter().markTouched(md.getID(), stage);
 	}
 

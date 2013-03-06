@@ -17,8 +17,8 @@ import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseConnector.ConversionException;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseType;
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.net.RESTTools.Method;
@@ -107,7 +107,7 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 		}
 	}
 	
-	private boolean release(Document md, String stage) {
+	private boolean release(Document<T> md, String stage) {
 		return dbc.getDocumentWriter().markTouched(md.getID(), stage);
 	}
 	

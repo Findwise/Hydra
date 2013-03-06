@@ -1,7 +1,6 @@
 package com.findwise.hydra.stage.webstages;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.jsoup.nodes.Document;

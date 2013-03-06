@@ -15,13 +15,14 @@ import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseQuery;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.DocumentReader;
 import com.findwise.hydra.DocumentWriter;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.SerializationUtils;
 import com.findwise.hydra.StatusUpdater;
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.DocumentFile;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.SerializationUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.CommandResult;
@@ -115,18 +116,18 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	 * @see com.findwise.hydra.DocumentReader#getDocumentFile(com.findwise.hydra.DatabaseDocument)
 	 */
 	@Override
-	public DocumentFile getDocumentFile(DatabaseDocument<MongoType> d, String filename) {
+	public DocumentFile<MongoType> getDocumentFile(DatabaseDocument<MongoType> d, String filename) {
 		return getDocumentFile(d.getID(), filename);
 	}
 	
-	private DocumentFile getDocumentFile(Object id, String filename) {
-		DBObject query = QueryBuilder.start(DOCUMENT_KEY).is(id).and(FILENAME_KEY).is(filename).get();
+	private DocumentFile<MongoType> getDocumentFile(DocumentID<MongoType> id, String filename) {
+		DBObject query = QueryBuilder.start(DOCUMENT_KEY).is(id.getID()).and(FILENAME_KEY).is(filename).get();
 		GridFSDBFile file = documentfs.findOne(query);
 		if(file==null) {
 			return null;
 		}
 		
-		DocumentFile df =  new DocumentFile(id, file.getFilename(), file.getInputStream(), (String)file.get(STAGE_KEY), file.getUploadDate());
+		DocumentFile<MongoType> df =  new DocumentFile<MongoType>(id, file.getFilename(), file.getInputStream(), (String)file.get(STAGE_KEY), file.getUploadDate());
 
 		if(file.containsField(MIMETYPE_KEY)) {
 			df.setMimetype((String) file.get(MIMETYPE_KEY));
@@ -142,7 +143,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	@Override
 	public List<String> getDocumentFileNames(DatabaseDocument<MongoType> d) {
 		MongoDocument md = (MongoDocument)d;
-		DBObject query = QueryBuilder.start(DOCUMENT_KEY).is(md.getID()).get();
+		DBObject query = QueryBuilder.start(DOCUMENT_KEY).is(md.getID().getID()).get();
 		
 		ArrayList<String> list = new ArrayList<String>();
 		
@@ -172,12 +173,12 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	 * @see com.findwise.hydra.DocumentReader#getDocumentById(java.lang.Object)
 	 */
 	@Override
-	public MongoDocument getDocumentById(Object id) {
+	public MongoDocument getDocumentById(DocumentID<MongoType> id) {
 		return getDocumentById(id, false);
 	}
 
 	@Override
-	public MongoDocument getDocumentById(Object id, boolean includeInactive) {
+	public MongoDocument getDocumentById(DocumentID<MongoType> id, boolean includeInactive) {
 		MongoQuery mq = new MongoQuery();
 		mq.requireID(id);
 		MongoDocument doc = (MongoDocument) documents.findOne(mq.toDBObject());
@@ -222,7 +223,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	 */
 	@Override
 	public void delete(DatabaseDocument<MongoType> d) {
-		BasicDBObject dbo = new BasicDBObject(MongoDocument.MONGO_ID_KEY, d.getID());
+		BasicDBObject dbo = new BasicDBObject(MongoDocument.MONGO_ID_KEY, d.getID().getID());
 		documents.remove(dbo, concern);
 	}
 	
@@ -314,12 +315,16 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	} 
 	
 	@Override
-	public void write(DocumentFile df) throws IOException {
-		QueryBuilder qb = QueryBuilder.start().put(DOCUMENT_KEY).is(df.getDocumentId()).and(FILENAME_KEY).is(df.getFileName());
+	public void write(DocumentFile<MongoType> df) throws IOException {
+		QueryBuilder qb = QueryBuilder.start()
+				.put(DOCUMENT_KEY)
+				.is(df.getDocumentId().getID())
+				.and(FILENAME_KEY)
+				.is(df.getFileName());
 		documentfs.remove(qb.get());
 		
 		GridFSInputFile input = documentfs.createFile(df.getStream(), df.getFileName());
-		input.put(DOCUMENT_KEY, df.getDocumentId());
+		input.put(DOCUMENT_KEY, df.getDocumentId().getID());
 		input.put(ENCODING_KEY, df.getEncoding());
 		input.put(MIMETYPE_KEY, df.getMimetype());
 		
@@ -349,6 +354,10 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		MongoDocument md = (MongoDocument) d;
 		
 		MongoQuery mdq = new MongoQuery();
+		if(d.getID() == null) {
+			logger.error("Unable to update document without an ID: "+d);
+			return false;
+		}
 		mdq.requireID(md.getID());
 		
 		BasicDBObjectBuilder bob = new BasicDBObjectBuilder();
@@ -395,7 +404,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 
 
 	@Override
-	public boolean markTouched(Object id, String tag) {
+	public boolean markTouched(DocumentID<MongoType> id, String tag) {
 		MongoQuery mq = new MongoQuery();
 		mq.requireID(id);
 		DBObject update = new BasicDBObject(MongoDocument.METADATA_KEY+"."+DatabaseDocument.TOUCHED_METADATA_TAG+"."+tag, new Date());
@@ -429,6 +438,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	private boolean markDone(DatabaseDocument<MongoType> d, String stage, String stamp) {
 		MongoQuery mq = new MongoQuery();
 		mq.requireID(d.getID());
+		
 		DBObject doc = documents.findAndRemove(mq.toDBObject());
 		
 		if(doc==null) {
@@ -486,32 +496,6 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		
 		return res;
 	}
-
-
-	@Override
-	public DatabaseDocument<MongoType> getAndTagRecurring(DatabaseQuery<MongoType> query, String tag) {
-		return getAndTagRecurring(query, tag, DEFAULT_RECURRING_INTERVAL);
-	}
-	
-	@Override
-	public MongoDocument getAndTagRecurring(DatabaseQuery<MongoType> query, String tag, int intervalMillis) {
-		MongoDocument md = getAndTag(query, tag);
-		if(md!=null) {
-			return md;
-		}
-		
-		MongoQuery mq = (MongoQuery)query;
-		BasicDBObjectBuilder dbob = BasicDBObjectBuilder.start(mq.toDBObject().toMap());
-		dbob.add(MongoDocument.METADATA_KEY+"."+Document.PENDING_METADATA_FLAG, new BasicDBObject("$exists", false));
-		
-		Date earlierThan = new Date(new Date().getTime()-intervalMillis);
-		dbob.add(MongoDocument.METADATA_KEY+"."+DatabaseDocument.FETCHED_METADATA_TAG+"."+tag, new BasicDBObject("$lt", earlierThan));
-		
-		DBObject update = new BasicDBObject(MongoDocument.METADATA_KEY+"."+DatabaseDocument.FETCHED_METADATA_TAG+"."+tag, new Date());
-		
-		return findAndModify(dbob.get(), getUpdateObject(update));
-	}
-
 	
 	private MongoDocument findAndModify(DBObject query, DBObject modification) {
 		DBObject c = (DBObject)documents.findAndModify(query, modification);
@@ -549,7 +533,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	@Override
 	public boolean deleteDocumentFile(DatabaseDocument<MongoType> d, String fileName) {
 		MongoDocument md = (MongoDocument) d;
-		DBObject query = QueryBuilder.start(DOCUMENT_KEY).is(md.getID()).and(FILENAME_KEY).is(fileName).get();
+		DBObject query = QueryBuilder.start(DOCUMENT_KEY).is(md.getID().getID()).and(FILENAME_KEY).is(fileName).get();
 		if(documentfs.getFileList(query).size()!=1) {
 			return false;
 		}
@@ -567,18 +551,26 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Object toDocumentId(Object jsonPrimitive) {
+	public DocumentID<MongoType> toDocumentId(Object jsonPrimitive) {
 		if (jsonPrimitive instanceof Map) {
-			return new ObjectId((Integer) ((Map) jsonPrimitive).get("_time"),
+			return new MongoDocumentID(new ObjectId((Integer) ((Map) jsonPrimitive).get("_time"),
 					(Integer) ((Map) jsonPrimitive).get("_machine"),
-					(Integer) ((Map) jsonPrimitive).get("_inc"));
-		} else {
-			logger.error("Serialized ID was not deserialized to map. The type was a "+jsonPrimitive.getClass()+". Was it created by a Hydra database of this type?");
-			return null;
+					(Integer) ((Map) jsonPrimitive).get("_inc")));
+		} else if(jsonPrimitive instanceof String) {
+			try {
+				Object o = SerializationUtils.toObject((String) jsonPrimitive);
+				if (o instanceof Map) {
+					return toDocumentId(o);
+				}
+			} catch (JsonException e) {
+				//Do nothing
+			}
 		}
+		logger.error("Serialized ID was not deserialized to map. The type was a "+jsonPrimitive.getClass()+". Was it created by a Hydra database of this type?");
+		return null;
 	}
 	
-	public Object toDocumentIdFromJson(String json) {
+	public DocumentID<MongoType> toDocumentIdFromJson(String json) {
 		try {
 			return toDocumentId(SerializationUtils.toObject((String)json));
 		} catch (JsonException e) {

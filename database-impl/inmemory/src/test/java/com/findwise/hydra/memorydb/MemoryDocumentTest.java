@@ -6,8 +6,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.Document.Action;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.Document.Action;
 
 @RunWith(RepeatRunner.class)
 public class MemoryDocumentTest {

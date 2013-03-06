@@ -12,11 +12,11 @@ import org.slf4j.LoggerFactory;
 import com.findwise.hydra.DatabaseConfiguration;
 import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseDocument;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.JsonException;
 import com.findwise.hydra.PipelineReader;
+import com.findwise.hydra.Query;
 import com.findwise.hydra.StatusUpdater;
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.Query;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.mongodb.DB;
@@ -227,7 +227,7 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	}
 
 	@Override
-	public DatabaseDocument<MongoType> convert(Document document) throws ConversionException {
+	public DatabaseDocument<MongoType> convert(Document<?> document) throws ConversionException {
 		try {
 			if(contains(document, "\u0000")) {
 				throw new ConversionException("A document cannot contain the NUL character. See https://jira.mongodb.org/browse/SERVER-7691");
@@ -238,7 +238,7 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 		}
 	}
 	
-	private boolean contains(Document haystack, String needle) {
+	private boolean contains(Document<?> haystack, String needle) {
 		for(String field : haystack.getContentFields()) {
 			if(field.contains(needle)) {
 				return true;

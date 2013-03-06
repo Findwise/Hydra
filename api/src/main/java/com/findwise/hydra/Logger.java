@@ -1,4 +1,4 @@
-package com.findwise.hydra.common;
+package com.findwise.hydra;
 
 
 import java.io.PrintWriter;

@@ -8,7 +8,8 @@ import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.Parser;
 import org.xml.sax.SAXException;
 
-import com.findwise.hydra.common.DocumentFile;
+import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.local.Local;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.*;
 import com.findwise.hydra.stage.tika.utils.TikaUtils;
@@ -31,7 +32,7 @@ public class TikaStage extends AbstractProcessStage {
 		try {
 			List<String> files = getRemotePipeline().getFileNames(doc.getID());
 			for(String fileName : files) {
-				DocumentFile df = getRemotePipeline().getFile(fileName, doc.getID());
+				DocumentFile<Local> df = getRemotePipeline().getFile(fileName, doc.getID());
 				TikaUtils.enrichDocumentWithFileContents(doc, fileName.replace('.', '_')+"_", df.getStream(), parser, addMetaData, addLanguage);
 			}
 		} catch (IOException e) {

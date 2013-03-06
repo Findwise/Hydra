@@ -5,8 +5,8 @@ import java.util.Map;
 
 import org.apache.http.ParseException;
 
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.Logger;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
 

@@ -9,6 +9,7 @@ import org.junit.Test;
 import com.findwise.hydra.ConfigurationFactory;
 import com.findwise.hydra.CoreConfiguration;
 import com.findwise.hydra.mongodb.MongoConnector;
+import com.findwise.hydra.mongodb.MongoType;
 
 public class RESTServerTest {
 
@@ -17,13 +18,13 @@ public class RESTServerTest {
 		CoreConfiguration conf = ConfigurationFactory.getConfiguration("jUnit-RESTServerTest");
 		MongoConnector dbc = new MongoConnector(conf);
 		int port = conf.getRestPort();
-		RESTServer server1 = new RESTServer(conf, new HttpRESTHandler(dbc));
+		RESTServer server1 = new RESTServer(conf, new HttpRESTHandler<MongoType>(dbc));
 		
 		if(!server1.blockingStart()) {
-			server1 = RESTServer.getNewStartedRESTServer(port, new HttpRESTHandler(dbc));
+			server1 = RESTServer.getNewStartedRESTServer(port, new HttpRESTHandler<MongoType>(dbc));
 		}
 		System.out.println("Started server 1 on port "+port);
-		RESTServer server2 = new RESTServer(conf, new HttpRESTHandler(dbc));
+		RESTServer server2 = new RESTServer(conf, new HttpRESTHandler<MongoType>(dbc));
 		if(server2.blockingStart()) {
 			System.out.println("We are failing on port "+server2.getPort());
 			Thread.sleep(1000);
@@ -38,9 +39,9 @@ public class RESTServerTest {
 			
 			fail("blockingStart() returned true when port should already be taken");
 		}
-		server2 = RESTServer.getNewStartedRESTServer(port, new HttpRESTHandler(new MongoConnector(conf)));
+		server2 = RESTServer.getNewStartedRESTServer(port, new HttpRESTHandler<MongoType>(new MongoConnector(conf)));
 		System.out.println("Restarted on port "+server2.getPort());
-		server2 = RESTServer.getNewStartedRESTServer(port, new HttpRESTHandler(new MongoConnector(conf)));
+		server2 = RESTServer.getNewStartedRESTServer(port, new HttpRESTHandler<MongoType>(new MongoConnector(conf)));
 		System.out.println("Restarted on port "+server2.getPort());
 		server1.shutdown();
 		server2.shutdown();
@@ -49,7 +50,7 @@ public class RESTServerTest {
 	@Test
 	public void testShutdown() throws IOException, InterruptedException {
 		CoreConfiguration conf = ConfigurationFactory.getConfiguration("jUnit-RESTServerTest");
-		RESTServer server = RESTServer.getNewStartedRESTServer(conf.getRestPort(), new HttpRESTHandler(new MongoConnector(conf)));
+		RESTServer server = RESTServer.getNewStartedRESTServer(conf.getRestPort(), new HttpRESTHandler<MongoType>(new MongoConnector(conf)));
 		server.shutdown();
 		Thread.sleep(1000);
 		if(server.isAlive()) {

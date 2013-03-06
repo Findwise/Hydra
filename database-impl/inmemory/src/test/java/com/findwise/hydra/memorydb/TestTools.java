@@ -2,7 +2,7 @@ package com.findwise.hydra.memorydb;
 
 import java.util.Random;
 
-import com.findwise.hydra.common.Document.Action;
+import com.findwise.hydra.Document.Action;
 
 public class TestTools {
 	private static Random r = new Random(System.currentTimeMillis());

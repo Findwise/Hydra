@@ -16,7 +16,7 @@ import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseConnector.ConversionException;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseType;
-import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
 

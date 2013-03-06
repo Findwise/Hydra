@@ -15,11 +15,12 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.util.EntityUtils;
 
-import com.findwise.hydra.common.DocumentFile;
-import com.findwise.hydra.common.InternalLogger;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.Logger;
-import com.findwise.hydra.common.SerializationUtils;
+import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.DocumentID;
+import com.findwise.hydra.InternalLogger;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.Logger;
+import com.findwise.hydra.SerializationUtils;
 import com.findwise.tools.HttpConnection;
 
 public class RemotePipeline {
@@ -34,7 +35,6 @@ public class RemotePipeline {
 	public static final String FILE_URL = "documentFile";
 	
 	public static final String STAGE_PARAM = "stage";
-	public static final String RECURRING_PARAM = "recurring";
 	public static final String NORELEASE_PARAM = "norelease";
 	public static final String PARTIAL_PARAM = "partial";
 	public static final String DOCID_PARAM = "docid";
@@ -50,7 +50,6 @@ public class RemotePipeline {
 	private boolean keepLock;
 	
 	private String getUrl;
-	private String getRecurringUrl;
 	private String writeUrl;
 	private String releaseUrl;
 	private String processedUrl;
@@ -86,8 +85,6 @@ public class RemotePipeline {
 		propertyUrl = "/"+GET_PROPERTIES_URL+"?"+STAGE_PARAM+"="+stageName;
 		fileUrl = "/"+FILE_URL+"?"+STAGE_PARAM+"="+stageName;
 		
-		getRecurringUrl = getUrl+"&"+RECURRING_PARAM+"=1";
-		
 		keepLock = false;
 		
 		core = new HttpConnection(hostName, port);
@@ -97,21 +94,12 @@ public class RemotePipeline {
 	 * Non-recurring, use this in all known cases except for in an output node.
 	 * 
 	 * The fetched document will be tagged with the name of the stage which is
-	 * used to execute getDocumebt.
+	 * used to execute getDocument.
 	 */
 	public LocalDocument getDocument(LocalQuery query) throws IOException {
-		return getDocument(query, false);
-	}
-
-	public LocalDocument getDocument(LocalQuery query, boolean recurring) throws IOException {
 		HttpResponse response;
 		long start = System.currentTimeMillis();
-		if(recurring) {
-			response = core.post(getRecurringUrl, query.toJson());
-		}
-		else {
 			response = core.post(getUrl, query.toJson());
-		}
 
 		long startSerialize = System.currentTimeMillis();
 		long startJson = 0L;
@@ -239,7 +227,7 @@ public class RemotePipeline {
 			}
 			if(isPerformanceLogging()) {
 				long end = System.currentTimeMillis();
-				Object docId = d != null ? d.getID() : null;
+				DocumentID<Local> docId = d.getID();
 				Logger.info(String.format("type=performance event=update stage_name=%s doc_id=\"%s\" start=%d serialize=%d post=%d end=%d total=%d", stageName, docId, start, startPost - start, end - startPost, end, end - start));
 			}
 			return true;
@@ -345,15 +333,15 @@ public class RemotePipeline {
 		}
 	}
 	
-	private String getFileUrl(DocumentFile df) throws UnsupportedEncodingException {
+	private String getFileUrl(DocumentFile<Local> df) throws UnsupportedEncodingException {
 		return getFileUrl(df.getFileName(), df.getDocumentId());
 	}
 	
-	private String getFileUrl(String fileName, Object docid) throws UnsupportedEncodingException {
-		return fileUrl+"&"+RemotePipeline.FILENAME_PARAM+"="+fileName+"&"+RemotePipeline.DOCID_PARAM+"="+URLEncoder.encode(SerializationUtils.toJson(docid), "UTF-8");
+	private String getFileUrl(String fileName, DocumentID<Local> docid) throws UnsupportedEncodingException {
+		return fileUrl+"&"+RemotePipeline.FILENAME_PARAM+"="+fileName+"&"+RemotePipeline.DOCID_PARAM+"="+URLEncoder.encode(docid.toJSON(), "UTF-8");
 	}
 	
-	public DocumentFile getFile(String fileName, Object docid) throws IOException {
+	public DocumentFile<Local> getFile(String fileName, DocumentID<Local> docid) throws IOException {
 		HttpResponse response = core.get(getFileUrl(fileName, docid));
 		
 		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
@@ -380,7 +368,7 @@ public class RemotePipeline {
 				is = new ByteArrayInputStream(Base64.decodeBase64(((String)map.get("stream")).getBytes(encoding)));
 			}
 
-			DocumentFile df = new DocumentFile(docid, fileName, is, savedByStage, d);
+			DocumentFile<Local> df = new DocumentFile<Local>(docid, fileName, is, savedByStage, d);
 			df.setEncoding(encoding);
 			df.setMimetype(mimetype);
 			
@@ -392,7 +380,7 @@ public class RemotePipeline {
 		}
 	}
 	
-	public boolean saveFile(DocumentFile df) throws IOException {
+	public boolean saveFile(DocumentFile<Local> df) throws IOException {
 		HttpResponse response = core.post(getFileUrl(df),  SerializationUtils.toJson(df));
 		int code = response.getStatusLine().getStatusCode();
 		if (code == HttpStatus.SC_OK || code == HttpStatus.SC_NO_CONTENT) {
@@ -404,7 +392,7 @@ public class RemotePipeline {
 		}
 	}
 	
-	public boolean deleteFile(String fileName, Object docid) throws IOException {
+	public boolean deleteFile(String fileName, DocumentID<Local> docid) throws IOException {
 		HttpResponse response = core.delete(getFileUrl(fileName, docid));
 
 		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
@@ -417,8 +405,8 @@ public class RemotePipeline {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<String> getFileNames(Object docid) throws IOException {
-		HttpResponse response = core.get(fileUrl+"&"+RemotePipeline.DOCID_PARAM+"="+URLEncoder.encode(SerializationUtils.toJson(docid), "UTF-8"));
+	public List<String> getFileNames(DocumentID<?> docid) throws IOException {
+		HttpResponse response = core.get(fileUrl+"&"+RemotePipeline.DOCID_PARAM+"="+URLEncoder.encode(docid.toJSON(), "UTF-8"));
 
 		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 			try {
