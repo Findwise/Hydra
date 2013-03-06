@@ -11,9 +11,8 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.common.SolrInputDocument;
 
-import com.findwise.hydra.common.Document;
-import com.findwise.hydra.common.Document.Action;
-import com.findwise.hydra.common.Logger;
+import com.findwise.hydra.Document.Action;
+import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractOutputStage;
 import com.findwise.hydra.stage.Parameter;
@@ -92,7 +91,7 @@ public class SolrOutputStage extends AbstractOutputStage {
 	
 
 	protected SolrInputDocument createSolrInputDocumentWithFieldConfig(
-			Document doc) {
+			LocalDocument doc) {
 		SolrInputDocument docToAdd = new SolrInputDocument();
 
 		if (sendAll) {
@@ -108,7 +107,7 @@ public class SolrOutputStage extends AbstractOutputStage {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void addField(Document doc, SolrInputDocument inputDoc, String field) {
+	private void addField(LocalDocument doc, SolrInputDocument inputDoc, String field) {
 		if (doc.hasContentField(field)) {
 			Object toField = fieldMappings.get(field);
 			if(toField instanceof String) {
