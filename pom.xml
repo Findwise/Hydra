@@ -25,6 +25,7 @@
           <configuration>
             <tasks>
               <copy file="core/target/hydra-core-jar-with-dependencies.jar" tofile="bin/hydra-core.jar"/>
+              <copy file="core/target/resource.properties" tofile="bin/resource.properties"/>
             </tasks>
           </configuration>
           <goals>
