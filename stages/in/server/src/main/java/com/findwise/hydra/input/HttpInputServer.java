@@ -27,13 +27,14 @@ import org.apache.http.protocol.ResponseContent;
 import org.apache.http.protocol.ResponseDate;
 import org.apache.http.protocol.ResponseServer;
 
-import com.findwise.hydra.common.Logger;
+import com.findwise.hydra.Logger;
 
 /**
  * Sets up a HTTP Input server on the specified port.
  * 
  * @author joel.westberg
  */
+@Deprecated
 public class HttpInputServer {
 
 	private static final int SOCKET_TIMEOUT_MS = 5000;

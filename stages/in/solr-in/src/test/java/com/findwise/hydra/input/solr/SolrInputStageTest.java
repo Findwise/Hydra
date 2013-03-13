@@ -11,8 +11,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 
-import com.findwise.hydra.common.Document.Action;
-import com.findwise.hydra.common.JsonException;
+import com.findwise.hydra.Document.Action;
+import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
 
