@@ -2,9 +2,11 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.findwise.hydra.stage;
+package com.findwise.hydra.stage.webstages;
 
+import com.findwise.hydra.stage.webstages.RenderHTMLStage;
 import com.findwise.hydra.local.LocalDocument;
+import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.LinkedList;

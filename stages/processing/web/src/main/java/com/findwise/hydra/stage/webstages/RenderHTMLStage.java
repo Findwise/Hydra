@@ -1,7 +1,12 @@
-package com.findwise.hydra.stage;
+package com.findwise.hydra.stage.webstages;
 
 import net.htmlparser.jericho.*;
 import com.findwise.hydra.local.LocalDocument;
+import com.findwise.hydra.stage.AbstractProcessStage;
+import com.findwise.hydra.stage.Parameter;
+import com.findwise.hydra.stage.ProcessException;
+import com.findwise.hydra.stage.RequiredArgumentMissingException;
+import com.findwise.hydra.stage.Stage;
 import java.util.List;
 
 /**
