@@ -24,9 +24,9 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import com.findwise.hydra.common.Document.Action;
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.Logger;
+import com.findwise.hydra.Document.Action;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.Logger;
 import com.findwise.hydra.input.HttpInputServer;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractInputStage;
@@ -34,6 +34,7 @@ import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
 
+@Deprecated
 @Stage
 public class SolrInputStage extends AbstractInputStage implements HttpRequestHandler {
 
