@@ -72,6 +72,5 @@ public class SimpleFetchingTikaStageTest {
 		} catch(ProcessException e) {
 			Assert.assertEquals(FileNotFoundException.class, e.getCause().getClass());
 		}
-	} 
-
+	}
 }
