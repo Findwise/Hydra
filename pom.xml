@@ -12,6 +12,7 @@
 	<module>database-impl/inmemory</module>
 	<module>core</module>
 	<module>examples</module>
+    <module>stages</module>
   </modules>
 
   <build>
