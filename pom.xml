@@ -11,6 +11,7 @@
 	<module>database-impl/mongodb</module>
 	<module>database-impl/inmemory</module>
 	<module>core</module>
+	<module>examples</module>
   </modules>
 
   <build>
