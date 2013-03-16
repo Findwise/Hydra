@@ -8,8 +8,8 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.http.util.EntityUtils;
 
-import com.findwise.hydra.common.JsonException;
-import com.findwise.hydra.common.Logger;
+import com.findwise.hydra.JsonException;
+import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractInputStage;
 import com.findwise.hydra.stage.Parameter;
@@ -27,6 +27,7 @@ import com.findwise.hydra.stage.Stage;
  * @author simon.stenstrom
  * 
  */
+@Deprecated
 @Stage
 public class JsonInputStage extends AbstractInputStage implements
 		HttpRequestHandler {
