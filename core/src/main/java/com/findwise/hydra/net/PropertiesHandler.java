@@ -13,19 +13,19 @@ import org.apache.http.protocol.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.Pipeline;
+import com.findwise.hydra.PipelineReader;
 import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.stage.GroupStarter;
 
 public class PropertiesHandler<T extends DatabaseType> implements ResponsibleHandler {
 	Logger logger = LoggerFactory.getLogger(PropertiesHandler.class);
 	
-	private DatabaseConnector<T> dbc;
+	private PipelineReader reader;
 	
-	public PropertiesHandler(DatabaseConnector<T> dbc) {
-		this.dbc = dbc;
+	public PropertiesHandler(PipelineReader reader) {
+		this.reader = reader;
 	}
 	
 	@Override
@@ -45,9 +45,9 @@ public class PropertiesHandler<T extends DatabaseType> implements ResponsibleHan
 		logger.trace("handleGetStages()");
 		String group = RESTTools.getParam(request, GroupStarter.GROUP_PARAM);
 		
-		Pipeline p = dbc.getPipelineReader().getPipeline();
+		Pipeline p = reader.getPipeline();
 		if(!p.hasGroup(group)) {
-			p = dbc.getPipelineReader().getDebugPipeline();
+			p = reader.getDebugPipeline();
 		}
 		if(p.hasGroup(group)) {
 			HttpResponseWriter.printJson(response, p.getGroup(group).getStageNames());
@@ -72,11 +72,11 @@ public class PropertiesHandler<T extends DatabaseType> implements ResponsibleHan
         
         Map<String, Object> map = new HashMap<String, Object>();
         
-        if(dbc.getPipelineReader().getPipeline().hasStage(stage)) {
-        	map = dbc.getPipelineReader().getPipeline().getStage(stage).getProperties();
+        if(reader.getPipeline().hasStage(stage)) {
+        	map = reader.getPipeline().getStage(stage).getProperties();
         }
-        else if(dbc.getPipelineReader().getDebugPipeline().hasStage(stage)){
-        	map = dbc.getPipelineReader().getDebugPipeline().getStage(stage).getProperties();
+        else if(reader.getDebugPipeline().hasStage(stage)){
+        	map = reader.getDebugPipeline().getStage(stage).getProperties();
         } 
         
         HttpResponseWriter.printJson(response, map);

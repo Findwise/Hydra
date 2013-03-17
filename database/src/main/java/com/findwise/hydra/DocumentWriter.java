@@ -17,27 +17,27 @@ public interface DocumentWriter<T extends DatabaseType> {
 
 	/**
 	 * Gets a document and timestamps the specified field name. Adds the
-	 * requirement to the query that the tag field doesn't already exist, should
+	 * requirement to the query that the tag fields doesn't already exist, should
 	 * such a requirement not already be in place.
 	 * 
 	 * Also requires the document not already be marked as processed.
 	 * 
 	 * This method enables the caller to obtain a one-time lock on a document
-	 * for any given tag.
+	 * for any given tags.
 	 * 
 	 * @param query
 	 * @param tag
 	 */
-	DatabaseDocument<T> getAndTag(DatabaseQuery<T> query, String tag);
+	DatabaseDocument<T> getAndTag(DatabaseQuery<T> query, String ... tag);
 
 	/**
 	 * Returns a collection containing tagged documents. 
 	 * 
 	 * It is left to the implementation whether this is equivalent to performing
-	 * n requests to getAndTag(DatabaseQuery<T> query, String tag), or something
+	 * n requests to getAndTag(DatabaseQuery<T> query, String ... tag), or something
 	 * more clever.
 	 */
-	Collection<DatabaseDocument<T>> getAndTag(DatabaseQuery<T> query, String tag, int n);
+	Collection<DatabaseDocument<T>> getAndTag(DatabaseQuery<T> query, int n, String ... tag);
 	
 	/**
 	 * Calls getAndTagRecurring(DatabaseQuery query, String tag, int
