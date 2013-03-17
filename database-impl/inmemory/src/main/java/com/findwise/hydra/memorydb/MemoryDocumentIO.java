@@ -188,23 +188,32 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 	}
 
 	@Override
-	public MemoryDocument getAndTag(DatabaseQuery<MemoryType> query, String tag) {
-		((MemoryQuery) query).requireNotFetchedByStage(tag);
+	public MemoryDocument getAndTag(DatabaseQuery<MemoryType> query, String ... tag) {
+		for(String t : tag) {
+			((MemoryQuery) query).requireNotFetchedByStage(t);
+		}
 		MemoryDocument d = getDocument(query);
 		if (d != null) {
-			d.tag(Document.FETCHED_METADATA_TAG, tag);
+			for(String t : tag) {
+				d.tag(Document.FETCHED_METADATA_TAG, t);
+			}
 		}
 		return d;
 	}
 
 	@Override
 	public Collection<DatabaseDocument<MemoryType>> getAndTag(
-			DatabaseQuery<MemoryType> query, String tag, int n) {
-		((MemoryQuery) query).requireNotFetchedByStage(tag);
+			DatabaseQuery<MemoryType> query, int n, String ... tag) {
+		for(String t : tag) {
+			((MemoryQuery) query).requireNotFetchedByStage(t);
+		}
 		List<DatabaseDocument<MemoryType>> docs = getDocuments(query, n);
 		for (int i = 0; i < docs.size() && i < n; i++) {
 			DatabaseDocument<MemoryType> d = docs.get(i);
-			((MemoryDocument) d).tag(Document.FETCHED_METADATA_TAG, tag);
+
+			for(String t : tag) {
+				((MemoryDocument) d).tag(Document.FETCHED_METADATA_TAG, t);
+			}
 		}
 		return docs;
 	}

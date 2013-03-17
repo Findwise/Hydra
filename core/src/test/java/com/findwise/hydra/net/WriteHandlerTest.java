@@ -90,7 +90,7 @@ public class WriteHandlerTest {
 			fail("Did not get false response on save");
 		}
 		
-		verify(writer, times(2)).update(any(DatabaseDocument.class));
+		verify(writer).update(any(DatabaseDocument.class));
 	}
 
 }

@@ -31,12 +31,25 @@ public final class Main {
 		}
 		
 		DatabaseConnector<MongoType> backing = new MongoConnector(conf);
-//		DatabaseConnector<MemoryType> cache = new MemoryConnector();
+		try {
+			backing.connect();
+		} catch (IOException e) {
+			logger.error("Unable to start", e);
+			return;
+		}
 		
-		NodeMaster<MongoType> nm = new NodeMaster<MongoType>(conf, backing, new Pipeline());
-		//NodeMaster<MemoryType> nm = new NodeMaster<MemoryType>(conf, new CachingDatabaseConnector<MongoType, MemoryType>(backing, cache), new Pipeline());
+		Cache<MongoType> cache;
+		if(conf.isCaching()) {
+			cache = new MemoryCache<MongoType>();
+		} else {
+			cache = new NoopCache<MongoType>();
+		}
+		
+		CachingDocumentNIO<MongoType> caching = new CachingDocumentNIO<MongoType>(backing, cache, conf.isCaching());
+		
+		NodeMaster<MongoType> nm = new NodeMaster<MongoType>(conf, caching, new Pipeline());
 
-		RESTServer server = new RESTServer(conf, new HttpRESTHandler<MongoType>(nm.getDatabaseConnector(), conf.isPerformanceLogging()));
+		RESTServer server = new RESTServer(conf, new HttpRESTHandler<MongoType>(nm.getDocumentIO(), backing.getPipelineReader(), null, conf.isPerformanceLogging()));
 
 		if (!server.blockingStart()) {
 			if (server.hasError()) {

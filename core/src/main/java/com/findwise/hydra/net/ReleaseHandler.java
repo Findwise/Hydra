@@ -12,7 +12,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.findwise.hydra.DatabaseConnector;
+import com.findwise.hydra.CachingDocumentNIO;
 import com.findwise.hydra.DatabaseConnector.ConversionException;
 import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.Document;
@@ -23,13 +23,13 @@ import com.findwise.hydra.net.RESTTools.Method;
 
 public class ReleaseHandler<T extends DatabaseType> implements ResponsibleHandler {
 
-	private DatabaseConnector<T> dbc;
+	private CachingDocumentNIO<T> io;
 
 	private static Logger logger = LoggerFactory
 			.getLogger(ReleaseHandler.class);
 
-	public ReleaseHandler(DatabaseConnector<T> dbc) {
-		this.dbc = dbc;
+	public ReleaseHandler(CachingDocumentNIO<T> dbc) {
+		this.io = dbc;
 	}
 
 	@Override
@@ -48,7 +48,7 @@ public class ReleaseHandler<T extends DatabaseType> implements ResponsibleHandle
 		}
 
 		try {
-			boolean x = release(dbc.convert(new LocalDocument(requestContent)), stage);
+			boolean x = release(io.convert(new LocalDocument(requestContent)), stage);
 			if (!x) {
 				HttpResponseWriter.printNoDocument(response);
 			}
@@ -65,7 +65,7 @@ public class ReleaseHandler<T extends DatabaseType> implements ResponsibleHandle
 	}
 
 	private boolean release(Document<T> md, String stage) {
-		return dbc.getDocumentWriter().markTouched(md.getID(), stage);
+		return io.markTouched(md.getID(), stage);
 	}
 
 	@Override

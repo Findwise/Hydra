@@ -105,4 +105,12 @@ public class MapConfiguration implements CoreConfiguration {
 	public boolean isPerformanceLogging() {
 		return Boolean.parseBoolean(getParameter(PERFORMANCE_LOGGING, "false"));
 	}
+	public void setCaching(boolean cache) {
+		map.put(USE_CACHE, ""+cache);
+	}
+
+	@Override
+	public boolean isCaching() {
+		return Boolean.parseBoolean(getParameter(USE_CACHE, "false"));
+	}
 }

@@ -32,9 +32,6 @@ public class PipelineTest {
 		p2.getGroup("group").addStage(new Stage("stage2", df));
 		p.getGroup("group").addStage(new Stage("stage", df));
 		
-		System.out.println(p);
-		System.out.println(p2);
-		
 		assertTrue(p.equals(p2));
 	}
 

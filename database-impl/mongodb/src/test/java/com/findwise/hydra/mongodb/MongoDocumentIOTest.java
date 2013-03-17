@@ -2,7 +2,6 @@ package com.findwise.hydra.mongodb;
 
 import static org.junit.Assert.fail;
 
-import java.util.Map;
 import java.util.Random;
 
 import junit.framework.Assert;
@@ -269,7 +268,6 @@ public class MongoDocumentIOTest {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testFetchRemoval() throws Exception {
 		MongoDocumentIO dw = (MongoDocumentIO) mdc.getDocumentWriter();
@@ -281,17 +279,21 @@ public class MongoDocumentIOTest {
 
 		MongoDocument d2 = dw.getDocumentById(md.getID());
 
-		Assert.assertTrue(d2.getMetadataMap().containsKey(MongoDocument.FETCHED_METADATA_TAG));
-		Map<String, Object> fetched = (Map<String, Object>)d2.getMetadataMap().get(MongoDocument.FETCHED_METADATA_TAG);
+		Assert.assertNotNull(d2.getFetchedBy());
 		
-		Assert.assertTrue(fetched.containsKey("tag"));
-		fetched.remove("tag");
+		
+		Assert.assertTrue(d2.fetchedBy("tag"));
+		d2.removeFetchedBy("tag");
 		dw.update(new MongoDocument(d2.toJson()));
 		
-		Assert.assertFalse((
-				(Map<String, Object>) dw.getDocumentById(d2.getID()).getMetadataMap().get(MongoDocument.FETCHED_METADATA_TAG))
-				.containsKey("tag"));
+		Assert.assertFalse(dw.getDocumentById(d2.getID()).fetchedBy("tag"));
+		
+		d2 = dw.getAndTag(new MongoQuery(), "tag", "tag2");
+		d2.removeFetchedBy("tag");
+		
+		dw.update(d2);
 	}
+	
 	
 	@Ignore
 	@Test

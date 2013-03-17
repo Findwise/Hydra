@@ -62,4 +62,18 @@ public class MongoDocumentID implements DocumentID<MongoType> {
 	public String toString() {
 		return toJSON();
 	}
+	
+	@SuppressWarnings("rawtypes")
+	@Override
+	public boolean equals(Object o) {
+		if(o instanceof DocumentID) {
+			return id.equals(((DocumentID) o).getID());
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		return id.hashCode();
+	}
 }
