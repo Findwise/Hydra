@@ -2,6 +2,7 @@ package com.findwise.hydra.net;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +29,8 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 	private String restId;
 
 	private List<String> allowedHosts;
-	
+	private List<InetAddress> resolvedHosts;
+
 	private ResponsibleHandler[] handlers;
 	
 	private PingHandler pingHandler;
@@ -120,10 +122,10 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 		try {
 			HttpInetConnection connection = (HttpInetConnection) context.getAttribute(ExecutionContext.HTTP_CONNECTION);
 			InetAddress ia = connection.getRemoteAddress();
-			if(allowedHosts.contains(ia.getHostName())) {
+			if(resolvedHosts.contains(ia)) {
 				return true;
 			} else {
-				logger.error("Caller adress ("+ia.getHostName()+") not in the list of allowed hosts ("+allowedHosts+"). Refusing the connection.");
+				logger.error("Caller adress ("+ia+") not in the list of allowed hosts ("+allowedHosts+"). Refusing the connection.");
 				return false;
 			}
 		} catch (Exception e) {
@@ -163,6 +165,23 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 
 	public void setAllowedHosts(List<String> allowedHosts) {
 		this.allowedHosts = allowedHosts;
+		resolveAllowedHosts();
+	}
+
+	private void resolveAllowedHosts() {
+		if( allowedHosts == null) {
+			resolvedHosts = null;
+		} else {
+			resolvedHosts = new ArrayList<InetAddress>();
+			for(String allowedHost: allowedHosts) {
+				try {
+					resolvedHosts.add(InetAddress.getByName(allowedHost));
+				} catch (UnknownHostException e) {
+					/* Fail early if configuration is wrong */
+					throw new RuntimeException("Could not resolve host: " + allowedHost, e);
+				}
+			}
+		}
 	}
 
 	public List<String> getAllowedHosts() {
