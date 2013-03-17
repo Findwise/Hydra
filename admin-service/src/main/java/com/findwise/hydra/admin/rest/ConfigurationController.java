@@ -67,7 +67,12 @@ public class ConfigurationController {
 	@ResponseBody
 	@RequestMapping(method=RequestMethod.GET, value="/libraries/{id}")
 	public Map<String, Object> getLibrary(@PathVariable String id) {
-		return service.getLibrary(id);
+		Map<String, Object> library = service.getLibrary(id);
+		if (null != library) {
+			return library;
+		} else {
+			throw new HttpResourceNotFoundException();
+		}
 	}
 	
 	@ResponseStatus(HttpStatus.ACCEPTED)
@@ -108,7 +113,12 @@ public class ConfigurationController {
 	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/stages/{stageName}")
 	public Stage getStageInfo(@PathVariable(value = "stageName") String stageName) {
-		return stagesService.getStageInfo(stageName);
+		Stage stageInfo = stagesService.getStageInfo(stageName);
+		if (null != stageInfo) {
+			return stageInfo;
+		} else {
+			throw new HttpResourceNotFoundException();
+		}
 	}
 
 	@ResponseBody
@@ -127,7 +137,12 @@ public class ConfigurationController {
 	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/stagegroups/{stageGroup}")
 	public StageGroup getStageGroup(@PathVariable(value = "stageGroup") String stageGroup) {
-		return stagesService.getStageGroup(stageGroup);
+		StageGroup stageGroupInfo = stagesService.getStageGroup(stageGroup);
+		if (null != stageGroupInfo) {
+			return stageGroupInfo;
+		} else {
+			throw new HttpResourceNotFoundException();
+		}
 	}
 	
 	@ResponseBody
