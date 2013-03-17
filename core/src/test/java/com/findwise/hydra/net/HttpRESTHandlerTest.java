@@ -50,24 +50,36 @@ public class HttpRESTHandlerTest {
 	
 	@Test
 	public void testAccessRestrictions() throws InterruptedException {
-		restHandler.setAllowedHosts(Arrays.asList(new String[] {"localhost","127.0.0.1"}));
-		
+        restHandler.setAllowedHosts(Arrays.asList("localhost"));
+
+        if(!server.isWorking(System.currentTimeMillis(), 200))
+        {
+            fail("Failed to connect when allowed hosts contained localhost");
+        }
+
+		restHandler.setAllowedHosts(Arrays.asList("127.0.0.1"));
+
 		if(!server.isWorking(System.currentTimeMillis(), 200))
 		{
-			fail("Server should have been working, we are connecting through localhost...");
+			fail("Failed to connect when allowed hosts contained 127.0.0.1");
 		}
 		
-		restHandler.setAllowedHosts(Arrays.asList(new String[] {"some_other_machine"}));
+		restHandler.setAllowedHosts(Arrays.asList("127.0.0.2"));
 		
 		if(server.isWorking(System.currentTimeMillis(), 200))
 		{
-			fail("Server should have been working, we are connecting through localhost...");
+			fail("Server should *not* have been working, since allowed hosts does not contain localhost");
 		}
-		
+
 		restHandler.setAllowedHosts(null);
 		if(!server.isWorking(System.currentTimeMillis(), 200))
 		{
 			fail("Server should have been working, since allowed hosts is null");
 		}
 	}
+
+    @Test(expected = RuntimeException.class)
+    public void testSetAllowedHostsThrowsExceptionWhenUnknownHost(){
+        restHandler.setAllowedHosts(Arrays.asList("unknownhost"));
+    }
 }
