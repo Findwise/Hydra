@@ -5,6 +5,8 @@ Overview: [findwise.github.com/Hydra](http://findwise.github.com/Hydra/)
 
 Mailing list/group: [hydra-processing google group](https://groups.google.com/forum/#!forum/hydra-processing)
 
+Current snapshot: [![Build Status](https://secure.travis-ci.org/Findwise/Hydra.png?branch=master)](https://travis-ci.org/Findwise/Hydra)
+
 What you'll need
 ----------------
 
