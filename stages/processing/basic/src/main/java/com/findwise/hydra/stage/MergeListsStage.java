@@ -3,13 +3,15 @@ package com.findwise.hydra.stage;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stage(description = "Merges lists into a single list, where each item is a concatenation of the corresponding items in the input lists, separated by a separator. " +
 		"This stage is incredibly specific in it's usecase, and most likely not the one you want, since it merges lists into a list of tuples, rather than merging two lists." +
 		"See MergeFieldsStage for more generic field merging capabilities.")
 public class MergeListsStage extends AbstractProcessStage {
+    private Logger logger = LoggerFactory.getLogger(MergeListsStage.class);
 
 	@Parameter(name = "inFields", description = "List of fields to use")
 	protected List<String> inFields;
@@ -30,7 +32,7 @@ public class MergeListsStage extends AbstractProcessStage {
 		for (String field : inFields) {
 			Object fieldContent = doc.getContentField(field);
 			if (fieldContent == null) {
-				Logger.warn("Field " + field + " does not exist, skipping document");
+				logger.warn("Field " + field + " does not exist, skipping document");
 				return;
 			}
 			if (fieldContent instanceof List<?>) {
@@ -42,13 +44,13 @@ public class MergeListsStage extends AbstractProcessStage {
 				}
 				else {
 					// Lists have different lengths
-					Logger.warn("Lists in inFields are of different lengths, skipping document");
+					logger.warn("Lists in inFields are of different lengths, skipping document");
 					return;
 				}
 			}
 			else {
 				// Field is not a list
-				Logger.warn("Field " + field + " is not a list, skipping document");
+				logger.warn("Field " + field + " is not a list, skipping document");
 				return;
 			}
 		}

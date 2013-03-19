@@ -26,6 +26,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * Convenience methods for handling serialization and deserialization of 
@@ -34,8 +36,10 @@ import com.google.gson.JsonSerializationContext;
  *
  */
 public final class SerializationUtils {
-	
-	private static SimpleDateFormat getDateFormat() {
+	private static Logger logger = LoggerFactory.getLogger(SerializationUtils.class);
+    private static Logger internalLogger = LoggerFactory.getLogger("internal");
+
+    private static SimpleDateFormat getDateFormat() {
 		return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 	}
 	
@@ -52,7 +56,7 @@ public final class SerializationUtils {
 								baos.write(b);
 							}
 						} catch (IOException e) {
-							Logger.error("Caught IOException in Stream serialization", e);
+							logger.error("Caught IOException in Stream serialization", e);
 						}
 						return new JsonPrimitive(new String(Base64.encodeBase64(baos.toByteArray())));
 					}
@@ -128,7 +132,7 @@ public final class SerializationUtils {
 			try {
 				return gson.toJson(o);
 			} catch(ConcurrentModificationException e) {
-				Logger.warn("A ConcurrentModificationException was caught during serialization. Trying again!");
+				logger.warn("A ConcurrentModificationException was caught during serialization. Trying again!");
 			}
 		}
 	}
@@ -169,7 +173,7 @@ public final class SerializationUtils {
 					return handleObject(json.getAsJsonObject(), context);
 				}
 			} catch (Exception e) {
-				InternalLogger.error("An exception was caught during deserialization", e);
+				internalLogger.error("An exception was caught during deserialization", e);
 				return null;
 			}
 		}

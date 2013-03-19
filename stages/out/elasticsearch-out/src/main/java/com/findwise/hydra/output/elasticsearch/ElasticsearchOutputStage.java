@@ -14,12 +14,13 @@ import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import com.findwise.hydra.Document.Action;
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractOutputStage;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Writes to elasticsearch via the Transport protocol.
@@ -29,6 +30,7 @@ import com.findwise.hydra.stage.Stage;
  */
 @Stage(description = "A stage that writes documents to elasticsearch")
 public class ElasticsearchOutputStage extends AbstractOutputStage {
+    private static Logger logger = LoggerFactory.getLogger(ElasticsearchOutputStage.class);
 
 	@Parameter(description = "List of elasticsearch nodes to connect to")
 	private List<String> esNodes = new ArrayList<String>();
@@ -63,7 +65,7 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 		final Action action = document.getAction();
 		
 		try {
-			Logger.debug(action.toString());
+			logger.debug(action.toString());
 			switch (action) {
 			case ADD:
 				add(document);
@@ -92,12 +94,12 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 	private void add(LocalDocument document) throws ElasticSearchException, IOException {
 		String docId = getDocumentId(document);
 		String json = document.contentFieldsToJson(document.getContentFields());
-		Logger.debug("Indexing document " + getDocumentId(document) + " to index " + documentIndex + " with type " + documentType);
+		logger.debug("Indexing document " + getDocumentId(document) + " to index " + documentIndex + " with type " + documentType);
 		ListenableActionFuture<IndexResponse> actionFuture = client.prepareIndex(documentIndex, documentType, docId)
 			.setSource(json)
 			.execute();
 		IndexResponse response = actionFuture.actionGet(requestTimeout);
-		Logger.debug("Got response for docId " + response.getId());
+		logger.debug("Got response for docId " + response.getId());
 		accept(document);
 	}
 
@@ -109,20 +111,20 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 				.execute();
 		DeleteResponse response = actionFuture.actionGet(requestTimeout);
 		if (response.isNotFound()) {
-			Logger.debug("Delete failed, document not found");
+			logger.debug("Delete failed, document not found");
 		}
 		else {
-			Logger.debug("Deleted document with id " + response.getId());
+			logger.debug("Deleted document with id " + response.getId());
 		}
 		accept(document);
 	}
 
 	private void failDocument(LocalDocument doc, Throwable reason) {
 		try {
-			Logger.error("Failing document " + doc.getID(), reason);
+			logger.error("Failing document " + doc.getID(), reason);
 			fail(doc, reason);
 		} catch (Exception e) {
-			Logger.error("Could not fail document with hydra id: " + doc.getID(), e);
+			logger.error("Could not fail document with hydra id: " + doc.getID(), e);
 		}
 	}
 

@@ -19,10 +19,13 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.params.SyncBasicHttpParams;
 
-import com.findwise.hydra.InternalLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HttpConnection {
-	private HttpParams params;
+    private static Logger internalLogger = LoggerFactory.getLogger("internal");
+
+    private HttpParams params;
 	private HttpHost host;
 	private DefaultHttpClient client;
 	
@@ -46,7 +49,7 @@ public class HttpConnection {
 	
 	public HttpResponse post(String url, String content) throws IOException {
 		String printable = (content.length()>100) ? content.substring(0, 100)+" [snip]..." : content;
-		InternalLogger.debug("Posting "+printable+" to "+url);
+		internalLogger.debug("Posting "+printable+" to "+url);
 		
 		return post(url, new StringEntity(content, "UTF-8"));
 	}
