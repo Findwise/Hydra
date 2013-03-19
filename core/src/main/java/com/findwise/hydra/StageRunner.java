@@ -41,7 +41,8 @@ public class StageRunner extends Thread {
     private File targetDirectory;
     private File baseDirectory;
     private boolean performanceLogging = false;;
-    
+    private int loggingPort;
+
     private boolean wasKilled = false;;
 
     public synchronized void setHasQueried() {
@@ -52,12 +53,13 @@ public class StageRunner extends Thread {
         return hasQueried;
     }
 
-    public StageRunner(StageGroup stageGroup, File baseDirectory, int pipelinePort, boolean performanceLogging) {
+    public StageRunner(StageGroup stageGroup, File baseDirectory, int pipelinePort, boolean performanceLogging, int loggingPort) {
         this.stageGroup = stageGroup;
         this.baseDirectory = baseDirectory;
         this.targetDirectory = new File(baseDirectory, stageGroup.getName());
         this.pipelinePort = pipelinePort;
         this.performanceLogging = performanceLogging;
+        this.loggingPort = loggingPort;
         timesStarted = 0;
     }
     
@@ -180,6 +182,7 @@ public class StageRunner extends Thread {
         cmdLine.addArgument("localhost");
         cmdLine.addArgument("" + pipelinePort);
         cmdLine.addArgument("" + performanceLogging);
+        cmdLine.addArgument("" + loggingPort);
         cmdLine.addArgument(startupArgsString);
         
         HashMap<String, Object> map = new HashMap<String, Object>();
@@ -196,14 +199,15 @@ public class StageRunner extends Thread {
         
         try {
             Process p = cl.exec(cmdLine, null);
+            new StreamLogger(
+                String.format("%s (stdin)", stageGroup.getName()),
+                p.getInputStream()
+            ).start();
+            new StreamLogger(
+                String.format("%s (stderr)", stageGroup.getName()),
+                p.getErrorStream()
+            ).start();
 
-            if (loggingEnabled) {
-                PumpStreamHandler streams = new PumpStreamHandler(new StreamLogger(stageGroup.getName()));
-                streams.setProcessInputStream(p.getOutputStream());
-                streams.setProcessErrorStream(p.getErrorStream());
-                streams.setProcessOutputStream(p.getInputStream());
-                streams.start();
-            }
             stageDestroyer.add(p);
             
             exitValue = p.waitFor();

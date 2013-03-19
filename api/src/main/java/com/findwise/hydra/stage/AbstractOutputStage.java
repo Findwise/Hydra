@@ -3,9 +3,10 @@ package com.findwise.hydra.stage;
 import java.io.IOException;
 import java.util.Map;
 
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * Base class for building output stages.
@@ -15,8 +16,9 @@ import com.findwise.hydra.local.RemotePipeline;
  * @author simon.stenstrom
  */
 public abstract class AbstractOutputStage extends AbstractProcessStage {
+    Logger logger = LoggerFactory.getLogger(AbstractOutputStage.class);
 
-	@Override
+    @Override
 	public void setUp(RemotePipeline rp, Map<String, Object> properties)
 			throws IllegalArgumentException, IllegalAccessException,
 			IOException {
@@ -24,7 +26,7 @@ public abstract class AbstractOutputStage extends AbstractProcessStage {
 	}
 
 	public void process(LocalDocument document) throws ProcessException {
-		Logger.debug("Processing document: " + document.getID());
+		logger.debug("Processing document: " + document.getID());
 		output(document);
 	}
 

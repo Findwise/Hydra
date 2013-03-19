@@ -12,15 +12,17 @@ import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.common.SolrInputDocument;
 
 import com.findwise.hydra.Document.Action;
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractOutputStage;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Stage(description="Writes documents to Solr")
 public class SolrOutputStage extends AbstractOutputStage {
+    private static Logger logger = LoggerFactory.getLogger(SolrOutputStage.class);
 
 	@Parameter(description="The URL of the Solr to which this stage will post data")
 	private String solrDeployPath;
@@ -123,10 +125,10 @@ public class SolrOutputStage extends AbstractOutputStage {
 
 	private void failDocument(LocalDocument doc, Throwable reason) {
 		try {
-			Logger.error("Failing document "+doc.getID(), reason);
+			logger.error("Failing document "+doc.getID(), reason);
 			fail(doc, reason);
 		} catch (Exception e) {
-			Logger.error("Could not fail document with hydra id: " + doc.getID(), e);
+			logger.error("Could not fail document with hydra id: " + doc.getID(), e);
 		}
 	}
 
