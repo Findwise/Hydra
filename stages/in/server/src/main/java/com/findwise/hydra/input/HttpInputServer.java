@@ -27,7 +27,8 @@ import org.apache.http.protocol.ResponseContent;
 import org.apache.http.protocol.ResponseDate;
 import org.apache.http.protocol.ResponseServer;
 
-import com.findwise.hydra.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * Sets up a HTTP Input server on the specified port.
@@ -36,6 +37,7 @@ import com.findwise.hydra.Logger;
  */
 @Deprecated
 public class HttpInputServer {
+    private static Logger logger = LoggerFactory.getLogger(HttpInputServer.class);
 
 	private static final int SOCKET_TIMEOUT_MS = 5000;
 	private static final int BUFFER_SIZE = 8 * 1024; // Consider increasing this
@@ -92,36 +94,36 @@ public class HttpInputServer {
 
 		} catch (IOException e) {
 			if (e.getCause() instanceof java.net.BindException) {
-				Logger.error("I/O error in RESTServer", e);
+				logger.error("I/O error in RESTServer", e);
 				System.exit(1);
 			}
 
-			Logger.error("I/O error in RESTServer", e);
+			logger.error("I/O error in RESTServer", e);
 		}
 
 	}
 
 	static class EventLogger implements EventListener {
 		public void connectionOpen(final NHttpConnection conn) {
-			Logger.debug("Connection open: " + conn);
+			logger.debug("Connection open: " + conn);
 		}
 
 		public void connectionTimeout(final NHttpConnection conn) {
-			Logger.debug("Connection timed out: " + conn);
+			logger.debug("Connection timed out: " + conn);
 		}
 
 		public void connectionClosed(final NHttpConnection conn) {
-			Logger.debug("Connection closed: " + conn);
+			logger.debug("Connection closed: " + conn);
 		}
 
 		public void fatalIOException(final IOException ex,
 				final NHttpConnection conn) {
-			Logger.error("I/O error: " + ex.getMessage());
+			logger.error("I/O error: " + ex.getMessage());
 		}
 
 		public void fatalProtocolException(final HttpException ex,
 				final NHttpConnection conn) {
-			Logger.error("HTTP error: " + ex.getMessage());
+			logger.error("HTTP error: " + ex.getMessage());
 		}
 	}
 

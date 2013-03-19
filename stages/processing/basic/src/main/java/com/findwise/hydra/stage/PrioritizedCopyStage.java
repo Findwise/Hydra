@@ -1,12 +1,14 @@
 package com.findwise.hydra.stage;
 
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 
 /**
@@ -31,6 +33,7 @@ import java.util.List;
  */
 @Stage(description = "This stage will copy the first field found in the specifed order.")
 public class PrioritizedCopyStage extends AbstractProcessStage {
+    private Logger logger = LoggerFactory.getLogger(PrioritizedCopyStage.class);
 
     @Parameter(name = "conditionField", description = "The field where to find the condition")
     private String conditionField = null;
@@ -53,21 +56,21 @@ public class PrioritizedCopyStage extends AbstractProcessStage {
     @Override
     public void process(LocalDocument doc) throws ProcessException {
 
-        Logger.debug("Starting processing");
+        logger.debug("Starting processing");
 
         if (hasValueAndNotEmptyString(doc, outputField) && !overWrite) {
-            Logger.debug("Field" + outputField + " already populated, no need to copy");
+            logger.debug("Field" + outputField + " already populated, no need to copy");
             return;
         }
 
         for (String field : inputFields) {
             if (hasValueAndNotEmptyString(doc, field)) {
                 if (meetsCondition(doc, field)) {
-                    Logger.debug("Found value in field: " + field);
+                    logger.debug("Found value in field: " + field);
                     doc.putContentField(outputField, doc.getContentField(field));
                     return;
                 } else {
-                    Logger.debug("Field" + outputField + " doesn't meet the condition of "+conditionField + "being" + conditionValue);
+                    logger.debug("Field" + outputField + " doesn't meet the condition of "+conditionField + "being" + conditionValue);
                 }
 
             }
@@ -75,7 +78,7 @@ public class PrioritizedCopyStage extends AbstractProcessStage {
 
         if (defaultValue != null) {
             doc.putContentField(outputField, defaultValue);
-            Logger.debug("no value found, using default: " + defaultValue);
+            logger.debug("no value found, using default: " + defaultValue);
         }
     }
 
@@ -119,7 +122,7 @@ public class PrioritizedCopyStage extends AbstractProcessStage {
             return true;
         }
         else if (doc.getContentField(conditionField) == null){
-            Logger.debug("conditionfield "+conditionField +" is empty....skipping");            
+            logger.debug("conditionfield "+conditionField +" is empty....skipping");
             return true;
         }
         else{

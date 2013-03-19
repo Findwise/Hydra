@@ -23,12 +23,14 @@ import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.sax.BodyContentHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 
 public class TikaUtils {
+    private static Logger logger = LoggerFactory.getLogger(TikaUtils.class);
 
     public static void enrichDocumentWithFileContents(LocalDocument doc,
             String fieldPrefix, InputStream stream, Parser parser, boolean addMetaData, boolean addLanguage) throws IOException,
@@ -99,7 +101,7 @@ public class TikaUtils {
                 } else {
                     toField = m.group();
                 }
-                Logger.debug("Added " + doc.getContentField(field) + " to "
+                logger.debug("Added " + doc.getContentField(field) + " to "
                         + toField);
                 fieldToUrl.put(toField, doc.getContentField(field));
             }

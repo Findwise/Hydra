@@ -7,7 +7,7 @@ import java.util.NoSuchElementException;
 import com.findwise.hydra.local.RemotePipeline;
 
 public class MapConfiguration implements CoreConfiguration {
-	private Map<String, String> map;
+    private Map<String, String> map;
 	
 	public MapConfiguration() {
 		map = new HashMap<String, String>();
@@ -105,4 +105,13 @@ public class MapConfiguration implements CoreConfiguration {
 	public boolean isPerformanceLogging() {
 		return Boolean.parseBoolean(getParameter(PERFORMANCE_LOGGING, "false"));
 	}
+
+    @Override
+    public int getLoggingPort() {
+        return Integer.parseInt(getParameter(LOGGING_PORT, "" + DEFAULT_LOGGING_PORT));
+    }
+
+    public void setLoggingPort(int loggingPort) {
+        map.put(LOGGING_PORT, "" + loggingPort);
+    }
 }

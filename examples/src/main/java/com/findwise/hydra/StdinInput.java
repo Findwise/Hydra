@@ -2,13 +2,15 @@ package com.findwise.hydra;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class StdinInput {
-	
-	/**
+    private static Logger logger = LoggerFactory.getLogger(StdinInput.class);
+
+    /**
 	 * Usage: key:value is added here;key2:second value here;key3:Third value here [...] 
 	 * @param args
 	 */
@@ -19,8 +21,8 @@ public class StdinInput {
 		for (String tuple : StringUtils.join(args, " ").split(";")) {
 			String[] keyValue = tuple.split(":");
 			if (keyValue.length != 2) {
-				Logger.error("Wrong input format. Format is 'key:value;key2:value2 [...]'");
-				Logger.error("Your data was not added");
+				logger.error("Wrong input format. Format is 'key:value;key2:value2 [...]'");
+				logger.error("Your data was not added");
 				return;
 			}
 			ld.putContentField(keyValue[0], keyValue[1]);
@@ -28,10 +30,10 @@ public class StdinInput {
 		
 		try {
 			if (rp1.saveFull(ld)) {
-				Logger.info("Document added");
+				logger.info("Document added");
 			}
 		} catch (Exception e) {
-			Logger.error("Failed to write document", e);
+			logger.error("Failed to write document", e);
 		}
 	}
 

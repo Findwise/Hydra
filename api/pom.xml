@@ -54,7 +54,12 @@
 			<version>1.8.5</version>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
 
 
 	<build>

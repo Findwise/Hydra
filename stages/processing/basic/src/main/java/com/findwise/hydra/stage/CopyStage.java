@@ -1,14 +1,17 @@
 package com.findwise.hydra.stage;
 
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A basic Copy-stage
  */
 @Stage(description = "Copies values from one field to another.")
 public class CopyStage extends AbstractMappingProcessStage {
-	@Override
+    Logger logger = LoggerFactory.getLogger(CopyStage.class);
+
+    @Override
 	public void stageInit() throws RequiredArgumentMissingException { }
 
 	@Override
@@ -17,7 +20,7 @@ public class CopyStage extends AbstractMappingProcessStage {
 		Object val = doc.getContentField(fromField);
 		doc.putContentField(toField, val);
 		String valString = (val == null) ? null : val.toString();
-		Logger.debug("Copying field " + fromField + " to field " + toField
+		logger.debug("Copying field " + fromField + " to field " + toField
 				+ " value: " + valString);
 	}
 }

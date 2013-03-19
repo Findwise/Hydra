@@ -17,13 +17,16 @@ import org.apache.http.util.EntityUtils;
 
 import com.findwise.hydra.DocumentFile;
 import com.findwise.hydra.DocumentID;
-import com.findwise.hydra.InternalLogger;
 import com.findwise.hydra.JsonException;
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.SerializationUtils;
 import com.findwise.tools.HttpConnection;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class RemotePipeline {
+    private static final Logger internalLogger = LoggerFactory.getLogger("internal");
+    private static final Logger logger = LoggerFactory.getLogger(RemotePipeline.class);
+
 	public static final String GET_DOCUMENT_URL = "getDocument";
 	public static final String WRITE_DOCUMENT_URL = "writeDocument";
 	public static final String RELEASE_DOCUMENT_URL = "releaseDocument";
@@ -112,10 +115,10 @@ public class RemotePipeline {
 			} catch (JsonException e) {
 				throw new IOException(e);
 			}
-			InternalLogger.debug("Received document with ID " + ld.getID());
+			internalLogger.debug("Received document with ID " + ld.getID());
 			currentDocument = ld;
 		} else if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
-			InternalLogger.debug("No document found matching query");
+			internalLogger.debug("No document found matching query");
 			EntityUtils.consume(response.getEntity());
 		} else {
 			logUnexpected(response);
@@ -123,7 +126,7 @@ public class RemotePipeline {
 		if(isPerformanceLogging()) {
 			long end = System.currentTimeMillis();
 			Object docId = ld != null ? ld.getID() : null;
-			Logger.info(String.format("type=performance event=query stage_name=%s doc_id=\"%s\" start=%d fetch=%d entitystring=%d serialize=%d end=%d total=%d", stageName, docId, start, startSerialize - start, startJson - startSerialize, end - startJson, end, end - start));
+			logger.info(String.format("type=performance event=query stage_name=%s doc_id=\"%s\" start=%d fetch=%d entitystring=%d serialize=%d end=%d total=%d", stageName, docId, start, startSerialize - start, startJson - startSerialize, end - startJson, end, end - start));
 		}
 		return ld;
 	}
@@ -137,7 +140,7 @@ public class RemotePipeline {
 	 */
 	public boolean releaseLastDocument() throws IOException {
 		if(currentDocument==null) {
-			InternalLogger.debug("There is no document to release...");
+			internalLogger.debug("There is no document to release...");
 			return false;
 		}
 		HttpResponse response = core.post(releaseUrl, currentDocument.contentFieldsToJson(null));
@@ -153,8 +156,8 @@ public class RemotePipeline {
 	}
 	
 	private static void logUnexpected(HttpResponse response) throws IOException {
-		InternalLogger.error("Node gave an unexpected response: "+response.getStatusLine());
-		InternalLogger.error("Message: "+EntityUtils.toString(response.getEntity()));
+		internalLogger.error("Node gave an unexpected response: "+response.getStatusLine());
+		internalLogger.error("Message: "+EntityUtils.toString(response.getEntity()));
 	}
 
 	/**
@@ -170,7 +173,7 @@ public class RemotePipeline {
 	public boolean saveCurrentDocument() throws IOException, JsonException {
 		boolean keepingLock = keepLock;
 		if (currentDocument == null) {
-			InternalLogger.error("There is no document to write.");
+			internalLogger.error("There is no document to write.");
 			return false;
 		}
 		boolean x = save(currentDocument);
@@ -228,7 +231,7 @@ public class RemotePipeline {
 			if(isPerformanceLogging()) {
 				long end = System.currentTimeMillis();
 				DocumentID<Local> docId = d.getID();
-				Logger.info(String.format("type=performance event=update stage_name=%s doc_id=\"%s\" start=%d serialize=%d post=%d end=%d total=%d", stageName, docId, start, startPost - start, end - startPost, end, end - start));
+				logger.info(String.format("type=performance event=update stage_name=%s doc_id=\"%s\" start=%d serialize=%d post=%d end=%d total=%d", stageName, docId, start, startPost - start, end - startPost, end, end - start));
 			}
 			return true;
 		}
@@ -321,10 +324,10 @@ public class RemotePipeline {
 			} catch (JsonException e) {
 				throw new IOException(e);
 			}
-			InternalLogger.debug("Successfully retrieved propertyMap with " + map.size()+" entries");
+			internalLogger.debug("Successfully retrieved propertyMap with " + map.size()+" entries");
 			return map;
 		} else if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
-			InternalLogger.debug("No document found matching query");
+			internalLogger.debug("No document found matching query");
 			EntityUtils.consume(response.getEntity());
 			return null;
 		} else {

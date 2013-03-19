@@ -2,6 +2,7 @@ package com.findwise.hydra.stage;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,10 +11,12 @@ import java.util.NoSuchElementException;
 
 import com.findwise.hydra.JsonDeserializer;
 import com.findwise.hydra.JsonException;
-import com.findwise.hydra.Logger;
+import com.findwise.hydra.Logging;
 import com.findwise.hydra.SerializationUtils;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -27,6 +30,7 @@ import com.findwise.hydra.local.RemotePipeline;
  * 
  */
 public abstract class AbstractStage extends Thread {
+    private static Logger logger = LoggerFactory.getLogger(AbstractStage.class);
 
 	public static final String ARG_NAME_STAGE_CLASS = "stageClass";
 	public static final String PROPERTY_NAME_COMMANDLINE_ARGS = "cmdline_args";
@@ -216,12 +220,12 @@ public abstract class AbstractStage extends Thread {
 	
 	@SuppressWarnings("unchecked")
 	public static AbstractStage getInstance(String[] args) {
-		Logger.debug("Getting AbstractStage with args: " + Arrays.toString(args));
+        logger.debug("Getting AbstractStage with args: " + Arrays.toString(args));
 		if (args.length < 1) {
-			Logger.error("No stage name found", new RequiredArgumentMissingException("No stage name was specified"));
+			logger.error("No stage name found", new RequiredArgumentMissingException("No stage name was specified"));
 			System.exit(1);
-		} 
-		try {
+		}
+        try {
 			RemotePipeline rp = getRemotePipeline(args);
 						
 			Map<String, Object> properties = rp.getProperties();
@@ -245,30 +249,33 @@ public abstract class AbstractStage extends Thread {
 			return stage;
 
 		} catch (RequiredArgumentMissingException e) {
-			Logger.error("Failed to read arguments", e);
+			logger.error("Failed to read arguments", e);
 		} catch (ClassNotFoundException e) {
-			Logger.error("Could not find the Stage class in classpath", e);
+			logger.error("Could not find the Stage class in classpath", e);
 		} catch (InstantiationException e) {
-			Logger.error("Could not instantiate the Stage class", e);
+			logger.error("Could not instantiate the Stage class", e);
 		} catch (IllegalAccessException e) {
-			Logger.error("Could not access constructor of Stage class", e);
+			logger.error("Could not access constructor of Stage class", e);
 		} catch (IOException e) {
-			Logger.error("Communication failiure when reading properties", e);
+			logger.error("Communication failiure when reading properties", e);
 		}
 		return null;
 	}
 
-	public static void main(String args[]) {
+	public static void main(String args[]) throws UnknownHostException {
+		if( args.length > 1) {
+			Logging.setup(args[1], Integer.parseInt(args[4]));
+		}
 		List<AbstractStage> stages = getInstances(args);
 		
 		if(stages==null || stages.size()<1) {
-			Logger.error("Unable to instantiate any stages for input: "+Arrays.toString(args));
+			logger.error("Unable to instantiate any stages for input: "+Arrays.toString(args));
 		}
 		else {
 			for(AbstractStage stage : stages) {
 				stage.start();
 			}
-			Logger.info("Started "+stages.size()+" instances of stage: " + stages.get(0).getName()+". Running with the query: "+stages.get(0).getQuery());
+			logger.info("Started "+stages.size()+" instances of stage: " + stages.get(0).getName()+". Running with the query: "+stages.get(0).getQuery());
 		}
 	}
 
@@ -292,7 +299,7 @@ public abstract class AbstractStage extends Thread {
 	private class OnDestroyThread extends Thread {
 		public void run() {
 
-			Logger.info("Shutting down stage: " + getName());
+			logger.info("Shutting down stage: " + getName());
 			if (AbstractStage.this.isAlive()) {
 				AbstractStage.this.setContinueRunning(false);
 				try {

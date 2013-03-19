@@ -6,8 +6,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Configuration string in JSON format:
@@ -32,6 +33,7 @@ import com.findwise.hydra.local.LocalDocument;
  */
 @Stage(description = "Regular expression matching on a field, where a substitute regular expression is put in the output field. Backslashes need to be double escaped!")
 public class RegexStage extends AbstractProcessStage {
+    private static Logger logger = LoggerFactory.getLogger(RegexStage.class);
 
     @Parameter(name = "regexConfigs", description = "List of configs, where each config is a map with the keys 'regex', 'inField' and 'outField' and 'substitute'")
     private List<Map<String, String>> regexConfigs;
@@ -75,12 +77,12 @@ public class RegexStage extends AbstractProcessStage {
                             outData.add(parseString(doc, regexConf, regexMatcher));
                         }
                     } else {
-                        Logger.warn("List did not contain all Strings");
+                        logger.warn("List did not contain all Strings");
                     }
                 }
                 doc.putContentField(regexConf.get("outField"), outData);
             } else {
-                Logger.warn("Field type of inField was not recognized. Valid field types are String and List<String>");
+                logger.warn("Field type of inField was not recognized. Valid field types are String and List<String>");
             }
         }
     }

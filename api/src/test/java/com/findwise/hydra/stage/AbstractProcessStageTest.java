@@ -13,12 +13,12 @@ import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 
+import ch.qos.logback.classic.Level;
+import com.findwise.hydra.Logging;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.findwise.hydra.Logger;
-import com.findwise.hydra.Logger.Level;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
@@ -30,7 +30,7 @@ public class AbstractProcessStageTest {
 
 	@Before
 	public void setUp() throws Exception {
-		Logger.setGlobalLoggingLevel(Level.OFF);
+        Logging.setGlobalLoggingLevel(Level.OFF);
 	}
 
 	@After
@@ -247,7 +247,7 @@ public class AbstractProcessStageTest {
 	
 	@Test
 	public void testPersistErrorOnSaveFailiure() throws Exception {
-		Logger.setGlobalLoggingLevel(Level.DEBUG);
+		Logging.setGlobalLoggingLevel(Level.DEBUG);
 		RemotePipeline rp = mock(RemotePipeline.class);
 		when(rp.getDocument(any(LocalQuery.class))).thenReturn(new LocalDocument());
 		

@@ -2,12 +2,13 @@ package com.findwise.hydra.stage;
 
 import java.io.IOException;
 
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractInputStage extends AbstractStage {
-
+    Logger logger = LoggerFactory.getLogger(AbstractInputStage.class);
 	@Parameter
 	protected String idField;
 	@Parameter
@@ -21,7 +22,7 @@ public abstract class AbstractInputStage extends AbstractStage {
 			try {
 				Thread.sleep(DEFAULT_HOLD_INTERVAL);
 			} catch (Exception e) {
-				Logger.error("Caught exception while running", e);
+				logger.error("Caught exception while running", e);
 				Runtime.getRuntime().removeShutdownHook(getShutDownHook());
 				System.exit(1);
 			}
@@ -37,28 +38,28 @@ public abstract class AbstractInputStage extends AbstractStage {
 			throw new RequiredArgumentMissingException("Input stage is set to discard old documents but idField is not specified.");
 		}
 		
-		Logger.debug("idField: " + idField + " value: " + ld.getContentField(idField));
+		logger.debug("idField: " + idField + " value: " + ld.getContentField(idField));
 		discardDocumentsWithValue(idField, ld.getContentField(idField));
 	}
 
 	private void discardDocumentsWithValue(String fieldName, Object fieldValue) {
-		Logger.debug("Discard");
+		logger.debug("Discard");
 		LocalDocument ld;
 		LocalQuery lq = new LocalQuery();
 		lq.requireContentFieldEquals(fieldName, fieldValue);
 
-		Logger.debug("Local query is: " + lq.toJson());
+		logger.debug("Local query is: " + lq.toJson());
 
 		try {
 			ld = getRemotePipeline().getDocument(lq);
 			while (ld != null) {
-				Logger.debug("Found document: " + ld.getID());
+				logger.debug("Found document: " + ld.getID());
 				getRemotePipeline().markDiscarded(ld);
-				Logger.debug("Discarded document: " + ld.toJson());
+				logger.debug("Discarded document: " + ld.toJson());
 				ld = getRemotePipeline().getDocument(lq);
 			}
 		} catch (IOException e) {
-			Logger.error("IOException while trying to discard");
+			logger.error("IOException while trying to discard");
 			throw new RuntimeException(e);
 		}
 	}
