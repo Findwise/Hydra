@@ -14,12 +14,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.DatabaseDocument;
+import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.Document;
 import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.tools.Comparator;
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 
 
@@ -416,11 +418,13 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 		return getMetadataSubMap(FETCHED_METADATA_TAG).containsKey(stage);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public boolean removeFetchedBy(String stage) {
-		touchedMetadata.add(FETCHED_METADATA_TAG);
-		return ((Map<String,Object>)getMetadataMap().get(FETCHED_METADATA_TAG)).remove(stage)!=null;
+		if(fetchedBy(stage)) {
+			touchedMetadata.add(FETCHED_METADATA_TAG);
+			return getMetadataSubMap(FETCHED_METADATA_TAG).remove(stage)!=null;
+		}
+		return false;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -490,5 +494,116 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	@Override
 	public void setID(DocumentID<MongoType> id) {
 		documentMap.put(ID_KEY, id.getID());
+	}
+
+	@Override
+	public boolean matches(DatabaseQuery<MongoType> query) {
+		MongoQuery mq = (MongoQuery) query;
+		
+		for(String s : mq.getTouchedBy()) {
+			if(!touchedBy(s)) {
+				return false;
+			}
+		}
+		for(String s : mq.getNotTouchedBy()) {
+			if(touchedBy(s)) {
+				return false;
+			}
+		}
+		
+		if(mq.getAction() != null && mq.getAction() != getAction()) {
+			return false;
+		}
+		
+		for(Map.Entry<String, Object> e : mq.getContentsEquals().entrySet()) {
+			if(!hasContentField(e.getKey()) || !getContentField(e.getKey()).equals(e.getValue())) {
+				return false;
+			}
+		}
+		
+		for(Map.Entry<String, Object> e : mq.getContentsNotEquals().entrySet()) {
+			if(hasContentField(e.getKey()) && getContentField(e.getKey()).equals(e.getValue())) {
+				return false;
+			}
+		}
+		
+		for(String s : mq.getContentsExists()) {
+			if(!hasContentField(s)) {
+				return false;
+			}
+		}
+		
+		for(String s : mq.getContentsNotExists()) {
+			if(hasContentField(s)) {
+				return false;
+			}
+		}
+		
+
+		for(String s : mq.getFetchedBy()) {
+			if(!fetchedBy(s)) {
+				return false;
+			}
+		}
+		
+		for(String s : mq.getNotFetchedBy()) {
+			if(fetchedBy(s)) {
+				return false;
+			}
+		}
+		
+		for(String s : mq.getMetadataExists()) {
+			if(!hasMetadataField(s)) {
+				return false;
+			}
+		}
+		
+		for(String s : mq.getMetadataNotExists()) {
+			if(hasMetadataField(s)) {
+				return false;
+			}
+		}
+		
+		for(Map.Entry<String, Object> e : mq.getMetadataEquals().entrySet()) {
+			if(!hasMetadataField(e.getKey()) || !getMetadataMap().get(e.getKey()).equals(e.getValue())) {
+				return false;
+			}
+		}
+		
+		for(Map.Entry<String, Object> e : mq.getMetadataNotEquals().entrySet()) {
+			if(hasMetadataField(e.getKey()) && getMetadataMap().get(e.getKey()).equals(e.getValue())) {
+				return false;
+			}
+		}
+		
+		if(mq.getRequiredID() != null && !getID().equals(mq.getRequiredID())) {
+			return false;
+		}
+		
+		return true;
+	}
+	
+	public final void setFetchedBy(String stage, Date date) {
+		touchedMetadata.add(FETCHED_METADATA_TAG);
+		if(!getMetadata().containsField(FETCHED_METADATA_TAG)) {
+			getMetadata().put(FETCHED_METADATA_TAG, BasicDBObjectBuilder.start(stage, date).get());
+		} else {
+			((DBObject) getMetadata().get(FETCHED_METADATA_TAG)).put(stage, date);
+		}
+	}
+	
+	public final void setTouchedBy(String stage, Date date) {
+		touchedMetadata.add(TOUCHED_METADATA_TAG);
+		if(!getMetadata().containsField(TOUCHED_METADATA_TAG)) {
+			getMetadata().put(TOUCHED_METADATA_TAG, BasicDBObjectBuilder.start(stage, date).get());
+		} else {
+			((DBObject) getMetadata().get(TOUCHED_METADATA_TAG)).put(stage, date);
+		}
+	}
+	
+	public MongoDocument copy() {
+		MongoDocument m = new MongoDocument();
+		m.putAll((Document<MongoType>)this);
+		return m;
 	}
 }

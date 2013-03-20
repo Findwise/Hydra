@@ -90,8 +90,6 @@ public class StageTest {
 		map.put("query", SerializationUtils.fromJson(query.toJson()));
 		ps.setParameters(map);
 		
-		System.out.println(ps.getQuery());
-		
 		if(ps.getQuery().getAction()!=Action.ADD) {
 			fail("Did not get correct action");
 		}

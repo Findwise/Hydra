@@ -233,8 +233,6 @@ public class MongoConnectorTest {
 		dbq.requireContentFieldEquals("number", 2);
 		MongoDocument d = mdc.getDocumentReader().getDocument(dbq);
 		
-		System.out.println(d);
-		
 		if(d.isEqual(test) || !d.isEqual(test2)) {
 			fail("Incorrect document returned");
 		}

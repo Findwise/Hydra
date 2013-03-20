@@ -15,74 +15,77 @@ import org.apache.http.protocol.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.findwise.hydra.CachingDocumentNIO;
 import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseType;
-import com.findwise.hydra.NodeMaster;
+import com.findwise.hydra.NoopCache;
+import com.findwise.hydra.PipelineReader;
 
-public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandler {
+public class HttpRESTHandler<T extends DatabaseType> implements
+		ResponsibleHandler {
 	private Logger logger = LoggerFactory.getLogger(HttpRESTHandler.class);
-	
-	private DatabaseConnector<T> dbc;
-	
+
+	private CachingDocumentNIO<T> documentIO;
+	private PipelineReader pipelineReader;
+
 	private boolean performanceLogging = false;
-	
+
 	private String restId;
 
 	private List<String> allowedHosts;
+
 	private List<InetAddress> resolvedHosts;
 
 	private ResponsibleHandler[] handlers;
-	
+
 	private PingHandler pingHandler;
 
 	private PingHandler getPingHandler() {
-		if(pingHandler == null) {
+		if (pingHandler == null) {
 			pingHandler = new PingHandler(restId);
 		}
 		return pingHandler;
 	}
 	
-	@SuppressWarnings("unchecked")
-    public HttpRESTHandler(NodeMaster<?> nm) {
-        this((DatabaseConnector<T>)nm.getDatabaseConnector());
-    }
-	
-    public HttpRESTHandler(DatabaseConnector<T> dbc) {
-        this(dbc, null, false);
-    }
-    
-    public HttpRESTHandler(DatabaseConnector<T> dbc, boolean isPerformanceLogging) {
-    	this(dbc, null, isPerformanceLogging);
-    }
-    
-    public HttpRESTHandler(DatabaseConnector<T> dbc, List<String> allowedHosts) {
-    	this(dbc, allowedHosts, false);
-    }
-    
-    public HttpRESTHandler(DatabaseConnector<T> dbc, List<String> allowedHosts, boolean isPerformanceLogging) {
-        this.dbc = dbc;
-        this.setAllowedHosts(allowedHosts);
-        this.performanceLogging = isPerformanceLogging;
-    }
-	
-	private void createHandlers() {
-		handlers = new ResponsibleHandler[] { new FileHandler<T>(dbc), new PropertiesHandler<T>(dbc), new MarkHandler<T>(dbc, performanceLogging), new QueryHandler<T>(dbc, performanceLogging), new ReleaseHandler<T>(dbc), new WriteHandler<T>(dbc, performanceLogging) };
+	public HttpRESTHandler(DatabaseConnector<T> dbc) {
+		this(new CachingDocumentNIO<T>(dbc, new NoopCache<T>()), dbc
+				.getPipelineReader(), null, false);
 	}
-	
+
+	public HttpRESTHandler(CachingDocumentNIO<T> documentIO,
+			PipelineReader pipelineReader, List<String> allowedHosts,
+			boolean isPerformanceLogging) {
+		this.documentIO = documentIO;
+		this.pipelineReader = pipelineReader;
+		this.setAllowedHosts(allowedHosts);
+		this.performanceLogging = isPerformanceLogging;
+	}
+
+	private void createHandlers() {
+		handlers = new ResponsibleHandler[] { new FileHandler<T>(documentIO),
+				new PropertiesHandler<T>(pipelineReader),
+				new MarkHandler<T>(documentIO, performanceLogging),
+				new QueryHandler<T>(documentIO, performanceLogging),
+				new ReleaseHandler<T>(documentIO),
+				new WriteHandler<T>(documentIO, performanceLogging) };
+	}
+
 	private ResponsibleHandler[] getHandlers() {
-		if(handlers==null) {
+		if (handlers == null) {
 			createHandlers();
 		}
 		return handlers;
 	}
-	
+
 	public void setRestId(String restId) {
 		getPingHandler().setServerId(restId);
 	}
-	
-	public boolean dispatch(HttpRequest request, HttpResponse response, HttpContext context, ResponsibleHandler ... handlers) throws HttpException, IOException {
-		for(ResponsibleHandler handler : handlers) {
-			if(handler.supports(request)) {
+
+	public boolean dispatch(HttpRequest request, HttpResponse response,
+			HttpContext context, ResponsibleHandler... handlers)
+			throws HttpException, IOException {
+		for (ResponsibleHandler handler : handlers) {
+			if (handler.supports(request)) {
 				handler.handle(request, response, context);
 				return true;
 			}
@@ -91,37 +94,40 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 	}
 
 	@Override
-	public void handle(final HttpRequest request, final HttpResponse response, final HttpContext context) {
-		if(!accessAllowed(context)) {
+	public void handle(final HttpRequest request, final HttpResponse response,
+			final HttpContext context) {
+		if (!accessAllowed(context)) {
 			HttpResponseWriter.printAccessDenied(response);
 			return;
 		}
 		try {
 			logger.trace("Parsing incoming request");
-			
-			if(dispatch(request, response, context, getPingHandler())) {
+
+			if (dispatch(request, response, context, getPingHandler())) {
 				return;
 			}
-			
-			if(dispatch(request, response, context, getHandlers())) {
+
+			if (dispatch(request, response, context, getHandlers())) {
 				return;
 			}
-			
+
 			HttpResponseWriter.printUnsupportedRequest(response);
 		} catch (Exception e) {
 			logger.error("Unhandled exception occurred", e);
 			HttpResponseWriter.printUnhandledException(response, e);
 			System.exit(1);
 		}
-    }
-	
+	}
+
 	public boolean accessAllowed(HttpContext context) {
-		if(allowedHosts==null) {
+		if (allowedHosts == null) {
 			return true;
 		}
 		try {
-			HttpInetConnection connection = (HttpInetConnection) context.getAttribute(ExecutionContext.HTTP_CONNECTION);
+			HttpInetConnection connection = (HttpInetConnection) context
+					.getAttribute(ExecutionContext.HTTP_CONNECTION);
 			InetAddress ia = connection.getRemoteAddress();
+
 			if(resolvedHosts.contains(ia)) {
 				return true;
 			} else {
@@ -130,17 +136,17 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 			}
 		} catch (Exception e) {
 			logger.error("Caught an exception while trying to determine remote address. Refusing the connection.");
-		} 
+		}
 		return false;
 	}
 
 	@Override
 	public boolean supports(HttpRequest request) {
-		if(getPingHandler().supports(request)) {
+		if (getPingHandler().supports(request)) {
 			return true;
 		}
-		for(ResponsibleHandler handler : handlers) {
-			if(handler.supports(request)) {
+		for (ResponsibleHandler handler : handlers) {
+			if (handler.supports(request)) {
 				return true;
 			}
 		}
@@ -151,14 +157,14 @@ public class HttpRESTHandler<T extends DatabaseType> implements ResponsibleHandl
 	public String[] getSupportedUrls() {
 		List<String> urls = new ArrayList<String>();
 		addArrayToList(getPingHandler().getSupportedUrls(), urls);
-		for(ResponsibleHandler handler : getHandlers()) {
+		for (ResponsibleHandler handler : getHandlers()) {
 			addArrayToList(handler.getSupportedUrls(), urls);
 		}
 		return urls.toArray(new String[urls.size()]);
 	}
-	
+
 	private static <T> void addArrayToList(T[] array, List<T> list) {
-		for(T t : array) {
+		for (T t : array) {
 			list.add(t);
 		}
 	}

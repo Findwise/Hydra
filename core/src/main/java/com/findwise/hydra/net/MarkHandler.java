@@ -12,7 +12,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.findwise.hydra.DatabaseConnector;
+import com.findwise.hydra.CachingDocumentNIO;
 import com.findwise.hydra.DatabaseConnector.ConversionException;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseType;
@@ -27,11 +27,11 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
 
 	private static Logger logger = LoggerFactory.getLogger(MarkHandler.class);
 
-	private DatabaseConnector<T> dbc;
+	private CachingDocumentNIO<T> io;
 	private boolean performanceLogging = false;
 	
-	public MarkHandler(DatabaseConnector<T> dbc, boolean performanceLogging) {
-		this.dbc = dbc;
+	public MarkHandler(CachingDocumentNIO<T> io, boolean performanceLogging) {
+		this.io = io;
 		this.performanceLogging = performanceLogging;
 	}
 
@@ -51,7 +51,7 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
 
 		DatabaseDocument<T> md;
 		try {
-			md = dbc.convert(new LocalDocument(requestContent));
+			md = io.convert(new LocalDocument(requestContent));
 		} catch (JsonException e) {
 			HttpResponseWriter.printJsonException(response, e);
 			return;
@@ -62,7 +62,7 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
 		}
 		long convert = System.currentTimeMillis();
 		
-		DatabaseDocument<T> dbdoc = dbc.getDocumentReader().getDocumentById(md.getID());
+		DatabaseDocument<T> dbdoc = io.getDocumentById(md.getID());
 		long query = System.currentTimeMillis();
 		if(dbdoc==null) {
 			HttpResponseWriter.printNoDocument(response);
@@ -101,17 +101,17 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
 
 		switch (mark) {
 		case PENDING: {
-			return dbc.getDocumentWriter().markPending(md, stage);
+			return io.markPending(md, stage);
 			
 		}
 		case PROCESSED: {
-			return dbc.getDocumentWriter().markProcessed(md, stage);
+			return io.markProcessed(md, stage);
 		}
 		case FAILED: {
-			return dbc.getDocumentWriter().markFailed(md, stage);
+			return io.markFailed(md, stage);
 		}
 		case DISCARDED: {
-			return dbc.getDocumentWriter().markDiscarded(md, stage);
+			return io.markDiscarded(md, stage);
 		}
 		}
 		return false;

@@ -1,5 +1,8 @@
 package com.findwise.hydra.mongodb;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -8,18 +11,42 @@ import com.findwise.hydra.Document.Action;
 import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.SerializationUtils;
+import com.findwise.hydra.local.LocalQuery;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.mongodb.DBObject;
 import com.mongodb.QueryBuilder;
 
-
 public class MongoQuery implements DatabaseQuery<MongoType> {
 
 	private QueryBuilder qb;
 	
+	private List<String> touchedBy;
+	private List<String> notTouchedBy;
+	private List<String> fetchedBy;
+	private List<String> notFetchedBy;
+	private List<String> metadataExists;
+	private List<String> metadataNotExists;
+	private Map<String, Object> metadataNotEquals;
+	private Map<String, Object> metadataEquals;
+	
+	
+	private LocalQuery lq;
+	
+	private DocumentID<MongoType> id;
+	private Action action;
+	
 	public MongoQuery() {
 		qb = QueryBuilder.start();
+		touchedBy = new ArrayList<String>();
+		notTouchedBy = new ArrayList<String>();
+		fetchedBy = new ArrayList<String>();
+		notFetchedBy = new ArrayList<String>();
+		metadataExists = new ArrayList<String>();
+		metadataNotExists = new ArrayList<String>();
+		metadataEquals = new HashMap<String, Object>();
+		metadataNotEquals = new HashMap<String, Object>();
+		lq = new LocalQuery();
 	}
 	
 	public MongoQuery(String json) throws JsonException {
@@ -47,46 +74,67 @@ public class MongoQuery implements DatabaseQuery<MongoType> {
 			return;
 		}
 		qb = qb.put(MongoDocument.MONGO_ID_KEY).is(o.getID());
+		id = o;
 	}
 
 	@Override
 	public final void requireContentFieldExists(String s) {
 		qb = putContentField(s).exists(true);
+		lq.requireContentFieldExists(s);
 	}
 
 	@Override
 	public final void requireContentFieldEquals(String s, Object o) {
 		qb = putContentField(s).is(o);
+		lq.requireContentFieldEquals(s, o);
 	}
 
 	@Override
 	public final void requireContentFieldNotExists(String s) {
 		qb = putContentField(s).exists(false);
+		lq.requireContentFieldNotExists(s);
 	}
 
 	@Override
 	public final void requireContentFieldNotEquals(String s, Object o) {
 		qb = putContentField(s).notEquals(o);
+		lq.requireContentFieldNotEquals(s, o);
 	}
 
 	@Override
 	public final void requireMetadataFieldExists(String s) {
+		requireMetadataFieldExists(s, true);
+	}
+	
+	private void requireMetadataFieldExists(String s, boolean addToList) {
 		qb = putMetadataField(s).exists(true);
+		if(addToList) {
+			metadataExists.add(s);
+		}
+	}
+	
+	@Override
+	public final void requireMetadataFieldNotExists(String s) {
+		requireMetadataFieldNotExists(s, true);
+	}
+	
+	private void requireMetadataFieldNotExists(String s, boolean addToList) {
+		qb = putMetadataField(s).exists(false);
+		if(addToList) {
+			metadataNotExists.add(s);
+		}
 	}
 
 	@Override
 	public final void requireMetadataFieldEquals(String s, Object o) {
 		qb = putMetadataField(s).is(o);
-	}
-	
-	@Override
-	public final void requireMetadataFieldNotExists(String s) {
-		qb = putMetadataField(s).exists(false);
+		getMetadataEquals().put(s, o);
 	}
 
 	@Override
 	public final void requireMetadataFieldNotEquals(String s, Object o) {
 		qb = putMetadataField(s).notEquals(o);
+		getMetadataNotEquals().put(s, o);
 	}
 	
 	public final String toString() {
@@ -95,20 +143,28 @@ public class MongoQuery implements DatabaseQuery<MongoType> {
 
 	@Override
 	public final void requireTouchedByStage(String stageName) {
-		requireMetadataFieldExists("touched."+stageName);
+		requireMetadataFieldExists("touched."+stageName, false);
+		touchedBy.add(stageName);
 	}
 
 	@Override
 	public final void requireNotTouchedByStage(String stageName) {
-		requireMetadataFieldNotExists("touched."+stageName);
+		requireMetadataFieldNotExists("touched."+stageName, false);
+		notTouchedBy.add(stageName);
 	}
 	
 	public final void requireFetchedByStage(String stageName) {
-		requireMetadataFieldExists("fetched."+stageName);
+		requireMetadataFieldExists("fetched."+stageName, false);
+		fetchedBy.add(stageName);
 	}
 
 	public final void requireNotFetchedByStage(String stageName) {
-		requireMetadataFieldNotExists("fetched."+stageName);
+		requireMetadataFieldNotExists("fetched."+stageName, false);
+		notFetchedBy.add(stageName);
+	}
+	
+	public final DocumentID<MongoType> getRequiredID() {
+		return id;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -172,6 +228,99 @@ public class MongoQuery implements DatabaseQuery<MongoType> {
 	@Override
 	public final void requireAction(Action action) {
 		qb = qb.put(MongoDocument.ACTION_KEY).is(action.toString());
+		this.action = action;
 	}
+
+	public Map<String, Object> getContentsEquals() {
+		return lq.getContentsEquals();
+	}
+	
+	public Map<String, Object> getContentsNotEquals() {
+		return lq.getContentNotEquals();
+	}
+
+	public List<String> getMetadataExists() {
+		return metadataExists;
+	}
+
+	public List<String> getMetadataNotExists() {
+		return metadataNotExists;
+	}
+
+	public List<String> getContentsNotExists() {
+		List<String> list = new ArrayList<String>();
+		
+		for(Map.Entry<String, Boolean> e : lq.getContentsExists().entrySet()) {
+			if(!e.getValue()) {
+				list.add(e.getKey());
+			}
+		}
+		
+		return list;
+	}
+
+	public List<String> getContentsExists() {
+		List<String> list = new ArrayList<String>();
+		
+		for(Map.Entry<String, Boolean> e : lq.getContentsExists().entrySet()) {
+			if(e.getValue()) {
+				list.add(e.getKey());
+			}
+		}
+		
+		return list;
+	}
+	
+	public final List<String> getTouchedBy() {
+		return touchedBy;
+	}
+	
+	public final List<String> getNotTouchedBy() {
+		return notTouchedBy;
+	}
+	
+	public final List<String> getFetchedBy() {
+		return fetchedBy;
+	}
+	
+	public final List<String> getNotFetchedBy() {
+		return notFetchedBy;
+	}
+	
+	public final Action getAction() {
+		return action;
+	}
+
+	public Map<String, Object> getMetadataEquals() {
+		return metadataEquals;
+	}
+
+	public Map<String, Object> getMetadataNotEquals() {
+		return metadataNotEquals;
+	}
+	
+//	public List<String> getContentsEquals() {
+//		List<String> list = new ArrayList<String>();
+//		
+//		for(Map.Entry<String, Object> e : lq.getContentsEquals().entrySet()) {
+//			if(e.getValue() == Boolean.TRUE) {
+//				list.add(e.getKey());
+//			}
+//		}
+//		
+//		return list;
+//	}
+//	
+//	public List<String> getContentsNotEquals() {
+//		List<String> list = new ArrayList<String>();
+//		
+//		for(Map.Entry<String, Object> e : lq.getContentsEquals().entrySet()) {
+//			if(e.getValue() == Boolean.FALSE) {
+//				list.add(e.getKey());
+//			}
+//		}
+//		
+//		return list;
+//	}
 
 }

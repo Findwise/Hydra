@@ -19,19 +19,21 @@ public final class NodeMaster<T extends DatabaseType> extends Thread {
 	private StageManager sm;
 	
 	private String namespace;
+	private CachingDocumentNIO<T> documentNIO;
 
 	private int port;
 	
 	private CoreConfiguration conf;
 	
-	public NodeMaster(CoreConfiguration conf, DatabaseConnector<T> dbc, Pipeline pipeline) {
+	public NodeMaster(CoreConfiguration conf, CachingDocumentNIO<T> documentNIO, Pipeline pipeline) {
 		this.conf = conf;
-		this.dbc = dbc;
 		sm = StageManager.getStageManager();
 		this.pipeline = pipeline;
 		this.pollingInterval = conf.getPollingInterval();
 		this.port = conf.getRestPort();
 		this.namespace = conf.getNamespace();
+		this.documentNIO = documentNIO;
+		this.dbc = documentNIO.getDatabaseConnector();
 	}
 	/**
 	 * Starts the NodeMaster.
@@ -146,8 +148,8 @@ public final class NodeMaster<T extends DatabaseType> extends Thread {
 		return true;
 	}
 	
-	public DatabaseConnector<T> getDatabaseConnector() {
-		return dbc;
+	public CachingDocumentNIO<T> getDocumentIO() {
+		return documentNIO;
 	}
 	
 	public Pipeline getPipeline() {
