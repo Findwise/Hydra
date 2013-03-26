@@ -77,7 +77,7 @@ public final class NodeMaster<T extends DatabaseType> extends Thread {
 	
 	private void startStopped() throws IOException {
 		for(StageRunner runner : sm.getRunners()) {
-			if(!runner.isAlive()) {
+			if(!runner.isAlive() && !runner.isStarted()) {
 				runner.prepare();
 				runner.start();
 			}

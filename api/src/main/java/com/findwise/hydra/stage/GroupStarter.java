@@ -13,6 +13,8 @@ import org.apache.http.util.EntityUtils;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.SerializationUtils;
 import com.findwise.tools.HttpConnection;
+
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -21,7 +23,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class GroupStarter {
-    public static final org.slf4j.Logger logger = LoggerFactory.getLogger(GroupStarter.class);
+    public static final Logger logger = LoggerFactory.getLogger(GroupStarter.class);
 	public static final String GET_STAGES_URL = "getStages";
 	public static final String GROUP_PARAM = "group";
 	
@@ -35,32 +37,36 @@ public class GroupStarter {
 		String groupName = args[0];
 		String logging;
 		String logPort;
-		if(args.length == 1) {
-			host = "localhost";
-			port = "12001";
-			logging = "false";
-			logPort = "12002";
-		}
-		else {
-			host = args[1];
-			port = args[2];
-			logging = args[3];
-			logPort = args[4];
-		}
+		
+		host = (args.length>1) ? args[1] : "localhost";
+		port = (args.length>2) ? args[2] : "12001";
+		logging = (args.length>3) ? args[3] : "false";
+		logPort = (args.length>4) ? args[4] : "12002";
 
-		Logging.setup(host, Integer.parseInt(logPort));
+		try {
+			Logging.setup(host, Integer.parseInt(logPort));
+		} catch (UnknownHostException e) {
+			logger.error("Unable to connect to remote logging host on "+host+":"+logPort, e);
+			return;
+		}
 
 		List<String> stages;
 		try {
 			stages = getStages(host, Integer.parseInt(port), groupName);
 		} catch (IOException e) {
-			logger.error("Unable to get stages for this group", e);
+			Logging.addConsoleAppender();
+			logger.error("Unable to get stages for the group '"+groupName+"'", e);
 			return;
 		}
-		
-		for(String stage : stages) {
-			logger.debug("Attempting to start stage: "+stage);
-			AbstractStage.main(new String[]{stage, host, port, logging, logPort});
+
+		try {
+			for (String stage : stages) {
+				logger.debug("Attempting to start stage: " + stage);
+				AbstractStage.main(new String[] { stage, host, port, logging, logPort });
+			}
+		} catch (Exception e) {
+			Logging.addConsoleAppender();
+			logger.error("An exception was thrown when starting the stages in the group", e);
 		}
 	}
 

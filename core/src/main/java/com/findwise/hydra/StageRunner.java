@@ -14,7 +14,6 @@ import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.Executor;
 import org.apache.commons.exec.ProcessDestroyer;
-import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.exec.launcher.CommandLauncher;
 import org.apache.commons.exec.launcher.CommandLauncherFactory;
 import org.apache.commons.io.FileUtils;
@@ -31,7 +30,6 @@ public class StageRunner extends Thread {
     private int timesToRetry = -1;
     private int timesStarted;
     private int pipelinePort;
-    private boolean loggingEnabled = true;
     private List<File> files = null;
     private String jvmParameters = null;
     private String startupArgsString = null;
@@ -42,6 +40,7 @@ public class StageRunner extends Thread {
     private File baseDirectory;
     private boolean performanceLogging = false;;
     private int loggingPort;
+    private boolean started;
 
     private boolean wasKilled = false;;
 
@@ -110,14 +109,10 @@ public class StageRunner extends Thread {
         } else {
             timesToRetry = -1;
         }
-        if (conf.containsKey(StageGroup.LOGGING_KEY) && conf.get(StageGroup.LOGGING_KEY)!=null) {
-            loggingEnabled = (Boolean) conf.get(StageGroup.LOGGING_KEY);
-        } else {
-            loggingEnabled = true;
-        }
     }
 
     public void run() {
+    	started = true;
     	if(!prepared) {
     		logger.error("The StageRunner was not prepared prior to being started. Aborting!");
     		return;
@@ -274,6 +269,10 @@ public class StageRunner extends Thread {
     
     public StageGroup getStageGroup() {
     	return stageGroup;
+    }
+    
+    public boolean isStarted() {
+    	return started;
     }
     
     /**

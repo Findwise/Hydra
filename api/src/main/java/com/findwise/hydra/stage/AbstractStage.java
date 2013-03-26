@@ -189,7 +189,7 @@ public abstract class AbstractStage extends Thread {
 		this.createAndApplyShutDownHook();
 	}
 	
-	public static List<AbstractStage> getInstances(String[] args) {
+	public static List<AbstractStage> getInstances(String[] args) throws UnknownHostException {
 		List<AbstractStage> list = new ArrayList<AbstractStage>();
 		
 		int numberOfThreads = 1;
@@ -219,7 +219,7 @@ public abstract class AbstractStage extends Thread {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static AbstractStage getInstance(String[] args) {
+	public static AbstractStage getInstance(String[] args) throws UnknownHostException {
         logger.debug("Getting AbstractStage with args: " + Arrays.toString(args));
 		if (args.length < 1) {
 			logger.error("No stage name found", new RequiredArgumentMissingException("No stage name was specified"));
@@ -243,6 +243,7 @@ public abstract class AbstractStage extends Thread {
 			AbstractStage stage = actualClass.newInstance();
 			
 			stage.setName(rp.getStageName());
+			stage.setStageName(rp.getStageName());
 			stage.setUp(rp, properties);
 			stage.init();
 			
@@ -256,6 +257,8 @@ public abstract class AbstractStage extends Thread {
 			logger.error("Could not instantiate the Stage class", e);
 		} catch (IllegalAccessException e) {
 			logger.error("Could not access constructor of Stage class", e);
+		} catch (UnknownHostException e) {
+			throw e;
 		} catch (IOException e) {
 			logger.error("Communication failiure when reading properties", e);
 		}
@@ -292,13 +295,13 @@ public abstract class AbstractStage extends Thread {
 
 	public Thread createAndApplyShutDownHook() {
 		shutDownHook = new OnDestroyThread();
+		shutDownHook.setName(stageName);
 		Runtime.getRuntime().addShutdownHook(shutDownHook);
 		return shutDownHook;
 	}
 	
 	private class OnDestroyThread extends Thread {
 		public void run() {
-
 			logger.info("Shutting down stage: " + getName());
 			if (AbstractStage.this.isAlive()) {
 				AbstractStage.this.setContinueRunning(false);

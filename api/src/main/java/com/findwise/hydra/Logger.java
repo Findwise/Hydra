@@ -1,14 +1,7 @@
 package com.findwise.hydra;
 
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.net.SocketAppender;
 import org.slf4j.LoggerFactory;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 /**
  * Deprecated Logger implementation.
