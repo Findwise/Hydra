@@ -12,7 +12,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.findwise.hydra.DatabaseConnector;
+import com.findwise.hydra.CachingDocumentNIO;
 import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.Document;
@@ -24,13 +24,13 @@ import com.findwise.hydra.net.RESTTools.Method;
 
 public class QueryHandler<T extends DatabaseType> implements ResponsibleHandler {
 	
-	private DatabaseConnector<T> dbc;
+	private CachingDocumentNIO<T> io;
 	private boolean performanceLogging = false;
 
 	private static Logger logger = LoggerFactory.getLogger(QueryHandler.class);
 
-	public QueryHandler(DatabaseConnector<T> dbc, boolean performanceLogging) {
-		this.dbc = dbc;
+	public QueryHandler(CachingDocumentNIO<T> dbc, boolean performanceLogging) {
+		this.io = dbc;
 		this.performanceLogging = performanceLogging;
 	}
 
@@ -63,7 +63,7 @@ public class QueryHandler<T extends DatabaseType> implements ResponsibleHandler 
 		reportQuery(stage);		
 		
 
-		Document<T> d = dbc.getDocumentWriter().getAndTag(dbq, stage);
+		Document<T> d = io.getAndTag(dbq, stage);
 		
 		long query = System.currentTimeMillis();
 		
@@ -82,7 +82,7 @@ public class QueryHandler<T extends DatabaseType> implements ResponsibleHandler 
 
 	private DatabaseQuery<T> requestToQuery(String requestContent)
 			throws JsonException {
-		return dbc.convert(new LocalQuery(requestContent));
+		return io.convert(new LocalQuery(requestContent));
 	}
 
 	@Override

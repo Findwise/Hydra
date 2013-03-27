@@ -76,4 +76,9 @@ public class FileConfiguration implements CoreConfiguration {
 	public boolean isPerformanceLogging() {
 		return conf.getBoolean(PERFORMANCE_LOGGING, false);
 	}
+
+	@Override
+	public boolean isCaching() {
+		return conf.getBoolean(USE_CACHE, false);
+	}
 }

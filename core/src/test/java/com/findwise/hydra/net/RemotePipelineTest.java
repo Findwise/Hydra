@@ -10,13 +10,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.findwise.hydra.CachingDocumentNIO;
 import com.findwise.hydra.ConfigurationFactory;
 import com.findwise.hydra.CoreConfiguration;
-import com.findwise.hydra.DatabaseConnector;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.Document.Action;
 import com.findwise.hydra.DocumentFile;
 import com.findwise.hydra.NodeMaster;
+import com.findwise.hydra.NoopCache;
 import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.local.Local;
 import com.findwise.hydra.local.LocalDocument;
@@ -31,6 +32,7 @@ import com.mongodb.Mongo;
 public class RemotePipelineTest {
 	private static NodeMaster<MongoType> nm;
 	private MongoDocument test, test2;
+	private static MongoConnector dbc;
 	
 	private static RESTServer server;
 
@@ -39,15 +41,16 @@ public class RemotePipelineTest {
 		new Mongo().getDB("jUnit-RemotePipelineTest").dropDatabase();
 		
 		CoreConfiguration conf = ConfigurationFactory.getConfiguration("jUnit-RemotePipelineTest");
+		dbc = new MongoConnector(conf);
 		
-		nm = new NodeMaster<MongoType>(conf, new MongoConnector(conf), new Pipeline());
+		nm = new NodeMaster<MongoType>(conf, new CachingDocumentNIO<MongoType>(dbc, new NoopCache<MongoType>(), false), new Pipeline());
 		if(!nm.isAlive()) {
 			nm.blockingStart();
 		
-			nm.getDatabaseConnector().waitForWrites(true);
-			nm.getDatabaseConnector().connect();
+			dbc.waitForWrites(true);
+			dbc.connect();
 		}
-		server = new RESTServer(conf, new HttpRESTHandler<MongoType>(nm.getDatabaseConnector()));
+		server = new RESTServer(conf, new HttpRESTHandler<MongoType>(dbc));
 		server.start();
 	}
 	
@@ -68,15 +71,14 @@ public class RemotePipelineTest {
 		test2.putContentField("name", "test2");
 		test2.putContentField("type", "fabulous");
 		
-		nm.getDatabaseConnector().getDocumentWriter().deleteAll();
+		dbc.getDocumentWriter().deleteAll();
 
-		nm.getDatabaseConnector().getDocumentWriter().insert(test);
-		nm.getDatabaseConnector().getDocumentWriter().insert(test2);
+		dbc.getDocumentWriter().insert(test);
+		dbc.getDocumentWriter().insert(test2);
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		DatabaseConnector<?> dbc = nm.getDatabaseConnector();
 		dbc.getDocumentWriter().deleteAll();
 	}
 	
@@ -418,7 +420,7 @@ public class RemotePipelineTest {
 		}
 		
 		MongoDocumentID mid = MongoDocumentID.getDocumentID(testDoc.getID().toJSON());
-		if(nm.getDatabaseConnector().getDocumentReader().getDocumentById(mid)!=null) {
+		if(dbc.getDocumentReader().getDocumentById(mid)!=null) {
 			fail("Document was found even though markFailed had been called");
 		}
 		
@@ -428,11 +430,11 @@ public class RemotePipelineTest {
 		}
 		
 		mid = MongoDocumentID.getDocumentID(testDoc.getID().toJSON());
-		if(nm.getDatabaseConnector().getDocumentReader().getDocumentById(mid)!=null) {
+		if(dbc.getDocumentReader().getDocumentById(mid)!=null) {
 			fail("Document was found even though markFailed(Doc, Throwable) had been called");
 		}
 		
-		DatabaseDocument<MongoType> dbdoc = nm.getDatabaseConnector().getDocumentReader().getDocumentById(mid, true);
+		DatabaseDocument<MongoType> dbdoc = dbc.getDocumentReader().getDocumentById(mid, true);
 		
 		if(!dbdoc.hasErrors()) {
 			fail("dbdocument had no errors");
@@ -442,7 +444,7 @@ public class RemotePipelineTest {
 	@Test
 	public void testSaveFile() throws Exception {
 		MongoDocument testDoc = new MongoDocument();
-		nm.getDatabaseConnector().getDocumentWriter().insert(testDoc);
+		dbc.getDocumentWriter().insert(testDoc);
 		
 		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
 		
@@ -456,7 +458,7 @@ public class RemotePipelineTest {
 			fail("RemotePipeline.saveFile() returned false");
 		}
 		
-		DocumentFile<?> df2 = nm.getDatabaseConnector().getDocumentReader().getDocumentFile(testDoc, fileName);
+		DocumentFile<?> df2 = dbc.getDocumentReader().getDocumentFile(testDoc, fileName);
 		
 		if(df2==null) {
 			fail("File was not properly saved");
@@ -474,10 +476,10 @@ public class RemotePipelineTest {
 	
 	@Test
 	public void testRemoveField() throws Exception {
-		nm.getDatabaseConnector().getDocumentWriter().deleteAll();
+		dbc.getDocumentWriter().deleteAll();
 		MongoDocument testDoc = new MongoDocument();
 		testDoc.putContentField("field", "value");
-		nm.getDatabaseConnector().getDocumentWriter().insert(testDoc);
+		dbc.getDocumentWriter().insert(testDoc);
 		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
 		
 		LocalDocument ld = rp.getDocument(new LocalQuery());

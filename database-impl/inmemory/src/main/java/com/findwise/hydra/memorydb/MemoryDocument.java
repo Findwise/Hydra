@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.findwise.hydra.DatabaseDocument;
+import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.Document;
 import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.JsonException;
@@ -24,6 +25,11 @@ public class MemoryDocument implements DatabaseDocument<MemoryType> {
 	@Override
 	public Object putMetadataField(String key, Object value) {
 		return getMetadataMap().put(key, value);
+	}
+	
+	@Override
+	public boolean matches(DatabaseQuery<MemoryType> query) {
+		return matches((MemoryQuery) query);
 	}
 	
 	public boolean matches(MemoryQuery mq) {
@@ -116,12 +122,16 @@ public class MemoryDocument implements DatabaseDocument<MemoryType> {
 		return getMetadataSubMap(FETCHED_METADATA_TAG).containsKey(stage);
 	}
 	
-	@SuppressWarnings("unchecked")
 	protected void tag(String tag, String stage) {
+		tag(tag, stage, new Date());
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected void tag(String tag, String stage, Date date) {
 		if(!getMetadataMap().containsKey(tag)) {
 			getMetadataMap().put(tag, new HashMap<String, Object>());
 		}
-		((Map<String, Object>) getMetadataMap().get(tag)).put(stage, new Date());
+		((Map<String, Object>) getMetadataMap().get(tag)).put(stage, date);
 	}
 
 	@Override
@@ -314,5 +324,22 @@ public class MemoryDocument implements DatabaseDocument<MemoryType> {
 
 	public boolean isTouchedAction() {
 		return doc.isTouchedAction();
+	}
+
+	@Override
+	public void setFetchedBy(String stage, Date date) {
+		tag(FETCHED_METADATA_TAG, stage, date);
+	}
+
+	@Override
+	public void setTouchedBy(String stage, Date date) {
+		tag(TOUCHED_METADATA_TAG, stage, date);
+	}
+
+	@Override
+	public MemoryDocument copy() {
+		MemoryDocument m = new MemoryDocument();
+		m.putAll(this);
+		return m;
 	}
 }

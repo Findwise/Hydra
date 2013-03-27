@@ -9,7 +9,9 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.findwise.hydra.CachingDocumentNIO;
 import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.NoopCache;
 import com.findwise.hydra.local.Local;
 import com.findwise.hydra.local.LocalDocumentID;
 import com.findwise.hydra.local.RemotePipeline;
@@ -26,7 +28,7 @@ public class FileHandlerTest {
 	@Before
 	public void setUp() {
 		mc = new MemoryConnector();
-		handler = new HttpRESTHandler<MemoryType>(mc);
+		handler = new HttpRESTHandler<MemoryType>(new CachingDocumentNIO<MemoryType>(mc, new NoopCache<MemoryType>()), mc.getPipelineReader(), null, false);
 		server = RESTServer.getNewStartedRESTServer(20000, handler);
 	}
 	

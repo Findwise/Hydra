@@ -30,4 +30,12 @@ public interface DatabaseDocument<T extends DatabaseType> extends Document<T> {
 	String getCompletedBy();
 
 	void setID(DocumentID<T> id);
+	
+	boolean matches(DatabaseQuery<T> query);
+	
+	void setFetchedBy(String stage, Date date);
+	
+	void setTouchedBy(String stage, Date date);
+	
+	DatabaseDocument<T> copy();
 }

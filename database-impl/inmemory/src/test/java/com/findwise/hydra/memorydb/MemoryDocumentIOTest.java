@@ -69,7 +69,7 @@ public class MemoryDocumentIOTest {
 		mdq.requireContentFieldEquals("name", "test");
 		DatabaseDocument<MemoryType> d = io.getDocument(mdq);
 		d.putContentField(field, content);
-		System.out.println("D: "+d.toJson());
+		
 		io.update(d);
 		mdq = new MemoryQuery();
 		mdq.requireContentFieldEquals(field, content);
@@ -163,10 +163,7 @@ public class MemoryDocumentIOTest {
 		if (d == null) {
 			fail("Did not find any documents matching query");
 		}
-		System.out.println(test2.toJson());
-		System.out.println(d.toJson());
-		System.out.println(d.isEqual(test));
-		System.out.println(d.isEqual(test2));
+
 		if(d.isEqual(test) || !d.isEqual(test2)) {
 			fail("Incorrect document returned");
 		}
