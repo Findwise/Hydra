@@ -338,6 +338,25 @@ public class CachingDocumentNIOTest {
 		verify(cache).add(doc1);
 		verifyNoMoreInteractions(writer);
 	}
+	
+	@Test
+	public void testGetDocumentByIdDocumentIDNotInCacheOrReader() {
+		when(cache.getDocumentById(id1)).thenReturn(null);
+		when(reader.getDocumentById(id1)).thenReturn(null);
+		when(reader.getDocumentById(id1, false)).thenReturn(null);
+
+		assertNull(io.getDocumentById(id1));
+
+		verify(cache).getDocumentById(id1);
+		try {
+			verify(reader).getDocumentById(id1);
+		} catch (Throwable t) {
+			verify(reader).getDocumentById(id1, false);
+		}
+		verify(cache, times(0)).add(any(DatabaseDocument.class));
+		verify(cache, times(0)).add(any(Collection.class));
+		verifyNoMoreInteractions(writer);
+	}
 
 	@Test
 	public void testGetDocumentByIdNotInactive() {
