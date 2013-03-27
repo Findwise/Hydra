@@ -61,6 +61,12 @@ public class MemoryCacheTest {
 		
 		assertEquals(doc1, cache.getDocumentById(id1));
 	}
+	
+	@Test
+	public void testAddNullDocumentIsNoOp() {
+		cache.add( (DatabaseDocument<MemoryCacheTest.TestType>) null );
+		assertEquals(0, cache.getSize());
+	}
 
 	@Test
 	public void testAddCollectionOfDatabaseDocuments() {

@@ -228,7 +228,11 @@ public class CachingDocumentNIO<T extends DatabaseType> implements
 
 		if (doc == null) {
 			doc = reader.getDocumentById(id, false);
-			cache.add(doc);
+			if(doc != null) {
+				cache.add(doc);
+			} else {
+				return null;
+			}
 		}
 
 		return getCopy(doc);

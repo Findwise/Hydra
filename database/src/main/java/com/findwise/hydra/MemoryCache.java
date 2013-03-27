@@ -26,8 +26,10 @@ public class MemoryCache<T extends DatabaseType> implements Cache<T> {
 
 	@Override
 	public void add(DatabaseDocument<T> doc) {
-		lastTouched.put(doc.getID(), System.currentTimeMillis());
-		map.put(doc.getID(), doc);
+		if(doc != null) {
+			lastTouched.put(doc.getID(), System.currentTimeMillis());
+			map.put(doc.getID(), doc);
+		}
 	}
 
 	@Override
