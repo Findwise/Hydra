@@ -13,7 +13,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.findwise.hydra.DatabaseConnector;
+import com.findwise.hydra.CachingDocumentNIO;
 import com.findwise.hydra.DatabaseConnector.ConversionException;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseType;
@@ -25,13 +25,13 @@ import com.findwise.hydra.net.RESTTools.Method;
 
 public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler {
 
-	private DatabaseConnector<T> dbc;
+	private CachingDocumentNIO<T> io;
 	private boolean performanceLogging;
 	
 	private static Logger logger = LoggerFactory.getLogger(WriteHandler.class);
 
-	public WriteHandler(DatabaseConnector<T> dbc, boolean performanceLogging) {
-		this.dbc = dbc;
+	public WriteHandler(CachingDocumentNIO<T> dbc, boolean performanceLogging) {
+		this.io = dbc;
 		this.performanceLogging = performanceLogging;
 	}
 	
@@ -64,7 +64,7 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
         
         DatabaseDocument<T> md;
         try {
-        	md = dbc.convert(new LocalDocument(requestContent));
+        	md = io.convert(new LocalDocument(requestContent));
         }
         catch(JsonException e) {
         	HttpResponseWriter.printJsonException(response, e);
@@ -108,7 +108,7 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 	}
 	
 	private boolean release(Document<T> md, String stage) {
-		return dbc.getDocumentWriter().markTouched(md.getID(), stage);
+		return io.markTouched(md.getID(), stage);
 	}
 	
 	private boolean handlePartialWrite(DatabaseDocument<T> md, HttpResponse response) throws UnsupportedEncodingException{
@@ -118,7 +118,7 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 			return false;
 		}
 		logger.debug("Handling a partial write for document "+md.getID());
-		DatabaseDocument<T> inDB = dbc.getDocumentReader().getDocumentById(md.getID());
+		DatabaseDocument<T> inDB = io.getDocumentById(md.getID());
 		if(inDB==null) {
 			HttpResponseWriter.printNoDocument(response);
 			return false;
@@ -126,7 +126,7 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 		inDB.putAll(md);
 
 
-		if(dbc.getDocumentWriter().update(inDB)){
+		if(io.update(inDB)){
 			HttpResponseWriter.printSaveOk(response, md.getID());
 			return true;
 		} 
@@ -138,7 +138,7 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 	
 	private boolean handleFullUpdate(DatabaseDocument<T> md, HttpResponse response) {
 		logger.trace("handleFullUpdate()");
-		if(dbc.getDocumentWriter().update(md)) {
+		if(io.update(md)) {
 			HttpResponseWriter.printSaveOk(response, md.getID());
 			return true;
 		}
@@ -147,7 +147,7 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 	}
 	
 	private boolean handleInsert(DatabaseDocument<T> md, HttpResponse response) {
-		if(dbc.getDocumentWriter().insert(md)) {
+		if(io.insert(md)) {
 			HttpResponseWriter.printInsertOk(response, md);
 			return true;
 		}

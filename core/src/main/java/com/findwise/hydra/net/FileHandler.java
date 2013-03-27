@@ -21,7 +21,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.findwise.hydra.DatabaseConnector;
+import com.findwise.hydra.CachingDocumentNIO;
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.DocumentFile;
@@ -34,10 +34,10 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 
 	private static Logger logger = LoggerFactory.getLogger(FileHandler.class);
 	
-	private DatabaseConnector<T> dbc;
+	private CachingDocumentNIO<T> io;
 	
-	public FileHandler(DatabaseConnector<T> dbc) {
-		this.dbc = dbc;
+	public FileHandler(CachingDocumentNIO<T> io) {
+		this.io = io;
 	}
 	
 	@Override
@@ -69,18 +69,18 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 	private void handleSaveFile(HttpRequest request, HttpResponse response) {
 		try {
 			DocumentFile<T> df = getDocumentFile(request);
-			System.out.println(df);
+			
 			if (df == null) {
 				HttpResponseWriter.printBadRequestContent(response);
 			}
 			
-			DatabaseDocument<T> md = dbc.getDocumentReader().getDocumentById(df.getDocumentId());
+			DatabaseDocument<T> md = io.getDocumentById(df.getDocumentId());
 			if (md == null) {
 				HttpResponseWriter.printNoDocument(response);
 				return;
 			}
 			
-			dbc.getDocumentWriter().write(df);
+			io.write(df);
 			
 			HttpResponseWriter.printOk(response);
 		} catch (Exception e) {
@@ -95,13 +95,13 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
         	return;
         }
         
-        DatabaseDocument<T> md = dbc.getDocumentReader().getDocumentById(triple.docid);
+        DatabaseDocument<T> md = io.getDocumentById(triple.docid);
         if(md==null) {
         	HttpResponseWriter.printNoDocument(response);
         	return;
         }
         
-        DocumentFile<T> df = dbc.getDocumentReader().getDocumentFile(md, triple.fileName);
+        DocumentFile<T> df = io.getDocumentFile(md, triple.fileName);
         
         if(df==null) {
         	HttpResponseWriter.printFileNotFound(response, triple.fileName);
@@ -118,13 +118,13 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 			return;
 		}
 		
-        DatabaseDocument<T> md = dbc.getDocumentReader().getDocumentById(tuple.docid);
+        DatabaseDocument<T> md = io.getDocumentById(tuple.docid);
         if(md==null) {
         	HttpResponseWriter.printNoDocument(response);
         	return;
         }
 		
-        HttpResponseWriter.printJson(response, dbc.getDocumentReader().getDocumentFileNames(md));
+        HttpResponseWriter.printJson(response, io.getDocumentFileNames(md));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -139,7 +139,7 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 		}
 		
 		Map<String, Object> map = (Map<String, Object>) o;
-		DocumentID<T> id = dbc.getDocumentReader().toDocumentId(map.get("documentId"));
+		DocumentID<T> id = io.toDocumentId(map.get("documentId"));
 		String fileName = (String) map.get("fileName");
 		Date d = (Date) map.get("uploadDate");
 		String encoding = (String) map.get("encoding");
@@ -167,13 +167,13 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 			return;
 		}
 		
-        DatabaseDocument<T> md = dbc.getDocumentReader().getDocumentById(triple.docid);
+        DatabaseDocument<T> md = io.getDocumentById(triple.docid);
         if(md==null) {
         	HttpResponseWriter.printNoDocument(response);
         	return;
         }
         
-       if(dbc.getDocumentWriter().deleteDocumentFile(md, triple.fileName)) {
+       if(io.deleteDocumentFile(md, triple.fileName)) {
     	   HttpResponseWriter.printFileDeleteOk(response, triple.fileName, md.getID());
     	   return;
        } 
@@ -194,7 +194,7 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
         	return null;
         }
 		try {
-			tuple.docid = dbc.getDocumentReader().toDocumentIdFromJson(URLDecoder.decode(rawparam, "UTF-8"));
+			tuple.docid = io.toDocumentIdFromJson(URLDecoder.decode(rawparam, "UTF-8"));
 		} catch (UnsupportedEncodingException e) {
 			
 		}

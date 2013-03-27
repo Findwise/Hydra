@@ -281,12 +281,21 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	 * 
 	 */
 	@Override
-	public MongoDocument getAndTag(DatabaseQuery<MongoType> query, String tag) {
-		ensureIndex(tag);
+	public MongoDocument getAndTag(DatabaseQuery<MongoType> query, String ... tag) {
+		for(String t : tag) {
+			ensureIndex(t);
+		}
 		MongoQuery mq = (MongoQuery)query;
 		mq.requireMetadataFieldNotExists(Document.PENDING_METADATA_FLAG);
-		mq.requireMetadataFieldNotExists(DatabaseDocument.FETCHED_METADATA_TAG+"."+tag);
-		DBObject update = new BasicDBObject(MongoDocument.METADATA_KEY+"."+DatabaseDocument.FETCHED_METADATA_TAG+"."+tag, new Date());
+
+		for(String t : tag) {
+			mq.requireMetadataFieldNotExists(DatabaseDocument.FETCHED_METADATA_TAG+"."+t);
+		}
+		DBObject update = new BasicDBObject();
+		for(String t : tag) {
+			update.put(MongoDocument.METADATA_KEY+"."+DatabaseDocument.FETCHED_METADATA_TAG+"."+t, new Date());
+		}
+		
 		DBObject dbo = getUpdateObject(update);
 
 		return findAndModify(mq.toDBObject(), dbo);
@@ -302,7 +311,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	}
 	
 	@Override
-	public List<DatabaseDocument<MongoType>> getAndTag(DatabaseQuery<MongoType> query, String tag, int n) {
+	public List<DatabaseDocument<MongoType>> getAndTag(DatabaseQuery<MongoType> query, int n, String ... tag) {
 		ArrayList<DatabaseDocument<MongoType>> list = new ArrayList<DatabaseDocument<MongoType>>();
 		for(int i=0; i<n; i++) {
 			MongoDocument d = getAndTag(query, tag);
