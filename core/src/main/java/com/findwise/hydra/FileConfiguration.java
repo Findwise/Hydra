@@ -24,17 +24,17 @@ public class FileConfiguration implements CoreConfiguration {
 	}
 	
 	public int getPollingInterval() {
-		return conf.getInt(POLLING_INTERVAL_PARAM, POLLING_INTERVAL_DEFAULT);
+		return conf.getInt(PIPELINE_POLLING_INTERVAL, NodeMaster.DEFAULT_POLLING_INTERVAL);
 	}
 
 	@Override
 	public String getNamespace() {
-		return conf.getString(DatabaseConnector.NAMESPACE_PARAM);
+		return conf.getString(NAMESPACE_PARAM);
 	}
 
 	@Override
 	public String getDatabaseUrl() {
-		return conf.getString(DatabaseConnector.DATABASE_URL_PARAM, DATABASE_URL_DEFAULT);
+		return conf.getString(DATABASE_URL_PARAM, DATABASE_URL_DEFAULT);
 	}
 
 	@Override
@@ -49,36 +49,41 @@ public class FileConfiguration implements CoreConfiguration {
 
 	@Override
 	public int getRestPort() {
-		return conf.getInt(REST_PORT_PARAM, RemotePipeline.DEFAULT_PORT);
+		return conf.getInt(COMMUNICATION_PORT_PARAM, RemotePipeline.DEFAULT_PORT);
 	}
 
 	@Override
 	public String getDatabaseUser() {
-		return conf.getString(DatabaseConnector.DATABASE_USER, "");
+		return conf.getString(DATABASE_USER, "");
 	}
 
 	@Override
 	public String getDatabasePassword() {
-		return conf.getString(DatabaseConnector.DATABASE_PASSWORD, "");
+		return conf.getString(DATABASE_PASSWORD, "");
 	}
 
 	@Override
 	public int getOldMaxSize() {
-		return conf.getInt(DatabaseConnector.OLD_MAX_SIZE_MB, 100);
+		return conf.getInt(OLD_MAX_SIZE_MB, 100);
 	}
 
 	@Override
 	public int getOldMaxCount() {
-		return conf.getInt(DatabaseConnector.OLD_MAX_COUNT, 1000);
+		return conf.getInt(OLD_MAX_COUNT, 1000);
 	}
 	
 	@Override
 	public boolean isPerformanceLogging() {
-		return conf.getBoolean(PERFORMANCE_LOGGING, false);
+		return conf.getBoolean(LOGGING_PERFORMANCE, false);
 	}
 
 	@Override
-	public boolean isCaching() {
+	public boolean isCacheEnabled() {
 		return conf.getBoolean(USE_CACHE, false);
+	}
+	
+	@Override
+	public int getCacheTimeout() {
+		return conf.getInt(CACHE_TIMEOUT, CachingDocumentNIO.DEFAULT_CACHE_TIMEOUT);
 	}
 }
