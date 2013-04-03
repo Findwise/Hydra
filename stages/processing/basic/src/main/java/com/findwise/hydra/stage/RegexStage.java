@@ -35,13 +35,16 @@ public class RegexStage extends AbstractProcessStage {
 
     @Parameter(name = "regexConfigs", description = "List of configs, where each config is a map with the keys 'regex', 'inField' and 'outField' and 'substitute'")
     private List<Map<String, String>> regexConfigs;
+    @Parameter(name = "concatenateMatches", description = "Will concatenate the extracted matches for the input string(s), enabled by default.")
+    private boolean concatenateMatches = true;
+    @Parameter(name = "concatenateListElements", description = "Will add matches from all the strings in the input list to a single list, enabled by default.")
+    private boolean concatenateListElements = true;
 
     @Override
     public void init() throws RequiredArgumentMissingException {
         if (this.regexConfigs == null || this.regexConfigs.size() == 0) {
             throw new RequiredArgumentMissingException("regexConf was probably not parsed correctly");
         }
-
     }
 
     @Override
@@ -52,59 +55,97 @@ public class RegexStage extends AbstractProcessStage {
             if (value == null) {
                 return;
             }
+            List<List<String>> outData = new ArrayList<List<String>>();
             if (value instanceof String) {
-                String stringValue = (String) doc.getContentField(regexConf.get("inField"));
-                Matcher regexMatcher = pattern.matcher(stringValue);
-                List<String> substitutions = new ArrayList<String>();
-                while (regexMatcher.find()) {
-                	substitutions.add(parseString(doc, regexConf, regexMatcher));
-                }
-                if (!substitutions.isEmpty()) {
-                	if (substitutions.size() == 1) {
-                		doc.putContentField(regexConf.get("outField"), substitutions.get(0));
-                	} else {
-                		doc.putContentField(regexConf.get("outField"), substitutions);
-                	}
-                }
+                String input = (String) doc.getContentField(regexConf.get("inField"));
+                processStringInput(regexConf, pattern, outData, input);
             } else if (value instanceof List<?>) {
-                List<String> outData = new ArrayList<String>();
                 for (Object listValue : (List<?>) value) {
                     if (listValue instanceof String) {
-                        Matcher regexMatcher = pattern.matcher((String) listValue);
-                        if (regexMatcher.find()) {
-                            outData.add(parseString(doc, regexConf, regexMatcher));
-                        }
+                        processStringInput(regexConf, pattern, outData, (String) listValue);
                     } else {
                         Logger.warn("List did not contain all Strings");
                     }
                 }
-                doc.putContentField(regexConf.get("outField"), outData);
             } else {
                 Logger.warn("Field type of inField was not recognized. Valid field types are String and List<String>");
+                continue;
             }
+            addMatchesToDocument(doc, regexConf, outData);
         }
     }
 
-    public List<Map<String, String>> getRegexConfigsList() {
-        return regexConfigs;
+	private void processStringInput(Map<String, String> regexConf, Pattern pattern,
+			List<List<String>> outData, String input) {
+		Matcher regexMatcher = pattern.matcher(input);
+		List<String> extractedMatches = extractMatches(regexConf, regexMatcher);
+		if (!extractedMatches.isEmpty()) {
+			outData.add(extractedMatches);
+		}
+	}
+
+	private List<String> extractMatches(Map<String, String> regexConf, Matcher regexMatcher) {
+    	List<String> extractions = new ArrayList<String>();
+    	while (regexMatcher.find()) {
+			StringBuilder sb = new StringBuilder(regexConf.get("substitute"));
+			int index = sb.indexOf("$");
+			while (index != -1) {
+				char group = sb.charAt(index + 1);
+				int groupNr = group - '0';
+				if (groupNr >= 0 && groupNr <= regexMatcher.groupCount()) {
+					String match = regexMatcher.group(groupNr);
+					sb.replace(index, index + 2, match);
+					index += match.length();
+					index = sb.indexOf("$", index);
+				}
+			}
+			extractions.add(sb.toString());
+		}
+    	return extractions;
     }
 
-    public void setRegexConfigsList(List<Map<String, String>> regexConfigsList) {
-        this.regexConfigs = regexConfigsList;
-    }
+	private void addMatchesToDocument(LocalDocument doc, Map<String, String> regexConf,
+			List<List<String>> outData) {
+		if (outData.isEmpty()) {
+			return;
+		}
+		if (concatenateListElements) {
+			List<String> concatenated = concatenateLists(outData);
+			if (concatenateMatches) {
+				doc.putContentField(regexConf.get("outField"), concatenateStrings(concatenated));
+			} else {
+				doc.putContentField(regexConf.get("outField"), concatenated);
+			}
+		} else {
+			if (concatenateMatches) {
+				doc.putContentField(regexConf.get("outField"), concatenateMatches(outData));
+			} else {
+				doc.putContentField(regexConf.get("outField"), outData);
+			}
+		}
+	}
 
-    private String parseString(LocalDocument doc, Map<String, String> regexConf, Matcher regexMatcher) {
-        String substitute = regexConf.get("substitute");
-        //This will only work with either many groups but only one next find
-        //or with one group and many next finds.
-        for (int i = 1; i <= regexMatcher.groupCount(); i++) {
-            substitute = substitute.replace("$" + i, regexMatcher.group(i));
-            if (regexMatcher.groupCount() == 1) {
-                while (regexMatcher.find()) {
-                    substitute += regexMatcher.group(i);
-                }
-            }
-        }
-        return substitute;
-    }
+	private List<String> concatenateLists(List<List<String>> lists) {
+		List<String> ret = new ArrayList<String>();
+		for (int i = 0; i < lists.size(); i++) {
+			ret.addAll(lists.get(i));
+		}
+		return ret;
+	}
+
+    private String concatenateStrings(List<String> strings) {
+    	StringBuilder concatenated = new StringBuilder();
+    	for (String s : strings) {
+    		concatenated.append(s);
+    	}
+		return concatenated.toString();
+	}
+
+	private List<String> concatenateMatches(List<List<String>> outData) {
+		List<String> ret = new ArrayList<String>();
+		for (List<String> list : outData) {
+			ret.add(concatenateStrings(list));
+		}
+		return ret;
+	}
 }
