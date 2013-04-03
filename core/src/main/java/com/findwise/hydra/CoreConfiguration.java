@@ -1,12 +1,20 @@
 package com.findwise.hydra;
 
 public interface CoreConfiguration extends Configuration, DatabaseConfiguration {
-	static final String PERFORMANCE_LOGGING = "performance_logging";
-	static final String USE_CACHE = "cache";
+	static final String LOGGING_PERFORMANCE = "core.logging.performance";
+	static final String USE_CACHE = "core.cache.enabled";
+	static final String CACHE_TIMEOUT = "core.cache.timeout";
+	static final String PIPELINE_POLLING_INTERVAL = "core.polling_interval";
+	static final String COMMUNICATION_PORT_PARAM = "core.communication_port";
+	static final String NAMESPACE_PARAM = "core.pipeline";
+	
+	int getRestPort();
 	
 	int getPollingInterval();
 	
 	boolean isPerformanceLogging();
 	
-	boolean isCaching();
+	boolean isCacheEnabled();
+	
+	int getCacheTimeout();
 }

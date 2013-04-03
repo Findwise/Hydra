@@ -13,7 +13,7 @@ public class MongoDBConnectionConfig {
     private final String username;
     private final String password;
     private final int OLD_MAX_SIZE = 100;
-    private final int OLD_MAX_COUNT = 1000;
+    private final int OLD_MAX_NUMBER = 1000;
 
     /**
      * Creates a new module with the given namespace and connection string. 
@@ -70,7 +70,7 @@ public class MongoDBConnectionConfig {
 
             @Override
             public int getOldMaxCount() {
-                return OLD_MAX_COUNT;
+                return OLD_MAX_NUMBER;
             }
         };
     }

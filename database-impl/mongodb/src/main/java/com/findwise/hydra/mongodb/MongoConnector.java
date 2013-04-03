@@ -26,13 +26,13 @@ import com.mongodb.WriteConcern;
 
 public class MongoConnector implements DatabaseConnector<MongoType> {
 	public static final int OLD_DOCUMENTS_TO_KEEP_DEFAULT = 1000;
-	
+
 	protected static final String TMP_DIR = "tmp";
-	
+
 	private DB db;
-	
+
 	private MongoStatusIO statusIO;
-	
+
 	private StatusUpdater statusUpdater;
 
 	/**
@@ -65,13 +65,13 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	public MongoDocumentIO getDocumentWriter() {
 		return documentIO;
 	}
-	
+
 	private DatabaseConfiguration conf;
 
 	private MongoPipelineReader pipelineReader;
 	private MongoPipelineWriter pipelineWriter;
 	private MongoDocumentIO documentIO;
-	
+
 	private boolean connected = false;
 
 	public MongoConnector(DatabaseConfiguration conf) {
@@ -93,54 +93,60 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 			throw new ConnectionException(e);
 		}
 		db = mongo.getDB(conf.getNamespace());
-		
-		if(requiresAuthentication(mongo)) {
-			if(!mongo.getDB("admin").authenticate(conf.getDatabaseUser(), conf.getDatabasePassword().toCharArray())) {
-				logger.error("Failed to authenticate with MongoDB");
-				throw new ConnectionException(new MongoException(""));
+
+		if (requiresAuthentication(mongo)) {
+			if (!mongo.getDB("admin").authenticate(conf.getDatabaseUser(),
+					conf.getDatabasePassword().toCharArray())) {
+				throw new ConnectionException(new MongoException(
+						"Failed to authenticate to MongoDB with username="
+								+ conf.getDatabaseUser()));
 			}
 		}
 
 		pipelineReader = new MongoPipelineReader(db);
 		pipelineWriter = new MongoPipelineWriter(pipelineReader, concern);
-		
+
 		statusIO = new MongoStatusIO(db);
-		
+
 		MongoPipelineStatus pipelineStatus;
-		if(!statusIO.hasStatus()) {
+		if (!statusIO.hasStatus()) {
 			pipelineStatus = new MongoPipelineStatus();
-			
+
 			statusIO.save(pipelineStatus);
 		} else {
 			pipelineStatus = statusIO.getStatus();
 		}
 
 		statusUpdater = new StatusUpdater(this);
-		
-		if(!pipelineStatus.isPrepared()) {
+
+		if (!pipelineStatus.isPrepared()) {
 			logger.info("Database is new, preparing it");
 			pipelineStatus.setPrepared(true);
 			pipelineStatus.setDiscardedMaxSize(conf.getOldMaxSize());
 			pipelineStatus.setDiscardedToKeep(conf.getOldMaxCount());
-			
-			documentIO = new MongoDocumentIO(db, concern, pipelineStatus.getNumberToKeep(), pipelineStatus.getDiscardedMaxSize(), statusUpdater);
+
+			documentIO = new MongoDocumentIO(db, concern,
+					pipelineStatus.getNumberToKeep(),
+					pipelineStatus.getDiscardedMaxSize(), statusUpdater);
 			documentIO.prepare();
 			pipelineWriter.prepare();
-			
+
 			statusIO.save(pipelineStatus);
 		} else {
-			documentIO = new MongoDocumentIO(db, concern, pipelineStatus.getNumberToKeep(), pipelineStatus.getDiscardedMaxSize(), statusUpdater);
+			documentIO = new MongoDocumentIO(db, concern,
+					pipelineStatus.getNumberToKeep(),
+					pipelineStatus.getDiscardedMaxSize(), statusUpdater);
 		}
 
 		connected = true;
-		
+
 		statusUpdater.start();
 	}
 
 	public StatusUpdater getStatusUpdater() {
 		return statusUpdater;
 	}
-	
+
 	private boolean requiresAuthentication(Mongo mongo) {
 		try {
 			mongo.getDatabaseNames();
@@ -149,7 +155,7 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 			return true;
 		}
 	}
-	
+
 	@Override
 	public boolean isConnected() {
 		return connected;
@@ -164,7 +170,6 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 		}
 	}
 
-	
 	public static MongoDocument staticConvert(LocalDocument document) {
 		MongoDocument doc;
 		try {
@@ -210,8 +215,7 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	public PipelineReader getPipelineReader() {
 		return pipelineReader;
 	}
-	
-	
+
 	public DB getDB() {
 		return db;
 	}
@@ -227,42 +231,47 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	}
 
 	@Override
-	public DatabaseDocument<MongoType> convert(Document<?> document) throws ConversionException {
+	public DatabaseDocument<MongoType> convert(Document<?> document)
+			throws ConversionException {
 		try {
-			if(contains(document, "\u0000")) {
-				throw new ConversionException("A document cannot contain the NUL character. See https://jira.mongodb.org/browse/SERVER-7691");
+			if (contains(document, "\u0000")) {
+				throw new ConversionException(
+						"A document cannot contain the NUL character. See https://jira.mongodb.org/browse/SERVER-7691");
 			}
 			return new MongoDocument(document.toJson());
 		} catch (JsonException e) {
-			throw new ConversionException("JSON Exception caught while converting", e);
+			throw new ConversionException(
+					"JSON Exception caught while converting", e);
 		}
 	}
-	
+
 	private boolean contains(Document<?> haystack, String needle) {
-		for(String field : haystack.getContentFields()) {
-			if(field.contains(needle)) {
+		for (String field : haystack.getContentFields()) {
+			if (field.contains(needle)) {
 				return true;
 			}
-			if(contains(haystack.getContentField(field), needle)) {
+			if (contains(haystack.getContentField(field), needle)) {
 				return true;
 			}
 		}
 		return false;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private boolean contains(Object object, String needle) {
-		if(object instanceof String) {
+		if (object instanceof String) {
 			return ((String) object).contains(needle);
 		} else if (object instanceof List<?>) {
-			for(Object o : (List<?>)object) {
-				if(contains(o, needle)) {
+			for (Object o : (List<?>) object) {
+				if (contains(o, needle)) {
 					return true;
 				}
 			}
 		} else if (object instanceof Map<?, ?>) {
-			for(Map.Entry<Object, Object> o : ((Map<Object, Object>) object).entrySet()) {
-				if(contains(o.getKey(), needle) || contains(o.getValue(), needle)) {
+			for (Map.Entry<Object, Object> o : ((Map<Object, Object>) object)
+					.entrySet()) {
+				if (contains(o.getKey(), needle)
+						|| contains(o.getValue(), needle)) {
 					return true;
 				}
 			}

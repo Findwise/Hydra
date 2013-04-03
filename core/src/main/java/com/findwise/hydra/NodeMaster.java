@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class NodeMaster<T extends DatabaseType> extends Thread {
-	public static final int DEFAULT_POLLING_INTERVAL = 60; //Seconds
+	public static final int DEFAULT_POLLING_INTERVAL = 10; //Seconds
 	private Logger logger = LoggerFactory.getLogger(NodeMaster.class);
 	
 	private DatabaseConnector<T> dbc;
