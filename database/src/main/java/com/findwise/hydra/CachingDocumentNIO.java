@@ -16,8 +16,7 @@ import com.findwise.hydra.local.LocalQuery;
 public class CachingDocumentNIO<T extends DatabaseType> implements
 		DocumentReader<T>, DocumentWriter<T> {
 
-	public static final int DEFAULT_BATCH_SIZE = 10;
-	private static final int DEFAULT_CACHE_TIMEOUT = 10000;
+	public static final int DEFAULT_CACHE_TIMEOUT = 10000;
 	public static final String CACHED_TIME_METADATA_KEY = "cached";
 	public static final String CACHE_TAG = "_cache";
 

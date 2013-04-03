@@ -6,12 +6,6 @@ import com.findwise.hydra.Document;
 import com.findwise.hydra.Query;
 
 public interface DatabaseConnector<T extends DatabaseType> {
-	String DATABASE_URL_PARAM = "database_url";
-	String DATABASE_USER = "database_user";
-	String DATABASE_PASSWORD = "database_password";
-	String NAMESPACE_PARAM = "namespace";
-	String OLD_MAX_COUNT = "old_max_count";
-	String OLD_MAX_SIZE_MB = "old_max_size_mb";
 	
 	/**
 	 * Connect to the database.
