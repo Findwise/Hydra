@@ -115,7 +115,7 @@ public class StagesService<T extends DatabaseType> {
 		} else {
 			Pipeline pipeline = connector.getPipelineReader().getPipeline();
 			if(groupName == null) {
-				groupName = stageToDelete.getName();
+				groupName = getStageGroupForStage(stageToDelete);
 			}
 			if(!pipeline.hasGroup(groupName)) {
 				pipeline.addGroup(new StageGroup(groupName));
@@ -126,5 +126,14 @@ public class StagesService<T extends DatabaseType> {
 			ret.put("stageStatus", "Deleted stage " + stageName);
 		}
 		return ret;
+	}
+
+	private String getStageGroupForStage(Stage stageToDelete) {
+		StageGroup groupForStage = connector.getPipelineReader().getPipeline().getGroupForStage(stageToDelete.getName());
+		if (groupForStage != null) {
+			return groupForStage.getName();
+		} else {
+			return stageToDelete.getName();
+		}
 	}
 }
