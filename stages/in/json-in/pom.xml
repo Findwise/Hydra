@@ -3,7 +3,7 @@
     <groupId>com.findwise.hydra</groupId>
     <artifactId>hydra-json-input</artifactId>
     <packaging>jar</packaging>
-    <version>0.3.0-SNAPSHOT</version>
+    <version>0.3.0</version>
     <name>${project.artifactId}</name>
     <url>http://maven.apache.org</url>
 
@@ -15,13 +15,13 @@
         <dependency>
             <groupId>com.findwise.hydra</groupId>
             <artifactId>hydra-api</artifactId>
-            <version>0.3.0-SNAPSHOT</version>
+            <version>0.3.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.findwise.hydra</groupId>
             <artifactId>hydra-input-server</artifactId>
-            <version>0.3.0-SNAPSHOT</version>
+            <version>0.3.0</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
