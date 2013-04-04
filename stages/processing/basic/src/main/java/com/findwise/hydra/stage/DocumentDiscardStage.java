@@ -5,8 +5,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Discards documents in Hydra depending on regex matched on a specified field.
@@ -31,7 +32,8 @@ import com.findwise.hydra.local.LocalDocument;
  */
 @Stage
 public class DocumentDiscardStage extends AbstractProcessStage {
-	
+    private Logger logger = LoggerFactory.getLogger(DocumentDiscardStage.class);
+
 	@Parameter
 	private List<Map<String, String>> discardConfigs;
 
@@ -84,13 +86,13 @@ public class DocumentDiscardStage extends AbstractProcessStage {
 						return true;
 					}
 				} else {
-					Logger.warn("Field " + discardConfig.get("field") + " was a list but not a List<String>");
+					logger.warn("Field " + discardConfig.get("field") + " was a list but not a List<String>");
 					return false;
 				}
 			}
 			return false;
 		}
-		Logger.warn("Field " + discardConfig.get("field") + " did not contain String or List<String>");
+		logger.warn("Field " + discardConfig.get("field") + " did not contain String or List<String>");
 		return false;
 	}
 	

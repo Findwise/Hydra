@@ -1,6 +1,5 @@
 package com.findwise.hydra.stage.webstages;
 
-import com.findwise.hydra.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +12,8 @@ import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This stage uses JSoup and it's DOM selector queries (http://jsoup.org
@@ -34,6 +35,7 @@ import com.findwise.hydra.stage.RequiredArgumentMissingException;
  * 
  */
 public abstract class AbstractJsoupSelector extends AbstractProcessStage {
+    private static Logger logger = LoggerFactory.getLogger(AbstractJsoupSelector.class);
 
 	@Parameter(name = "htmlField", required = true, description = "The input field containing HTML/XML, or a listfield with fields containing HTML/XML")
 	private String htmlField;
@@ -66,12 +68,12 @@ public abstract class AbstractJsoupSelector extends AbstractProcessStage {
 				if (val instanceof String) {
                     jsoupParse(doc, (String)val, append);
                 } else {
-                    Logger.warn("Field " + htmlField + " was a list but not a List<String>");
+                    logger.warn("Field " + htmlField + " was a list but not a List<String>");
                 }
 				if (!append) append = true;
             }
         } else {
-            Logger.warn("Field " + htmlField + " did not contain String or List<String>");         
+            logger.warn("Field " + htmlField + " did not contain String or List<String>");
         }
   	}
 

@@ -81,9 +81,14 @@ public class FileConfiguration implements CoreConfiguration {
 	public boolean isCacheEnabled() {
 		return conf.getBoolean(USE_CACHE, false);
 	}
-	
+
 	@Override
 	public int getCacheTimeout() {
 		return conf.getInt(CACHE_TIMEOUT, CachingDocumentNIO.DEFAULT_CACHE_TIMEOUT);
 	}
+
+    @Override
+    public int getLoggingPort() {
+        return conf.getInt(LOGGING_PORT, DEFAULT_LOGGING_PORT);
+    }
 }

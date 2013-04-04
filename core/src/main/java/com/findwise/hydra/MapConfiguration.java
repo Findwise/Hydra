@@ -128,4 +128,13 @@ public class MapConfiguration implements CoreConfiguration {
 	public void setCacheTimeout(int timeout) {
 		map.put(CACHE_TIMEOUT, ""+timeout);
 	}
+
+    @Override
+    public int getLoggingPort() {
+        return Integer.parseInt(getParameter(LOGGING_PORT, "" + DEFAULT_LOGGING_PORT));
+    }
+
+    public void setLoggingPort(int loggingPort) {
+        map.put(LOGGING_PORT, "" + loggingPort);
+    }
 }

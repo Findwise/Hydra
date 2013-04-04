@@ -15,9 +15,10 @@ import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.sax.BodyContentHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
@@ -27,8 +28,9 @@ import com.findwise.hydra.stage.Stage;
 
 @Stage(description = "A stage that fetches the content from a given url and appends it the the document")
 public class TextExtractionStage extends AbstractProcessStage {
+    private static Logger logger = LoggerFactory.getLogger(TextExtractionStage.class);
 
-	@Parameter(description = "The max size to be fetched. Default: -1 = unlimited")
+    @Parameter(description = "The max size to be fetched. Default: -1 = unlimited")
 	private long maxSizeInBytes = -1;
 	@Parameter(description = "The prefix to add to the metadata fields when adding them to the content")
 	private String metadataPrefix;
@@ -51,13 +53,13 @@ public class TextExtractionStage extends AbstractProcessStage {
 		long size = getFileSize(doc);
 
 		if (!okFileSize(size)) {
-			Logger.debug("File size was not ok. Skipping");
+			logger.debug("File size was not ok. Skipping");
 			return;
 		}
 
 		String fileFormat = getFileFormat(doc);
 		if (!okFileFormat(fileFormat)) {
-			Logger.debug("File format " + fileFormat + " was not an allowed file format");
+			logger.debug("File format " + fileFormat + " was not an allowed file format");
 			return;
 		}
 
@@ -66,21 +68,21 @@ public class TextExtractionStage extends AbstractProcessStage {
 		try {
 			stream = getStreamFromUrl(url);
 		} catch (IOException e) {
-			Logger.warn("Failed to open stream to url: " + url, e);
+			logger.warn("Failed to open stream to url: " + url, e);
 			return;
 		}
 
 		try {
 			enrichDocumentWithFileContents(doc, stream);
 		} catch (Exception e) {
-			Logger.warn(
+			logger.warn(
 					"The parser experienced a problem. " + "The data from the specified file will not be included.", e);
 			return;
 		} finally {
 			try {
 				stream.close();
 			} catch (IOException e) {
-				Logger.warn("Failed to close stream. Was it never opened?");
+				logger.warn("Failed to close stream. Was it never opened?");
 			}
 		}
 
@@ -118,7 +120,7 @@ public class TextExtractionStage extends AbstractProcessStage {
 			return (String) fileFormatObject;
 		}
 
-		Logger.debug("Failed to parse fileFormat");
+		logger.debug("Failed to parse fileFormat");
 		return null;
 	}
 
@@ -146,7 +148,7 @@ public class TextExtractionStage extends AbstractProcessStage {
 			return ((Number) fileSizeObject).longValue();
 		}
 
-		Logger.warn("File size could not be parsed");
+		logger.warn("File size could not be parsed");
 		return -1;
 	}
 
@@ -250,14 +252,14 @@ public class TextExtractionStage extends AbstractProcessStage {
 				if (urlList.get(0) instanceof String) {
 					return (String) urlList.get(0);
 				} else {
-					Logger.warn("List in " + urlField + " did not contain Strings. Skipping");
+					logger.warn("List in " + urlField + " did not contain Strings. Skipping");
 					return null;
 				}
 			} else {
-				Logger.warn("List was empty. Skipping");
+				logger.warn("List was empty. Skipping");
 			}
 		} else {
-			Logger.warn(urlField + " did not contain String nor List. Skipping");
+			logger.warn(urlField + " did not contain String nor List. Skipping");
 		}
 
 		return null;

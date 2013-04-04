@@ -11,9 +11,10 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.Parser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
@@ -24,6 +25,7 @@ import com.findwise.hydra.stage.tika.utils.TikaUtils;
 
 @Stage(description = "A stage that fetches the content from a given url and appends it the the document")
 public class SimpleFetchingTikaStage extends AbstractProcessStage {
+    private static Logger logger = LoggerFactory.getLogger(SimpleFetchingTikaStage.class);
 
 	@Parameter(description = "The field name pattern that should be matched where urls will be found. First group plus \"_\" will be used as field prefix. Example: \"attachment_(.*)\" will match for example attachment_a and will use \"a_\" as prefix")
 	private String urlFieldPattern = null;
@@ -96,7 +98,7 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 			throw new RequiredArgumentMissingException(
 					"Missing parameter urlFieldPattern");
 		}
-		Logger.debug("Initiated SimpleTikaStage");
+		logger.debug("Initiated SimpleTikaStage");
 	}
 
 	/* For testing purposes */

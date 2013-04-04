@@ -49,4 +49,9 @@ public class LocalDocumentID implements DocumentID<Local> {
 	public int hashCode() {
 		return id.hashCode();
 	}
+	
+	@Override
+	public String toString() {
+		return toJSON();
+	}
 }

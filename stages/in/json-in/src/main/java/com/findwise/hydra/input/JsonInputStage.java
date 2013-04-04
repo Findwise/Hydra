@@ -9,12 +9,13 @@ import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.http.util.EntityUtils;
 
 import com.findwise.hydra.JsonException;
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractInputStage;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * inputConfiguration={port:12002,idField:\"DREREFERENCE\"}
@@ -31,6 +32,7 @@ import com.findwise.hydra.stage.Stage;
 @Stage
 public class JsonInputStage extends AbstractInputStage implements
 		HttpRequestHandler {
+    private static Logger logger = LoggerFactory.getLogger(JsonInputStage.class);
 
 	private HttpInputServer server;
 
@@ -38,7 +40,7 @@ public class JsonInputStage extends AbstractInputStage implements
 	private int port = HttpInputServer.DEFAULT_LISTEN_PORT;
 
 	public void init() throws RequiredArgumentMissingException {
-		Logger.info("Starting Json Input Server on port: " + this.port);
+		logger.info("Starting Json Input Server on port: " + this.port);
 		server = new HttpInputServer(this.port, this);
 		server.init();
 	}
@@ -46,7 +48,7 @@ public class JsonInputStage extends AbstractInputStage implements
 	public void handle(final HttpRequest request, final HttpResponse response,
 			final HttpContext context) {
 		try {
-			Logger.debug("Parsing incoming request");
+			logger.debug("Parsing incoming request");
 			HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request)
 					.getEntity();
 			LocalDocument ld = new LocalDocument();
@@ -55,18 +57,18 @@ public class JsonInputStage extends AbstractInputStage implements
 			ld.fromJson(json);
 			discardOld(ld);
 			if (getRemotePipeline().saveFull(ld)) {
-				Logger.debug("Document added");
+				logger.debug("Document added");
 				response.setStatusCode(200);
 			} else {
-				Logger.error("Document could not be added");
+				logger.error("Document could not be added");
 				response.setStatusCode(400);
 			}
 
 		} catch (JsonException e) {
-			Logger.error("Json sent was malformed. Skipping document");
+			logger.error("Json sent was malformed. Skipping document");
 			response.setStatusCode(400);
 		} catch (Exception e) {
-			Logger.error("Unhandled exception occurred", e);
+			logger.error("Unhandled exception occurred", e);
 			response.setStatusCode(400);
 		}
 	}

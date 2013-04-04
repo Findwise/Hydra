@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Adds a field with a specified value to the document.
@@ -14,6 +15,7 @@ import com.findwise.hydra.local.LocalDocument;
  */
 @Stage(description = "Modifies a field with a static value. Can append values to a list, ")
 public class SetStaticFieldStage extends AbstractProcessStage {
+    private static Logger logger = LoggerFactory.getLogger(SetStaticFieldStage.class);
 
 	private static final int OVERWRITE = 0;
 	private static final int SKIP = 1;
@@ -42,7 +44,7 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 			try {
 				overwritePolicy = Integer.parseInt(overwrite);
 			} catch (NumberFormatException e) {
-				Logger.error("The overwrite field could not be parsed. Using default");
+				logger.error("The overwrite field could not be parsed. Using default");
 				overwritePolicy = SetStaticFieldStage.DEFAULTOVERWRITEPOLICY;
 			}
 		}
@@ -58,7 +60,7 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 		for (int i = 0; i < fieldNames.size(); i++) {
 			if (overwritePolicy == ADD) {
 				addValueToField(doc, fieldNames.get(i), fieldValues.get(i));
-				Logger.debug("Added field " + fieldNames + " with value "
+				logger.debug("Added field " + fieldNames + " with value "
 						+ fieldValues);
 			} else if (overwritePolicy == OVERWRITE) {
 				setValueToField(doc, fieldNames.get(i), fieldValues.get(i));
@@ -93,7 +95,7 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 			valueList = new ArrayList<String>();
 			valueList.add((String) object);
 		} else {
-			Logger.warn("Deleting value " + object + ". Object in field " + fieldName + " was not of type String[] nor String.");
+			logger.warn("Deleting value " + object + ". Object in field " + fieldName + " was not of type String[] nor String.");
 			valueList = new ArrayList<String>();
 		}
 		valueList.add(fieldValue);
@@ -114,7 +116,7 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 		if (data instanceof String[] || data instanceof String) {
 			return (data != null);
 		} else {
-			Logger.warn("Data ins field " + field + " was not of type String[] nor String. hasValue returned false");
+			logger.warn("Data ins field " + field + " was not of type String[] nor String. hasValue returned false");
 			return false;
 		}
 	}
