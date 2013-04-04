@@ -3,9 +3,9 @@
 	<groupId>com.findwise.hydra</groupId>
 	<artifactId>hydra-web-stages</artifactId>
     <name>${project.artifactId}</name>
-	<version>0.3.0</version>
 	<description>Web Content processing stages</description>
 	<url>http://findwise.github.com/Hydra</url>
+	<version>0.4.0-SNAPSHOT</version>
 	
     <properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -38,7 +38,7 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-api</artifactId>
-			<version>0.3.0</version>
+			<version>0.4.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jsoup</groupId>
