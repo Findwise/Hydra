@@ -2,6 +2,8 @@ package com.findwise.hydra;
 
 import java.io.IOException;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.net.SimpleSocketServer;
 import org.apache.commons.configuration.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,8 @@ public final class Main {
 		} else {
 			conf = getConfiguration(null);
 		}
+
+        new SimpleSocketServer((LoggerContext) LoggerFactory.getILoggerFactory(), conf.getLoggingPort()).start();
 
 		DatabaseConnector<MongoType> backing = new MongoConnector(conf);
 		try {

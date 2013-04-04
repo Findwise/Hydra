@@ -18,6 +18,8 @@ import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.solr.common.util.JavaBinCodec;
 import org.apache.solr.common.util.NamedList;
 import org.apache.xerces.parsers.DOMParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -26,7 +28,6 @@ import org.xml.sax.SAXException;
 
 import com.findwise.hydra.Document.Action;
 import com.findwise.hydra.JsonException;
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.input.HttpInputServer;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractInputStage;
@@ -37,8 +38,9 @@ import com.findwise.hydra.stage.Stage;
 @Deprecated
 @Stage
 public class SolrInputStage extends AbstractInputStage implements HttpRequestHandler {
+    private static Logger logger = LoggerFactory.getLogger(SolrInputStage.class);
 
-	private HttpInputServer server;
+    private HttpInputServer server;
 	
 	@Parameter
 	private int port = 8051;
@@ -47,10 +49,10 @@ public class SolrInputStage extends AbstractInputStage implements HttpRequestHan
 	public void init() throws RequiredArgumentMissingException {
 		
 		if (port != 0) {
-			Logger.info("Starting Solr Input Server on port: " + port);
+			logger.info("Starting Solr Input Server on port: " + port);
 			server = new HttpInputServer(port, this);
 		} else {
-			Logger.info("Starting Solr Input Server on default port: " + HttpInputServer.DEFAULT_LISTEN_PORT);
+			logger.info("Starting Solr Input Server on default port: " + HttpInputServer.DEFAULT_LISTEN_PORT);
 			server = new HttpInputServer(HttpInputServer.DEFAULT_LISTEN_PORT, this);
 		}
 
@@ -59,7 +61,7 @@ public class SolrInputStage extends AbstractInputStage implements HttpRequestHan
 	
 	@Override
 	public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
-		Logger.debug("Parsing incoming request");
+		logger.debug("Parsing incoming request");
 		String requestUri = request.getRequestLine().getUri();
 
 		if (!requestUri.matches("/update.*")) {

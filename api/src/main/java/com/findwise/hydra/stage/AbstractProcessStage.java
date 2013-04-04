@@ -6,9 +6,10 @@ import java.util.Map;
 import org.apache.http.ParseException;
 
 import com.findwise.hydra.JsonException;
-import com.findwise.hydra.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -21,6 +22,8 @@ import com.findwise.hydra.local.RemotePipeline;
  * 
  */
 public abstract class AbstractProcessStage extends AbstractStage {
+    Logger logger = LoggerFactory.getLogger(AbstractProcessStage.class);
+
 	@Parameter(description="If set, indicates that the document being processed should be FAILED if a ProcessException is thrown by the stage. If not set, the error will only be persisted and the document written back to Hydra.")
 	private boolean failDocumentOnProcessException = false;
 	
@@ -47,7 +50,7 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	 * @throws JsonException
 	 */
 	protected boolean persist() throws IOException, JsonException {
-		Logger.debug("Saving document to RemotePipeline..");
+		logger.debug("Saving document to RemotePipeline..");
 		return getRemotePipeline().saveCurrentDocument();
 	}
 
@@ -62,7 +65,7 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	 * @throws JsonException 
 	 */
 	protected boolean persistError(LocalDocument d, Exception e) throws IOException, JsonException {
-		Logger.error("Trying to release document due to error in processing", e);
+		logger.error("Trying to release document due to error in processing", e);
 		d.addError(getStageName(), e);
 		return getRemotePipeline().saveCurrentDocument();
 	}
@@ -106,14 +109,14 @@ public abstract class AbstractProcessStage extends AbstractStage {
 
 				} else {
 					try {
-						Logger.debug("Got new doc " + doc.getID()
+						logger.debug("Got new doc " + doc.getID()
 								+ " to process.");
 						process(doc);
 						if(!persist()) {
 							LocalDocument ld = new LocalDocument(doc.toJson());
 							IOException e = new IOException("Unable to save changes to core");
 							if(!getRemotePipeline().markFailed(ld, e)) {
-								Logger.error("Unable to persist an error to the database", e);
+								logger.error("Unable to persist an error to the database", e);
 							}
 						}
 					} catch (ProcessException e) {
@@ -127,7 +130,7 @@ public abstract class AbstractProcessStage extends AbstractStage {
 				}
 
 			} catch (Exception e) {
-				Logger.error("Caught exception while running", e);
+				logger.error("Caught exception while running", e);
 				Runtime.getRuntime().removeShutdownHook(getShutDownHook());
 				System.exit(1);
 			}

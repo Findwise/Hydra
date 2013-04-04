@@ -77,7 +77,7 @@ public final class NodeMaster<T extends DatabaseType> extends Thread {
 	
 	private void startStopped() throws IOException {
 		for(StageRunner runner : sm.getRunners()) {
-			if(!runner.isAlive()) {
+			if(!runner.isAlive() && !runner.isStarted()) {
 				runner.prepare();
 				runner.start();
 			}
@@ -129,7 +129,7 @@ public final class NodeMaster<T extends DatabaseType> extends Thread {
 			if(!pipeline.hasGroup(group.getName())) {
 				pipeline.addGroup(group);
 				if(attachFiles(group)) {
-					sm.addRunner(new StageRunner(group, new File(namespace), port, conf.isPerformanceLogging()));
+					sm.addRunner(new StageRunner(group, new File(namespace), port, conf.isPerformanceLogging(), conf.getLoggingPort()));
 				} else {
 					logger.error("Was unable to start the stage group '"+group.getName()+"' due to missing libraries.");
 				}

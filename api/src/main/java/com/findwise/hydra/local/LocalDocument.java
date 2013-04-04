@@ -10,13 +10,15 @@ import java.util.HashMap;
 
 import com.findwise.hydra.Document;
 import com.findwise.hydra.DocumentID;
-import com.findwise.hydra.InternalLogger;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.SerializationUtils;
 import com.findwise.tools.Comparator;
 import com.google.gson.JsonParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LocalDocument implements Document<Local> {
+    private static Logger internalLogger = LoggerFactory.getLogger("internal");
 
 	private Map<String, Object> documentMap;
 	private Set<String> touchedContent;
@@ -189,14 +191,14 @@ public class LocalDocument implements Document<Local> {
 			}
 		} 
 		catch(JsonParseException e) {
-			InternalLogger.error("Caught JsonParseException, throwing JsonException");
+			internalLogger.error("Caught JsonParseException, throwing JsonException");
 			throw new JsonException(e);
 		}
 	}
 	
 	private String removePeriodFromKey(String key) {
 		if(key.contains(".")) {
-			InternalLogger.warn("The fieldname " + key + " contains a period, mongodb does not allow keys to contain a period (.). It has been replaced with a dash (-)");
+			internalLogger.warn("The fieldname " + key + " contains a period, mongodb does not allow keys to contain a period (.). It has been replaced with a dash (-)");
 			return key.replace(".", "-");
 		}
 		return key;

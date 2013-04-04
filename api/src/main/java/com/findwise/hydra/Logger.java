@@ -1,33 +1,19 @@
 package com.findwise.hydra;
 
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import org.slf4j.LoggerFactory;
 
 /**
- * This class is mirrors the Log4J error levels, providing an interface
- * for logging on stdout which will be redirected to Log4J by 
- * com.findwise.hydra.StreamLogger.
- *
- * Does not currently support multi-line log messages (each line is treated as a new message)
+ * Deprecated Logger implementation.
  *
  * @author joel.westberg
  */
+@Deprecated
 public final class Logger {
-	
+    public static org.slf4j.Logger logger = LoggerFactory.getLogger(Logger.class);
 	private Logger() {}
 
     public static enum Level { TRACE, DEBUG, INFO, WARN, ERROR, OFF }
-
-    private static final String[] PREFIXES = {"TRACE ", "DEBUG ", "INFO ", "WARN ", "ERROR ", "OFF "};
-
-    public static final String SWITCHMESSAGE = "$SWITCHLOGGER$ ";
-    
-    public static final String STACKTRACEMESSAGE = "$STACKTRACE$ ";
-
-    private static Level internalLoggingLevel = Level.WARN;
-
-	private static Level globalLevel = Level.TRACE;
 
     /**
      * Sets the name of the Log4J logger (equivalent to <code>new log4j.Logger(String clazz)</code>)
@@ -36,8 +22,8 @@ public final class Logger {
      *
      * @param clazz
      */
-    public static void setLogger(String clazz) {
-        System.out.println(SWITCHMESSAGE + clazz);
+    synchronized public static void setLogger(String clazz) {
+        logger = LoggerFactory.getLogger(clazz);
     }
 
     /**
@@ -45,7 +31,7 @@ public final class Logger {
      * @param s
      */
     public static void log(String s) {
-        System.out.println(s);
+        logger.info(s);
     }
 
     /**
@@ -54,10 +40,27 @@ public final class Logger {
      * @param s
      */
     public static void log(Level l, String s) {
-    	if(!logOnLevel(l)) {
-    		return;
-    	}
-        System.out.println(PREFIXES[l.ordinal()]+s);
+        switch(l) {
+            case ERROR:
+                logger.error(s);
+                break;
+            case WARN:
+                logger.warn(s);
+                break;
+            case INFO:
+                logger.info(s);
+                break;
+            case DEBUG:
+                logger.debug(s);
+                break;
+            case TRACE:
+                logger.trace(s);
+                break;
+            case OFF:
+                // There is no OFF level in slf4j API as far as I can tell. I am guessing that these
+                // shouldn't be logged at all? TODO: Confused...
+                break;
+        }
     }
     
     /**
@@ -66,15 +69,27 @@ public final class Logger {
      * @param s
      */
     public static void log(Level l, String s, Throwable e) {
-    	if(!logOnLevel(l)) {
-    		return;
-    	}
-    	System.out.println(STACKTRACEMESSAGE);
-    	log(l, s);
-        StringWriter st = new StringWriter();
-        e.printStackTrace(new PrintWriter(st));
-    	System.out.println(st.toString());
-    	System.out.println(STACKTRACEMESSAGE);
+        switch(l) {
+            case ERROR:
+                logger.error(s, e);
+                break;
+            case WARN:
+                logger.warn(s, e);
+                break;
+            case INFO:
+                logger.info(s, e);
+                break;
+            case DEBUG:
+                logger.debug(s, e);
+                break;
+            case TRACE:
+                logger.trace(s, e);
+                break;
+            case OFF:
+                // There is no OFF level in slf4j API as far as I can tell. I am guessing that these
+                // shouldn't be logged at all? TODO: Confused...
+                break;
+        }
     }
 
     /**
@@ -177,36 +192,5 @@ public final class Logger {
      */
     public static void warn(String s, Throwable e) {
         log(Level.WARN, s, e);
-    }
-
-    /**
-     * Gets the current level of messages above which the API itself will log.
-     * @return
-     */
-    public static Level getInternalLoggingLevel() {
-        return internalLoggingLevel;
-    }
-
-    /**
-     * Set the level of logging for internal components. This defaults to WARN or above (i.e. WARN, ERROR, FATAL).
-     * When developing inside the API, or if you are curious, set this to a lower level.
-     */
-    public static void setInternalLoggingLevel(Level internalLevel) {
-        internalLoggingLevel = internalLevel;
-    }
-    
-    /**
-     * Sets the global logging level. 
-     */
-    public static void setGlobalLoggingLevel(Level loggingLevel) {
-    	globalLevel  = loggingLevel;
-    }
-    
-    public static Level getGlobalLoggingLevel() {
-    	return globalLevel;
-    }
-    
-    private static boolean logOnLevel(Level l) {
-    	return l.ordinal()>=globalLevel.ordinal() && l!=Level.OFF;
     }
 }
