@@ -86,6 +86,15 @@ public class Pipeline {
 		return null;
 	}
 	
+	public StageGroup getGroupForStage(String name) {
+		for (StageGroup g : getStageGroups()) {
+			if (g.hasStage(name)) {
+				return g;
+			}
+		}
+		return null;
+	}
+	
 	public boolean hasStage(String name) {
 		return getStage(name) != null;
 	}
