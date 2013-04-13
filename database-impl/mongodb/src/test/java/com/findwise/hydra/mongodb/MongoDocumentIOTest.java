@@ -275,7 +275,9 @@ public class MongoDocumentIOTest {
 		md.putContentField("field", "value");
 		dw.insert(md);
 
-		dw.getAndTag(new MongoQuery(), "tag");
+		MongoQuery mongoQuery = new MongoQuery();
+		mongoQuery.requireID(md.getID());
+		dw.getAndTag(mongoQuery, "tag");
 
 		MongoDocument d2 = dw.getDocumentById(md.getID());
 
