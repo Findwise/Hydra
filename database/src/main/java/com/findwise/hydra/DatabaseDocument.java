@@ -9,6 +9,8 @@ public interface DatabaseDocument<T extends DatabaseType> extends Document<T> {
 
 	Object putMetadataField(String key, Object value);
 
+	Object getMetadataField(String key);
+
 	boolean removeTouchedBy(String stage);
 	
 	boolean removeFetchedBy(String stage);
