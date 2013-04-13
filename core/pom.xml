@@ -25,7 +25,15 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-
+	
+	<developers>
+		<developer>
+			<id>findwise</id>
+			<name>Findwise</name>
+			<email>hydra-processing@googlegroups.com</email>
+		</developer>
+	</developers>
+	
 	<profiles>
 		<profile>
 			<id>stresstest</id>
