@@ -251,6 +251,11 @@ public class MemoryDocument implements DatabaseDocument<MemoryType> {
 	}
 
 	@Override
+	public Object getMetadataField(String key) {
+		return getMetadataMap().get(key);
+	}
+
+	@Override
 	public Map<String, Object> getMetadataMap() {
 		return doc.getMetadataMap();
 	}
