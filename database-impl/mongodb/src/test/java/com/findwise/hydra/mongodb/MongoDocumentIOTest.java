@@ -2,10 +2,16 @@ package com.findwise.hydra.mongodb;
 
 import static org.junit.Assert.fail;
 
+import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Random;
 
+import com.findwise.hydra.Document;
+import com.findwise.hydra.DocumentFile;
 import junit.framework.Assert;
 
+import org.apache.commons.io.IOUtils;
 import org.bson.types.ObjectId;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -23,6 +29,9 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.WriteConcern;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 public class MongoDocumentIOTest {
 	private MongoConnector mdc;
@@ -266,6 +275,61 @@ public class MongoDocumentIOTest {
 				fail("Processed document did not have the correct data in the content fields");
 			}
 		}
+	}
+
+	@Test
+	public void testInsertWithAttachments() throws Exception {
+		MongoDocumentIO dw = mdc.getDocumentWriter();
+		MongoDocument md = new MongoDocument();
+
+		byte[] inputData = new byte[]{1,2,3};
+		DocumentFile<MongoType> documentFile = buildSimpleDocumentFile(inputData);
+		dw.insert(md, Arrays.asList(documentFile));
+
+		/* First of all, we should be able to fetch the document file */
+		DocumentFile<MongoType> outputDocFile = dw.getDocumentFile(md, documentFile.getFileName());
+		assertNotNull(outputDocFile);
+
+		/* And it should have the correct data */
+		byte[] outputData = IOUtils.toByteArray(outputDocFile.getStream());
+		assertArrayEquals(inputData, outputData);
+
+		/* We have changed the documentId of the documentFile we sent in (for better or worse) */
+		assertEquals(md.getID(), documentFile.getDocumentId());
+
+		/* The document in mongo has "committing" metadata set to false (is fully committed) */
+		MongoDocument outputDocument = mdc.getDocumentReader().getDocumentById(md.getID());
+		assertFalse((Boolean) outputDocument.getMetadataField(Document.COMMITTING_METADATA_FLAG));
+	}
+
+	@Test
+	/* Test that we *can* get documents that are fully committed */
+	public void testFullyCommittedDocumentsCanBeTagged() throws Exception {
+		MongoDocumentIO dw = mdc.getDocumentWriter();
+		MongoDocument md = new MongoDocument();
+		dw.insert(md, Arrays.asList(buildSimpleDocumentFile(new byte[]{1, 2, 3})));
+		MongoQuery mongoQuery = new MongoQuery();
+		mongoQuery.requireID(md.getID());
+		assertNotNull(dw.getAndTag(mongoQuery));
+	}
+
+	@Test
+	/* Test that we *can't* get documents that are *not* fully committed */
+	public void testCommittingDocumentsCannotBeTagged() throws Exception {
+		MongoDocumentIO dw = spy(mdc.getDocumentWriter());
+		MongoDocument md = new MongoDocument();
+		doThrow(new RuntimeException()).when(dw).write(any(DocumentFile.class));
+		try {
+			dw.insert(md, Arrays.asList(buildSimpleDocumentFile(new byte[]{1, 2, 3})));
+		} catch( RuntimeException e) {}
+		MongoQuery mongoQuery = new MongoQuery();
+		mongoQuery.requireID(md.getID());
+		assertNull(dw.getAndTag(mongoQuery));
+	}
+
+	private DocumentFile<MongoType> buildSimpleDocumentFile(byte[] bytes) throws UnsupportedEncodingException {
+		ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+		return new DocumentFile<MongoType>(null, "filename", inputStream);
 	}
 
 	@Test

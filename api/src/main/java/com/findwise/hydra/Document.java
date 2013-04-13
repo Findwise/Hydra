@@ -15,6 +15,7 @@ public interface Document<Type> extends JsonDeserializer, JsonSerializer {
 	String ACTION_KEY = "_action";
 	String CONTENTS_KEY = "contents";
 	String METADATA_KEY = "metadata";
+	String COMMITTING_METADATA_FLAG = "committing";
 	String PENDING_METADATA_FLAG = "pending";
 	String PROCESSED_METADATA_FLAG = "processed";
 	String DISCARDED_METADATA_FLAG = "discarded";

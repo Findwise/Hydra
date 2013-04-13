@@ -278,6 +278,47 @@ public class MemoryDocumentIO implements DocumentWriter<MemoryType>,
 		return true;
 	}
 
+	@Override
+	public boolean insert(DatabaseDocument<MemoryType> d, List<DocumentFile<MemoryType>> attachments) {
+		if(attachments == null || attachments.isEmpty()) {
+			return insert(d);
+		}
+
+		d.putMetadataField(Document.COMMITTING_METADATA_FLAG, true);
+
+		if (!insert(d)) {
+			return false;
+		};
+
+		if (!writeAttachments(d, attachments)) {
+			delete(d);
+			return false;
+		}
+
+		d.putMetadataField(Document.COMMITTING_METADATA_FLAG, false);
+		return update(d);
+	}
+
+	private boolean writeAttachments(DatabaseDocument<MemoryType> d, List<DocumentFile<MemoryType>> attachments) {
+		for(DocumentFile<MemoryType> attachment: attachments) {
+			attachment.setDocumentId(d.getID());
+			try {
+				write(attachment);
+			} catch (IOException e) {
+				logger.error(
+						String.format(
+								"Exception while writing filename:%s for id:%s",
+								attachment.getFileName(),
+								d.getID()
+						),
+						e
+				);
+				return false;
+			}
+		}
+		return true;
+	}
+
 	private void removeNullFields(MemoryDocument md) {
 		HashSet<String> fields = new HashSet<String>();
 		for (String entry : md.getTouchedContent()) {
