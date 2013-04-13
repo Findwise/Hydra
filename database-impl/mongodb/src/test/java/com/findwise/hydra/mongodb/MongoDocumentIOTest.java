@@ -289,11 +289,6 @@ public class MongoDocumentIOTest {
 		dw.update(new MongoDocument(d2.toJson()));
 		
 		Assert.assertFalse(dw.getDocumentById(d2.getID()).fetchedBy("tag"));
-		
-		d2 = dw.getAndTag(new MongoQuery(), "tag", "tag2");
-		d2.removeFetchedBy("tag");
-		
-		dw.update(d2);
 	}
 	
 	
