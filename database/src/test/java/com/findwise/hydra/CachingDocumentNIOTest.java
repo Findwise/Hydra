@@ -228,6 +228,16 @@ public class CachingDocumentNIOTest {
 	}
 
 	@Test
+	public void testInsertWithAttachments() {
+		DocumentFile<TestType> mock = mock(DocumentFile.class);
+		List<DocumentFile<TestType>> attachments = Arrays.asList(mock);
+		io.insert(doc1, attachments);
+
+		verifyNoMoreInteractions(cache);
+		verify(writer, times(1)).insert(doc1, attachments);
+	}
+
+	@Test
 	public void testInsert() {
 		io.insert(doc1);
 
