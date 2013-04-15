@@ -3,12 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.findwise.hydra</groupId>
 	<artifactId>hydra-groovy-runner</artifactId>
-	<version>0.0.1</version>
+	<version>0.3.1-SNAPSHOT</version>
 	<dependencies>
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-api</artifactId>
-			<version>0.3.0</version>
+			<version>0.3.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>

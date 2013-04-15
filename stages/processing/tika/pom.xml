@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.findwise.hydra</groupId>
 	<artifactId>hydra-tika-stages</artifactId>
-	<version>0.3.0</version>
+	<version>0.3.1-SNAPSHOT</version>
 	<description>Tika Text Extraction Stage</description>
 	<name>${project.artifactId}</name>
 	<url>http://findwise.github.com/Hydra</url>
@@ -41,7 +41,7 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-api</artifactId>
-			<version>0.3.0</version>
+			<version>0.3.1-SNAPSHOT</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>

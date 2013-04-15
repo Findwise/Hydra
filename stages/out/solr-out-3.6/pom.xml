@@ -3,7 +3,7 @@
 	<groupId>com.findwise.hydra</groupId>
 	<artifactId>hydra-solr-3-out-stage</artifactId>
 	<packaging>jar</packaging>
-	<version>0.3.0</version>
+	<version>0.3.1-SNAPSHOT</version>
 	<name>${project.artifactId}</name>
 	<description>Solr Output Stage</description>
 	<url>http://findwise.github.com/Hydra</url>
@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-api</artifactId>
-			<version>0.3.0</version>
+			<version>0.3.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<artifactId>solr-solrj</artifactId>

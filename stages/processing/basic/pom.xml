@@ -4,7 +4,7 @@
     <groupId>com.findwise.hydra</groupId>
     <artifactId>hydra-basic-stages</artifactId>
     <packaging>jar</packaging>
-    <version>0.3.0</version>
+    <version>0.3.1-SNAPSHOT</version>
     <name>${project.artifactId}</name>
     <description>Basic Stages - A package of basic stages for Hydra</description>
     <url>http://findwise.github.com/Hydra</url>
@@ -40,7 +40,7 @@
         <dependency>
             <groupId>com.findwise.hydra</groupId>
             <artifactId>hydra-api</artifactId>
-            <version>0.3.0</version>
+            <version>0.3.1-SNAPSHOT</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>

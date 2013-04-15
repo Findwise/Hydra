@@ -4,7 +4,7 @@
 	<groupId>com.findwise.hydra</groupId>
 	<artifactId>hydra-memorydb</artifactId>
 	<packaging>jar</packaging>
-	<version>0.3.0</version>
+	<version>0.3.1-SNAPSHOT</version>
 	<name>${project.artifactId}</name>
 	<description>Hydra Inmemory database implementation</description>
 	<url>http://findwise.github.com/Hydra</url>
@@ -39,7 +39,7 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-database</artifactId>
-			<version>0.3.0</version>
+			<version>0.3.1-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
