@@ -2,6 +2,7 @@ package com.findwise.hydra;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 
 import com.findwise.hydra.DocumentFile;
 
@@ -145,7 +146,7 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 * Inserts a new document into the database. Will fail if the document
 	 * already has a non-null ID. The document's new ID will be applied to the
 	 * document.
-	 * 
+	 *
 	 * A field that is <pre>null</pre> is ignored.
 	 * 
 	 * @param d
@@ -153,7 +154,26 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 * @return false if the document already has an id, true otherwise.
 	 */
 	boolean insert(DatabaseDocument<T> d);
-	
+
+	/**
+	 * Inserts a new document into the database. Will fail if the document
+	 * already has a non-null ID. The document's new ID will be applied to the
+	 * document. Until the attachments have been committed, the document will have
+	 * metadata field <pre>committing</pre> set to <pre>true</pre>; after they have been committed,
+	 * it will be set to <pre>false</pre>.
+	 *
+	 * A field that is <pre>null</pre> is ignored.
+	 *
+	 * @param d
+	 *            the document to insert
+	 * @param attachments
+	 *            Any number of DocumentFile attachments belonging to the document.
+	 *            The document ID for each DocumentFile will be overwritten using the
+	 *            new ID obtained for the document, before the document files are
+	 *            committed.
+	 * @return false if the document already has an id, true otherwise.
+	 */
+	boolean insert(DatabaseDocument<T> d, List<DocumentFile<T>> attachments);
 	/**
 	 * Updates the document in the database. If any field in document is 
 	 * <pre>null</pre>, this field will be ignored and removed. 

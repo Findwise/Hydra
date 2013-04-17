@@ -1,9 +1,10 @@
 package com.findwise.hydra.memorydb;
 
-import static org.junit.Assert.fail;
-
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -21,6 +22,11 @@ import com.findwise.hydra.Document;
 import com.findwise.hydra.Document.Status;
 import com.findwise.hydra.DocumentFile;
 import com.findwise.hydra.SerializationUtils;
+
+import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+
+import static org.mockito.Mockito.*;
 
 @RunWith(RepeatRunner.class)
 public class MemoryDocumentIOTest {
@@ -59,6 +65,52 @@ public class MemoryDocumentIOTest {
 		if(io.getActiveDatabaseSize()!=size+count) {
 			fail("Incorrect database size after inserts. Expected "+(size+count)+" but found "+io.getActiveDatabaseSize());
 		}
+	}
+
+	@Test
+	public void testInsertWithAttachments() throws Exception {
+		MemoryDocument md = TestTools.getRandomDocument();
+
+		byte[] inputData = new byte[]{1,2,3};
+		DocumentFile<MemoryType> documentFile = buildSimpleDocumentFile(inputData);
+		io.insert(md, Arrays.asList(documentFile));
+
+		/* First of all, we should be able to fetch the attachment */
+		DocumentFile outputDocFile = io.getDocumentFile(md, documentFile.getFileName());
+		assertNotNull(outputDocFile);
+
+		/* And it should have the correct data */
+		byte[] outputData = IOUtils.toByteArray(outputDocFile.getStream());
+		assertArrayEquals(inputData, outputData);
+
+		/* We have changed the state of the documentFile we sent in (for better or worse) */
+		assertEquals(md.getID(), documentFile.getDocumentId());
+
+		/* The document in mongo has a metadata field reflecting the fact that it is fully committed */
+		MemoryDocument outputDocument = io.getDocumentById(md.getID());
+		assertFalse((Boolean) outputDocument.getMetadataField(Document.COMMITTING_METADATA_FLAG));
+	}
+
+	@Test
+	public void testInsertWithAttachmentsTwoStageCommit() throws Exception {
+		io = spy(io);
+		MemoryDocument md = TestTools.getRandomDocument();
+
+		/* Assume that writing a DocumentFile raises an exception */
+		doThrow(new RuntimeException()).when(io).write(any(DocumentFile.class));
+		try {
+			io.insert(md, Arrays.asList(buildSimpleDocumentFile(new byte[]{})));
+		} catch (RuntimeException e) {
+		}
+
+		/* Then the database document has metadata reflecting that it failed */
+		MemoryDocument outputDocument = io.getDocumentById(md.getID());
+		assertTrue((Boolean) outputDocument.getMetadataField(Document.COMMITTING_METADATA_FLAG));
+	}
+
+	private DocumentFile<MemoryType> buildSimpleDocumentFile(byte[] bytes) throws UnsupportedEncodingException {
+		ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+		return new DocumentFile<MemoryType>(null, "filename", inputStream);
 	}
 
 	@Test
