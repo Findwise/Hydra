@@ -2,7 +2,9 @@ package com.findwise.hydra;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.List;
@@ -163,6 +165,11 @@ public class CachingDocumentNIO<T extends DatabaseType> implements
 	@Override
 	public boolean insert(DatabaseDocument<T> d) {
 		return writer.insert(d);
+	}
+
+	@Override
+	public boolean insert(DatabaseDocument<T> d, List<DocumentFile<T>> attachments) {
+		return writer.insert(d, attachments);
 	}
 
 	@Override

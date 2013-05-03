@@ -169,11 +169,13 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 		touchedContent.add(key);
 		return getContents().put(key, v);
 	}
-	
+
+	@Override
 	public Object getContentField(String key) {
 		return getContents().get(key);
 	}
-	
+
+	@Override
 	public Object getMetadataField(String key) {
 		return getMetadata().get(key);
 	}

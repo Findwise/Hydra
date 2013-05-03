@@ -255,7 +255,51 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		}
 		return false;
 	}
-	
+
+	/* (non-Javadoc)
+	 * @see com.findwise.hydra.DocumentWriter#insert(com.findwise.hydra.DatabaseDocument)
+	 */
+	@Override
+	public boolean insert(DatabaseDocument<MongoType> d, List<DocumentFile<MongoType>> attachments) {
+		if(attachments == null || attachments.isEmpty()) {
+			return insert(d);
+		}
+
+		d.putMetadataField(MongoDocument.COMMITTING_METADATA_FLAG, true);
+
+		if (!insert(d)) {
+			return false;
+		};
+
+		if (!writeAttachments(d, attachments)) {
+			delete(d);
+			return false;
+		}
+
+		d.putMetadataField(MongoDocument.COMMITTING_METADATA_FLAG, false);
+		return update(d);
+	}
+
+	private boolean writeAttachments(DatabaseDocument<MongoType> d, List<DocumentFile<MongoType>> attachments) {
+		for(DocumentFile<MongoType> attachment: attachments) {
+			attachment.setDocumentId(d.getID());
+			try {
+				write(attachment);
+			} catch (IOException e) {
+				logger.error(
+						String.format(
+								"Exception while writing filename:%s for id:%s",
+								attachment.getFileName(),
+								d.getID()
+						),
+						e
+				);
+				return false;
+			}
+		}
+		return true;
+	}
+
 	private Set<String> getNullFields(MongoDocument d) {
 		Set<String> set = new HashSet<String>();
 		for(Map.Entry<String, Object> e : d.getContentMap().entrySet()) {
@@ -287,6 +331,11 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		}
 		MongoQuery mq = (MongoQuery)query;
 		mq.requireMetadataFieldNotExists(Document.PENDING_METADATA_FLAG);
+
+		/* The document must be fully committed (i.e. all attachments are committed) before we can fetch it
+		 * Using not equals to true here (instead of "equals false"), to allow for documents where committing
+		 * isn't set at all. */
+		mq.requireMetadataFieldNotEquals(Document.COMMITTING_METADATA_FLAG, true);
 
 		for(String t : tag) {
 			mq.requireMetadataFieldNotExists(DatabaseDocument.FETCHED_METADATA_TAG+"."+t);
