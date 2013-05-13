@@ -74,17 +74,19 @@ Architecturally Hydra sits in between the search engine and the source integrati
 The pipeline framework design is intended to be easily distributed, very flexible and to allow easy testing and development. Because of its distributed data crunching nature, we've decided to name it Hydra. 
 </p>
 
-<p>
-Hydra is designed as a fully distributed, persisted and flexible document processing pipeline. It has one central repository, currently an instance of a MongoDB document store that can be run on a single machine or completely in the cloud. A worker node reads a pipeline configuration from this central repository - all processing stages are packeted as separate jar files. The stages in those jar files are then launched by the main process as separate JVM instances for isolation purposes. This is perhaps the most controversial design decision, but was done to ensure problems such as Tika leaking memory and running out of heap space on a problematic document would not bring the whole pipeline to a halt. The design can of course be extended to run multiple stages in the same JVM. All communication between the stages and the core framework happens via REST. Because of this, one can test processing stages in development by simply running them from any IDE such as Eclipse, pointing them to an active node. This eliminates the need for time consuming WAR packaging/deployment found in e.g. OpenPipeline.
-</p>
+<img class="architecture" src="images/architecture/input-output.png">
 
 <p>
-Hydra was also designed to allow the development of a particular pipeline to be easy, even allowing for test driven development (TDD) of a pipeline, e.g. specifying a valid document domain model, that will be enforced before output from the pipeline takes place.
+Hydra is designed as a fully distributed, persisted and flexible document processing pipeline. It has one central repository, currently an instance of a MongoDB document store, that can be run on a single machine or completely in the cloud. A worker node (Hydra Core) reads a pipeline configuration from this central repository and loads the associated processing stages - which are packaged as jar files. The stages in those jar files are then, for isolation purposes, launched by the main process as separate JVM instances or together in a stage group. This is done to ensure that problems such as Tika leaking memory and running out of heap space on a problematic document will not bring the whole pipeline to a halt. The core will monitor the JVMs and restart the stages if necessary.
 </p>
 
+<img class="architecture" src="images/architecture/stages.png">
+
 <p>
-The stages, running in their own JVMs, will then fetch documents relevant for their processing purpose from MongoDB, e.g. a “Static Writer” stage would fetch any and all documents, while a more specialized node might only fetch documents that have or lack a certain field. This allows configuration of both the classic “straight” pipeline where all documents pass through all processing nodes (in order, if necessary), and asymmetrical pipelines that can fork depending on the content of the document.
+All communication between the stages and the core framework happens via REST. Because of this, one can test processing stages in development by simply running them from any IDE such as Eclipse, pointing them to an active node. This eliminates the need for time consuming WAR packaging/deployment found in e.g. OpenPipeline. The stages, running in their own JVMs, will then fetch documents relevant for their processing purpose from MongoDB, e.g. a “Static Writer” stage would fetch any and all documents, while a more specialized node might only fetch documents that have or lack a certain field. This allows configuration of both the classic “straight” pipeline where all documents pass through all processing nodes (in order, if necessary), and asymmetrical pipelines that can fork depending on the content of the document.
 </p>
+
+<img class="architecture" src="images/architecture/distributed.png">
 
 <p>
 All administration of the pipeline, as well as traceability, are handled directly through an administrator interface communicating with the central repository (MongoDB). To add processing power to the pipeline, it is as simple as starting a new worker node on another machine, pointing to the same pipeline configuration in MongoDB.

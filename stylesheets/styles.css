@@ -1032,3 +1032,9 @@ footer {
   width: 25px;
   vertical-align: middle;
 }
+
+.architecture {
+  margin-left: 20%;
+  margin-right: 20%;
+  width: 60%;
+}
