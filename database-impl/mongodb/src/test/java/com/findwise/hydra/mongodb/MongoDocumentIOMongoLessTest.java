@@ -28,7 +28,7 @@ import com.mongodb.gridfs.GridFS;
  * Contains tests for {@link MongoDocumentIO}.
  * 
  * <p>
- * This test is a part of the MongoDB-less test suite which values mocks above running
+ * This test is a part of the MongoDB-less test suite which values mocks over running
  * MongoDB instances.
  * </p>
  * 
@@ -49,6 +49,7 @@ public class MongoDocumentIOMongoLessTest {
 	private GridFS gridFs;
 
 	private MongoDocumentIO documentIO;
+	private MongoDocument document;
 
 	@Before
 	public void setUp() throws Exception {
@@ -56,16 +57,20 @@ public class MongoDocumentIOMongoLessTest {
 		when(db.getCollection(eq(MongoDocumentIO.OLD_DOCUMENT_COLLECTION))).thenReturn(oldDocuments);
 
 		documentIO = new MongoDocumentIO(db, null, 0, 0, updater, gridFs);
+
+		document = new MongoDocument();
+		document.setID(new MongoDocumentID(Mockito.mock(ObjectId.class)));
+
+		when(documents.findAndRemove(any(DBObject.class))).thenReturn(new BasicDBObject());
 	}
 
 	@Test
 	public void testMarkProcessedWhenMongoIsBroken() {
-		MongoDocument document = new MongoDocument();
-		document.setID(new MongoDocumentID(Mockito.mock(ObjectId.class)));
-		document.putContentField("body", "Very nice body.");
-
 		DBObject mongoObject = new BasicDBObject();
 		when(documents.findAndRemove(any(DBObject.class))).thenReturn(mongoObject);
+
+		// Add some content since markProcessed assumes content exists.
+		document.putContentField("a", "b");
 
 		when(oldDocuments.insert(any(DBObject.class))).thenThrow(new MongoInternalException(
 				"I am suck!"));
@@ -78,14 +83,9 @@ public class MongoDocumentIOMongoLessTest {
 
 	@Test
 	public void testMarkProcessedOfTooLargeDocument() {
-		final MongoDocument document = new MongoDocument();
-		document.setID(new MongoDocumentID(Mockito.mock(ObjectId.class)));
 		final String contentField = "body";
 		final String contentValue = "A very looooooooooooooooooong body!";
 		document.putContentField(contentField, contentValue);
-
-		DBObject mongoObject = new BasicDBObject();
-		when(documents.findAndRemove(any(DBObject.class))).thenReturn(mongoObject);
 
 		when(oldDocuments.insert(any(DBObject.class))).thenAnswer(new Answer<WriteResult>() {
 			@Override
@@ -103,11 +103,41 @@ public class MongoDocumentIOMongoLessTest {
 
 		boolean processed = documentIO.markProcessed(document, "Test stage");
 
-		Assert.assertTrue("Processing should have removed the body field and successfully return.",
-				processed);
+		Assert.assertTrue("Processing should return successfully.", processed);
 		Assert.assertTrue("The field 'body' should be removed.",
 				document.getContentField(contentField).equals("<Removed>"));
 		Assert.assertTrue("The document should have logged errors", document.hasErrors());
+	}
+
+	@Test
+	public void testMarkProcessedOfTooLargeDocumentRemovesLargestField() throws Exception {
+		final String shortValue = "aaa";
+		final String longValue = "aaaaaaaa";
+		document.putContentField("short", shortValue);
+		document.putContentField("long", longValue);
+
+		when(oldDocuments.insert(any(DBObject.class))).thenAnswer(new Answer<WriteResult>() {
+			@Override
+			public WriteResult answer(InvocationOnMock invocation) throws Throwable {
+				boolean shortFieldIsStillTheSame = document.getContentField("short")
+						.equals(shortValue);
+				boolean longFieldIsStillTheSame = document.getContentField("long")
+						.equals(longValue);
+
+				if (shortFieldIsStillTheSame && longFieldIsStillTheSame) {
+					throw new MongoInternalException("Document is too large!");
+				} else {
+					return null;
+				}
+			}
+		});
+
+		boolean processed = documentIO.markProcessed(document, "Test stage");
+
+		// One field should have been removed now, and it should be the longest one.
+		Assert.assertEquals(shortValue, document.getContentField("short"));
+		Assert.assertEquals("<Removed>", document.getContentField("long"));
+		Assert.assertTrue("Processing should return successfully.", processed);
 	}
 
 }
