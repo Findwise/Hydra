@@ -2,6 +2,8 @@ package com.findwise.hydra.mongodb;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -31,6 +33,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
+import com.mongodb.MongoInternalException;
 import com.mongodb.QueryBuilder;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
@@ -43,19 +46,20 @@ import com.mongodb.gridfs.GridFSInputFile;
  *
  */
 public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWriter<MongoType> {
+	private static final int MAX_NUMBER_OF_DONE_RETRIES = 10;
 	private DBCollection documents;
 	private DBCollection oldDocuments;
 	private GridFS documentfs;
-	private WriteConcern concern;
+	private final WriteConcern concern;
 	
-	private StatusUpdater updater;
+	private final StatusUpdater updater;
 	
-	private Set<String> seenTags = new HashSet<String>();
+	private final Set<String> seenTags = new HashSet<String>();
 	
 	private static Logger logger = LoggerFactory.getLogger(MongoDocumentIO.class);
 
-	private long maxDocumentsToKeep;
-	private int oldDocsSize;
+	private final long maxDocumentsToKeep;
+	private final int oldDocsSize;
 	
 	public static final String DOCUMENT_COLLECTION = "documents";
 	public static final String OLD_DOCUMENT_COLLECTION ="oldDocuments";
@@ -70,17 +74,22 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	private static final String MIMETYPE_KEY = "contentType";
 	private static final String ENCODING_KEY = "encoding";
 	
-	public MongoDocumentIO(DB db, WriteConcern concern, long documentsToKeep, int oldDocsMaxSizeMB, StatusUpdater updater) {
+	public MongoDocumentIO(DB db,
+			WriteConcern concern,
+			long documentsToKeep,
+			int oldDocsMaxSizeMB,
+			StatusUpdater updater,
+			GridFS documentFs) {
 		this.concern = concern;
 		this.maxDocumentsToKeep = documentsToKeep;
 		this.oldDocsSize = oldDocsMaxSizeMB*BYTES_IN_MB;
 		this.updater = updater;
+		this.documentfs = documentFs;
 		
 		documents = db.getCollection(DOCUMENT_COLLECTION);
 		documents.setObjectClass(MongoDocument.class);
 		oldDocuments = db.getCollection(OLD_DOCUMENT_COLLECTION);
 		oldDocuments.setObjectClass(MongoDocument.class);
-		documentfs = new GridFS(db, DOCUMENT_FS);
 	}
 	
 	@Override
@@ -394,7 +403,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		 * RemotePipelineTest.testSaveFile() failed 2 or 3 times out of 100.
 		 */
 		long start = System.currentTimeMillis();
-		while(documentfs.findOne(qb.get())==null) {
+		while (documentfs.findOne(qb.get()) == null) {
 			try {
 				if(start+1000>System.currentTimeMillis()) {
 					throw new IOException("Failed to save the file");
@@ -493,7 +502,9 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		doc.put(MongoDocument.METADATA_KEY, metadata);
 	}
 	
-	private boolean markDone(DatabaseDocument<MongoType> d, String stage, String stamp) {
+	private boolean markDone(final DatabaseDocument<MongoType> d,
+			String stage,
+			String stamp) {
 		MongoQuery mq = new MongoQuery();
 		mq.requireID(d.getID());
 		
@@ -507,9 +518,58 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		
 		stampMetadataField(doc, stamp, stage);
 		deleteAllFiles(d);
-		oldDocuments.insert(doc);
-		
-		return true;
+
+		return writeToOldDocuments(d, stage, doc);
+	}
+
+	/**
+	 * Attempt to write a {@link DatabaseDocument} to the {@link #oldDocuments}
+	 * collection. If it fails, it will remove the largest content field by replacing the
+	 * content with the string "&lt;Removed&gt;" and retry doing this
+	 * {@value #MAX_NUMBER_OF_DONE_RETRIES} number of times.
+	 * 
+	 * <p>
+	 * We can do this since the document has been successfully processed, but the cleanup
+	 * is failing. We want a document in old documents, but if we can not - then we should
+	 * be satisfied with a partial document.
+	 * </p>
+	 * 
+	 * @param document the original {@link DatabaseDocument} which was processed.
+	 * @param stage the name of the stage which will be used for logging
+	 * @param mongoDocument the MongoDb-document to insert
+	 * @return true if it was successful, false if the write failed.
+	 */
+	private boolean writeToOldDocuments(final DatabaseDocument<MongoType> document,
+			String stage,
+			DBObject mongoDocument) {
+		for (int retryNr = 0; retryNr < MAX_NUMBER_OF_DONE_RETRIES; retryNr++) {
+			try {
+				oldDocuments.insert(mongoDocument);
+				return true;
+			} catch (MongoInternalException e) {
+				String largestContentField = getLargestContentField(document);
+				document.putContentField(largestContentField, "<Removed>");
+				document.addError(stage, e);
+				mongoDocument.putAll(((MongoDocument) document).toMap());
+				logger.error("An error occurred while writing document "
+						+ document.getID() + " to " + oldDocuments.getName() + ": "
+						+ e.getMessage(),
+						e);
+			}
+		}
+
+		return false;
+	}
+
+	private String getLargestContentField(final DatabaseDocument<MongoType> d) {
+		return Collections.max(d.getContentFields(), new Comparator<String>() {
+			@Override
+			public int compare(String a, String b) {
+				Integer sizeOfA = d.getContentField(a).toString().length();
+				Integer sizeOfB = d.getContentField(b).toString().length();
+				return sizeOfA.compareTo(sizeOfB);
+			}
+		});
 	}
 	
 	@Override
@@ -556,7 +616,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	}
 	
 	private MongoDocument findAndModify(DBObject query, DBObject modification) {
-		DBObject c = (DBObject)documents.findAndModify(query, modification);
+		DBObject c = documents.findAndModify(query, modification);
 		
 		if(c==null) {
 			return null;
@@ -592,7 +652,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	public boolean deleteDocumentFile(DatabaseDocument<MongoType> d, String fileName) {
 		MongoDocument md = (MongoDocument) d;
 		DBObject query = QueryBuilder.start(DOCUMENT_KEY).is(md.getID().getID()).and(FILENAME_KEY).is(fileName).get();
-		if(documentfs.getFileList(query).size()!=1) {
+		if (documentfs.getFileList(query).size() != 1) {
 			return false;
 		}
 		
@@ -628,9 +688,10 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		return null;
 	}
 	
+	@Override
 	public DocumentID<MongoType> toDocumentIdFromJson(String json) {
 		try {
-			return toDocumentId(SerializationUtils.toObject((String)json));
+			return toDocumentId(SerializationUtils.toObject(json));
 		} catch (JsonException e) {
 			logger.error("Error deserializing json", e);
 			return null;
