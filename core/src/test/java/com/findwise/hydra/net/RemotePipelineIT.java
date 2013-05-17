@@ -29,7 +29,7 @@ import com.findwise.hydra.mongodb.MongoDocumentID;
 import com.findwise.hydra.mongodb.MongoType;
 import com.mongodb.Mongo;
 
-public class RemotePipelineTest {
+public class RemotePipelineIT {
 	private static NodeMaster<MongoType> nm;
 	private MongoDocument test, test2;
 	private static MongoConnector dbc;

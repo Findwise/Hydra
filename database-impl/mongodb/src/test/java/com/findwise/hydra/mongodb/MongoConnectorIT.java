@@ -31,7 +31,7 @@ import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.local.LocalDocument;
 import com.mongodb.Mongo;
 
-public class MongoConnectorTest {
+public class MongoConnectorIT {
 	MongoConnector mdc;
 	MongoDocument test;
 	MongoDocument test2;
