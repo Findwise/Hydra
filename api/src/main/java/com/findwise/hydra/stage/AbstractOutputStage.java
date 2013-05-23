@@ -21,7 +21,7 @@ public abstract class AbstractOutputStage extends AbstractProcessStage {
     @Override
 	public void setUp(RemotePipeline rp, Map<String, Object> properties)
 			throws IllegalArgumentException, IllegalAccessException,
-			IOException {
+			IOException, RequiredArgumentMissingException {
 		super.setUp(rp, properties);
 	}
 

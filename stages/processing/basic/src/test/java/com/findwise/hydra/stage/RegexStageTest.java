@@ -56,7 +56,7 @@ public class RegexStageTest {
 		assertTrue(!doc2.hasContentField("out"));
 	}
 
-	private void setParameters() throws IllegalAccessException {
+	private void setParameters() throws IllegalAccessException, IllegalArgumentException, RequiredArgumentMissingException {
 		Map<String, Object> parameters = new HashMap<String, Object>();
 		parameters.put("regexConfigs", configs);
 		regexStage.setParameters(parameters);
