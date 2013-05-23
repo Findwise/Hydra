@@ -127,8 +127,9 @@ public abstract class AbstractStage extends Thread {
 	 * @param map
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
+	 * @throws RequiredArgumentMissingException 
 	 */
-	public void setParameters(Map<String, Object> map) throws IllegalArgumentException, IllegalAccessException {
+	public void setParameters(Map<String, Object> map) throws IllegalArgumentException, IllegalAccessException, RequiredArgumentMissingException {
 		if (getClass().isAnnotationPresent(Stage.class)) {
 			for(Field field : getParameterFields()) {
 				if (map.containsKey(field.getName())) {
@@ -162,6 +163,10 @@ public abstract class AbstractStage extends Thread {
 						field.set(this, map.get(field.getName()));
 					}
 					field.setAccessible(prevAccessible);
+				} else if (field.getAnnotation(Parameter.class).required()) {
+					Parameter fieldAnnotation = field.getAnnotation(Parameter.class);
+					String parameterName = fieldAnnotation.name().isEmpty() ? field.getName() : fieldAnnotation.name();
+					throw new RequiredArgumentMissingException("Required parameter '" + parameterName + "' not configured");
 				}
 			}
 		} else {
@@ -196,7 +201,7 @@ public abstract class AbstractStage extends Thread {
 		}
 	}
 
-	public void setUp(RemotePipeline rp, Map<String, Object> properties) throws IllegalArgumentException, IllegalAccessException, IOException {
+	public void setUp(RemotePipeline rp, Map<String, Object> properties) throws IllegalArgumentException, IllegalAccessException, IOException, RequiredArgumentMissingException {
 		setRemotePipeline(rp);
 		setParameters(properties);
 		this.createAndApplyShutDownHook();

@@ -82,7 +82,7 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	public abstract void process(LocalDocument doc) throws ProcessException;
 
 	@Override
-	public void setUp(RemotePipeline rp, Map<String, Object> properties) throws IllegalArgumentException, IllegalAccessException, IOException {
+	public void setUp(RemotePipeline rp, Map<String, Object> properties) throws IllegalArgumentException, IllegalAccessException, IOException, RequiredArgumentMissingException {
 		super.setUp(rp, properties);
 	}
 
