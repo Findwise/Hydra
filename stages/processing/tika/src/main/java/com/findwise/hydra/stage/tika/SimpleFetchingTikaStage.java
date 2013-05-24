@@ -27,7 +27,9 @@ import com.findwise.hydra.stage.tika.utils.TikaUtils;
 public class SimpleFetchingTikaStage extends AbstractProcessStage {
     private static Logger logger = LoggerFactory.getLogger(SimpleFetchingTikaStage.class);
 
-	@Parameter(description = "The field name pattern that should be matched where urls will be found. First group plus \"_\" will be used as field prefix. Example: \"attachment_(.*)\" will match for example attachment_a and will use \"a_\" as prefix")
+	@Parameter(required = true, description = "The field name pattern that should be matched where " +
+			"urls will be found. First group plus \"_\" will be used as field prefix. Example:" +
+			" \"attachment_(.*)\" will match for example attachment_a and will use \"a_\" as prefix")
 	private String urlFieldPattern = null;
 
 	@Parameter(name = "addMetaData", description = "Add the metadata to the document or not. Defaults to true")

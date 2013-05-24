@@ -5,7 +5,7 @@ import java.util.Map;
 import com.findwise.hydra.local.LocalDocument;
 
 public abstract class AbstractMappingProcessStage extends AbstractProcessStage {
-	@Parameter(description = "Map from String to String, e.g. {inField:outField}. "
+	@Parameter(required = true, description = "Map from String to String, e.g. {inField:outField}. "
 		+ "A map such as {key:value} will cause this stage to perform it's action on the value of "
 		+ "the field 'key' and store it into the field 'value'")
 	private Map<String, String> map;

@@ -35,11 +35,15 @@ import org.slf4j.LoggerFactory;
 public class RegexStage extends AbstractProcessStage {
     private static Logger logger = LoggerFactory.getLogger(RegexStage.class);
 
-    @Parameter(name = "regexConfigs", description = "List of configs, where each config is a map with the keys 'regex', 'inField' and 'outField' and 'substitute'")
+    @Parameter(name = "regexConfigs", required = true,
+    		description = "List of configs, where each config is a map with the keys " +
+    				"'regex', 'inField' and 'outField' and 'substitute'")
     private List<Map<String, String>> regexConfigs;
-    @Parameter(name = "concatenateMatches", description = "Will concatenate the extracted matches for the input string(s), enabled by default.")
+    @Parameter(name = "concatenateMatches",
+    		description = "Will concatenate the extracted matches for the input string(s), enabled by default.")
     private boolean concatenateMatches = true;
-    @Parameter(name = "concatenateListElements", description = "Will add matches from all the strings in the input list to a single list, enabled by default.")
+    @Parameter(name = "concatenateListElements",
+    		description = "Will add matches from all the strings in the input list to a single list, enabled by default.")
     private boolean concatenateListElements = true;
 
     @Override
@@ -66,11 +70,11 @@ public class RegexStage extends AbstractProcessStage {
                     if (listValue instanceof String) {
                         processStringInput(regexConf, pattern, outData, (String) listValue);
                     } else {
-                        logger.warn("List did not contain all Strings");
+                        logger.info("List did not contain all Strings");
                     }
                 }
             } else {
-                logger.warn("Field type of inField was not recognized. Valid field types are String and List<String>");
+                logger.info("Field type of inField was not recognized. Valid field types are String and List<String>");
                 continue;
             }
             addMatchesToDocument(doc, regexConf, outData);

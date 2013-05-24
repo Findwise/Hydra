@@ -39,9 +39,9 @@ public class PrioritizedCopyStage extends AbstractProcessStage {
     private String conditionField = null;
     @Parameter(name = "conditionValue", description = "The condition for the actual copy")
     private String conditionValue = null;
-    @Parameter(name = "outputField", description = "The field to populate")
+    @Parameter(name = "outputField", required = true, description = "The field to populate")
     private String outputField;
-    @Parameter(name = "inputFields", description = "the prioritized fields to populate from")
+    @Parameter(name = "inputFields", required = true, description = "the prioritized fields to populate from")
     private List<String> inputFields;
     @Parameter(name = "defaultValue", description = "the default value if nothing is found")
     private String defaultValue = null;

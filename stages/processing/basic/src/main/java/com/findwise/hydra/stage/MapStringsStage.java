@@ -9,17 +9,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A basic Copy-stage
+ * Maps exact values in one field to exact values in an output field
  */
 @Stage(description = "A stage that maps one exact value to another")
 public class MapStringsStage extends AbstractProcessStage {
     private Logger logger = LoggerFactory.getLogger(MapStringsStage.class);
 
-	@Parameter(description="The field to read the input from")
+	@Parameter(required = true, description="The field to read the input from")
 	private String inField;
-	@Parameter(description="The field to save the output in")
+	@Parameter(required = true, description="The field to save the output in")
 	private String outField;
-	@Parameter(description="A map with the values that should be mapped")
+	@Parameter(required = true, description="A map with the values that should be mapped")
 	private Map<String, String> map;
 
 	@Override
@@ -45,18 +45,19 @@ public class MapStringsStage extends AbstractProcessStage {
 					String replace = getMap().get(stringValue);
 					outData.add(replace == null ? stringValue : replace);
 				} else {
-					logger.warn("List did not contain all Strings");
+					logger.info("List did not contain all Strings");
 				}
 			}
 			doc.putContentField(outField, outData);
 		} else {
-			logger.warn("Field type of inField was not recognized. Valid field types are String and List<String>");
+			logger.info("Field type of inField was not recognized. Valid field types are String and List<String>");
 		}
 	}
 
 	@Override
 	public void init() throws RequiredArgumentMissingException {
-		if (inField == null || outField == null || getMap() == null) {
+		if (inField == null || outField == null || getMap() == null
+				|| (getMap() != null && getMap().isEmpty())) {
 			throw new RequiredArgumentMissingException("Missing argument!");
 		}
 	}

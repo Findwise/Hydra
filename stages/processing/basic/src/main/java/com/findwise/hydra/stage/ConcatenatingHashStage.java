@@ -13,16 +13,21 @@ import java.util.List;
  *
  * @author poserdonut
  */
-@Stage(description = "Hashes the value of the given fields and saves it in another named field. Hash is stored as a hex string.")
+@Stage(description = "Hashes the value of the given fields and " +
+		"saves it in another named field. Hash is stored as a hex string.")
 public class ConcatenatingHashStage extends AbstractProcessStage {
     
-    @Parameter(name = "algorithm", description = "The name of the algorithm to use. Must be a registered java.security.Provider, see http://docs.oracle.com/javase/6/docs/technotes/guides/security/crypto/CryptoSpec.html#AppA")
+    @Parameter(name = "algorithm", description = "The name of the algorithm to use. " +
+    		"Must be a registered java.security.Provider, see " +
+    		"http://docs.oracle.com/javase/6/docs/technotes/guides/security/crypto/CryptoSpec.html#AppA")
     private String algorithm = "MD5";
     
-    @Parameter(name = "fields", description= "The fields that you want to concatenate and run the hash on")
+    @Parameter(name = "fields", required = true,
+    		description= "The fields that you want to concatenate and run the hash on")
     List<String> fields;
     
-    @Parameter(name = "output", description = "The field you want to output the hash value to")
+    @Parameter(name = "output", required = true,
+    		description = "The field you want to output the hash value to")
     String output;
     
     private Hasher hasher;

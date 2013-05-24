@@ -32,11 +32,11 @@ public class TextExtractionStage extends AbstractProcessStage {
 
     @Parameter(description = "The max size to be fetched. Default: -1 = unlimited")
 	private long maxSizeInBytes = -1;
-	@Parameter(description = "The prefix to add to the metadata fields when adding them to the content")
+	@Parameter(required = true, description = "The prefix to add to the metadata fields when adding them to the content")
 	private String metadataPrefix;
-	@Parameter(description = "The field name where the extracted content will be stored")
+	@Parameter(required = true, description = "The field name where the extracted content will be stored")
 	private String contentField;
-	@Parameter(description = "The field where the url can be found")
+	@Parameter(required = true, description = "The field where the url can be found")
 	private String urlField;
 	@Parameter(description = "The field where the file size can be found")
 	private String fileSizeField;

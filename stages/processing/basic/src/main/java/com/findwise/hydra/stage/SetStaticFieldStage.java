@@ -26,11 +26,16 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 
 	private int overwritePolicy = SetStaticFieldStage.DEFAULTOVERWRITEPOLICY;
 
-	@Parameter(name = "fieldNames", description = "List of fields to modify")
+	@Parameter(name = "fieldNames", required = true, description = "List of fields to modify")
 	private List<String> fieldNames;
-	@Parameter(name = "fieldValues", description = "List of values to modify each respective field with")
+	@Parameter(name = "fieldValues", required = true, description = "List of values to modify each respective field with")
 	private List<String> fieldValues;
-	@Parameter(name = "overwrite", description = "Switch for beheaviour when modifying; 0 = overwrite content, 1 = skip if there is content, 2 = throw exception if there is content, 3 = append to content (default)")
+	@Parameter(name = "overwrite", 
+			description = "Switch for behaviour when modifying; " +
+			"0 = overwrite content, " +
+			"1 = skip if there is content, " +
+			"2 = throw exception if there is content, " +
+			"3 = append to content (default)")
 	private String overwrite;
 
 	public void init() throws RequiredArgumentMissingException {
@@ -95,7 +100,7 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 			valueList = new ArrayList<String>();
 			valueList.add((String) object);
 		} else {
-			logger.warn("Deleting value " + object + ". Object in field " + fieldName + " was not of type String[] nor String.");
+			logger.info("Deleting value " + object + ". Object in field " + fieldName + " was not of type String[] nor String.");
 			valueList = new ArrayList<String>();
 		}
 		valueList.add(fieldValue);
@@ -116,7 +121,7 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 		if (data instanceof String[] || data instanceof String) {
 			return (data != null);
 		} else {
-			logger.warn("Data ins field " + field + " was not of type String[] nor String. hasValue returned false");
+			logger.info("Data ins field " + field + " was not of type String[] nor String. hasValue returned false");
 			return false;
 		}
 	}

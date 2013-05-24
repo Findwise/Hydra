@@ -26,11 +26,11 @@ import org.slf4j.LoggerFactory;
 public class SolrOutputStage extends AbstractOutputStage {
     private static Logger logger = LoggerFactory.getLogger(SolrOutputStage.class);
 
-	@Parameter(description="The URL of the Solr to which this stage will post data")
+	@Parameter(required = true, description = "The URL of the Solr to which this stage will post data")
 	private String solrDeployPath;
-	@Parameter(description="A map specifying which fields in the Hydra document becomes which fields in Solr. The value of an entry must be one of either String or List<String>.")
+	@Parameter(required = true, description = "A map specifying which fields in the Hydra document becomes which fields in Solr. The value of an entry must be one of either String or List<String>.")
 	private Map<String, Object> fieldMappings = new HashMap<String, Object>();
-	@Parameter(description="If set, fieldMappings will be ignored and all fields will be sent to Solr.")
+	@Parameter(required = true, description = "If set, fieldMappings will be ignored and all fields will be sent to Solr.")
 	private boolean sendAll = false;
 	@Parameter
 	private String idField = "id";
