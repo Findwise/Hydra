@@ -15,7 +15,7 @@ import java.util.List;
 @Stage(description = "This stage render a html page as text, removing all html tags, css styling and javascript")
 public class RenderHTMLStage extends AbstractProcessStage {
 
-	@Parameter(name = "fields", description = "The fields containing the html text to be rendered(removing html and such)")
+	@Parameter(name = "fields", required = true, description = "The fields containing the html text to be rendered(removing html and such)")
 	private List<String> fields;
 
 	@Override

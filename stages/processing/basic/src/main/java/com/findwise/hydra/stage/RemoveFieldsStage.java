@@ -14,7 +14,8 @@ import java.util.List;
 public class RemoveFieldsStage extends AbstractProcessStage {
     private static Logger logger = LoggerFactory.getLogger(RemoveFieldsStage.class);
 
-    @Parameter(name = "removeFields", description = "List of regular expressions defining what fields to remove from the document")
+    @Parameter(name = "removeFields", required = true,
+    		description = "List of regular expressions defining what fields to remove from the document")
     private List<String> removeFields;
 
     @Override

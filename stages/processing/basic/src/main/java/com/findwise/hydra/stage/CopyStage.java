@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
  */
 @Stage(description = "Copies values from one field to another.")
 public class CopyStage extends AbstractMappingProcessStage {
-    Logger logger = LoggerFactory.getLogger(CopyStage.class);
+    private Logger logger = LoggerFactory.getLogger(CopyStage.class);
 
     @Override
 	public void stageInit() throws RequiredArgumentMissingException { }

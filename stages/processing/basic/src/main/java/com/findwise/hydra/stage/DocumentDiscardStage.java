@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
  * Discards documents in Hydra depending on regex matched on a specified field.
  * 
  * The stage takes its configuration from a properties-file and needs the following arguments:
- * regexConf=[{field:<meta-data-field-name>, regex:<regex>}]
+ * discardConfigs=[{field:<meta-data-field-name>, regex:<regex>}]
  * 
  * where the right-hand side is a configuration string in JSON format where
  * 
@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 public class DocumentDiscardStage extends AbstractProcessStage {
     private Logger logger = LoggerFactory.getLogger(DocumentDiscardStage.class);
 
-	@Parameter
+	@Parameter(required = true, description = "Mapping between fields and regexes")
 	private List<Map<String, String>> discardConfigs;
 
 	public List<Map<String, String>> getDiscardConfigs() {
@@ -86,13 +86,13 @@ public class DocumentDiscardStage extends AbstractProcessStage {
 						return true;
 					}
 				} else {
-					logger.warn("Field " + discardConfig.get("field") + " was a list but not a List<String>");
+					logger.info("Field " + discardConfig.get("field") + " was a list but not a List<String>");
 					return false;
 				}
 			}
 			return false;
 		}
-		logger.warn("Field " + discardConfig.get("field") + " did not contain String or List<String>");
+		logger.info("Field " + discardConfig.get("field") + " did not contain String or List<String>");
 		return false;
 	}
 	

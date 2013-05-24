@@ -21,9 +21,9 @@ public class MergeFieldsStageTest {
 		MergeFieldsStage mfs = new MergeFieldsStage();
 		
 		Map<String, Object> map = new HashMap<String, Object>();
-		mfs.setParameters(map);
 		
 		try {
+			mfs.setParameters(map);
 			mfs.init();
 			Assert.fail("Did not throw RequiredArgumentMissing");
 		} catch(RequiredArgumentMissingException e) {
