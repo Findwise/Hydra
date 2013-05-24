@@ -13,7 +13,7 @@ import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.Stage;
 
 
-@Stage
+@Stage(description="Writes documents to a MySQL table")
 public class MySQLStage extends AbstractOutputStage {
 	
 	@Parameter(name = "columnmap")
