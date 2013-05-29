@@ -18,4 +18,25 @@
         <module>processing/tika</module>
         <module>processing/web</module>
     </modules>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.ning.maven.plugins</groupId>
+				<artifactId>maven-duplicate-finder-plugin</artifactId>
+				<version>1.0.4</version>
+				<configuration>
+					<failBuildInCaseOfConflict>true</failBuildInCaseOfConflict>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>test</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>

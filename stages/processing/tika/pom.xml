@@ -2,9 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.findwise.hydra</groupId>
+	<parent>
+		<groupId>com.findwise.hydra</groupId>
+		<artifactId>stages</artifactId>
+		<version>0.4.0-SNAPSHOT</version>
+		<relativePath>../..</relativePath>
+	</parent>
+
 	<artifactId>hydra-tika-stages</artifactId>
-	<version>0.4.0-SNAPSHOT</version>
 	<description>Tika Text Extraction Stage</description>
 	<name>${project.artifactId}</name>
 	<url>http://findwise.github.com/Hydra</url>
@@ -34,7 +39,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
+			<artifactId>junit-dep</artifactId>
 			<version>4.8.2</version>
 			<scope>test</scope>
 		</dependency>
@@ -59,6 +64,15 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>com.ning.maven.plugins</groupId>
+				<artifactId>maven-duplicate-finder-plugin</artifactId>
+				<configuration>
+					<ignoredResources>
+						<ignoredResource>META-INF/BCKEY.*</ignoredResource>
+					</ignoredResources>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
