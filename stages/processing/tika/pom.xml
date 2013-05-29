@@ -13,14 +13,6 @@
 	<description>Tika Text Extraction Stage</description>
 	<name>${project.artifactId}</name>
 
-	<developers>
-		<developer>
-			<id>findwise</id>
-			<name>Findwise</name>
-			<email>hydra-processing@googlegroups.com</email>
-		</developer>
-	</developers>
-
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>

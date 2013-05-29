@@ -21,6 +21,14 @@
 		<url>https://github.com/Findwise/Hydra</url>
 	</scm>
 
+	<developers>
+		<developer>
+			<id>findwise</id>
+			<name>Findwise</name>
+			<email>hydra-processing@googlegroups.com</email>
+		</developer>
+	</developers>
+
 	<modules>
 		<module>admin-service</module>
 		<module>api</module>

@@ -17,14 +17,6 @@
     <properties>
         <main.class>com.findwise.hydra.stage.AbstractStage</main.class>
     </properties>
-	
-	<developers>
-		<developer>
-			<id>findwise</id>
-			<name>Findwise</name>
-			<email>hydra-processing@googlegroups.com</email>
-		</developer>
-	</developers>
 
     <dependencies>
         <dependency>

@@ -10,14 +10,6 @@
     <name>${project.artifactId}</name>
 	<description>Web Content processing stages</description>
 
-	<developers>
-		<developer>
-			<id>findwise</id>
-			<name>Findwise</name>
-			<email>hydra-processing@googlegroups.com</email>
-		</developer>
-	</developers>
-
 	<dependencies>
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>

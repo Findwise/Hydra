@@ -14,14 +14,6 @@
 		<cglib.version>2.2.2</cglib.version>
 	</properties>
 
-	<developers>
-		<developer>
-			<id>findwise</id>
-			<name>Findwise</name>
-			<email>hydra-processing@googlegroups.com</email>
-		</developer>
-	</developers>
-	
 	<build>
 		<finalName>hydra</finalName>
 	</build>

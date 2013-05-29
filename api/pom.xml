@@ -11,14 +11,6 @@
 	<name>${project.artifactId}</name>
 	<description>Hydra API</description>
 
-	<developers>
-		<developer>
-			<id>findwise</id>
-			<name>Findwise</name>
-			<email>hydra-processing@googlegroups.com</email>
-		</developer>
-	</developers>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>

@@ -14,15 +14,7 @@
 		<surefire.version>2.9</surefire.version>
 		<failsafe.version>2.9</failsafe.version>
 	</properties>
-	
-	<developers>
-		<developer>
-			<id>findwise</id>
-			<name>Findwise</name>
-			<email>hydra-processing@googlegroups.com</email>
-		</developer>
-	</developers>
-	
+
 	<profiles>
 		<profile>
 			<id>stresstest</id>
