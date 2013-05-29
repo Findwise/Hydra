@@ -6,6 +6,7 @@
   <packaging>pom</packaging>
   
   <modules>
+	<module>admin-service</module>
 	<module>api</module>
 	<module>database</module>
 	<module>database-impl/mongodb</module>
