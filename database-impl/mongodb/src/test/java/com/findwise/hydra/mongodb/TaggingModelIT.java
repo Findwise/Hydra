@@ -8,7 +8,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TaggingModelTest {
+public class TaggingModelIT {
 	MongoConnector mdc;
 
 	private void createAndConnect() throws Exception {
@@ -36,7 +36,7 @@ public class TaggingModelTest {
 	
 	@AfterClass
 	public static void tearDown() throws Exception {
-		TaggingModelTest tmt = new TaggingModelTest();
+		TaggingModelIT tmt = new TaggingModelIT();
 		tmt.createAndConnect();
 		tmt.mdc.getDB().dropDatabase();
 	}

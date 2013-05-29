@@ -23,7 +23,7 @@
       <executions>
         <execution>
           <id>copy</id>
-          <phase>compile</phase>
+          <phase>package</phase>
           <configuration>
             <tasks>
               <copy file="core/target/hydra-core-jar-with-dependencies.jar" tofile="bin/hydra-core.jar"/>

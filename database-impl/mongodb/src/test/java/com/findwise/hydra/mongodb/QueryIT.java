@@ -23,7 +23,7 @@ import com.mongodb.Mongo;
  * @author joel.westberg
  *
  */
-public class QueryTest {
+public class QueryIT {
 
 	MongoConnector mdc;
 	DatabaseDocument<MongoType> test;

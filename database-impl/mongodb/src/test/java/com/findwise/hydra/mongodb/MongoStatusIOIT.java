@@ -12,7 +12,7 @@ import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 
-public class MongoStatusIOTest {
+public class MongoStatusIOIT {
 	private DB db;
 	
 	@Before
