@@ -1,5 +1,6 @@
 package com.findwise.hydra.admin.rest;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -8,7 +9,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
-import com.findwise.hydra.DatabaseConfiguration;
 import com.findwise.hydra.admin.ConfigurationService;
 import com.findwise.hydra.admin.documents.DocumentsService;
 import com.findwise.hydra.admin.stages.StagesService;
@@ -19,36 +19,24 @@ import com.findwise.hydra.mongodb.MongoType;
 @ComponentScan(basePackages = "com.findwise.hydra.admin.rest")
 public class AppConfig {
 
-	private static MongoConnector connector = new MongoConnector(
-			new DatabaseConfiguration() {
+	private static final String PROPERTIES_FILE = "admin-service.properties";
+	
+	@Autowired
+	private DatabaseConfig databaseConfig;
 
-				public int getOldMaxSize() {
-					return 100;
-				}
-
-				public int getOldMaxCount() {
-					return 10000;
-				}
-
-				public String getNamespace() {
-					return "pipeline";
-				}
-
-				public String getDatabaseUser() {
-					return "admin";
-				}
-
-				public String getDatabaseUrl() {
-					return "localhost";
-				}
-
-				public String getDatabasePassword() {
-					return "changeme";
-				}
-			});
+	@Bean
+	@Autowired
+	public MongoConnector connector(DatabaseConfig config) {
+		return new MongoConnector(config);
+	}
+	
+	@Bean
+	public DatabaseConfig databaseConfig() {
+		return new DatabaseConfig();
+	}
 
 	@Bean(name = "multipartResolver")
-	public static CommonsMultipartResolver multipartResolver() {
+	public CommonsMultipartResolver multipartResolver() {
 		CommonsMultipartResolver cmr = new CommonsMultipartResolver();
 
 		cmr.setMaxUploadSize(1024 * 1024 * 1024); // 1 Gigabyte...
@@ -57,27 +45,27 @@ public class AppConfig {
 	}
 
 	@Bean
-	public static PropertyPlaceholderConfigurer properties() {
+	public PropertyPlaceholderConfigurer properties() {
 		PropertyPlaceholderConfigurer ppc = new PropertyPlaceholderConfigurer();
-		final Resource[] resources = new ClassPathResource[] {};
+		final Resource[] resources = new ClassPathResource[] {new ClassPathResource(PROPERTIES_FILE)};
 		ppc.setLocations(resources);
 		ppc.setIgnoreUnresolvablePlaceholders(true);
 		return ppc;
 	}
 
 	@Bean
-	public static ConfigurationService<MongoType> configurationService() {
+	public ConfigurationService<MongoType> configurationService(MongoConnector connector) {
 		return new ConfigurationService<MongoType>(connector);
 	}
 
 	@Bean
-	public static DocumentsService<MongoType> documentsService() {
+	public DocumentsService<MongoType> documentsService(MongoConnector connector) {
 		return new DocumentsService<MongoType>(connector);
 
 	}
 	
 	@Bean
-	public static StagesService<MongoType> stagesService() {
+	public StagesService<MongoType> stagesService(MongoConnector connector) {
 		return new StagesService<MongoType>(connector);
 	}
 
