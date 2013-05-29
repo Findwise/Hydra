@@ -31,33 +31,37 @@ public class ConfigurationService<T extends DatabaseType> {
 		this.connector = connector;
 
 		try {
-			connect();
-			pipelineScanner = new PipelineScanner<T>(connector.getPipelineReader());
+			initialize();
 		} catch (IOException e) {
 			logger.error("Failed to connect", e);
 		}
+	}
+
+	private void initialize() throws IOException {
+		connect();
+		pipelineScanner = new PipelineScanner<T>(connector.getPipelineReader());
 	}
 
 	private void connect() throws IOException {
 		connector.connect();
 	}
 
-	public void addLibrary(String id, String filename, InputStream stream) {
-		connector.getPipelineWriter().save(id, filename, stream);
+	public void addLibrary(String id, String filename, InputStream stream) throws IOException {
+		getConnector().getPipelineWriter().save(id, filename, stream);
 	}
 
-	public Map<String, Object> getLibraries() {
+	public Map<String, Object> getLibraries() throws IOException {
 		Map<String, Object> map = new HashMap<String, Object>();
 
-		for (DatabaseFile df : pipelineScanner.getLibraryFiles()) {
+		for (DatabaseFile df : getPipelineScanner().getLibraryFiles()) {
 			map.put(df.getId().toString(), getLibraryMap(df));
 		}
 
 		return map;
 	}
 	
-	public Map<String, Object> getLibrary(String id) {
-		for (DatabaseFile df : pipelineScanner.getLibraryFiles()) {
+	public Map<String, Object> getLibrary(String id) throws IOException {
+		for (DatabaseFile df : getPipelineScanner().getLibraryFiles()) {
 			if(df.getId().toString().equals(id)) {
 				return getLibraryMap(df);
 			}
@@ -76,7 +80,7 @@ public class ConfigurationService<T extends DatabaseType> {
 	private Map<String, Object> getStagesMap(DatabaseFile df) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		try {
-			for (Class<?> c : pipelineScanner.getStageClasses(new File(TMP_DIR), df)) {
+			for (Class<?> c : getPipelineScanner().getStageClasses(new File(TMP_DIR), df)) {
 				try {
 					map.put(c.getCanonicalName(), new StageInformation(c));
 				} catch (NoSuchElementException e) {
@@ -89,14 +93,14 @@ public class ConfigurationService<T extends DatabaseType> {
 		return map;
 	}
 
-	public Map<String, Object> getStats() {
+	public Map<String, Object> getStats() throws IOException {
 		Map<String, Object> map = new HashMap<String, Object>();
 		Map<String, Object> documentMap = new HashMap<String, Object>();
 
-		documentMap.put("current", connector.getDocumentReader()
+		documentMap.put("current", getConnector().getDocumentReader()
 				.getActiveDatabaseSize());
 		documentMap.put("throughput", 0);
-		documentMap.put("archived", connector.getDocumentReader()
+		documentMap.put("archived", getConnector().getDocumentReader()
 				.getInactiveDatabaseSize());
 		documentMap.put("status", new HashMap<String, Long>());
 
@@ -151,5 +155,19 @@ public class ConfigurationService<T extends DatabaseType> {
 			propertiesMap.remove(StageGroup.LOGGING_KEY);
 		}
 		return propertiesMap;
+	}
+
+	private DatabaseConnector<T> getConnector() throws IOException {
+		if (!connector.isConnected()) {
+			initialize();
+		}
+		return connector;
+	}
+
+	private PipelineScanner<T> getPipelineScanner() throws IOException {
+		if (!connector.isConnected() && null == pipelineScanner) {
+			initialize();
+		}
+		return pipelineScanner;
 	}
 }

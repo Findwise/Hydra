@@ -54,19 +54,19 @@ public class ConfigurationController {
 	
 	@ResponseBody
 	@RequestMapping(method=RequestMethod.GET, value="") 
-	public Map<String, Object> getStats() {
+	public Map<String, Object> getStats() throws IOException {
 		return service.getStats();
 	}
 	
 	@ResponseBody
 	@RequestMapping(method=RequestMethod.GET, value="/libraries")
-	public Map<String, Object> getLibraries() {
+	public Map<String, Object> getLibraries() throws IOException {
 		return service.getLibraries();
 	}
 	
 	@ResponseBody
 	@RequestMapping(method=RequestMethod.GET, value="/libraries/{id}")
-	public Map<String, Object> getLibrary(@PathVariable String id) {
+	public Map<String, Object> getLibrary(@PathVariable String id) throws IOException {
 		Map<String, Object> library = service.getLibrary(id);
 		if (null != library) {
 			return library;
