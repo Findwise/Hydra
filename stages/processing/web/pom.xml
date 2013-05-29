@@ -11,11 +11,6 @@
 	<description>Web Content processing stages</description>
 	<url>http://findwise.github.com/Hydra</url>
 
-    <properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
-	
-	
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
@@ -80,15 +75,6 @@
 
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				    <encoding>${project.build.sourceEncoding}</encoding>
-				</configuration>
-			</plugin>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
