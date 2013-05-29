@@ -13,7 +13,6 @@
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
     <description>Basic Stages - A package of basic stages for Hydra</description>
-    <url>http://findwise.github.com/Hydra</url>
 
     <licenses>
         <license>

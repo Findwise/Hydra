@@ -10,7 +10,6 @@
 	<packaging>jar</packaging>
 	<name>hydra-debugging-stage</name>
 	<description>Solr Debugging Stage</description>
-	<url>http://findwise.github.com/Hydra</url>
 
 	<licenses>
 		<license>

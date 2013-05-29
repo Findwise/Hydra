@@ -5,6 +5,7 @@
 	<artifactId>hydra-parent</artifactId>
 	<version>0.4.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
+	<url>http://findwise.github.com/Hydra</url>
 
 	<modules>
 		<module>admin-service</module>

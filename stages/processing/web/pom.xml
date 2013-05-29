@@ -9,7 +9,6 @@
 	<artifactId>hydra-web-stages</artifactId>
     <name>${project.artifactId}</name>
 	<description>Web Content processing stages</description>
-	<url>http://findwise.github.com/Hydra</url>
 
 	<licenses>
 		<license>
@@ -24,7 +23,7 @@
 		<developerConnection>scm:git:git@github.com:Findwise/Hydra.git</developerConnection>
 		<url>https://github.com/Findwise/Hydra</url>
 	</scm>
-	
+
 	<developers>
 		<developer>
 			<id>findwise</id>
@@ -32,7 +31,7 @@
 			<email>hydra-processing@googlegroups.com</email>
 		</developer>
 	</developers>
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>

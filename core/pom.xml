@@ -9,7 +9,6 @@
 	<packaging>jar</packaging>
 	<name>${project.artifactId}</name>
 	<description>Hydra Core - The main runnable artifact of Hydra</description>
-	<url>http://findwise.github.com/Hydra</url>
 
 	<licenses>
 		<license>

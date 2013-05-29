@@ -10,7 +10,6 @@
 	<packaging>jar</packaging>
 	<name>${project.artifactId}</name>
 	<description>Hydra Database Package - Database interfaces AND MongoDB implementation</description>
-	<url>http://findwise.github.com/Hydra</url>
 
 	<licenses>
 		<license>

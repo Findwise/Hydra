@@ -10,7 +10,6 @@
 	<packaging>jar</packaging>
 	<name>${project.artifactId}</name>
 	<description>Elasticsearch Output Stage</description>
-	<url>http://findwise.github.com/Hydra</url>
 
 	<licenses>
 		<license>

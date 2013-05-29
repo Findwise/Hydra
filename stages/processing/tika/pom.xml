@@ -12,7 +12,6 @@
 	<artifactId>hydra-tika-stages</artifactId>
 	<description>Tika Text Extraction Stage</description>
 	<name>${project.artifactId}</name>
-	<url>http://findwise.github.com/Hydra</url>
 
 	<licenses>
 		<license>

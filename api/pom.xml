@@ -10,7 +10,6 @@
 	<packaging>jar</packaging>
 	<name>${project.artifactId}</name>
 	<description>Hydra API</description>
-	<url>http://findwise.github.com/Hydra</url>
 
 	<licenses>
 		<license>
