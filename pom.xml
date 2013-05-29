@@ -15,6 +15,12 @@
 		</license>
 	</licenses>
 
+	<scm>
+		<connection>scm:git:git@github.com:Findwise/Hydra.git</connection>
+		<developerConnection>scm:git:git@github.com:Findwise/Hydra.git</developerConnection>
+		<url>https://github.com/Findwise/Hydra</url>
+	</scm>
+
 	<modules>
 		<module>admin-service</module>
 		<module>api</module>

@@ -10,12 +10,6 @@
 	<name>${project.artifactId}</name>
 	<description>Hydra Core - The main runnable artifact of Hydra</description>
 
-	<scm>
-		<connection>scm:git:git@github.com:Findwise/Hydra.git</connection>
-		<developerConnection>scm:git:git@github.com:Findwise/Hydra.git</developerConnection>
-		<url>https://github.com/Findwise/Hydra</url>
-	</scm>
-
 	<properties>
 		<surefire.version>2.9</surefire.version>
 		<failsafe.version>2.9</failsafe.version>
