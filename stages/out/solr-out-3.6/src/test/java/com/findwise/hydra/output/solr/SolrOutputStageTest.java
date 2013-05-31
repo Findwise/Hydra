@@ -10,7 +10,6 @@ import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.common.SolrInputDocument;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -38,19 +37,6 @@ public class SolrOutputStageTest {
 
 	@After
 	public void tearDown() throws Exception {
-	}
-
-	@Ignore
-	@Test
-	public void testSolrConnection() throws Exception {
-		LocalDocument doc = new LocalDocument();
-		doc.putContentField("_solrAction", "add");
-		doc.putContentField("id", "someid1");
-		doc.putContentField("name", "jockeh");
-		solrOutput.output(doc);
-
-		doc.putContentField("_solrAction", "del");
-		solrOutput.output(doc);
 	}
 
 	@Test

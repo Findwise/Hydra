@@ -22,7 +22,7 @@ import com.findwise.hydra.StageGroup;
 import com.mongodb.Mongo;
 import com.mongodb.WriteConcern;
 
-public class MongoPipelineIOTest {
+public class MongoPipelineIOIT {
 	MongoConnector mdc;
 	
 	private void createAndConnect() throws Exception {

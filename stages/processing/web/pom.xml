@@ -1,39 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.findwise.hydra</groupId>
+	<parent>
+		<groupId>com.findwise.hydra</groupId>
+		<artifactId>stages</artifactId>
+		<version>0.3.1-SNAPSHOT</version>
+		<relativePath>../..</relativePath>
+	</parent>
 	<artifactId>hydra-web-stages</artifactId>
     <name>${project.artifactId}</name>
-	<version>0.3.1-SNAPSHOT</version>
 	<description>Web Content processing stages</description>
-	<url>http://findwise.github.com/Hydra</url>
-	
-    <properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
-	
-	
-	<licenses>
-		<license>
-			<name>The Apache Software License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
 
-	<scm>
-		<connection>scm:git:git@github.com:Findwise/Hydra.git</connection>
-		<developerConnection>scm:git:git@github.com:Findwise/Hydra.git</developerConnection>
-		<url>https://github.com/Findwise/Hydra</url>
-	</scm>
-	
-	<developers>
-		<developer>
-			<id>findwise</id>
-			<name>Findwise</name>
-			<email>hydra-processing@googlegroups.com</email>
-		</developer>
-	</developers>
-	
 	<dependencies>
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
@@ -52,8 +28,8 @@
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.9</version>
+			<artifactId>junit-dep</artifactId>
+			<version>4.11</version>
             <scope>test</scope>
 		</dependency>
 		<dependency>
@@ -76,15 +52,6 @@
 
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				    <encoding>${project.build.sourceEncoding}</encoding>
-				</configuration>
-			</plugin>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
@@ -109,14 +76,6 @@
 					</execution>
 				</executions>
 			</plugin>
-		    <plugin>
-		        <groupId>org.apache.maven.plugins</groupId>
-		        <artifactId>maven-resources-plugin</artifactId>
-		        <version>2.4.3</version>
-		        <configuration>
-		            <encoding>${project.build.sourceEncoding}</encoding>
-		        </configuration>
-		    </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>

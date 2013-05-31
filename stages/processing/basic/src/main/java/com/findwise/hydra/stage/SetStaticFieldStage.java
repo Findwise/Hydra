@@ -99,7 +99,7 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 			valueList = new ArrayList<String>();
 		}
 		valueList.add(fieldValue);
-		doc.putContentField(fieldName, valueList.toArray());
+		doc.putContentField(fieldName, valueList.toArray(new String[valueList.size()]));
 
 	}
 

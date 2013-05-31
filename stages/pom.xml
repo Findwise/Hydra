@@ -1,8 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.findwise.hydra</groupId>
+	<parent>
+		<groupId>com.findwise.hydra</groupId>
+		<artifactId>hydra-parent</artifactId>
+		<version>0.3.1-SNAPSHOT</version>
+	</parent>
     <artifactId>stages</artifactId>
-    <version>0.3.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -18,4 +21,25 @@
         <module>processing/tika</module>
         <module>processing/web</module>
     </modules>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.ning.maven.plugins</groupId>
+				<artifactId>maven-duplicate-finder-plugin</artifactId>
+				<version>1.0.4</version>
+				<configuration>
+					<failBuildInCaseOfConflict>true</failBuildInCaseOfConflict>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>test</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>

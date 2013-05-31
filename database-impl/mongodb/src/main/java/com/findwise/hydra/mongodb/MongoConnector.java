@@ -23,6 +23,7 @@ import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
+import com.mongodb.gridfs.GridFS;
 
 public class MongoConnector implements DatabaseConnector<MongoType> {
 	public static final int OLD_DOCUMENTS_TO_KEEP_DEFAULT = 1000;
@@ -47,7 +48,7 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 		}
 	}
 
-	private Logger logger = LoggerFactory.getLogger(MongoConnector.class);
+	private final Logger logger = LoggerFactory.getLogger(MongoConnector.class);
 
 	private WriteConcern concern = WriteConcern.NORMAL;
 
@@ -66,7 +67,7 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 		return documentIO;
 	}
 
-	private DatabaseConfiguration conf;
+	private final DatabaseConfiguration conf;
 
 	private MongoPipelineReader pipelineReader;
 	private MongoPipelineWriter pipelineWriter;
@@ -127,7 +128,8 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 
 			documentIO = new MongoDocumentIO(db, concern,
 					pipelineStatus.getNumberToKeep(),
-					pipelineStatus.getDiscardedMaxSize(), statusUpdater);
+					pipelineStatus.getDiscardedMaxSize(), statusUpdater, new GridFS(db,
+							MongoDocumentIO.DOCUMENT_FS));
 			documentIO.prepare();
 			pipelineWriter.prepare();
 
@@ -135,7 +137,8 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 		} else {
 			documentIO = new MongoDocumentIO(db, concern,
 					pipelineStatus.getNumberToKeep(),
-					pipelineStatus.getDiscardedMaxSize(), statusUpdater);
+					pipelineStatus.getDiscardedMaxSize(), statusUpdater, new GridFS(db,
+							MongoDocumentIO.DOCUMENT_FS));
 		}
 
 		connected = true;

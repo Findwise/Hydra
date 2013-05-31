@@ -33,7 +33,7 @@ import com.mongodb.WriteConcern;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-public class MongoDocumentIOTest {
+public class MongoDocumentIOIT {
 	private MongoConnector mdc;
 	
 	private Random r = new Random(System.currentTimeMillis());
