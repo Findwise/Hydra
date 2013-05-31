@@ -1,50 +1,45 @@
 package com.findwise.hydra.stage;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
-import com.findwise.hydra.local.LocalDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.findwise.hydra.local.LocalDocument;
 
 /**
  * Adds a field with a specified value to the document.
  * 
- * @author simon.stenstrom
+ * @author joel.westberg
  */
-@Stage(description = "Modifies a field with a static value. Can append values to a list, ")
+@Stage(description = "Modifies a field with a static value. Can append values to lists, and will create lists if configured to do so.")
 public class SetStaticFieldStage extends AbstractProcessStage {
-    private static Logger logger = LoggerFactory.getLogger(SetStaticFieldStage.class);
+	private static Logger logger = LoggerFactory
+			.getLogger(SetStaticFieldStage.class);
 
-	private static final int OVERWRITE = 0;
-	private static final int SKIP = 1;
-	private static final int THROW = 2;
-	private static final int ADD = 3;
+	public enum Policy {
+		OVERWRITE, SKIP, THROW, ADD
+	};
 
-	private static final int DEFAULTOVERWRITEPOLICY = SetStaticFieldStage.ADD;
+	private static final Policy DEFAULTOVERWRITEPOLICY = Policy.ADD;
 
-	private int overwritePolicy = SetStaticFieldStage.DEFAULTOVERWRITEPOLICY;
+	private Policy overwritePolicy = SetStaticFieldStage.DEFAULTOVERWRITEPOLICY;
 
-	@Parameter(name = "fieldNames", description = "List of fields to modify")
-	private List<String> fieldNames;
-	@Parameter(name = "fieldValues", description = "List of values to modify each respective field with")
-	private List<String> fieldValues;
-	@Parameter(name = "overwrite", description = "Switch for beheaviour when modifying; 0 = overwrite content, 1 = skip if there is content, 2 = throw exception if there is content, 3 = append to content (default)")
-	private String overwrite;
+	@Parameter(name = "fieldNames", description = "A map of fields to modify, and the values to write to them")
+	private Map<String, Object> fieldValueMap;
+	@Parameter(name = "overwrite", description = "Switch for behaviour when modifying; 0 = overwrite content, 1 = skip if there is content, 2 = throw exception if there is content, 3 = append to content, converting the content to a list if necessary (default)")
+	private int overwrite = -1;
 
+	@Override
 	public void init() throws RequiredArgumentMissingException {
-		if (this.fieldNames == null) {
-			throw new RequiredArgumentMissingException("fieldName missing");
-		}
-		if (this.fieldValues == null) {
-			throw new RequiredArgumentMissingException("fieldValue missing");
-		}
-		if (overwrite != null) {
+		if (overwrite != -1) {
 			try {
-				overwritePolicy = Integer.parseInt(overwrite);
-			} catch (NumberFormatException e) {
-				logger.error("The overwrite field could not be parsed. Using default");
+				overwritePolicy = Policy.values()[overwrite];
+			} catch (ArrayIndexOutOfBoundsException e) {
+				logger.error("The passed value for parameter overwrite is not allowed, defaulting to ADD. Expected values:(0..3), found value:"
+						+ overwrite);
 				overwritePolicy = SetStaticFieldStage.DEFAULTOVERWRITEPOLICY;
 			}
 		}
@@ -52,73 +47,34 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 
 	@Override
 	public void process(LocalDocument doc) throws ProcessException {
-		if (fieldNames == null || fieldValues == null) {
-			throw new ProcessException(
-					"fieldName and/or fieldValue was not set. Probably because init() have not been called");
-		}
-
-		for (int i = 0; i < fieldNames.size(); i++) {
-			if (overwritePolicy == ADD) {
-				addValueToField(doc, fieldNames.get(i), fieldValues.get(i));
-				logger.debug("Added field " + fieldNames + " with value "
-						+ fieldValues);
-			} else if (overwritePolicy == OVERWRITE) {
-				setValueToField(doc, fieldNames.get(i), fieldValues.get(i));
-			} else if (overwritePolicy == SKIP) {
-				if (!hasValue(doc, fieldNames.get(i))) {
-					setValueToField(doc, fieldNames.get(i), fieldValues.get(i));
-				}
-			} else if (overwritePolicy == THROW) {
-				if (hasValue(doc, fieldNames.get(i))) {
-					throw new ProcessException("Field " + fieldNames.get(i)
-							+ " already has a value!");
-				}
+		for (Map.Entry<String, Object> entry : fieldValueMap.entrySet()) {
+			if (!doc.hasContentField(entry.getKey()) || overwritePolicy == Policy.OVERWRITE) {
+				doc.putContentField(entry.getKey(), entry.getValue());
+			} else if (overwritePolicy == Policy.ADD) {
+				addValueToField(doc, entry.getKey(), entry.getValue());
+			} else if (overwritePolicy == Policy.THROW) {
+				throw new ProcessException("Field " + entry.getKey()
+						+ " already has a value!");
 			}
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private void addValueToField(LocalDocument doc, String fieldName,
-			String fieldValue) {
-
-		Object object = doc.getContentField(fieldName);
-		ArrayList<String> valueList;
-		if (object == null) {
-			valueList = new ArrayList<String>();
-		} else if (object instanceof String[]) {
-			String[] values;
-			values = (String[]) object;
-
-			valueList = new ArrayList<String>(
-					Arrays.asList(values));
-
-		} else if (object instanceof String) {
-			valueList = new ArrayList<String>();
-			valueList.add((String) object);
+			Object fieldValue) {
+		if (!doc.hasContentField(fieldName)) {
+			doc.putContentField(fieldName, fieldValue);
 		} else {
-			logger.warn("Deleting value " + object + ". Object in field " + fieldName + " was not of type String[] nor String.");
-			valueList = new ArrayList<String>();
-		}
-		valueList.add(fieldValue);
-		doc.putContentField(fieldName, valueList.toArray(new String[valueList.size()]));
-
-	}
-
-	private void setValueToField(LocalDocument doc, String fieldName,
-			String fieldValue) {
-		String[] values = { fieldValue };
-		doc.putContentField(fieldName, values);
-	}
-
-	private boolean hasValue(LocalDocument doc, String field) {
-
-		Object data = doc.getContentField(field);
-		
-		if (data instanceof String[] || data instanceof String) {
-			return (data != null);
-		} else {
-			logger.warn("Data ins field " + field + " was not of type String[] nor String. hasValue returned false");
-			return false;
+			Object value = doc.getContentField(fieldName);
+			List<Object> list;
+			if (value instanceof List) {
+				list = (List<Object>) value;
+			} else {
+				list = new ArrayList<Object>();
+				list.add(value);
+			}
+			list.add(fieldValue);
+			doc.putContentField(fieldName, list);
 		}
 	}
-
 }
