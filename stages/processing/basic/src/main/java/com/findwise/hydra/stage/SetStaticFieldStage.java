@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.findwise.hydra.local.LocalDocument;
 
 /**
@@ -16,34 +13,15 @@ import com.findwise.hydra.local.LocalDocument;
  */
 @Stage(description = "Modifies a field with a static value. Can append values to lists, and will create lists if configured to do so.")
 public class SetStaticFieldStage extends AbstractProcessStage {
-	private static Logger logger = LoggerFactory
-			.getLogger(SetStaticFieldStage.class);
 
 	public enum Policy {
 		OVERWRITE, SKIP, THROW, ADD
 	};
 
-	private static final Policy DEFAULTOVERWRITEPOLICY = Policy.ADD;
-
-	private Policy overwritePolicy = SetStaticFieldStage.DEFAULTOVERWRITEPOLICY;
-
-	@Parameter(name = "fieldNames", description = "A map of fields to modify, and the values to write to them")
+	@Parameter(required = true, name = "fieldNames", description = "A map of fields to modify, and the values to write to them")
 	private Map<String, Object> fieldValueMap;
-	@Parameter(name = "overwrite", description = "Switch for behaviour when modifying; 0 = overwrite content, 1 = skip if there is content, 2 = throw exception if there is content, 3 = append to content, converting the content to a list if necessary (default)")
-	private int overwrite = -1;
-
-	@Override
-	public void init() throws RequiredArgumentMissingException {
-		if (overwrite != -1) {
-			try {
-				overwritePolicy = Policy.values()[overwrite];
-			} catch (ArrayIndexOutOfBoundsException e) {
-				logger.error("The passed value for parameter overwrite is not allowed, defaulting to ADD. Expected values:(0..3), found value:"
-						+ overwrite);
-				overwritePolicy = SetStaticFieldStage.DEFAULTOVERWRITEPOLICY;
-			}
-		}
-	}
+	@Parameter(name = "overwritePolicy", description = "Switch for behaviour when modifying. Available options: 0/OVERWRITE = overwrite content, 1/SKIP = skip if there is content, 2/THROW = throw exception if there is content, 3/ADD = append to content, converting the content to a list if necessary (default)")
+	private Policy overwritePolicy = Policy.ADD;
 
 	@Override
 	public void process(LocalDocument doc) throws ProcessException {

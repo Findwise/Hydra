@@ -90,7 +90,7 @@ public class SetStaticFieldStageTest {
 
 	public void init(Policy policy) throws Exception {
 		HashMap<String, Object> map = new HashMap<String, Object>();
-		map.put("overwrite", policy.ordinal());
+		map.put("overwritePolicy", policy);
 		HashMap<String, Object> fieldValueMap = new HashMap<String, Object>();
 		fieldValueMap.put("empty", "value");
 		fieldValueMap.put("string", 1);
