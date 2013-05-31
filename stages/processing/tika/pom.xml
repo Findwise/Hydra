@@ -12,29 +12,6 @@
 	<artifactId>hydra-tika-stages</artifactId>
 	<description>Tika Text Extraction Stage</description>
 	<name>${project.artifactId}</name>
-	<url>http://findwise.github.com/Hydra</url>
-
-	<licenses>
-		<license>
-			<name>The Apache Software License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
-
-	<scm>
-		<connection>scm:git:git@github.com:Findwise/Hydra.git</connection>
-		<developerConnection>scm:git:git@github.com:Findwise/Hydra.git</developerConnection>
-		<url>https://github.com/Findwise/Hydra</url>
-	</scm>
-	
-	<developers>
-		<developer>
-			<id>findwise</id>
-			<name>Findwise</name>
-			<email>hydra-processing@googlegroups.com</email>
-		</developer>
-	</developers>
 
 	<dependencies>
 		<dependency>
@@ -71,14 +48,6 @@
 					<ignoredResources>
 						<ignoredResource>META-INF/BCKEY.*</ignoredResource>
 					</ignoredResources>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -160,9 +129,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
-
 </project>

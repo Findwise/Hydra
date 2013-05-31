@@ -1,39 +1,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.findwise.hydra</groupId>
+	<parent>
+		<groupId>com.findwise.hydra</groupId>
+		<artifactId>hydra-parent</artifactId>
+		<version>0.4.0-SNAPSHOT</version>
+		<relativePath>../..</relativePath>
+	</parent>
 	<artifactId>hydra-memorydb</artifactId>
 	<packaging>jar</packaging>
-	<version>0.4.0-SNAPSHOT</version>
 	<name>${project.artifactId}</name>
 	<description>Hydra Inmemory database implementation</description>
-	<url>http://findwise.github.com/Hydra</url>
-
-	<licenses>
-		<license>
-			<name>The Apache Software License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
-
-	<scm>
-		<connection>scm:git:git@github.com:Findwise/Hydra.git</connection>
-		<developerConnection>scm:git:git@github.com:Findwise/Hydra.git</developerConnection>
-		<url>https://github.com/Findwise/Hydra</url>
-	</scm>
-	
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
-	
-	<developers>
-		<developer>
-			<id>findwise</id>
-			<name>Findwise</name>
-			<email>hydra-processing@googlegroups.com</email>
-		</developer>
-	</developers>
 
 	<dependencies>
 		<dependency>
@@ -69,15 +46,6 @@
 		<finalName>${project.name}</finalName>
 
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>
-						1.6</source>
-					<target>1.6</target>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
