@@ -9,14 +9,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.findwise.hydra.JsonDeserializer;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.Logging;
 import com.findwise.hydra.SerializationUtils;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -145,7 +146,19 @@ public abstract class AbstractStage extends Thread {
 						} catch (JsonException e) {
 							field.set(this, map.get(field.getName()));
 						}
-					} else {
+					} else if(field.getType().isEnum() && !map.get(field.getName()).getClass().isEnum()) {
+						Object value = map.get(field.getName());
+						try {
+							if(value instanceof Integer) {
+								field.set(this, field.getType().getEnumConstants()[(Integer)value]);
+							} else if(value instanceof String) {
+								field.set(this, field.getType().getDeclaredMethod("valueOf", String.class).invoke(null, value));
+							}
+						} catch (Exception e) {
+							field.set(this, value);
+						} 
+					}
+					else {
 						field.set(this, map.get(field.getName()));
 					}
 					field.setAccessible(prevAccessible);
