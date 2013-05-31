@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 public class ElasticsearchOutputStage extends AbstractOutputStage {
     private static Logger logger = LoggerFactory.getLogger(ElasticsearchOutputStage.class);
 
-	@Parameter(description = "List of elasticsearch nodes to connect to")
+	@Parameter(required = true, description = "List of elasticsearch node URLs to connect to")
 	private List<String> esNodes = new ArrayList<String>();
 
 	@Parameter(description = "Transport port of the elasticsearch nodes")
