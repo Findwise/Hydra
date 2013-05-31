@@ -36,6 +36,7 @@ public class MergeListsStage extends AbstractProcessStage {
 				return;
 			}
 			if (fieldContent instanceof List<?>) {
+				@SuppressWarnings("unchecked")
 				List<String> list = (List<String>)fieldContent;
 				if (length == -1) length = list.size();
 				
