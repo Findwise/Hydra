@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.findwise.hydra</groupId>
 		<artifactId>stages</artifactId>
-		<version>0.3.1-SNAPSHOT</version>
+		<version>0.3.1</version>
 		<relativePath>../..</relativePath>
 	</parent>
 
@@ -16,7 +16,7 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-api</artifactId>
-			<version>0.3.1-SNAPSHOT</version>
+			<version>0.3.1</version>
 		</dependency>
 		<dependency>
 			<artifactId>solr-solrj</artifactId>

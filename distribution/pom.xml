@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
 		<groupId>com.findwise.hydra</groupId>
 		<artifactId>hydra-parent</artifactId>
-		<version>0.3.1-SNAPSHOT</version>
+		<version>0.3.1</version>
 	</parent>
 
 	<artifactId>distribution</artifactId>
@@ -19,7 +17,7 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-core</artifactId>
-			<version>0.3.1-SNAPSHOT</version>
+			<version>0.3.1</version>
 			<classifier>jar-with-dependencies</classifier>
 		</dependency>
 	</dependencies>
@@ -36,9 +34,8 @@
 						<inherited>false</inherited>
 						<configuration>
 							<tasks>
-								<copy file="../core/target/hydra-core-jar-with-dependencies.jar"
-								      tofile="bin/hydra-core.jar"/>
-								<copy file="../core/target/resource.properties" tofile="bin/resource.properties"/>
+								<copy file="../core/target/hydra-core-jar-with-dependencies.jar" tofile="bin/hydra-core.jar" />
+								<copy file="../core/target/resource.properties" tofile="bin/resource.properties" />
 							</tasks>
 						</configuration>
 						<goals>

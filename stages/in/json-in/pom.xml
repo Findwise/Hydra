@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.findwise.hydra</groupId>
 		<artifactId>stages</artifactId>
-		<version>0.3.1-SNAPSHOT</version>
+		<version>0.3.1</version>
 		<relativePath>../..</relativePath>
 	</parent>
     <artifactId>hydra-json-input</artifactId>
@@ -15,13 +15,13 @@
         <dependency>
             <groupId>com.findwise.hydra</groupId>
             <artifactId>hydra-api</artifactId>
-            <version>0.3.1-SNAPSHOT</version>
+            <version>0.3.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.findwise.hydra</groupId>
             <artifactId>hydra-input-server</artifactId>
-            <version>0.3.1-SNAPSHOT</version>
+            <version>0.3.1</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
