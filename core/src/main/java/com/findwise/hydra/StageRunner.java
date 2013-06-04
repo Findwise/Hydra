@@ -21,6 +21,8 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.findwise.hydra.stage.GroupStarter;
+
 public class StageRunner extends Thread {
 
     private StageGroup stageGroup;
@@ -163,16 +165,11 @@ public class StageRunner extends Thread {
     private boolean runGroup() {
 		CommandLine cmdLine = new CommandLine(java);
         cmdLine.addArgument(jvmParameters, false);
-        if(classPathString==null) {
-        	classPathString = targetDirectory.getAbsolutePath()+File.separator+"*";
-        } else {
-        	classPathString = classPathString+":"+targetDirectory.getAbsolutePath()+File.separator+"*";
-        }
+        String cp = getClassPath();
         
         cmdLine.addArgument("-cp");
         cmdLine.addArgument("${classpath}");
-        cmdLine.addArgument("-jar");
-        cmdLine.addArgument("${file}");
+        cmdLine.addArgument(GroupStarter.class.getCanonicalName());
         cmdLine.addArgument(stageGroup.getName());
         cmdLine.addArgument("localhost");
         cmdLine.addArgument("" + pipelinePort);
@@ -182,8 +179,7 @@ public class StageRunner extends Thread {
         
         HashMap<String, Object> map = new HashMap<String, Object>();
         
-        map.put("file", files.get(0)); //Any of the files should do as a starting point
-        map.put("classpath", classPathString);
+        map.put("classpath", cp);
         
         cmdLine.setSubstitutionMap(map);
         logger.info("Launching with command " + cmdLine.toString());
@@ -221,6 +217,22 @@ public class StageRunner extends Thread {
 		}
         return true;
     }
+
+	private String getClassPath() {
+		if(classPathString==null) {
+        	return getAllJars();
+        } else {
+        	return classPathString+File.pathSeparator+getAllJars();
+        }
+	}
+	
+	private String getAllJars() {
+		String jars="";	
+		for(String s : targetDirectory.list()) {
+			jars+=targetDirectory.getAbsolutePath()+File.separator+s+File.pathSeparator;
+		}
+		return jars.substring(0, jars.length()-1);		
+	}
 
     /**
      * Destroys the JVM running this stage and removes it's working files. 
