@@ -9,9 +9,11 @@
         <module>debugging/debugging</module>
         <module>in/json-in</module>
         <module>in/server</module>
+		<module>in/minions</module>
         <module>in/solr-in</module>
         <module>out/elasticsearch-out</module>
         <module>out/solr-out</module>
+		<module>out/mysql-out</module>
         <module>out/solr-out-3.6</module>
         <module>processing/basic</module>
         <module>processing/hydra-groovy-runner</module>

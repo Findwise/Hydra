@@ -1,4 +1,4 @@
-package com.minions.hydra;
+package com.findwise.hydra;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -6,7 +6,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
 
-import com.findwise.hydra.common.Logger;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractOutputStage;
 import com.findwise.hydra.stage.Parameter;
@@ -16,22 +15,22 @@ import com.findwise.hydra.stage.Stage;
 @Stage(description="Writes documents to a MySQL table")
 public class MySQLStage extends AbstractOutputStage {
 	
-	@Parameter(name = "columnmap")
+	@Parameter(name = "columnmap", required=true)
 	private Map<String, String> columnmap;
 	
-	@Parameter(name = "table")
+	@Parameter(name = "table", required=true)
 	private String table;
 	
-	@Parameter(name = "host")
+	@Parameter(name = "host", required=true)
 	private String host;
 	
-	@Parameter(name = "db")
+	@Parameter(name = "db", required=true)
 	private String db;
 	
-	@Parameter(name = "user")
+	@Parameter(name = "user", required=true)
 	private String user;
 	
-	@Parameter(name = "password")
+	@Parameter(name = "password", required=true)
 	private String password;
 			
 	@Override
@@ -82,7 +81,7 @@ public class MySQLStage extends AbstractOutputStage {
 		
 		// Remove trailing ,
 		builder.deleteCharAt(builder.length()-1);
-		Logger.debug(builder.toString());
+		logger.debug(builder.toString());
 		return builder.toString();	
 	}
 	

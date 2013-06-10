@@ -1,4 +1,4 @@
-package com.minions.hydra;
+package com.findwise.hydra;
 
 import static org.junit.Assert.*;
 
