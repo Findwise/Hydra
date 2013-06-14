@@ -169,6 +169,15 @@ public class ConfigurationController {
 			@RequestBody String changes) {
 		return documentService.updateDocuments(jsonQuery, limit, changes);
 	}
+
+        @ResponseBody
+	@RequestMapping(method = RequestMethod.GET, value = "/documents/discard")
+	public Map<String, Object> discardDocuments(
+			@RequestParam(required = true, value = "q") String jsonQuery,
+			@RequestParam(required = false, defaultValue = "1", value = "limit") int limit,
+			@RequestParam(required = false, defaultValue = "0", value = "skip") int skip){
+		return documentService.discardDocuments(jsonQuery, limit, skip);
+	}
 	
 	@ResponseStatus(HttpStatus.ACCEPTED)
 	@ResponseBody
