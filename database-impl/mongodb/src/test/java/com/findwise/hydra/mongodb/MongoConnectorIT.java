@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.findwise.hydra.DatabaseConnector.ConversionException;
@@ -29,26 +29,20 @@ import com.findwise.hydra.Document.Status;
 import com.findwise.hydra.DocumentFile;
 import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.local.LocalDocument;
-import com.mongodb.Mongo;
 
 public class MongoConnectorIT {
-	MongoConnector mdc;
+
+	@Rule
+	public MongoConnectorResource mongoConnectorResource = new MongoConnectorResource(getClass());
+	
 	MongoDocument test;
 	MongoDocument test2;
 	MongoDocument random;
 	File f;
 
-	private void createAndConnect() throws Exception {
-		mdc = new MongoConnector(DatabaseConfigurationFactory.getDatabaseConfiguration("junit-MongoConnectorTest"));
-		
-		mdc.waitForWrites(true);
-		
-		mdc.connect();
-	}
-	
 	@Before
 	public void setUp() throws Exception {
-		createAndConnect();
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		
 		test = new MongoDocument();
 		test.putContentField("name", "test");
@@ -84,6 +78,7 @@ public class MongoConnectorIT {
 
 	@After
 	public void tearDown() throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		boolean successfulDelete = f.delete();
 		for (int maxTries = 10; !successfulDelete && maxTries > 0; maxTries--) {
 			System.gc();
@@ -96,14 +91,10 @@ public class MongoConnectorIT {
 
 		mdc.getDocumentWriter().deleteAll();
 	}
-	
-	@AfterClass
-	public static void tearDownClass() throws Exception {
-		new Mongo().getDB("junit-MongoConnectorTest").dropDatabase();
-	}
 
 	@Test
 	public void testInsertDocument() {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		MongoDocument md = new MongoDocument();
 		md.putContentField("name", "blahonga");
 		
@@ -124,6 +115,7 @@ public class MongoConnectorIT {
 
 	@Test
 	public void testUpdateDocument() {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		String field = "xyz";
 		String content = "zyx";
 		MongoQuery mdq = new MongoQuery();
@@ -142,6 +134,7 @@ public class MongoConnectorIT {
 
 	@Test
 	public void testGetDocuments() {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		MongoQuery mdq = new MongoQuery();
 		List<DatabaseDocument<MongoType>> list = mdc.getDocumentReader().getDocuments(mdq, 3);
 		if(list.size()!=3) {
@@ -181,6 +174,7 @@ public class MongoConnectorIT {
 
 	@Test
 	public void testWriteDocumentFile() throws IOException{
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		if(mdc.getDocumentReader().getDocumentFileNames(test2).size()!=0) {
 			fail("Document already had files");
 		}
@@ -206,6 +200,7 @@ public class MongoConnectorIT {
 
 	@Test
 	public void testGetDocumentFile() throws IOException{
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		DocumentFile<MongoType> fx = mdc.getDocumentReader().getDocumentFile(test, f.getName());
 
 		if(!f.getName().equals(fx.getFileName())) {
@@ -228,6 +223,7 @@ public class MongoConnectorIT {
 	
 	@Test
 	public void testGetDocumentDatabaseQuery() {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		DatabaseQuery<MongoType> dbq = new MongoQuery();
 		dbq.requireContentFieldEquals("name", "test");
 		dbq.requireContentFieldEquals("number", 2);
@@ -241,6 +237,7 @@ public class MongoConnectorIT {
 
 	@Test
 	public void testGetAndTagDocumentDatabaseQueryString() {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		MongoQuery mdq = new MongoQuery();
 		mdq.requireContentFieldExists("name");
 		Document<MongoType> d = mdc.getDocumentWriter().getAndTag(mdq, "tag");
@@ -267,6 +264,7 @@ public class MongoConnectorIT {
 
 	@Test
 	public void testDelete() {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		MongoQuery query = new MongoQuery();
 		query.requireContentFieldNotEquals("name", "test");
 		MongoDocument d = (MongoDocument) mdc.getDocumentReader().getDocument(query);
@@ -279,7 +277,8 @@ public class MongoConnectorIT {
 	}
 	
 	@Test
-	public void testDiscardDocument() {		
+	public void testDiscardDocument() {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		DatabaseDocument<MongoType> discarded_d = mdc.getDocumentWriter().getAndTag(new MongoQuery(), "DiscardedTag");
 		
 		DatabaseDocument<MongoType> d;
@@ -310,7 +309,8 @@ public class MongoConnectorIT {
 	}
 	
 	@Test
-	public void testFailedDocument() {		
+	public void testFailedDocument() {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		DatabaseDocument<MongoType> failed = mdc.getDocumentWriter().getAndTag(new MongoQuery(), "failedTag");
 		
 		mdc.getDocumentWriter().markFailed(failed, "test_stage");
@@ -330,7 +330,8 @@ public class MongoConnectorIT {
 	}
 	
 	@Test
-	public void testPendingDocument() {		
+	public void testPendingDocument() {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		DatabaseDocument<MongoType> pending = mdc.getDocumentWriter().getAndTag(new MongoQuery(), "pending");
 		
 		mdc.getDocumentWriter().markPending(pending, "test_stage");
@@ -343,7 +344,8 @@ public class MongoConnectorIT {
 	}
 	
 	@Test
-	public void testProcessedDocument() {		
+	public void testProcessedDocument() {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		DatabaseDocument<MongoType> processed = mdc.getDocumentWriter().getAndTag(new MongoQuery(), "processed");
 		
 		mdc.getDocumentWriter().markProcessed(processed, "test_stage");
@@ -357,6 +359,7 @@ public class MongoConnectorIT {
 	
 	@Test
 	public void testActiveDatabaseSize() {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		if(mdc.getDocumentReader().getActiveDatabaseSize() != 3) {
 			fail("Not the correct active database size. Expected 3 got: "+mdc.getDocumentReader().getActiveDatabaseSize());
 		}
@@ -370,6 +373,7 @@ public class MongoConnectorIT {
 	
 	@Test(expected = ConversionException.class)
 	public void testConversionWithNullCharacterInFieldName() throws ConversionException {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		LocalDocument ld = new LocalDocument();
 		ld.putContentField("field\0000name", "field value");
 		mdc.convert(ld);
@@ -377,6 +381,7 @@ public class MongoConnectorIT {
 	
 	@Test(expected = ConversionException.class)
 	public void testConversionWithNullCharacterInList() throws ConversionException {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		LocalDocument ld = new LocalDocument();
 		ld.putContentField("fieldname", Arrays.asList(new String[] {"some", "string", "with", "null\u0000here"}));
 		mdc.convert(ld);
@@ -384,6 +389,7 @@ public class MongoConnectorIT {
 
 	@Test(expected = ConversionException.class)
 	public void testConversionWithNullCharacterInString() throws ConversionException {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		LocalDocument ld = new LocalDocument();
 		ld.putContentField("fieldname", "some\u0000null");
 		mdc.convert(ld);
@@ -391,6 +397,7 @@ public class MongoConnectorIT {
 
 	@Test(expected = ConversionException.class)
 	public void testConversionWithNullCharacterInMap() throws ConversionException {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		LocalDocument ld = new LocalDocument();
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("NUL \u0000 here", "");

@@ -1,65 +1,52 @@
 package com.findwise.hydra.mongodb;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Random;
 
-import com.findwise.hydra.Document;
-import com.findwise.hydra.DocumentFile;
 import junit.framework.Assert;
 
 import org.apache.commons.io.IOUtils;
 import org.bson.types.ObjectId;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.findwise.hydra.DatabaseDocument;
+import com.findwise.hydra.Document;
+import com.findwise.hydra.Document.Status;
+import com.findwise.hydra.DocumentFile;
 import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.DocumentWriter;
 import com.findwise.hydra.SerializationUtils;
 import com.findwise.hydra.TailableIterator;
-import com.findwise.hydra.Document.Status;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
-import com.mongodb.Mongo;
 import com.mongodb.WriteConcern;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
 public class MongoDocumentIOIT {
-	private MongoConnector mdc;
+	
+	@Rule
+	public MongoConnectorResource mongoConnectorResource = new MongoConnectorResource(getClass());
 	
 	private Random r = new Random(System.currentTimeMillis());
 
-	private void createAndConnect() throws Exception {
-		mdc = new MongoConnector(DatabaseConfigurationFactory.getDatabaseConfiguration("junit-MongoDocumentIOTest"));
-		
-		mdc.waitForWrites(true);
-		mdc.connect();
-	}
-	
-	@Before
-	public void setUp() throws Exception {
-		createAndConnect();
-		mdc.getDB().getCollection(MongoDocumentIO.OLD_DOCUMENT_COLLECTION).drop();
-	}
-	
-	@AfterClass
-	@BeforeClass
-	public static void tearDown() throws Exception {
-		new Mongo().getDB("junit-MongoDocumentIO").dropDatabase();
-	}
-	
 	@Test
 	public void testPrepare() {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		DB db = mdc.getDB();
+		db.getCollection(MongoDocumentIO.OLD_DOCUMENT_COLLECTION).drop();
 		
 		if(db.getCollectionNames().contains(MongoDocumentIO.OLD_DOCUMENT_COLLECTION)) {
 			fail("Collection already exists");
@@ -76,11 +63,13 @@ public class MongoDocumentIOIT {
 	}
 	
 	private boolean isCapped() {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		return mdc.getDB().getCollection(MongoDocumentIO.OLD_DOCUMENT_COLLECTION).isCapped();
 	}
 	
 	@Test
 	public void testConnectPrepare() throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		mdc.getDB().dropDatabase();
 		while(mdc.getDB().getCollection(MongoStatusIO.HYDRA_COLLECTION_NAME).count()!=0) {
 			mdc.getDB().getCollection(MongoStatusIO.HYDRA_COLLECTION_NAME).remove(new BasicDBObject(), WriteConcern.SAFE);
@@ -102,6 +91,7 @@ public class MongoDocumentIOIT {
 	
 	@Test
 	public void testRollover() throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
 		dw.prepare();
 
@@ -133,6 +123,7 @@ public class MongoDocumentIOIT {
 	
 	@Test
 	public void testNullFields() throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		MongoDocumentIO dw = (MongoDocumentIO) mdc.getDocumentWriter();
 		MongoDocument md = new MongoDocument();
 		md.putContentField("field", "value");
@@ -160,6 +151,7 @@ public class MongoDocumentIOIT {
 	
 	@Test
 	public void testIdSerialization() throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		ObjectId id = new ObjectId();
 		
 		String serialized = SerializationUtils.toJson(id);
@@ -175,6 +167,7 @@ public class MongoDocumentIOIT {
 	
 	@Test
 	public void testInactiveIterator() throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
 		dw.prepare();
 		
@@ -241,6 +234,7 @@ public class MongoDocumentIOIT {
 	
 	@Test
 	public void testDoneContentTransfer() throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		mdc.getDocumentWriter().prepare();
 		
 		MongoDocument d = new MongoDocument();
@@ -277,8 +271,10 @@ public class MongoDocumentIOIT {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testInsertWithAttachments() throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		MongoDocumentIO dw = mdc.getDocumentWriter();
 		MongoDocument md = new MongoDocument();
 
@@ -302,9 +298,11 @@ public class MongoDocumentIOIT {
 		assertFalse((Boolean) outputDocument.getMetadataField(Document.COMMITTING_METADATA_FLAG));
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	/* Test that we *can* get documents that are fully committed */
 	public void testFullyCommittedDocumentsCanBeTagged() throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		MongoDocumentIO dw = mdc.getDocumentWriter();
 		MongoDocument md = new MongoDocument();
 		dw.insert(md, Arrays.asList(buildSimpleDocumentFile(new byte[]{1, 2, 3})));
@@ -313,9 +311,11 @@ public class MongoDocumentIOIT {
 		assertNotNull(dw.getAndTag(mongoQuery));
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	/* Test that we *can't* get documents that are *not* fully committed */
 	public void testCommittingDocumentsCannotBeTagged() throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		MongoDocumentIO dw = spy(mdc.getDocumentWriter());
 		MongoDocument md = new MongoDocument();
 		doThrow(new RuntimeException()).when(dw).write(any(DocumentFile.class));
@@ -334,6 +334,7 @@ public class MongoDocumentIOIT {
 
 	@Test
 	public void testFetchRemoval() throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		MongoDocumentIO dw = (MongoDocumentIO) mdc.getDocumentWriter();
 		MongoDocument md = new MongoDocument();
 		md.putContentField("field", "value");
@@ -355,10 +356,10 @@ public class MongoDocumentIOIT {
 		Assert.assertFalse(dw.getDocumentById(d2.getID()).fetchedBy("tag"));
 	}
 	
-	
 	@Ignore
 	@Test
 	public void testInsertLargeDocument() throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
 		dw.prepare();
 		
@@ -373,7 +374,7 @@ public class MongoDocumentIOIT {
 	@Test
 	@Ignore
 	public void testUpdateLargeDocument() throws Exception {
-
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
 		dw.prepare();
 		
@@ -392,6 +393,7 @@ public class MongoDocumentIOIT {
 	}
 	
 	private void makeDocumentTooLarge(MongoDocument d) {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		int maxMongoDBObjectSize = mdc.getDB().getMongo().getConnector().getMaxBsonObjectSize();
 		while(d.toJson().getBytes().length <= maxMongoDBObjectSize) {
 			d.putContentField(getRandomString(5), getRandomString(1000000));
@@ -401,6 +403,7 @@ public class MongoDocumentIOIT {
 	int testReadCount = 1;
 	@Test
 	public void testReadStatus() throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		mdc.getDocumentWriter().prepare();
 		
 		testReadCount = (int)mdc.getStatusReader().getStatus().getNumberToKeep(); 
@@ -452,6 +455,7 @@ public class MongoDocumentIOIT {
 	}
 	
 	public long processDocuments(int count) throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		long start = System.currentTimeMillis();
 		DatabaseDocument<MongoType> dd;
 		for(int i=0; i<count; i++) {
@@ -462,6 +466,7 @@ public class MongoDocumentIOIT {
 	}
 	
 	public long failDocuments(int count) throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		long start = System.currentTimeMillis();
 		DatabaseDocument<MongoType> dd;
 		for(int i=0; i<count; i++) {
@@ -472,6 +477,7 @@ public class MongoDocumentIOIT {
 	}
 	
 	public long discardDocuments(int count) throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		long start = System.currentTimeMillis();
 		DatabaseDocument<MongoType> dd;
 		for(int i=0; i<count; i++) {
@@ -482,6 +488,7 @@ public class MongoDocumentIOIT {
 	}
 	
 	public long insertDocuments(int count) throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		long start = System.currentTimeMillis();
 		for(int i=0; i<count; i++) {
 			MongoDocument d = new MongoDocument();

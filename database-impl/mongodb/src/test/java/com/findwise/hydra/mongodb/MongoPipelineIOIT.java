@@ -11,41 +11,23 @@ import java.util.List;
 
 import junit.framework.Assert;
 
-import org.junit.After;
-import org.junit.AfterClass;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.findwise.hydra.DatabaseFile;
 import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.Stage;
 import com.findwise.hydra.StageGroup;
-import com.mongodb.Mongo;
 import com.mongodb.WriteConcern;
 
 public class MongoPipelineIOIT {
-	MongoConnector mdc;
 	
-	private void createAndConnect() throws Exception {
-		mdc = new MongoConnector(DatabaseConfigurationFactory.getDatabaseConfiguration("junit-MongoPipelineIOTest"));
-		
-		mdc.waitForWrites(true);
-		
-		mdc.connect();
-	}
-	
-	@After
-	public void tearDown() throws Exception {
-		tearDownClass();
-	}
-	
-	@AfterClass 
-	public static void tearDownClass() throws Exception {
-		new Mongo().getDB("junit-MongoPipelineIOTest").dropDatabase();
-	}
+	@Rule
+	public MongoConnectorResource mongoConnectorResource = new MongoConnectorResource(getClass());
 	
 	@Test
 	public void testSave() throws Exception {
-		createAndConnect();
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		int count = mdc.getPipelineReader().getFiles().size();
 		
 		String testString = "testString";
@@ -62,6 +44,7 @@ public class MongoPipelineIOIT {
 	
 	@Test
 	public void testDeleteFile() throws Exception {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		testSave();
 		
 		mdc.getPipelineWriter().save("file", new ByteArrayInputStream("random".getBytes("UTF-8")));
@@ -77,7 +60,7 @@ public class MongoPipelineIOIT {
 
 	@Test
 	public void testFilename() throws Exception {
-		createAndConnect();
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		mdc.getPipelineWriter().save("myFile.txt", new ByteArrayInputStream("some file".getBytes("UTF-8")));
 		
 		List<DatabaseFile> list = mdc.getPipelineReader().getFiles();
@@ -91,7 +74,7 @@ public class MongoPipelineIOIT {
 	
 	@Test
 	public void testGetContents() throws Exception {
-		createAndConnect();
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		String filename = "testContentsFile.txt";
 		String contents = "This is the contents of the file";
 		mdc.getPipelineWriter().save(filename, new ByteArrayInputStream(contents.getBytes("UTF-8")));
@@ -110,7 +93,8 @@ public class MongoPipelineIOIT {
 	}
 	
 	@Test
-	public void testGetStageGroups() throws Exception {
+	public void testGetStageGroups() throws Throwable {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		Pipeline p = new Pipeline();
 		StageGroup singleGroup = new StageGroup("singleStage");
 		StageGroup multiGroup = new StageGroup("multi");
@@ -128,7 +112,8 @@ public class MongoPipelineIOIT {
 		Assert.assertTrue(p.hasGroup("multi"));
 		Assert.assertTrue(p.hasGroup("singleStage"));
 		
-		createAndConnect();
+		mongoConnectorResource.reset();
+		mdc = mongoConnectorResource.getConnector();
 		MongoPipelineReader reader = new MongoPipelineReader(mdc.getDB());
 		MongoPipelineWriter writer = new MongoPipelineWriter(reader, WriteConcern.SAFE);
 		
@@ -145,7 +130,8 @@ public class MongoPipelineIOIT {
 	}
 	
 	@Test
-	public void testStageGroupProperties() throws Exception {
+	public void testStageGroupProperties() throws Throwable {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		Pipeline p = new Pipeline();
 		StageGroup singleGroup = new StageGroup("singleStage");
 		StageGroup multiGroup = new StageGroup("multi");
@@ -164,7 +150,8 @@ public class MongoPipelineIOIT {
 		multiGroup.setLogging(false);
 		multiGroup.setCmdlineArgs("cmd");
 		
-		createAndConnect();
+		mongoConnectorResource.reset();
+		mdc = mongoConnectorResource.getConnector();
 		MongoPipelineReader reader = new MongoPipelineReader(mdc.getDB());
 		MongoPipelineWriter writer = new MongoPipelineWriter(reader, WriteConcern.SAFE);
 		
