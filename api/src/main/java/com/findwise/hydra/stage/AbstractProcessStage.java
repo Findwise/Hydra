@@ -1,15 +1,19 @@
 package com.findwise.hydra.stage;
 
 import java.io.IOException;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.http.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.findwise.hydra.Document.Action;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -26,9 +30,26 @@ public abstract class AbstractProcessStage extends AbstractStage {
 
 	@Parameter(description="If set, indicates that the document being processed should be FAILED if a ProcessException is thrown by the stage. If not set, the error will only be persisted and the document written back to Hydra.")
 	private boolean failDocumentOnProcessException = false;
-	
+
+	@Parameter(description = "A list that contains the actions that this step should process. Default is all available actions: ADD, UPDATE and DELETE.")
+	private List<String> actionsToProcess = null;
+	private Set<Action> actionsToProcessSet;
+
 	public static final int NUM_RESERVED_ARGUMENTS = 3;
 	private long holdInterval = DEFAULT_HOLD_INTERVAL;
+
+	@Override
+	public void init() throws RequiredArgumentMissingException {
+		super.init();
+		if (actionsToProcess == null) {
+			actionsToProcessSet = EnumSet.allOf(Action.class);
+			return;
+		}
+		actionsToProcessSet = EnumSet.noneOf(Action.class);
+		for (String action : actionsToProcess) {
+			actionsToProcessSet.add(Action.valueOf(action));
+		}
+	}
 
 	/**
 	 * Fetches a document to be processed from the RemotePipeline
@@ -98,42 +119,56 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	 * 
 	 */
 	public void run() {
-		
 		setContinueRunning(true);
-
 		while (isContinueRunning()) {
 			try {
-				LocalDocument doc = fetch();
-				if (doc == null) {
-					Thread.sleep(holdInterval);
-
-				} else {
-					try {
-						logger.debug("Got new doc " + doc.getID()
-								+ " to process.");
-						process(doc);
-						if(!persist()) {
-							LocalDocument ld = new LocalDocument(doc.toJson());
-							IOException e = new IOException("Unable to save changes to core");
-							if(!getRemotePipeline().markFailed(ld, e)) {
-								logger.error("Unable to persist an error to the database", e);
-							}
-						}
-					} catch (ProcessException e) {
-						if(failDocumentOnProcessException) {
-							getRemotePipeline().markFailed(doc, e);
-						} else {
-							persistError(doc, e);
-						}
-					}
-
-				}
-
+				fetchAndProcess();
 			} catch (Exception e) {
 				logger.error("Caught exception while running", e);
 				Runtime.getRuntime().removeShutdownHook(getShutDownHook());
 				System.exit(1);
 			}
+		}
+	}
+
+	void fetchAndProcess() throws IOException, JsonException, InterruptedException {
+		LocalDocument doc = fetch();
+		if (doc == null) {
+			Thread.sleep(holdInterval);
+			return;
+		}
+		try {
+			doProcess(doc);
+		} catch (ProcessException e) {
+			handleProcessException(doc, e);
+		}
+	}
+
+	private void doProcess(LocalDocument doc) throws ProcessException,
+			IOException, JsonException {
+		logger.debug("Got new doc " + doc.getID() + " to process.");
+		if (shouldProcess(doc)) {
+			process(doc);
+		}
+		if (!persist()) {
+			LocalDocument ld = new LocalDocument(doc.toJson());
+			IOException e = new IOException("Unable to save changes to core");
+			if (!getRemotePipeline().markFailed(ld, e)) {
+				logger.error("Unable to persist an error to the database", e);
+			}
+		}
+	}
+
+	private boolean shouldProcess(LocalDocument doc) {
+		return doc.getAction() == null || actionsToProcessSet.contains(doc.getAction());
+	}
+
+	private void handleProcessException(LocalDocument doc, ProcessException e)
+			throws IOException, JsonException {
+		if (failDocumentOnProcessException) {
+			getRemotePipeline().markFailed(doc, e);
+		} else {
+			persistError(doc, e);
 		}
 	}
 }
