@@ -2,21 +2,18 @@ package com.findwise.hydra.mongodb;
 
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.Document;
-import com.findwise.hydra.JsonException;
 import com.findwise.hydra.Document.Action;
+import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.LocalQuery;
-import com.mongodb.Mongo;
 
 /**
  * Cross-test
@@ -25,15 +22,16 @@ import com.mongodb.Mongo;
  */
 public class QueryIT {
 
-	MongoConnector mdc;
+	@Rule
+	public MongoConnectorResource mongoConnectorResource = new MongoConnectorResource(getClass());
+	
 	DatabaseDocument<MongoType> test;
 	DatabaseDocument<MongoType> test2;
 	DatabaseDocument<MongoType> random;
 	
 	@Before
 	public void setUp() throws Exception {
-		mdc = new MongoConnector(DatabaseConfigurationFactory.getDatabaseConfiguration("junit-QueryTest"));
-		mdc.waitForWrites(true);
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		
 		test = new MongoDocument();
 		test.setAction(Action.ADD);
@@ -48,13 +46,6 @@ public class QueryIT {
 		
 		random = new MongoDocument();
 		
-		try {
-			mdc.connect();
-		}
-		catch (IOException e) {
-			fail("IOException when establishing connection");
-		}
-		
 		DatabaseDocument<MongoType> d;
 		while((d = mdc.getDocumentReader().getDocument(new MongoQuery()))!=null) {
 			mdc.getDocumentWriter().delete(d);
@@ -64,15 +55,10 @@ public class QueryIT {
 		mdc.getDocumentWriter().insert(test2);
 		mdc.getDocumentWriter().insert(random);
 	}
-	
-	@AfterClass
-	@BeforeClass
-	public static void tearDownClass() throws Exception {
-		new Mongo().getDB("junit-QueryTest").dropDatabase();
-	}
 
 	@Test
 	public void testMongoDatabaseQuery() throws JsonException {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		LocalQuery lq = new LocalQuery();
 		lq.requireTouchedByStage("test");
 		lq.requireNotTouchedByStage("test2");
@@ -90,6 +76,7 @@ public class QueryIT {
 	
 	@Test
 	public void testRequireID() {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		Document<MongoType> d = mdc.getDocumentReader().getDocument(new MongoQuery());
 		MongoQuery mdq = new MongoQuery();
 		mdq.requireID(d.getID());
@@ -103,6 +90,7 @@ public class QueryIT {
 
 	@Test
 	public void testRequireContentFieldExists() throws JsonException {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		LocalQuery q = new LocalQuery();
 		q.requireContentFieldExists("number");
 		List<DatabaseDocument<MongoType>> ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
@@ -119,6 +107,7 @@ public class QueryIT {
 	
 	@Test
 	public void testRequireContentFieldNotExists() throws JsonException {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		LocalQuery q = new LocalQuery();
 		q.requireContentFieldNotExists("number");
 		List<DatabaseDocument<MongoType>> ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
@@ -135,6 +124,7 @@ public class QueryIT {
 
 	@Test
 	public void testRequireTouchedByStage() throws JsonException {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		LocalQuery q = new LocalQuery();
 		q.requireTouchedByStage("xyz");
 		List<DatabaseDocument<MongoType>> ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
@@ -156,6 +146,7 @@ public class QueryIT {
 
 	@Test
 	public void testRequireNotTouchedByStage() throws JsonException {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		LocalQuery q = new LocalQuery();
 		q.requireNotTouchedByStage("xyz");
 		List<DatabaseDocument<MongoType>> ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
@@ -177,6 +168,7 @@ public class QueryIT {
 	
 	@Test
 	public void testRequireAction() throws JsonException {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		LocalQuery q = new LocalQuery();
 		q.requireAction(Action.UPDATE);
 		List<DatabaseDocument<MongoType>> ds = mdc.getDocumentReader().getDocuments(new MongoQuery(q.toJson()), 3);
@@ -205,6 +197,7 @@ public class QueryIT {
 
 	@Test
 	public void testFromJSON() throws JsonException {
+		MongoConnector mdc = mongoConnectorResource.getConnector();
 		LocalQuery q = new LocalQuery();
 		MongoQuery mdq = new MongoQuery();
 		mdq.fromJson(q.toJson());

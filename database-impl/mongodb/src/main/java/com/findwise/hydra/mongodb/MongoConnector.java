@@ -93,6 +93,10 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 			logger.error("A MongoException occurred", e);
 			throw new ConnectionException(e);
 		}
+		connect(mongo, true);
+	}
+
+	protected void connect(Mongo mongo, boolean startStatusUpdater) throws IOException {
 		db = mongo.getDB(conf.getNamespace());
 
 		if (requiresAuthentication(mongo)) {
@@ -143,7 +147,9 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 
 		connected = true;
 
-		statusUpdater.start();
+		if (startStatusUpdater) {
+			statusUpdater.start();
+		}
 	}
 
 	public StatusUpdater getStatusUpdater() {

@@ -1,34 +1,19 @@
 package com.findwise.hydra.mongodb;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-import java.net.UnknownHostException;
-
-import org.junit.After;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
-import com.mongodb.DB;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
-
 public class MongoStatusIOIT {
-	private DB db;
 	
-	@Before
-	public void setUp() throws UnknownHostException, MongoException {
-		tearDown();
-		db = new Mongo().getDB("junit-statusiotest");
-	}
-	
-	@After
-	public void tearDown() throws MongoException, UnknownHostException {
-		new Mongo().getDB("junit-statusiotest").dropDatabase();
-	}
+	@Rule
+	public MongoDatabaseResource mongoResource = new MongoDatabaseResource(getClass());
 	
 	@Test
 	public void testSaveInsert() {
-		MongoStatusIO io = new MongoStatusIO(db);
+		MongoStatusIO io = new MongoStatusIO(mongoResource.getDatabase());
 		
 		if(io.hasStatus() && io.getStatus().isPrepared()) {
 			fail("Not set up properly");
@@ -46,7 +31,7 @@ public class MongoStatusIOIT {
 	
 	@Test
 	public void testCounts() {
-		MongoStatusIO io = new MongoStatusIO(db);
+		MongoStatusIO io = new MongoStatusIO(mongoResource.getDatabase());
 		MongoPipelineStatus mps = new MongoPipelineStatus();
 		
 		if(mps.getFailedCount()!=0) {
@@ -74,7 +59,7 @@ public class MongoStatusIOIT {
 	
 	@Test
 	public void testIncrement() {
-		MongoStatusIO io = new MongoStatusIO(db);
+		MongoStatusIO io = new MongoStatusIO(mongoResource.getDatabase());
 		MongoPipelineStatus mps = new MongoPipelineStatus();
 		io.save(mps);
 		
