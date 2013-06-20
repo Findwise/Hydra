@@ -1,5 +1,7 @@
 package com.findwise.hydra.mongodb;
 
+import java.io.IOException;
+
 import org.junit.rules.ExternalResource;
 
 import com.findwise.hydra.DatabaseConfiguration;
@@ -20,6 +22,24 @@ public class MongoConnectorResource extends ExternalResource {
 	
 	@Override
 	protected void before() throws Throwable {
+		connect();
+	}
+	
+	@Override
+	protected void after() {
+		disconnect();
+	}
+	
+	public MongoConnector getConnector() {
+		return mdc;
+	}
+	
+	public void reset() throws IOException {
+		disconnect();
+		connect();
+	}
+
+	private void connect() throws IOException {
 		mongo = new Mongo();
 		DatabaseConfiguration conf = DatabaseConfigurationFactory.getDatabaseConfiguration(dbName);
 		mdc = new MongoConnector(conf);
@@ -27,19 +47,9 @@ public class MongoConnectorResource extends ExternalResource {
 		mdc.connect(mongo, false);
 	}
 	
-	@Override
-	protected void after() {
+	private void disconnect() {
 		mdc = null;
 		mongo.dropDatabase(dbName);
 		mongo.close();
-	}
-	
-	public MongoConnector getConnector() {
-		return mdc;
-	}
-	
-	public void reset() throws Throwable {
-		after();
-		before();
 	}
 }

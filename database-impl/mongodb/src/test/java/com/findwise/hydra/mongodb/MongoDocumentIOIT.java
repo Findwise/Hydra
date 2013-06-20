@@ -12,7 +12,9 @@ import static org.mockito.Mockito.spy;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import junit.framework.Assert;
@@ -318,9 +320,11 @@ public class MongoDocumentIOIT {
 		MongoConnector mdc = mongoConnectorResource.getConnector();
 		MongoDocumentIO dw = spy(mdc.getDocumentWriter());
 		MongoDocument md = new MongoDocument();
-		doThrow(new RuntimeException()).when(dw).write(any(DocumentFile.class));
+		doThrow(new RuntimeException()).when(dw).write(any(DocumentFile.class)); // Unchecked due to generics
 		try {
-			dw.insert(md, Arrays.asList(buildSimpleDocumentFile(new byte[]{1, 2, 3})));
+			List<DocumentFile<MongoType>> docFiles = new ArrayList<DocumentFile<MongoType>>();
+			docFiles.add(buildSimpleDocumentFile(new byte[]{1, 2, 3}));
+			dw.insert(md, docFiles);
 		} catch( RuntimeException e) {}
 		MongoQuery mongoQuery = new MongoQuery();
 		mongoQuery.requireID(md.getID());

@@ -96,7 +96,7 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 		connect(mongo, true);
 	}
 
-	public void connect(Mongo mongo, boolean startStatusUpdater) throws IOException {
+	protected void connect(Mongo mongo, boolean startStatusUpdater) throws IOException {
 		db = mongo.getDB(conf.getNamespace());
 
 		if (requiresAuthentication(mongo)) {

@@ -93,7 +93,7 @@ public class MongoPipelineIOIT {
 	}
 	
 	@Test
-	public void testGetStageGroups() throws Throwable {
+	public void testGetStageGroups() throws Exception {
 		MongoConnector mdc = mongoConnectorResource.getConnector();
 		Pipeline p = new Pipeline();
 		StageGroup singleGroup = new StageGroup("singleStage");
@@ -130,7 +130,7 @@ public class MongoPipelineIOIT {
 	}
 	
 	@Test
-	public void testStageGroupProperties() throws Throwable {
+	public void testStageGroupProperties() throws Exception {
 		MongoConnector mdc = mongoConnectorResource.getConnector();
 		Pipeline p = new Pipeline();
 		StageGroup singleGroup = new StageGroup("singleStage");
