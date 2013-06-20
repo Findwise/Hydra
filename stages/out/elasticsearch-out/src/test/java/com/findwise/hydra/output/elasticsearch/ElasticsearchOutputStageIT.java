@@ -9,7 +9,9 @@ import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
 import com.findwise.hydra.Document.Action;
@@ -18,6 +20,9 @@ import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.stage.ProcessException;
 
 public class ElasticsearchOutputStageIT {
+	
+	@Rule
+	public TemporaryFolder dataDir = new TemporaryFolder();
 	
 	ElasticsearchOutputStage stage;
 	Node node;
@@ -34,7 +39,7 @@ public class ElasticsearchOutputStageIT {
 				.clusterName(clusterName)
 				.loadConfigSettings(false)
 				.local(true);
-		
+		nodeBuilder.settings().put("path.data", dataDir.getRoot().getAbsolutePath());
 		node = nodeBuilder.build();
 		node.start();
 		client = node.client();
