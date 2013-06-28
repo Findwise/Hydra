@@ -1,10 +1,7 @@
 package com.findwise.hydra.admin;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -12,7 +9,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.io.FileUtils;
-import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,22 +22,19 @@ import com.findwise.hydra.StageGroup;
 public class PipelineScanner<T extends DatabaseType> {
 	private Logger logger = LoggerFactory.getLogger(PipelineScanner.class);
 
-	/**
-	 * Temporary directory for scanned JARs
-	 */
-	private final String tempDir;
-
 	private final PipelineReader pipelineReader;
+
+	private final JarFetcher jarFetcher;
 
 	private final StageScanner stageScanner;
 
 	public PipelineScanner(PipelineReader pipelineReader) {
-		this(pipelineReader, new StageScanner(), "tmp");
+		this(pipelineReader, new JarFetcher(), new StageScanner());
 	}
 
-	public PipelineScanner(PipelineReader pipelineReader, StageScanner stageScanner, String tempDir) {
+	public PipelineScanner(PipelineReader pipelineReader, JarFetcher jarFetcher, StageScanner stageScanner) {
 		this.pipelineReader = pipelineReader;
-		this.tempDir = tempDir;
+		this.jarFetcher = jarFetcher;
 		this.stageScanner = stageScanner;
 	}
 
@@ -59,14 +52,19 @@ public class PipelineScanner<T extends DatabaseType> {
 	public Map<String, StageInformation> getStagesMap(DatabaseFile df) {
 		Map<String, StageInformation> map = new HashMap<String, StageInformation>();
 		try {
-			for (Class<?> c : getStageClasses(new File(tempDir), df)) {
+			List<URL> jars = jarFetcher.getJars(FileUtils.getTempDirectory(), pipelineReader, df);
+			
+			for (Class<?> c : stageScanner.getClasses(jars)) {
 				try {
-					map.put(c.getCanonicalName(), new StageInformation(c));
+					StageInformation stageInformation = new StageInformation(c);
+					String stageClass = null != c.getCanonicalName() ? c.getCanonicalName() : c.getName();
+					map.put(stageClass, stageInformation);
 				} catch (NoSuchElementException e) {
 					logger.error("Unable to get stage information for class "
 							+ c.getCanonicalName(), e);
 				}
 			}
+			jarFetcher.cleanup(jars);
 		} catch (IOException e) {
 			logger.error("Unable to get stage classes", e);
 		}
@@ -118,23 +116,5 @@ public class PipelineScanner<T extends DatabaseType> {
 			propertiesMap.remove(StageGroup.LOGGING_KEY);
 		}
 		return propertiesMap;
-	}
-
-	private List<Class<?>> getStageClasses(File tmpdir, DatabaseFile... files)
-			throws IOException {
-		List<URL> urls = new ArrayList<URL>();
-
-		for (DatabaseFile df : files) {
-			URL url = new File(tmpdir.getAbsolutePath() + File.separator
-					+ df.getFilename()).toURI().toURL();
-
-			FileUtils.copyInputStreamToFile(pipelineReader.getStream(df),
-					new File(url.getFile()));
-			urls.add(url);
-		}
-
-		ClassLoader cl = new URLClassLoader(urls.toArray(new URL[urls.size()]));
-
-		return stageScanner.getClasses(new Reflections(urls, cl));
 	}
 }
