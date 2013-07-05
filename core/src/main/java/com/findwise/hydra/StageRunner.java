@@ -191,7 +191,7 @@ public class StageRunner extends Thread {
         try {
             Process p = cl.exec(cmdLine, null);
             new StreamLogger(
-                String.format("%s (stdin)", stageGroup.getName()),
+                String.format("%s (stdout)", stageGroup.getName()),
                 p.getInputStream()
             ).start();
             new StreamLogger(
