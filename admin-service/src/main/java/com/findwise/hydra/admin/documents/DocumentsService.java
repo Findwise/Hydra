@@ -71,6 +71,17 @@ public class DocumentsService<T extends DatabaseType> {
 		return getConnector().getDocumentReader().getDocuments(query, limit, skip);
 	}
 
+	private boolean discardDocuments(DatabaseQuery<T> query, int limit, int skip) {
+		List<DatabaseDocument<T>> res = getConnector().getDocumentReader().getDocuments(query, limit, skip);
+			if (res.isEmpty()) {
+				return false;
+			} else {
+			for (DatabaseDocument<T> databaseDocument : res) {
+				getConnector().getDocumentWriter().delete(databaseDocument);
+			}
+		return true;
+	    }
+	}
 	public DatabaseConnector<T> getConnector() {
 		return connector;
 	}
@@ -187,4 +198,24 @@ public class DocumentsService<T extends DatabaseType> {
 		
 		return ret;
 	}
+        
+	public Map<String, Object> discardDocuments(String jsonQuery, int limit, int skip) {
+		Map<String, Object> ret = new HashMap<String, Object>();
+
+		try {
+			DatabaseQuery<AdminServiceType> query = new AdminServiceQuery();
+			query.fromJson(jsonQuery);
+			boolean success = discardDocuments(connector.convert(query), limit, skip);
+			ret.put("success", success);
+
+		} catch (JsonException e) {
+			Map<String, String> error = new HashMap<String, String>();
+			error.put("Invalid query", jsonQuery);
+			ret.put("error", error);
+			ret.put("success", false);
+		}
+
+		return ret;
+	}        
+
 }

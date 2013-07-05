@@ -391,3 +391,26 @@ Available endpoints
 		"document_id" : "23432451"
 	}
 	```
+* **/documents/discard** - Method: GET
+	
+	Deletes the documents matching a query.
+	The number of documents to be deleted and what document to start deleting from, can be configured with request parameters
+	
+	Available parameters: 
+	
+		- q: A json query to be matched by the documents to be deleted
+		
+		- limit: The maximum number of documents to delete (*default: no limit*)
+		
+		- skip: The number of documents to skip (used for example if you want to delete all documents except the first 10) (*default: 0*)
+	
+	Sample request: http://localhost:8080/hydra/documents/discard?q={fetched:{rename:true}}&limit=10&skip=0
+	Deleted 10 documents matching the query, starting with the first one.
+	
+	Sample response: 
+	
+	```
+	{
+		success: true
+	}
+	```
