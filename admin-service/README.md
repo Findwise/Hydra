@@ -400,7 +400,7 @@ Available endpoints
 	
 		- q: A json query to be matched by the documents to be deleted
 		
-		- limit: The maximum number of documents to delete (*default: 1*)
+		- limit: The maximum number of documents to delete (*default: no limit*)
 		
 		- skip: The number of documents to skip (used for example if you want to delete all documents except the first 10) (*default: 0*)
 	
