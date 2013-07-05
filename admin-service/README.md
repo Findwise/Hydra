@@ -1,6 +1,22 @@
 Hydra Admin Service
 ==========================
 
+Description
+-----------
+
+This service talks directly to the backend database. The service can configure pipelines without any running Core.
+
+As a webapp, this service needs to be deployed in a container such as Tomcat or Jetty.
+
+Configuration
+-------------
+
+If you need to set any of the configuration parameters (such as database authentication), you need to supply the `admin-service.properties` file via a JVM system property. Simply add the following to your Java startup command:
+
+    -Dhydra.admin.config.dir=<path-to-directory>
+
+Put your `admin-service.properties` in that directory and the admin service should load it when initiated.
+
 Available endpoints
 ----------------
 
