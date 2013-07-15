@@ -3,19 +3,24 @@
 	<parent>
 		<groupId>com.findwise.hydra</groupId>
 		<artifactId>stages</artifactId>
-		<version>0.4.0-SNAPSHOT</version>
+		<version>0.3.1</version>
 		<relativePath>../..</relativePath>
 	</parent>
-	<artifactId>hydra-debugging-stage</artifactId>
+	<artifactId>hydra-debugging</artifactId>
 	<packaging>jar</packaging>
-	<name>hydra-debugging-stage</name>
-	<description>Solr Debugging Stage</description>
+	<name>hydra-debugging</name>
+	<description>Hydra debugging tools</description>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-api</artifactId>
-			<version>0.4.0-SNAPSHOT</version>
+			<version>0.3.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.findwise.hydra</groupId>
+			<artifactId>hydra-mongodb</artifactId>
+			<version>0.3.1</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
