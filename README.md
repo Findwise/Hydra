@@ -180,11 +180,11 @@ Start hydra by running `java -jar hydra-core.jar`
 
 Everything is now up and running. To add a document for processing, just type
 
-'''
+```
 
 	java -cp hydra-debugging-jar-with-dependencies.jar com.findwise.hydra.debugging.StdinInput 
 	"{\"contents\":{\"text\":\"This is my text\"}}"
 
-'''
+```
 
 Hydra will print out the processed document, that should contain a title aswell as the imported text.
