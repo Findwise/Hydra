@@ -124,7 +124,7 @@ Basically, an input connector pushes data directly to mongodb by creating an ins
 
 ```
 
-A `StdinInput`connector can be found in the `examples` package, and can be used as a reference implementation.
+A `StdinInput`connector can be found in the `stages/debugging` package, and can be used as a reference implementation.
 
 ## Setting up a demo pipeline
 Start the mongo deamon (mongod), in your `mongodb/bin` folder
@@ -180,6 +180,11 @@ Start hydra by running `java -jar hydra-core.jar`
 
 Everything is now up and running. To add a document for processing, just type
 
-`java -cp hydra-debugging-jar-with-dependencies.jar com.findwise.hydra.debugging.StdinInput "{\"contents\":{\"text\":\"This is my text\"}}"`
+'''
+
+	java -cp hydra-debugging-jar-with-dependencies.jar com.findwise.hydra.debugging.StdinInput 
+	"{\"contents\":{\"text\":\"This is my text\"}}"
+
+'''
 
 Hydra will print out the processed document, that should contain a title aswell as the imported text.
