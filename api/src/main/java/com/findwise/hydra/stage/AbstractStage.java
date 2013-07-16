@@ -196,7 +196,7 @@ public abstract class AbstractStage extends Thread {
 		}
 	}
 
-	public void setUp(RemotePipeline rp, Map<String, Object> properties) throws IllegalArgumentException, IllegalAccessException, IOException {
+	public void setUp(RemotePipeline rp, Map<String, Object> properties) throws IllegalArgumentException, IllegalAccessException, IOException, RequiredArgumentMissingException {
 		setRemotePipeline(rp);
 		setParameters(properties);
 		this.createAndApplyShutDownHook();
