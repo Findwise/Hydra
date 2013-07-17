@@ -192,7 +192,7 @@ Hydra will print out the processed document, that should contain a title aswell 
 
 ## Debugging
 
-You can run your stages from the command line if you need to debug them. 
+You can run your stages from the command line (or you IDE) if you need to debug them. 
 
 java -cp `{libraryJarWithDependencies}` com.findwise.hydra.stage.AbstractStage `{fieldName}` `{hydraHost}` `{hydraRestPort}` `{performaceLoggingEnabled}` `{loggingPort}` `{configuration}`
 
@@ -200,3 +200,26 @@ i.e.
 ```
 	java -cp basic-jar-with-dependincies.jar com.findwise.hydra.stage.AbstractStage staticField localhost 12001 false 12002 "{ stageClass: \"com.findwise.hydra.stage.SetStaticFieldStage\", fieldValueMap: {\"source\": \"my source\" } }"
 ```
+
+
+## Scaling and Distribution
+
+You can easily start a stage with several threads on your machine. This can for example be done when you have one stage that is the bottleneck of your processing. Set the `numberOfThreads` parameter to the stage configuration and push the configuration to hydra and it will restart the stage with more threads.
+
+```
+
+	{
+		stageClass: "com.findwise.hydra.stage.SetStaticFieldStage",
+		fieldValueMap: {
+			"title" : "This is my title" 
+		},
+		numberOfThreads: 3
+	}
+
+```
+
+If you need to distribute Hydra, to make it run on several servers, the only thing you need to do is set up a second hydra-core using the same mongodb instance as your previously running hydra instance. The new core will automatically download the stages and start them. Each Hydra core instance will hold its own cache, meaning that a document that will probably not be passed around between the servers.
+
+Configuring the mongodb location is done in the `resource.properties` file, that is located in the `distribution/bin` folder.
+
+If you are running heavy processing in your stages, the cache may time out forcing a new call to mongodb. To prevent this from happening, increase the cache timeout in `resource.properties`. 
