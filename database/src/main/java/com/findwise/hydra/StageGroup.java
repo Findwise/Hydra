@@ -22,7 +22,7 @@ public class StageGroup {
 	public static final String CLASSPATH_KEY = "classpath";
 	public static final String JAVA_LOCATION_KEY = "java_location";
 	
-	private Set<Stage> stages;
+	private Map<String, Stage> stages;
 	
 	private String jvmParameters;
 	private String classpath;
@@ -37,7 +37,7 @@ public class StageGroup {
 	private static final Logger logger = LoggerFactory.getLogger(StageGroup.class);
 	
 	public StageGroup(String name) {
-		stages = new HashSet<Stage>();
+		stages = new HashMap<String, Stage>();
 		this.name = name;
 	}
 	
@@ -140,7 +140,7 @@ public class StageGroup {
 	public Set<DatabaseFile> getDatabaseFiles() {
 		Map<Object, DatabaseFile> files = new HashMap<Object, DatabaseFile>();
 		
-		for(Stage s : stages) {
+		for(Stage s : stages.values()) {
 			if(s.getDatabaseFile()==null) {
 				logger.error("Stage group '"+s.getName()+"' is missing it's library file");
 				return null;
@@ -154,15 +154,11 @@ public class StageGroup {
 	}
 	
 	public Set<String> getStageNames() {
-		HashSet<String> names = new HashSet<String>();
-		for(Stage stage : stages) {
-			names.add(stage.getName());
-		}
-		return names;
+		return stages.keySet();
 	}
 	
 	public boolean hasStage(String name) {
-		return getStage(name)!=null;
+		return stages.containsKey(name);
 	}
 
 	@Override
@@ -201,29 +197,20 @@ public class StageGroup {
 	}
 
 	public Stage getStage(String name) {
-		for(Stage stage : stages) {
-			if(stage.getName().equals(name)) {
-				return stage;
-			}
-		}
-		return null;
+		return stages.get(name);
 	}
 	
 	public Stage removeStage(String stageName) {
-		for(Stage stage : stages) {
-			if(stage.getName().equals(stageName)) {
-				stages.remove(stage);
-				return stage;
-			}
-		}
-		return null;
+		return stages.remove(stageName);
 	}
 
 	public Set<Stage> getStages() {
-		return stages;
+		Set<Stage> s = new HashSet<Stage>();
+		s.addAll(stages.values());
+		return s;
 	}
 	
-	public boolean addStage(Stage stage) {
-		return stages.add(stage);
+	public void addStage(Stage stage) {
+		stages.put(stage.getName(), stage);
 	}
 }
