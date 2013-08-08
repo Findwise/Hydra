@@ -127,9 +127,8 @@ public abstract class AbstractStage extends Thread {
 	 * @param map
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
-	 * @throws RequiredArgumentMissingException 
 	 */
-	public void setParameters(Map<String, Object> map) throws IllegalArgumentException, IllegalAccessException, RequiredArgumentMissingException {
+	public void setParameters(Map<String, Object> map) throws IllegalArgumentException, IllegalAccessException {
 		if (getClass().isAnnotationPresent(Stage.class)) {
 			for(Field field : getParameterFields()) {
 				if (map.containsKey(field.getName())) {
@@ -163,10 +162,6 @@ public abstract class AbstractStage extends Thread {
 						field.set(this, map.get(field.getName()));
 					}
 					field.setAccessible(prevAccessible);
-				} else if (field.getAnnotation(Parameter.class).required()) {
-					Parameter fieldAnnotation = field.getAnnotation(Parameter.class);
-					String parameterName = fieldAnnotation.name().isEmpty() ? field.getName() : fieldAnnotation.name();
-					throw new RequiredArgumentMissingException("Required parameter '" + parameterName + "' not configured");
 				}
 			}
 		} else {
@@ -245,9 +240,8 @@ public abstract class AbstractStage extends Thread {
 		}
         try {
 			RemotePipeline rp = getRemotePipeline(args);
-						
-			Map<String, Object> properties = rp.getProperties();
-	
+
+			Map<String, Object> properties = getParameters(args, rp);
 			String stageClass;
 			if(properties.containsKey(ARG_NAME_STAGE_CLASS)) {
 				stageClass = (String) properties.get(ARG_NAME_STAGE_CLASS);
@@ -281,6 +275,23 @@ public abstract class AbstractStage extends Thread {
 			logger.error("Communication failiure when reading properties", e);
 		}
 		return null;
+	}
+
+	private static Map<String, Object> getParameters(String[] args,
+			RemotePipeline rp)
+			throws IOException {
+		Map<String, Object> properties;
+		if (args.length > 5) {
+			try {
+				properties = SerializationUtils.fromJson(args[5]);
+			} catch (JsonException e) {
+				logger.warn("Failed to parse supplied configuration. Using what is stored in database");
+				properties = rp.getProperties();
+			}
+		} else {
+			properties = rp.getProperties();
+		}
+		return properties;
 	}
 
 	public static void main(String args[]) throws UnknownHostException {
