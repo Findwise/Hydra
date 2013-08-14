@@ -1,7 +1,7 @@
 package com.findwise.hydra.stage.tika.utils;
 
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.StringWriter;
 import java.net.URI;
@@ -12,10 +12,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.Assert;
-
 import org.apache.tika.metadata.Metadata;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,7 +23,7 @@ import com.findwise.hydra.local.LocalDocument;
 public class TikaUtilsTest {
 	private LocalDocument doc;
 	
-	private String pattern = "attachment_(.*)";
+	private final String pattern = "attachment_(.*)";
 
 
 	@Before
@@ -72,8 +71,9 @@ public class TikaUtilsTest {
 		List<URL> urls = TikaUtils.getUrlsFromObject("http://google.com");
 
 		Assert.assertEquals(1, urls.size());
-		for (URL url : urls)
+		for (URL url : urls) {
 			Assert.assertEquals("http://google.com", url.toString());
+		}
 	}
 
 	@Test

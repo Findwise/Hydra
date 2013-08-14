@@ -4,13 +4,12 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Arrays;
 
-import junit.framework.Assert;
-
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.sax.BodyContentHandler;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -23,7 +22,7 @@ public class SimpleFetchingTikaStageTest {
 	private SimpleFetchingTikaStage stage;
 	private LocalDocument doc;
 
-	private String pattern = "attachment_(.*)";
+	private final String pattern = "attachment_(.*)";
 
 	@Before
 	public void init() {
@@ -48,7 +47,6 @@ public class SimpleFetchingTikaStageTest {
 						Mockito.any(Metadata.class),
 						Mockito.any(ParseContext.class));
 		stage.process(doc);
-
 	}
 	
 	@Test
