@@ -1,6 +1,7 @@
 package com.findwise.hydra.stage.tika;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -58,9 +59,14 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 					String num = (i > 1) ? "" + i : "";
 					URL url = it.next();
 					URLConnection connection = createConnection(url);
+					final InputStream inputStream = connection.getInputStream();
+					try {
 					TikaUtils.enrichDocumentWithFileContents(doc, field + num
-							+ "_", connection.getInputStream(), parser,
+							+ "_", inputStream, parser,
 							addMetaData, addLanguage);
+					} finally {
+						inputStream.close();
+					}
 				}
 			} catch (URISyntaxException e) {
 				throw new ProcessException("A field matching the pattern "
