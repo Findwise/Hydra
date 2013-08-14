@@ -30,19 +30,19 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 	@Parameter(required = true, description = "The field name pattern that should be matched where " +
 			"urls will be found. First group plus \"_\" will be used as field prefix. Example:" +
 			" \"attachment_(.*)\" will match for example attachment_a and will use \"a_\" as prefix")
-	private String urlFieldPattern = null;
+	public String urlFieldPattern = null;
 
 	@Parameter(name = "addMetaData", description = "Add the metadata to the document or not. Defaults to true")
-	private boolean addMetaData = true;
+	public boolean addMetaData = true;
 
 	@Parameter(description = "Set to true, will also do language detection and add the field 'prefix_language' according to the prefix rules. Defaults to true")
-	private boolean addLanguage = true;
+	public boolean addLanguage = true;
 
 	@Parameter(description = "Username for basic authentication.")
-	private String username = null;
+	public String username = null;
 
 	@Parameter(description = "Password for basic authentication.")
-	private String password = null;
+	public String password = null;
 
 	private Parser parser = new AutoDetectParser();
 
