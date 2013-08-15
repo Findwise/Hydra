@@ -32,7 +32,7 @@ public class StageGroupTest {
 		stageGroup.addStage(stageConfig1);
 		stageGroup.addStage(stageConfig2);
 		
-		assertEquals(1, stageGroup.getStages().size());
+		assertEquals(1, stageGroup.getSize());
 		assertEquals(stageConfig2, stageGroup.getStage("stage1"));
 	}
 }

@@ -99,7 +99,7 @@ public class StageRunner extends Thread {
 		stageDestroyer = new StageDestroyer();
 
 		setParameters(stageGroup.toPropertiesMap());
-		if (stageGroup.getStages().size() == 1) {
+		if (stageGroup.getSize() == 1) {
 			//If there is only a single stage in this group, it's configuration takes precedent
 			setParameters(stageGroup.getStages().iterator().next().getProperties());
 		}
@@ -133,7 +133,7 @@ public class StageRunner extends Thread {
 			return;
 		}
 
-		if (stageGroup.getStages().size() < 1) {
+		if (stageGroup.getSize() < 1) {
 			logger.info("Stage group " + stageGroup.getName() + " has no stages, and can not be started.");
 			return;
 		}

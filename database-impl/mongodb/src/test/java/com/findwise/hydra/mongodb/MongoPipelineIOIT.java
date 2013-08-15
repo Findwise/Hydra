@@ -125,8 +125,8 @@ public class MongoPipelineIOIT {
 		Assert.assertTrue(reader.getPipeline().hasGroup("multi"));
 		Assert.assertTrue(reader.getPipeline().hasGroup("singleStage"));
 
-		Assert.assertEquals(2, reader.getPipeline().getGroup("multi").getStages().size());
-		Assert.assertEquals(1, reader.getPipeline().getGroup("singleStage").getStages().size());
+		Assert.assertEquals(2, reader.getPipeline().getGroup("multi").getSize());
+		Assert.assertEquals(1, reader.getPipeline().getGroup("singleStage").getSize());
 	}
 	
 	@Test

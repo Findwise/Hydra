@@ -181,7 +181,7 @@ public class StageGroup {
 		}
 		
 		StageGroup g = (StageGroup) obj;
-		if(g.getStages().size() == stages.size()) {
+		if(g.getSize() == stages.size()) {
 			for(Stage s : g.getStages()) {
 				if(!hasStage(s.getName()) || !getStage(s.getName()).equals(s)) {
 					return false;
@@ -211,5 +211,9 @@ public class StageGroup {
 	
 	public void addStage(Stage stage) {
 		stages.put(stage.getName(), stage);
+	}
+
+	public int getSize() {
+		return stages.size();
 	}
 }
