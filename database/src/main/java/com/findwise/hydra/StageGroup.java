@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collections;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -154,7 +155,7 @@ public class StageGroup {
 	}
 	
 	public Set<String> getStageNames() {
-		return stages.keySet();
+		return Collections.unmodifiableSet(new HashSet<String>(stages.keySet()));
 	}
 	
 	public boolean hasStage(String name) {
@@ -205,9 +206,7 @@ public class StageGroup {
 	}
 
 	public Set<Stage> getStages() {
-		Set<Stage> s = new HashSet<Stage>();
-		s.addAll(stages.values());
-		return s;
+		return Collections.unmodifiableSet(new HashSet<Stage>(stages.values()));
 	}
 	
 	public void addStage(Stage stage) {
