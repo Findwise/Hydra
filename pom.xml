@@ -48,6 +48,7 @@
 		<module>core</module>
 		<module>examples</module>
 		<module>stages</module>
+		<module>tools</module>
 		<module>distribution</module>
 	</modules>
 
