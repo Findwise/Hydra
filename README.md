@@ -82,7 +82,7 @@ In order to configure a stage, you'll need to know what stage it is you want to 
 
 * __stageClass__: *Required*. Must be the full name of the stage class to be configured. 
 * __query__: A serialized version of the query, that all documents this stage receives must match. In this example, all documents received by this stage will have already been processed by a stage called _extractTitles_ and they all have a field called _source_. See below for more information about the query syntax.
-* __fieldValueMap__: The input parameters specific for this stage. In this case, it expects a map from field names to any object.
+* __fieldValueMap__: A parameter expected by this stage. Parameters can be a number of different types and are used for stage-specific configuration. This parameter is a map from field names to objects (JSON arrays are converted to lists).
 
 Save the configuration in a file somewhere on disk, e.g. {mystage.properties}, for ease of use. 
 
