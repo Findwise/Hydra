@@ -128,8 +128,8 @@ public final class SerializationUtils {
 	
 	/**
 	 * Serializes any object to Json. 
-	 * @param o
-	 * @return
+	 * @param o object to serialize
+	 * @return json
 	 */
 	public static String toJson(Object o) {
 		while(true) {
