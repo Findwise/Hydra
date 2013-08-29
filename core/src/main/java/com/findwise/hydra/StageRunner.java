@@ -3,6 +3,7 @@ package com.findwise.hydra;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -80,7 +81,14 @@ public class StageRunner extends Thread {
     	for(DatabaseFile df : stageGroup.getDatabaseFiles()) {
     		File f = new File(targetDirectory, df.getFilename());
     		files.add(f);
-    		IOUtils.copy(df.getInputStream(), new FileOutputStream(f));
+			InputStream dfis = df.getInputStream();
+			FileOutputStream fos = new FileOutputStream(f);
+			try {
+    			IOUtils.copy(dfis, fos);
+			} finally {
+				IOUtils.closeQuietly(dfis);
+				IOUtils.closeQuietly(fos);
+			}
     	}
 
         stageDestroyer = new StageDestroyer();
