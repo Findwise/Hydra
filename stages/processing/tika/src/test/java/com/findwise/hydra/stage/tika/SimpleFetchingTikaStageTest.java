@@ -7,6 +7,7 @@ import java.util.Arrays;
 import org.junit.Assert;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 import com.google.common.io.ByteStreams;
 import org.junit.*;
@@ -28,12 +29,16 @@ public class SimpleFetchingTikaStageTest {
 
 	private final String pattern = "attachment_(.*)";
 
+	private static final String mockHost = "localhost";
+	private static final int mockPort = 37777;
+	private static final String mockUrl = "http://" + mockHost + ":" + mockPort;
+
 	@ClassRule
-	public static WireMockRule wireMockRule = new WireMockRule();
+	public static WireMockRule wireMockRule = new WireMockRule(wireMockConfig().port(mockPort));
 
 	@BeforeClass
 	public static void initClass() throws Exception {
-		// Make all requests to localhost:8080 return src/test/resources/test.html
+		// Make all requests to the mock host and port return src/test/resources/test.html
 		byte[] bytes = ByteStreams.toByteArray(
 			SimpleFetchingTikaStageTest.class.getClassLoader().getResourceAsStream("test.html")
 		);
@@ -51,7 +56,7 @@ public class SimpleFetchingTikaStageTest {
 	@Test(expected = RuntimeException.class)
 	public void testProcess() throws Exception {
 
-		doc.putContentField("attachment_a", "http://localhost:8080");
+		doc.putContentField("attachment_a", mockUrl);
 
 		Parser parser = Mockito.mock(AutoDetectParser.class);
 		stage.setParser(parser);
@@ -67,7 +72,7 @@ public class SimpleFetchingTikaStageTest {
 	
 	@Test
 	public void testListAttachments() throws Exception {
-		doc.putContentField("attachment_links", Arrays.asList("http://localhost:8080", "http://localhost:8080", "http://localhost:8080"));
+		doc.putContentField("attachment_links", Arrays.asList(mockUrl, mockUrl, mockUrl));
 		
 		stage.process(doc);
 		
@@ -78,7 +83,7 @@ public class SimpleFetchingTikaStageTest {
 	
 	@Test
 	public void testURIEscaping() throws Exception {
-		doc.putContentField("attachment_a", "http://localhost:8080/ arbitrary path with spaces/");
+		doc.putContentField("attachment_a", mockUrl + "/ arbitrary path with spaces/");
 		
 		try {
 			stage.process(doc);
