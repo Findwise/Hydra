@@ -71,7 +71,6 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 * 
 	 * @param id
 	 * @param tag
-	 * @return
 	 */
 	boolean markTouched(DocumentID<T> id, String tag);
 
@@ -101,7 +100,6 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 *            the document to discard
 	 * @param stage
 	 *            the name of the stage that discarded this document.
-	 * @return
 	 */
 	boolean markDiscarded(DatabaseDocument<T> d, String stage);
 	
@@ -117,7 +115,6 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 *            the document to fail
 	 * @param stage
 	 *            the name of the stage that discarded this document.
-	 * @return
 	 */
 	boolean markFailed(DatabaseDocument<T> d, String stage);
 
@@ -138,7 +135,6 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 *            the document to mark as pending
 	 * @param stage
 	 *            the stage marking the document
-	 * @return
 	 */
 	boolean markPending(DatabaseDocument<T> d, String stage);
 
