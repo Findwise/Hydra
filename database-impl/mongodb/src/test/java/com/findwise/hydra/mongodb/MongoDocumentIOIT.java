@@ -8,14 +8,12 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -33,6 +31,7 @@ import com.findwise.hydra.SerializationUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.WriteConcern;
+import org.mockito.Matchers;
 
 public class MongoDocumentIOIT {
 	
@@ -171,7 +170,6 @@ public class MongoDocumentIOIT {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testInsertWithAttachments() throws Exception {
 		MongoConnector mdc = mongoConnectorResource.getConnector();
@@ -180,7 +178,9 @@ public class MongoDocumentIOIT {
 
 		byte[] inputData = new byte[]{1,2,3};
 		DocumentFile<MongoType> documentFile = buildSimpleDocumentFile(inputData);
-		dw.insert(md, Arrays.asList(documentFile));
+		List<DocumentFile<MongoType>> l = new ArrayList<DocumentFile<MongoType>>();
+		l.add(documentFile);
+		dw.insert(md, l);
 
 		/* First of all, we should be able to fetch the document file */
 		DocumentFile<MongoType> outputDocFile = dw.getDocumentFile(md, documentFile.getFileName());
@@ -198,27 +198,27 @@ public class MongoDocumentIOIT {
 		assertFalse((Boolean) outputDocument.getMetadataField(Document.COMMITTING_METADATA_FLAG));
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	/* Test that we *can* get documents that are fully committed */
 	public void testFullyCommittedDocumentsCanBeTagged() throws Exception {
 		MongoConnector mdc = mongoConnectorResource.getConnector();
 		MongoDocumentIO dw = mdc.getDocumentWriter();
 		MongoDocument md = new MongoDocument();
-		dw.insert(md, Arrays.asList(buildSimpleDocumentFile(new byte[]{1, 2, 3})));
+		List<DocumentFile<MongoType>> l = new ArrayList<DocumentFile<MongoType>>();
+		l.add(buildSimpleDocumentFile(new byte[]{1, 2, 3}));
+		dw.insert(md, l);
 		MongoQuery mongoQuery = new MongoQuery();
 		mongoQuery.requireID(md.getID());
 		assertNotNull(dw.getAndTag(mongoQuery));
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
 	/* Test that we *can't* get documents that are *not* fully committed */
 	public void testCommittingDocumentsCannotBeTagged() throws Exception {
 		MongoConnector mdc = mongoConnectorResource.getConnector();
 		MongoDocumentIO dw = spy(mdc.getDocumentWriter());
 		MongoDocument md = new MongoDocument();
-		doThrow(new RuntimeException()).when(dw).write(any(DocumentFile.class)); // Unchecked due to generics
+		doThrow(new RuntimeException()).when(dw).write(Matchers.<DocumentFile<MongoType>>any());
 		try {
 			List<DocumentFile<MongoType>> docFiles = new ArrayList<DocumentFile<MongoType>>();
 			docFiles.add(buildSimpleDocumentFile(new byte[]{1, 2, 3}));
