@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Hydra Admin Service GUI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link type="text/css" rel="stylesheet" href="bootstrap.min.css"
+	media="screen">
+<link type="text/css" rel="stylesheet" href="hydra.css" media="screen">
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="hydra.js"></script>
+<script type="text/javascript" src="handlebars.js"></script>
+<script type="text/javascript" src="bootstrap.min.js"></script>
+</head>
+<body>
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container">
+				<button type="button" class="btn btn-navbar" data-toggle="collapse"
+					data-target=".nav-collapse">
+					<span class="icon-bar"></span> <span class="icon-bar"></span> <span
+						class="icon-bar"></span>
+				</button>
+				<a class="brand" href="./">Hydra Admin Service</a>
+				<div class="nav-collapse collapse">
+					<ul class="nav" id="navigation">
+						<li class="active"><a href="#status">Status</a></li>
+						<li><a href="#stagegroups">Stage groups</a></li>
+						<li><a href="#libraries">Libraries</a></li>
+						<li><a href="#documents">Documents</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<main>
+	<article id="status_content" class="container"></article>
+	<article id="stagegroups_content" class="container"
+		style="display: none"></article>
+	<article id="libraries_content" class="container"
+		style="display: none"></article>
+	<article id="documents_content" class="container"
+		style="display: none"></article>
+	</main>
+	<script type="text/x-handlebars-template" id="status"
+		class="template">
+	{{#with documents}}
+	<div class="well">
+		<h1>Stats</h1>
+		<table class="table table-striped table-bordered sinks">
+		<thead>
+			<tr>
+				<th>Current</th>
+				<th>Archived</th>
+				<th>Processed</th>
+				<th>Discarded</th>
+				<th>Failed</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>{{this.current}}</td>
+				<td>{{this.archived}}</td>
+				<td>{{this.procesed}}</td>
+				<td>{{this.discarded}}</td>
+				<td>{{this.failed}}</td>
+			</tr>
+		</tbody>
+		</table>
+	</div>
+	{{/with}}
+	</script>
+	<script type="text/x-handlebars-template" id="stagegroups"
+		class="template">
+	<div class="row">
+		<div class="span2">
+			{{> stagegroups_menu}}
+		</div>
+		<div class="span10">
+			{{#each stagegroups}}
+			<div class="well" id="{{this.name}}">
+				<h1>{{this.name}}</h1>
+				{{#each this.stages}}
+					{{> stagegroups_stage}}
+				{{/each}}
+			</div>
+			{{/each}}
+		</div>
+	</div>
+	</script>
+	<script type="text/x-handlebars-template" id="stagegroups_menu"
+		class="partial_template">
+			<ul class="nav nav-tabs nav-stacked affix">
+				{{#each stagegroups}}
+				<li><a href="#{{this.name}}">{{this.name}}</a></li>
+				{{/each}}
+			</ul>
+	</script>
+	<script type="text/x-handlebars-template" id="stagegroups_stage"
+		class="partial_template">
+		<div>
+			<h2>{{this.name}}</h2>
+			<dl class="dl-horizontal">
+				<dt>Mode</dt>
+				<dd>{{this.mode}}</dd>
+				<dt>Library</dt>
+				<dd>{{this.databaseFile.id}}</dd>
+				<dt>Properties modified date</dt>
+				<dd>{{this.propertiesModifiedDate}}</dd>
+			</dl>
+			<ul>
+				<li>Properties</li>
+				<li>Raw</li>
+			</ul>
+			{{#each properties}}
+			<dl class="dl-horizontal">
+				<dt>{{@key}}</dt>
+				<dd>{{this}}</dd>
+			</dl>
+			{{/each}}
+		</div>
+	</script>
+	<script type="text/x-handlebars-template" id="libraries"
+		class="template">
+	<div class="row">
+		<div class="span2">
+			{{> libraries_menu}}
+		</div>
+		<div class="span10" data-spy="scroll" data-target=".nav-tabs">
+			{{#each libraries}}
+			<div class="well" id="{{this.id}}">
+				<h1>{{this.id}}</h1>
+				<dl class="dl-horizontal">
+					<dt>Filename</dt>
+					<dd>{{this.filename}}</dd>
+					<dt>Uploaded</dt>
+					<dd>{{this.uploaded}}</dd>
+				</dl>
+				{{#each this.stages}}
+					{{> libraries_stage}}
+				{{/each}}
+			</div>
+			{{/each}}
+		</div>
+	</div>
+	</script>
+	<script type="text/x-handlebars-template" id="libraries_menu"
+		class="partial_template">
+			<ul class="nav nav-tabs nav-stacked affix">
+				{{#each libraries}}
+				<li><a href="#{{this.id}}">{{this.id}}</a></li>
+				{{/each}}
+			</ul>
+	</script>
+	<script type="text/x-handlebars-template" id="libraries_stage"
+		class="partial_template">
+					<div>
+						<h3>{{this.name}}</h3>
+						<p>{{this.className}}</p>
+						<p>{{this.description}}</p>
+						<div class="accordion" id="{{@index}}-{{this.name}}">
+							<div class="accordion-group">
+								<div class="accordion-heading">
+									<a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#{{@index}}-{{this.name}}" href="#{{@index}}-{{this.name}}-parameters">
+										Parameters
+									</a>
+								</div>
+								<div id="{{@index}}-{{this.name}}-parameters" class="accordion-body collapse">
+									<div class="accordion-inner">
+										{{> libraries_stage_parameters}}
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+	</script>
+	<script type="text/x-handlebars-template" id="libraries_stage_parameters"
+		class="partial_template">
+										<table class="table table-striped table-bordered sinks">
+										<thead>
+											<tr>
+												<th>Parameter</th>
+												<th>Type</th>
+												<th>Required</th>
+												<th>Description</th>
+											</tr>
+										</thead>
+										<tbody>
+										{{#each this.parameters}}
+											<tr>
+												<td>{{@key}}</td>
+												<td>{{this.type}}</td>
+												<td>{{#if this.required}}true{{else}}false{{/if}}</td>
+												<td>{{this.description}}</td>
+											</tr>
+										{{/each}}
+										</tbody>
+										</table>
+	</script>
+	<script type="text/x-handlebars-template" id="documents"
+		class="template">
+	{{#each documents}}
+	<div class="well">
+
+	</div>
+	{{/each}}
+	</script>
+</body>
+</html>

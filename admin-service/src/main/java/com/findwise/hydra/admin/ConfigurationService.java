@@ -2,10 +2,13 @@ package com.findwise.hydra.admin;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.findwise.hydra.DatabaseException;
+import com.findwise.hydra.PipelineStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,12 +66,13 @@ public class ConfigurationService<T extends DatabaseType> {
 	 * @throws DatabaseException if scanning the pipeline failed
 	 */
 	public Map<String, Object> getLibraries() throws DatabaseException {
-
 		try {
 			Map<String, Object> map = new HashMap<String, Object>();
+			List<Map<String, Object>> libraries = new ArrayList<Map<String, Object>>();
 			for (DatabaseFile df : getPipelineScanner().getLibraryFiles()) {
-				map.put(df.getId().toString(), getLibraryMap(df));
+				libraries.add(getLibraryMap(df));
 			}
+			map.put("libraries", libraries);
 			return map;
 		} catch (IOException e) {
 			throw new DatabaseException("Failed to scan pipeline", e);
@@ -96,6 +100,7 @@ public class ConfigurationService<T extends DatabaseType> {
 
 	private Map<String, Object> getLibraryMap(DatabaseFile df) throws IOException {
 		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("id", df.getId());
 		map.put("filename", df.getFilename());
 		map.put("uploaded", df.getUploadDate());
 		map.put("stages", getPipelineScanner().getStagesMap(df));
@@ -119,10 +124,13 @@ public class ConfigurationService<T extends DatabaseType> {
 			throw new DatabaseException("Failed to connect to database", e);
 		}
 		DocumentReader<T> documentReader = databaseConnector.getDocumentReader();
+		PipelineStatus<T> pipelineStatus = databaseConnector.getStatusReader().getStatus();
 		documentMap.put("current", documentReader.getActiveDatabaseSize());
-		documentMap.put("throughput", 0);
+		documentMap.put("throughput", 0); // TODO actually implement this
 		documentMap.put("archived", documentReader.getInactiveDatabaseSize());
-		documentMap.put("status", new HashMap<String, Long>());
+		documentMap.put("processed", pipelineStatus.getProcessedCount());
+		documentMap.put("discarded", pipelineStatus.getDiscardedCount());
+		documentMap.put("failed", pipelineStatus.getFailedCount());
 
 		map.put("documents", documentMap);
 

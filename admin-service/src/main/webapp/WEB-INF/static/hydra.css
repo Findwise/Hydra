@@ -1,0 +1,11 @@
+body {
+	padding-top: 60px;
+}
+
+a.accordion-toggle.collapsed:before {
+	content: "+";
+}
+
+a.accordion-toggle:before {
+	content: "-";
+}
