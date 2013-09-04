@@ -128,10 +128,12 @@ public abstract class AbstractStage extends Thread {
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public void setParameters(Map<String, Object> map) throws IllegalArgumentException, IllegalAccessException {
+	public void setParameters(Map<String, Object> map) throws IllegalArgumentException, IllegalAccessException, RequiredArgumentMissingException {
 		if (getClass().isAnnotationPresent(Stage.class)) {
 			for(Field field : getParameterFields()) {
-				if (map.containsKey(field.getName())) {
+				Parameter fieldAnnotation = field.getAnnotation(Parameter.class);
+				String parameterName = fieldAnnotation.name().isEmpty() ? field.getName() : fieldAnnotation.name();
+				if (map.containsKey(parameterName)) {
 					boolean prevAccessible = field.isAccessible();
 					if (!prevAccessible) {
 						field.setAccessible(true);
@@ -139,15 +141,15 @@ public abstract class AbstractStage extends Thread {
 					if(hasInterface(field.getType(), JsonDeserializer.class)) {
 						try {
 							JsonDeserializer jd = (JsonDeserializer) field.getType().newInstance();
-							jd.fromJson(SerializationUtils.toJson(map.get(field.getName())));
+							jd.fromJson(SerializationUtils.toJson(map.get(parameterName)));
 							field.set(this, jd);
 						} catch (InstantiationException e) {
-							field.set(this, map.get(field.getName()));
+							field.set(this, map.get(parameterName));
 						} catch (JsonException e) {
-							field.set(this, map.get(field.getName()));
+							field.set(this, map.get(parameterName));
 						}
-					} else if(field.getType().isEnum() && !map.get(field.getName()).getClass().isEnum()) {
-						Object value = map.get(field.getName());
+					} else if(field.getType().isEnum() && !map.get(parameterName).getClass().isEnum()) {
+						Object value = map.get(parameterName);
 						try {
 							if(value instanceof Integer) {
 								field.set(this, field.getType().getEnumConstants()[(Integer)value]);
@@ -159,16 +161,18 @@ public abstract class AbstractStage extends Thread {
 						} 
 					}
 					else {
-						field.set(this, map.get(field.getName()));
+						field.set(this, map.get(parameterName));
 					}
 					field.setAccessible(prevAccessible);
+				} else if (field.getAnnotation(Parameter.class).required()) {
+					throw new RequiredArgumentMissingException("Required parameter '" + parameterName + "' not configured");
 				}
 			}
 		} else {
 			throw new NoSuchElementException("No Stage-annotation found on the specified class "+getClass().getCanonicalName());
 		}
 	}
-	
+
 	private boolean hasInterface(Class<?> c, Class<?> inf) {
 		for(Class<?> x : c.getInterfaces()) {
 			if(x.equals(inf)) {

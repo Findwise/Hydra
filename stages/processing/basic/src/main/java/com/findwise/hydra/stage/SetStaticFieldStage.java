@@ -18,8 +18,7 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 		OVERWRITE, SKIP, THROW, ADD
 	}
 
-	@Parameter(required = true, name = "fieldNames",
-			description = "A map of fields to modify, and the values to write to them")
+	@Parameter(required = true, name = "fieldValueMap", description = "A map of fields to modify, and the values to write to them")
 	private Map<String, Object> fieldValueMap;
 	@Parameter(name = "overwritePolicy",
 			description = "Switch for behaviour when modifying. Available options: 0/OVERWRITE = overwrite content, 1/SKIP = skip if there is content, 2/THROW = throw exception if there is content, 3/ADD = append to content, converting the content to a list if necessary (default)")
