@@ -199,7 +199,13 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	@Override
 	public final Object putMetadataField(String key, Object v) {
 		touchedMetadata.add(key);
-		return getMetadata().put(key, v);
+		Object metadataPutResult = getMetadata().put(key, v);
+		if (FETCHED_METADATA_TAG.equals(key)) {
+			for (String stage : getMetadataSubMap(key).keySet()) {
+				appendFetchedByToFetchedList(stage);
+			}
+		}
+		return metadataPutResult;
 	}
 
 	@Override
@@ -594,13 +600,21 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	}
 
 	public final void setFetchedBy(String stage, Date date) {
+		setFetchedByStage(stage, date);
+		appendFetchedByToFetchedList(stage);
+	}
+
+	private void setFetchedByStage(String stage, Date date) {
 		touchedMetadata.add(FETCHED_METADATA_TAG);
-		touchedMetadata.add(MONGO_FETCHED_METADATA_TAG_LIST);
 		if(!getMetadata().containsField(FETCHED_METADATA_TAG)) {
 			getMetadata().put(FETCHED_METADATA_TAG, BasicDBObjectBuilder.start(stage, date).get());
 		} else {
 			((DBObject) getMetadata().get(FETCHED_METADATA_TAG)).put(stage, date);
 		}
+	}
+
+	private void appendFetchedByToFetchedList(String stage) {
+		touchedMetadata.add(MONGO_FETCHED_METADATA_TAG_LIST);
 		if (!getMetadata().containsField(MONGO_FETCHED_METADATA_TAG_LIST)) {
 			List<String> fetchedList = new ArrayList<String>();
 			fetchedList.add(stage);

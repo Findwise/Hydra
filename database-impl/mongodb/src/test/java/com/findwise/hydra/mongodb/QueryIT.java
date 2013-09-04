@@ -220,5 +220,4 @@ public class QueryIT {
 			}
 		}
 	}
-
 }

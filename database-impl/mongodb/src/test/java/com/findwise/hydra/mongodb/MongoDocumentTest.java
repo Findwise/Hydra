@@ -6,8 +6,12 @@ import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
+import com.findwise.hydra.Document;
 import org.bson.types.ObjectId;
 import org.junit.Test;
 
@@ -252,7 +256,7 @@ public class MongoDocumentTest {
 		mq.requireNotFetchedByStage("stage2");
 		assertTrue(md.matches(mq));
 	}
-	
+
 	@Test
 	public void testRemoveFetchedBy() {
 		MongoDocument md = new MongoDocument();
@@ -260,10 +264,14 @@ public class MongoDocumentTest {
 		md.setFetchedBy("stage", new Date());
 		md.setFetchedBy("stage2", new Date());
 		assertEquals(2, md.getFetchedBy().size());
-		
+		assertEquals(Arrays.asList("stage", "stage2"),
+				md.getMetadataField(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST));
+
 		md.removeFetchedBy("stage2");
 		assertEquals(1, md.getFetchedBy().size());
 		assertTrue(md.fetchedBy("stage"));
+		assertEquals(Arrays.asList("stage"),
+				md.getMetadataField(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST));
 	}
 	
 	@Test
@@ -300,5 +308,16 @@ public class MongoDocumentTest {
 		mq = new MongoQuery();
 		mq.requireNotTouchedByStage("stage2");
 		assertTrue(md.matches(mq));
+	}
+
+	@Test
+	public void testPutMetadataField_appends_to_fetchedList() {
+		MongoDocument md = new MongoDocument();
+		Map<String, Date> fetched = new HashMap<String, Date>();
+		fetched.put("somestage", new Date());
+		md.putMetadataField(Document.FETCHED_METADATA_TAG, fetched);
+
+		assertTrue(md.hasMetadataField(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST));
+		assertEquals(Arrays.asList("somestage"), md.getMetadataField(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST));
 	}
 }
