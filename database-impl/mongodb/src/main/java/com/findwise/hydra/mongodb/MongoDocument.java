@@ -1,5 +1,20 @@
 package com.findwise.hydra.mongodb;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.bson.BSONObject;
+import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseQuery;
 import com.findwise.hydra.Document;
@@ -10,18 +25,6 @@ import com.findwise.tools.Comparator;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
-import org.bson.BSONObject;
-import org.bson.types.ObjectId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 
 public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
@@ -37,6 +40,8 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	public static final String MONGO_ID_KEY = "_id";
 	private boolean partialObject = false;
 
+	public static final String MONGO_FETCHED_METADATA_TAG_LIST = "fetchedList";
+	
 	public MongoDocument() {
 		setup();
 	}
@@ -406,6 +411,14 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 		return new HashMap<String, Object>();
 	}
 
+	@SuppressWarnings("unchecked")
+	private List<Object> getMetadataListField(String key) {
+		if (getMetadataMap().containsKey(key)) {
+			return (List<Object>) getMetadataMap().get(key);
+		}
+		return new ArrayList<Object>();
+	}
+	
 	@Override
 	public boolean touchedBy(String stage) {
 		return getMetadataSubMap(TOUCHED_METADATA_TAG).containsKey(stage);
@@ -420,7 +433,9 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	public boolean removeFetchedBy(String stage) {
 		if (fetchedBy(stage)) {
 			touchedMetadata.add(FETCHED_METADATA_TAG);
-			return getMetadataSubMap(FETCHED_METADATA_TAG).remove(stage) != null;
+			touchedMetadata.add(MONGO_FETCHED_METADATA_TAG_LIST);
+			return getMetadataSubMap(FETCHED_METADATA_TAG).remove(stage) != null
+					&& getMetadataListField(MONGO_FETCHED_METADATA_TAG_LIST).remove(stage);
 		}
 		return false;
 	}
@@ -580,10 +595,18 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 
 	public final void setFetchedBy(String stage, Date date) {
 		touchedMetadata.add(FETCHED_METADATA_TAG);
-		if (!getMetadata().containsField(FETCHED_METADATA_TAG)) {
+		touchedMetadata.add(MONGO_FETCHED_METADATA_TAG_LIST);
+		if(!getMetadata().containsField(FETCHED_METADATA_TAG)) {
 			getMetadata().put(FETCHED_METADATA_TAG, BasicDBObjectBuilder.start(stage, date).get());
 		} else {
 			((DBObject) getMetadata().get(FETCHED_METADATA_TAG)).put(stage, date);
+		}
+		if (!getMetadata().containsField(MONGO_FETCHED_METADATA_TAG_LIST)) {
+			List<String> fetchedList = new ArrayList<String>();
+			fetchedList.add(stage);
+			getMetadata().put(MONGO_FETCHED_METADATA_TAG_LIST, fetchedList);
+		} else {
+			getMetadataListField(MONGO_FETCHED_METADATA_TAG_LIST).add(stage);
 		}
 	}
 

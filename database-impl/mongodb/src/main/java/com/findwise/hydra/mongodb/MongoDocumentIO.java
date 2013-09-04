@@ -347,13 +347,16 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		mq.requireMetadataFieldNotEquals(Document.COMMITTING_METADATA_FLAG, true);
 
 		for(String t : tag) {
-			mq.requireMetadataFieldNotExists(DatabaseDocument.FETCHED_METADATA_TAG+"."+t);
+			mq.requireNotFetchedByStage(t);
 		}
 		DBObject update = new BasicDBObject();
+		List<String> tags = new ArrayList<String>();
 		for(String t : tag) {
-			update.put(MongoDocument.METADATA_KEY+"."+DatabaseDocument.FETCHED_METADATA_TAG+"."+t, new Date());
+			update.put(MongoDocument.METADATA_KEY + "." + DatabaseDocument.FETCHED_METADATA_TAG + "." + t, new Date());
+			tags.add(t);
 		}
-		
+		update.put(MongoDocument.METADATA_KEY + "." + MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST, tags);
+
 		DBObject dbo = getUpdateObject(update);
 
 		return findAndModify(mq.toDBObject(), dbo);
@@ -362,8 +365,8 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	private void ensureIndex(String tag) {
 		if(!seenTags.contains(tag)) {
 			long start = System.currentTimeMillis();
-			documents.ensureIndex(MongoDocument.METADATA_KEY+"."+DatabaseDocument.FETCHED_METADATA_TAG+"."+tag);
-			logger.info("Ensured index for stage "+tag+" in "+(System.currentTimeMillis()-start)+" ms");
+			documents.ensureIndex(MongoDocument.METADATA_KEY + "." + MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST);
+			logger.info("Ensured index for stage " + tag + " in " + (System.currentTimeMillis() - start) + " ms");
 			seenTags.add(tag);
 		}
 	}
