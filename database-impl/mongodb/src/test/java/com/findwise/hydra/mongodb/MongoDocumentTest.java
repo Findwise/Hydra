@@ -7,8 +7,10 @@ import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.findwise.hydra.Document;
@@ -311,7 +313,7 @@ public class MongoDocumentTest {
 	}
 
 	@Test
-	public void testPutMetadataField_appends_to_fetchedList() {
+	public void testPutMetadataField_adds_to_fetchedList() {
 		MongoDocument md = new MongoDocument();
 		Map<String, Date> fetched = new HashMap<String, Date>();
 		fetched.put("somestage", new Date());
@@ -320,4 +322,24 @@ public class MongoDocumentTest {
 		assertTrue(md.hasMetadataField(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST));
 		assertEquals(Arrays.asList("somestage"), md.getMetadataField(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST));
 	}
+
+	@Test
+	public void testPutMetadataField_does_not_append_to_fetchedList_when_stage_already_there() {
+		MongoDocument md = new MongoDocument();
+		Map<String, Date> fetched1 = new HashMap<String, Date>();
+		fetched1.put("somestage", new Date());
+		md.putMetadataField(Document.FETCHED_METADATA_TAG, fetched1);
+		Map<String, Date> fetched2 = new HashMap<String, Date>();
+		fetched2.put("somestage", new Date());
+		fetched2.put("someOtherStage", new Date());
+		md.putMetadataField(Document.FETCHED_METADATA_TAG, fetched2);
+
+		assertTrue(md.hasMetadataField(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST));
+		List<String> expected = Arrays.asList("somestage", "someOtherStage");
+		List<?> actual = (List<?>) md.getMetadataField(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST);
+		assertEquals(expected.size(), actual.size());
+		assertTrue(actual.containsAll(expected));
+		assertFalse(Collections.disjoint(expected, actual));
+	}
+
 }

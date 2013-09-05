@@ -614,13 +614,17 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	}
 
 	private void appendFetchedByToFetchedList(String stage) {
-		touchedMetadata.add(MONGO_FETCHED_METADATA_TAG_LIST);
 		if (!getMetadata().containsField(MONGO_FETCHED_METADATA_TAG_LIST)) {
+			touchedMetadata.add(MONGO_FETCHED_METADATA_TAG_LIST);
 			List<String> fetchedList = new ArrayList<String>();
 			fetchedList.add(stage);
 			getMetadata().put(MONGO_FETCHED_METADATA_TAG_LIST, fetchedList);
 		} else {
-			getMetadataListField(MONGO_FETCHED_METADATA_TAG_LIST).add(stage);
+			List<Object> fetchedList = getMetadataListField(MONGO_FETCHED_METADATA_TAG_LIST);
+			if (!fetchedList.contains(stage)) {
+				touchedMetadata.add(MONGO_FETCHED_METADATA_TAG_LIST);
+				fetchedList.add(stage);
+			}
 		}
 	}
 
