@@ -26,6 +26,9 @@ public abstract class AbstractProcessStage extends AbstractStage {
 
 	@Parameter(description="If set, indicates that the document being processed should be FAILED if a ProcessException is thrown by the stage. If not set, the error will only be persisted and the document written back to Hydra.")
 	private boolean failDocumentOnProcessException = false;
+
+	@Parameter(description = "The maximum time (in milliseconds) the stage may process a single document before throwing a ProcessException. Default: -1 (unlimited)")
+	private long timeout = -1;
 	
 	public static final int NUM_RESERVED_ARGUMENTS = 3;
 	private long holdInterval = DEFAULT_HOLD_INTERVAL;
@@ -111,7 +114,30 @@ public abstract class AbstractProcessStage extends AbstractStage {
 					try {
 						logger.debug("Got new doc " + doc.getID()
 								+ " to process.");
-						process(doc);
+						ProcessThread processThread = new ProcessThread();
+						processThread.setDocument(doc);
+
+						long startTime = System.currentTimeMillis();
+						processThread.setDaemon(true);
+						processThread.start();
+
+						while (!processThread.isCompleted()) {
+							Thread.yield();
+
+							if (timeout > 0 && System.currentTimeMillis() - startTime > timeout) {
+								throw new ProcessException(
+										"Processing was not done within configured timout");
+							} else if (logger.isTraceEnabled()) {
+								logger.trace("Waiting for processing. Waited "
+										+ (System.currentTimeMillis() - startTime)
+										+ "ms so far...");
+							}
+						}
+
+						if (processThread.getException() != null) {
+							throw processThread.getException();
+						}
+
 						if(!persist()) {
 							LocalDocument ld = new LocalDocument(doc.toJson());
 							IOException e = new IOException("Unable to save changes to core");
@@ -134,6 +160,37 @@ public abstract class AbstractProcessStage extends AbstractStage {
 				Runtime.getRuntime().removeShutdownHook(getShutDownHook());
 				System.exit(1);
 			}
+		}
+	}
+	
+	class ProcessThread extends Thread {
+		private LocalDocument doc;
+		private Exception exception = null;
+
+		private boolean completed = false;
+
+		public void setDocument(LocalDocument doc) {
+			this.doc = doc;
+		}
+
+		public Exception getException() {
+			return exception;
+		}
+
+		@Override
+		public void run() {
+			try {
+				logger.trace("Processing document");
+				process(doc);
+			} catch (Exception e) {
+				exception = e;
+			} finally {
+				completed = true;
+			}
+		}
+
+		public boolean isCompleted() {
+			return completed;
 		}
 	}
 }
