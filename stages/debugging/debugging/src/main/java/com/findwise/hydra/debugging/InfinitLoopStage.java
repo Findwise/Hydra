@@ -17,6 +17,10 @@ public class InfinitLoopStage extends AbstractProcessStage {
 	public void process(LocalDocument doc) throws ProcessException {
 		for (int i=0;true;i++) {
 			doc.putContentField("field" + i, i);
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+			}
 		}
 	}
 
