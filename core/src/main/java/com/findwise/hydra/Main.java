@@ -2,12 +2,14 @@ package com.findwise.hydra;
 
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.util.concurrent.TimeUnit;
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.net.SimpleSocketServer;
 import org.apache.commons.configuration.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.net.SimpleSocketServer;
 
 import com.findwise.hydra.mongodb.MongoConnector;
 import com.findwise.hydra.mongodb.MongoType;
@@ -112,8 +114,7 @@ public final class Main {
 	private static void shutdown() {
 		logger.info("Got shutdown request...");
 		shuttingDown = true;
-
-		long killDelay = 30 * 1000;
+		long killDelay = TimeUnit.SECONDS.toMillis(30);
 		killUnlessShutdownWithin(killDelay);
 
 		if (simpleSocketServer != null) {

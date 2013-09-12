@@ -54,7 +54,10 @@ public abstract class AbstractStage extends Thread {
 	public static final int DEFAULT_HOLD_INTERVAL = 2000;
 	private RemotePipeline remotePipeline = null;
 	private Thread shutDownHook;
-	
+
+	private String stageName;
+	private boolean continueRunning;
+
 	/**
 	 * Initiates an implementation of AbstractDocument. When this method is
 	 * called, and Object of the class has been initialized. The arguments
@@ -74,9 +77,6 @@ public abstract class AbstractStage extends Thread {
 	public void setShutDownHook(Thread shutDownHook) {
 		this.shutDownHook = shutDownHook;
 	}
-
-	private String stageName;
-	private boolean continueRunning;
 
 	/**
 	 * 

@@ -2,18 +2,25 @@ package com.findwise.hydra.stage;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.http.ParseException;
 
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
- * Class to use for creating new process steps in Hydra.
+ * Base class for all stages that do processing of documents in Hydra.
  * 
  * @author anton.hagerstrand
  * @author simon.stenstrom
@@ -24,11 +31,25 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractProcessStage extends AbstractStage {
     Logger logger = LoggerFactory.getLogger(AbstractProcessStage.class);
 
-	@Parameter(description="If set, indicates that the document being processed should be FAILED if a ProcessException is thrown by the stage. If not set, the error will only be persisted and the document written back to Hydra.")
+	@Parameter(description = "If set, indicates that the document being processed should be FAILED if a ProcessException is thrown by the stage. If not set, the error will only be persisted and the document written back to Hydra.")
 	private boolean failDocumentOnProcessException = false;
+
+	@Parameter(description = "The maximum time (in milliseconds) the stage may process a single document before cancelling the processing. Default: -1 (unlimited)")
+	private long processingTimeout = -1;
 	
 	public static final int NUM_RESERVED_ARGUMENTS = 3;
 	private long holdInterval = DEFAULT_HOLD_INTERVAL;
+
+	private long terminationTimeout = DEFAULT_SHUTDOWN_TIMEOUT;
+	public static final int DEFAULT_SHUTDOWN_TIMEOUT = 2000;
+
+	// The size of the thread pool is limited to 1, as the pool is only used for timeout functionality, not concurrency
+	private final ExecutorService executor;
+	private static final int FIXED_THREAD_POOL_SIZE = 1;
+
+	public AbstractProcessStage() {
+		this.executor = Executors.newFixedThreadPool(FIXED_THREAD_POOL_SIZE);
+	}
 
 	/**
 	 * Fetches a document to be processed from the RemotePipeline
@@ -86,7 +107,6 @@ public abstract class AbstractProcessStage extends AbstractStage {
 		super.setUp(rp, properties);
 	}
 
-
 	/**
 	 * The thread starts with run(). Use run() to start the execution of this
 	 * step in this thread, or start() to start it in a new step (recomended).
@@ -97,6 +117,7 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	 * processing by process() and then persisting by persist().
 	 * 
 	 */
+	@Override
 	public void run() {
 		
 		setContinueRunning(true);
@@ -106,34 +127,94 @@ public abstract class AbstractProcessStage extends AbstractStage {
 				LocalDocument doc = fetch();
 				if (doc == null) {
 					Thread.sleep(holdInterval);
-
 				} else {
-					try {
-						logger.debug("Got new doc " + doc.getID()
-								+ " to process.");
-						process(doc);
-						if(!persist()) {
-							LocalDocument ld = new LocalDocument(doc.toJson());
-							IOException e = new IOException("Unable to save changes to core");
-							if(!getRemotePipeline().markFailed(ld, e)) {
-								logger.error("Unable to persist an error to the database", e);
-							}
-						}
-					} catch (ProcessException e) {
-						if(failDocumentOnProcessException) {
-							getRemotePipeline().markFailed(doc, e);
-						} else {
-							persistError(doc, e);
-						}
-					}
-
+					performProcessing(doc);
 				}
-
 			} catch (Exception e) {
 				logger.error("Caught exception while running", e);
-				Runtime.getRuntime().removeShutdownHook(getShutDownHook());
+				Thread shutdownHook = getShutDownHook();
+				if (null != shutdownHook) {
+					Runtime.getRuntime().removeShutdownHook(shutdownHook);
+				}
 				System.exit(1);
 			}
+		}
+		shutdownProcessing();
+	}
+
+	private void performProcessing(LocalDocument doc) throws Exception {
+		logger.debug("Got new doc '{}' to process.", doc.getID());
+		Future<Object> future = executor.submit(new ProcessCallable(doc));
+		try {
+			logger.trace("Waiting for processing of doc '{}'", doc.getID());
+			if (processingTimeout > 0) {
+				future.get(processingTimeout, TimeUnit.MILLISECONDS);
+			} else {
+				future.get();
+			}
+			logger.trace("Processing finished of doc '{}'", doc.getID());
+			boolean persistSucceeded = persist();
+			if(!persistSucceeded) {
+				LocalDocument ld = new LocalDocument(doc.toJson());
+				IOException e = new IOException("Unable to save changes to core");
+				if(!persistFailure(ld, e)) {
+					logger.error("Unable to persist an error to the database for doc '" + doc.getID() + "'", e);
+				}
+			}
+		} catch (ExecutionException e) {
+			if (e.getCause() instanceof ProcessException) {
+				handleProcessException(doc, (ProcessException)e.getCause());
+			} else {
+				handleProcessException(doc, e);
+				logger.error("Processing for doc '{}' failed execution");
+				throw e;
+			}
+		} catch (TimeoutException e) {
+			handleProcessException(doc, new ProcessException(e));
+			boolean interruptIfRunning = true;
+			if (!future.cancel(interruptIfRunning)) {
+				logger.error("Processing for doc '{}' timed out and processing thread could not be cancelled", doc.getID());
+				throw e;
+			}
+		}
+	}
+
+	private void shutdownProcessing() {
+		try {
+			executor.shutdown();
+			if (!executor.awaitTermination(terminationTimeout, TimeUnit.MILLISECONDS)) {
+				logger.error("Processing still in progress, stage is leaving dangling threads");
+			}
+		} catch (InterruptedException e) {
+			logger.error("Interrupted during shutdown");
+		}
+	}
+
+	private void handleProcessException(LocalDocument doc, Exception e) throws IOException, JsonException {
+		if(failDocumentOnProcessException) {
+			persistFailure(doc, e);
+		} else {
+			persistError(doc, e);
+		}
+	}
+
+	private boolean persistFailure(LocalDocument doc, Exception e) throws IOException {
+		logger.debug("Failing doc '{}'", doc.getID());
+		return getRemotePipeline().markFailed(doc, e);
+	}
+
+	class ProcessCallable implements Callable<Object> {
+
+		private final LocalDocument doc; // TODO: Can stages reassign the doc object?
+
+		ProcessCallable(LocalDocument doc) {
+			this.doc = doc;
+		}
+
+		@Override
+		public Object call() throws ProcessException {
+			process(doc);
+			return null;
 		}
 	}
 }
