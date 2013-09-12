@@ -1,6 +1,7 @@
 package com.findwise.hydra;
 
 import java.io.IOException;
+import java.lang.Thread.UncaughtExceptionHandler;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.net.SimpleSocketServer;
@@ -23,12 +24,26 @@ public final class Main {
 	private static RESTServer server = null;
 
 	private static boolean shuttingDown = false;
+
+	private static UncaughtExceptionHandler uncaughtExceptionHandler = new UncaughtExceptionHandler() {
+		@Override
+		public void uncaughtException(Thread t, Throwable e) {
+			if (!shuttingDown) {
+				logger.error("Got an uncaught exception. Shutting down Hydra", e);
+				shutdown();
+			} else {
+				logger.error("Got exception while shutting down", e);
+			}
+		}
+	};
 	
 	public static void main(String[] args) {
 		if (args.length > 1) {
 			logger.error("Some parameters on command line were ignored.");
 		}
 
+		Thread.setDefaultUncaughtExceptionHandler(uncaughtExceptionHandler);
+		
 		CoreConfiguration conf;
 		if (args.length > 0) {
 			conf = getConfiguration(args[0]);
