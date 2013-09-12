@@ -150,7 +150,7 @@ public class StageRunner extends Thread {
 				logger.error("The stage group " + stageGroup.getName() + " did not start. It will not be restarted until configuration changes.");
 				return;
 			}
-		} while (timesToRetry == -1 || timesToRetry >= timesStarted);
+		} while ((timesToRetry == -1 || timesToRetry >= timesStarted) && !Main.isShuttingDown());
 
 		logger.error("Stage group " + stageGroup.getName()
 				+ " has failed and cannot be restarted. ");
