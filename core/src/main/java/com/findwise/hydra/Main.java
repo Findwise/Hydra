@@ -105,12 +105,7 @@ public final class Main {
 			nm.blockingStart();
 		} catch (IOException e) {
 			logger.error("Unable to start nodemaster... Shutting down.");
-			try {
-				server.shutdown();
-			} catch (IOException e2) {
-				logger.error("IOException caught while shutting down", e2);
-				System.exit(1);
-			}
+			shutdown();
 		}
 	}
 
