@@ -270,6 +270,44 @@ public class AbstractProcessStageTest {
 		verify(rp, times(1)).saveCurrentDocument();
 		verify(rp, times(1)).markFailed(any(LocalDocument.class), any(Throwable.class));
 	}
+
+	@Test
+	public void testProcessTimeout() throws Exception {
+		WaitingStage ws = new WaitingStage();
+		ws.setName("stagename");
+		RemotePipeline rp = mock(RemotePipeline.class);
+		ws.setRemotePipeline(rp);
+
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		map.put("timeout", 1000);
+		ws.setParameters(map);
+
+		LocalDocument ld = mock(LocalDocument.class);
+
+		when(rp.getDocument(any(LocalQuery.class))).thenReturn(ld);
+		when(rp.releaseLastDocument()).thenReturn(true);
+		
+		ws.start();
+		
+		Thread.sleep(1100);
+		
+		verify(ld, times(1)).addError(eq(ws.getStageName()), any(Throwable.class));
+		
+	}
+	
+	@Stage
+	public static class WaitingStage extends AbstractProcessStage {
+
+		@Override
+		public void process(LocalDocument doc) throws ProcessException {
+			try {
+				while (true) {
+					sleep(100);
+				}
+			} catch (InterruptedException e) {
+			}
+		}
+	}
 	
 	public static class ExceptionStage extends AbstractProcessStage {
 
