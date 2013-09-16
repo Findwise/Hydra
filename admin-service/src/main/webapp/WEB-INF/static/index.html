@@ -54,6 +54,7 @@
 				<th>Processed</th>
 				<th>Discarded</th>
 				<th>Failed</th>
+				<th>Cached</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -63,6 +64,7 @@
 				<td>{{this.procesed}}</td>
 				<td>{{this.discarded}}</td>
 				<td>{{this.failed}}</td>
+				<td></td>
 			</tr>
 		</tbody>
 		</table>
@@ -176,33 +178,49 @@
 	<script type="text/x-handlebars-template" id="libraries_stage_parameters"
 		class="partial_template">
 										<table class="table table-striped table-bordered sinks">
-										<thead>
-											<tr>
-												<th>Parameter</th>
-												<th>Type</th>
-												<th>Required</th>
-												<th>Description</th>
-											</tr>
-										</thead>
-										<tbody>
-										{{#each this.parameters}}
-											<tr>
-												<td>{{@key}}</td>
-												<td>{{this.type}}</td>
-												<td>{{#if this.required}}true{{else}}false{{/if}}</td>
-												<td>{{this.description}}</td>
-											</tr>
-										{{/each}}
-										</tbody>
+											<thead>
+												<tr>
+													<th>Parameter</th>
+													<th>Type</th>
+													<th>Required</th>
+													<th>Description</th>
+												</tr>
+											</thead>
+											<tbody>
+											{{#each this.parameters}}
+												<tr>
+													<td>{{@key}}</td>
+													<td>{{this.type}}</td>
+													<td>{{#if this.required}}true{{else}}false{{/if}}</td>
+													<td>{{this.description}}</td>
+												</tr>
+											{{/each}}
+											</tbody>
 										</table>
 	</script>
 	<script type="text/x-handlebars-template" id="documents"
 		class="template">
-	{{#each documents}}
-	<div class="well">
 
+	<div class="row">
+		<div class="span3">
+			<div id="documents_query">
+				<form id="documents_query_form">
+					<textarea id="documents_query_textarea" rows="3" placeholder='{"touched": "example-stage"}' />
+					<button type="button" class="btn btn-primary" onClick="queryDocuments()">Query</button>
+				</form>
+			</div>
+			<div id="documents_add">
+				<form id="documents_add_form">
+					<textarea rows="5" placeholder='{"field1": "a value", "field2": ["val1", "val2"]}' />
+					<button type="button" class="btn btn-primary" onClick="addDocument()">Add</button>
+				</form>
+			</div>
+		</div>
+		<div class="span9">
+			<div id="documents_list" class="well">
+			</div>
+		</div>
 	</div>
-	{{/each}}
 	</script>
 </body>
 </html>

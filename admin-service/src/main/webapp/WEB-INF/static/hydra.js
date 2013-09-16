@@ -60,46 +60,40 @@ function msToReadable(ms) {
 	return res + seconds + " second" + (seconds != 1 ? "s" : "");
 }
 
-function startSource(name) {
-	$.post("api/start?source=" + name, function(data) {
-		console.log(data);
-		refreshCurrentPage();
-	});
+function queryDocuments() {
+	var query = $("#documents_query_textarea").text();
+	$.getJSON(pages.documents + "?q=" + query,
+		function(data) {
+			console.log(data);
+			$("#documents_list").text(data);
+		}).fail(
+		function(obj, textStatus, errorThrown) {
+			alert("Query failed : " + errorThrown);
+		});
 }
 
-function stopSource(name) {
-	$.post("api/stop?source=" + name, function(data) {
-		console.log(data);
-		refreshCurrentPage();
-	});
-}
-
-function startDispatcher(name) {
-	$.post("api/start?dispatcher=" + name, function(data) {
-		console.log(data);
-		refreshCurrentPage();
-	});
-}
-
-function stopDispatcher(name) {
-	$.post("api/stop?dispatcher=" + name, function(data) {
-		console.log(data);
-		refreshCurrentPage();
-	}).fail(function(obj, textStatus, errorThrown) {
-		alert("Failed to stop dispatcher '" + name + "': " + errorThrown);
-	});
+function addDocument() {
+	var docBody = $("#documents_add_textarea").text();
+	$.post(pages.documents + "/new", docBody,
+		function(data) {
+			console.log(data);
+			queryDocuments();
+		}).fail(
+		function(obj, textStatus, errorThrown) {
+			alert("Query failed : " + errorThrown);
+		});
 }
 
 function showCurrentPage() {
 	var currentPage = getCurrentPage();
-	if (currentPage != "") {
+	if (currentPage !== "") {
 		showPage(currentPage);
 	}
 }
 
 function getCurrentPage() {
 	var currentPage = window.location.hash.substring(1);
-	if (currentPage == "") {
+	if (currentPage === "") {
 		// Try finding the navigation element with class active and use that
 		currentPage = $("#navigation li.active a").attr("href").substring(1);
 	}
@@ -119,22 +113,23 @@ window.templates = {};
 
 $(document).ready(
 	function() {
-		$('.template').each(
-				function(i, container) {
-					window.templates[container.id] = Handlebars.compile($(
-							container).html());
-				});
-		$('.partial_template').each(function(i, template) {
+	$('.template').each(
+		function(i, container) {
+			window.templates[container.id] = Handlebars.compile($(
+					container).html());
+		});
+	$('.partial_template').each(
+		function(i, template) {
 			Handlebars.registerPartial(template.id, $(template).html());
 		});
 
-		$("#navigation a").click(
-			function() {
-				var containerId = this.href.substring(this.href
-						.lastIndexOf('#') + 1);
-				refreshPage(containerId);
-				showPage(containerId);
-			});
+	$("#navigation a").click(
+		function() {
+			var containerId = this.href.substring(this.href
+					.lastIndexOf('#') + 1);
+			refreshPage(containerId);
+			showPage(containerId);
+		});
 	showCurrentPage();
 	refreshCurrentPage();
 });

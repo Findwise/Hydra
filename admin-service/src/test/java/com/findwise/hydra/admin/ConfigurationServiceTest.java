@@ -67,16 +67,15 @@ public class ConfigurationServiceTest {
 	@Test
 	public void testGetStats() throws DatabaseException {
 		Map<String, Object> stats = service.getStats();
-		
+
 		verify(pipelineReader).getPipeline();
 		verify(pipelineReader).getDebugPipeline();
-		
+
 		verify(documentReader).getActiveDatabaseSize();
 		verify(documentReader).getInactiveDatabaseSize();
-		
+
 		assertTrue(stats.containsKey("documents"));
 		assertTrue(stats.containsKey("groups"));
 		assertEquals(2, stats.size());
 	}
-	
 }
