@@ -83,10 +83,10 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 	public void connect() throws IOException {
 		Mongo mongo;
 		try {
-			mongo = new Mongo(conf.getDatabaseUrl());
+			mongo = new Mongo(conf.getDatabaseHost());
 		} catch (UnknownHostException e) {
 			logger.error("Failed to establish connection to MongoDB at URL: "
-					+ conf.getDatabaseUrl(), e);
+					+ conf.getDatabaseHost(), e);
 			throw new ConnectionException(e);
 
 		} catch (MongoException e) {

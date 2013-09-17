@@ -5,6 +5,20 @@ public class TestConfiguration implements DatabaseConfiguration {
 	private String mongohost;
 	private String username;
 	private String password;
+	private int mongoPort;
+
+	public TestConfiguration(String namespace, String mongohost) {
+		this(namespace, mongohost, 27017, "admin", "changeme");
+	}
+
+	public TestConfiguration(String namespace, String mongohost, int mongoPort,
+			String username, String password) {
+		this.namespace = namespace;
+		this.mongohost = mongohost;
+		this.mongoPort = mongoPort;
+		this.username = username;
+		this.password = password;
+	}
 
 	public String getUsername() {
 		return username;
@@ -26,26 +40,19 @@ public class TestConfiguration implements DatabaseConfiguration {
 		this("pipeline", "127.0.0.1");
 	}
 
-	public TestConfiguration(String namespace, String mongohost) {
-		this(namespace, mongohost, "admin", "changeme");
-	}
-
-	public TestConfiguration(String namespace, String mongohost,
-			String username, String password) {
-		this.namespace = namespace;
-		this.mongohost = mongohost;
-		this.username = username;
-		this.password = password;
-	}
-
 	@Override
 	public String getNamespace() {
 		return namespace;
 	}
 
 	@Override
-	public String getDatabaseUrl() {
+	public String getDatabaseHost() {
 		return mongohost;
+	}
+
+	@Override
+	public int getDatabasePort() {
+		return mongoPort;
 	}
 
 	@Override

@@ -9,22 +9,23 @@ import com.findwise.hydra.local.RemotePipeline;
 
 public class FileConfiguration implements CoreConfiguration {
 	public static final String DEFAULT_PROPERTIES_FILE = "resource.properties";
-	
+
 	private static Logger logger = LoggerFactory.getLogger(Configuration.class);
-	
+
 	private PropertiesConfiguration conf;
-	
+
 	public FileConfiguration() throws ConfigurationException {
 		this(DEFAULT_PROPERTIES_FILE);
 	}
-	
+
 	public FileConfiguration(String fileName) throws ConfigurationException {
 		logger.debug("Properties: Reading from file '" + fileName + "'");
 		conf = new PropertiesConfiguration(fileName);
 	}
-	
+
 	public int getPollingInterval() {
-		return conf.getInt(PIPELINE_POLLING_INTERVAL, NodeMaster.DEFAULT_POLLING_INTERVAL);
+		return conf.getInt(PIPELINE_POLLING_INTERVAL,
+				NodeMaster.DEFAULT_POLLING_INTERVAL);
 	}
 
 	@Override
@@ -33,8 +34,13 @@ public class FileConfiguration implements CoreConfiguration {
 	}
 
 	@Override
-	public String getDatabaseUrl() {
-		return conf.getString(DATABASE_URL_PARAM, DATABASE_URL_DEFAULT);
+	public String getDatabaseHost() {
+		return conf.getString(DATABASE_HOST, DATABASE_HOST_DEFAULT);
+	}
+
+	@Override
+	public int getDatabasePort() {
+		return conf.getInt(DATABASE_PORT, DATABASE_PORT_DEFAULT);
 	}
 
 	@Override
@@ -71,7 +77,7 @@ public class FileConfiguration implements CoreConfiguration {
 	public int getOldMaxCount() {
 		return conf.getInt(OLD_MAX_COUNT, 1000);
 	}
-	
+
 	@Override
 	public boolean isPerformanceLogging() {
 		return conf.getBoolean(LOGGING_PERFORMANCE, false);
@@ -87,8 +93,8 @@ public class FileConfiguration implements CoreConfiguration {
 		return conf.getInt(CACHE_TIMEOUT, CachingDocumentNIO.DEFAULT_CACHE_TIMEOUT);
 	}
 
-    @Override
-    public int getLoggingPort() {
-        return conf.getInt(LOGGING_PORT, DEFAULT_LOGGING_PORT);
-    }
+	@Override
+	public int getLoggingPort() {
+		return conf.getInt(LOGGING_PORT, DEFAULT_LOGGING_PORT);
+	}
 }
