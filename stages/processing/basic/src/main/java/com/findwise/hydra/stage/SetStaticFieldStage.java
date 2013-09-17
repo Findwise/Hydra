@@ -28,8 +28,8 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 	@Override
 	public void process(LocalDocument doc) throws ProcessException {
 		for (Map.Entry<String, Object> entry : fieldValueMap.entrySet()) {
-			String key = entry.getKey();
-			if (missingContent(doc, key) || overwritePolicy == Policy.OVERWRITE) {
+			final String key = entry.getKey();
+			if (!hasContent(doc, key) || overwritePolicy == Policy.OVERWRITE) {
 				doc.putContentField(key, entry.getValue());
 			} else if (overwritePolicy == Policy.ADD) {
 				addValueToField(doc, key, entry.getValue());
@@ -40,18 +40,18 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 		}
 	}
 
-	private boolean missingContent(LocalDocument doc, String key) {
+	private static boolean hasContent(LocalDocument doc, String key) {
 		if (!doc.hasContentField(key)) {
-			return true;
+			return false;
 		}
 
 		Object value = doc.getContentField(key);
 		if (value instanceof String) {
-			return ((String) value).isEmpty();
+			return !((String) value).isEmpty();
 		} else if (value instanceof Collection) {
-			return ((Collection) value).isEmpty();
+			return !((Collection) value).isEmpty();
 		} else {
-			return false;
+			return true;
 		}
 	}
 
