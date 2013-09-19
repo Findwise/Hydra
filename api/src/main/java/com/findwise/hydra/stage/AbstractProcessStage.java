@@ -114,14 +114,14 @@ public abstract class AbstractProcessStage extends AbstractStage {
 					try {
 						logger.debug("Got new doc " + doc.getID()
 								+ " to process.");
-						ProcessThread processThread = new ProcessThread();
+						ProcessThread processThread = new ProcessThread(getStageName());
 						processThread.setDocument(doc);
 
 						long startTime = System.currentTimeMillis();
 						processThread.setDaemon(true);
 						processThread.start();
 
-						while (!processThread.isCompleted()) {
+						while (processThread.isRunning()) {
 							Thread.yield();
 
 							if (timeout > 0 && System.currentTimeMillis() - startTime > timeout) {
@@ -167,8 +167,13 @@ public abstract class AbstractProcessStage extends AbstractStage {
 		private LocalDocument doc;
 		private Exception exception = null;
 
-		private boolean completed = false;
+		private volatile boolean running;
 
+		public ProcessThread(String name) {
+			super(name);
+			running = true;
+		}
+		
 		public void setDocument(LocalDocument doc) {
 			this.doc = doc;
 		}
@@ -185,12 +190,12 @@ public abstract class AbstractProcessStage extends AbstractStage {
 			} catch (Exception e) {
 				exception = e;
 			} finally {
-				completed = true;
+				running = false;
 			}
 		}
 
-		public boolean isCompleted() {
-			return completed;
+		public boolean isRunning() {
+			return running;
 		}
 	}
 }
