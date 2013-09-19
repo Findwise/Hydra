@@ -13,15 +13,18 @@ import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 
-import ch.qos.logback.classic.Level;
-import com.findwise.hydra.Logging;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import ch.qos.logback.classic.Level;
+
+import com.findwise.hydra.Logging;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
+import com.findwise.tools.TimeProvider;
 
 public class AbstractProcessStageTest {
 
@@ -284,20 +287,28 @@ public class AbstractProcessStageTest {
 
 		LocalDocument ld = mock(LocalDocument.class);
 
-		when(rp.getDocument(any(LocalQuery.class))).thenReturn(ld);
+		when(rp.getDocument(any(LocalQuery.class))).thenReturn(ld, (LocalDocument[]) null);
 		when(rp.releaseLastDocument()).thenReturn(true);
 		
+		TimeProvider timeProvider = Mockito.mock(TimeProvider.class);
+		
+		when(timeProvider.getCurrentTime()).thenReturn(new Long(0), new Long(1001));
+		
+		ws.setTimeProvider(timeProvider);
+		
 		ws.start();
-		
-		Thread.sleep(1100);
-		
 		verify(ld, times(1)).addError(eq(ws.getStageName()), any(Throwable.class));
-		
 	}
-	
+
+
 	@Stage
 	public static class WaitingStage extends AbstractProcessStage {
 
+	@Override
+	public synchronized void start() {
+		super.start();
+	}
+		
 		@Override
 		public void process(LocalDocument doc) throws ProcessException {
 			try {

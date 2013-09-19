@@ -8,6 +8,9 @@ import org.apache.http.ParseException;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.RemotePipeline;
+import com.findwise.tools.SystemTimeProvider;
+import com.findwise.tools.TimeProvider;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +36,8 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	public static final int NUM_RESERVED_ARGUMENTS = 3;
 	private long holdInterval = DEFAULT_HOLD_INTERVAL;
 
+	private TimeProvider timeProvider = SystemTimeProvider.INSTANCE;
+	
 	/**
 	 * Fetches a document to be processed from the RemotePipeline
 	 * 
@@ -90,6 +95,10 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	}
 
 
+	public void setTimeProvider(TimeProvider timeProvider) {
+		this.timeProvider = timeProvider;
+	}
+	
 	/**
 	 * The thread starts with run(). Use run() to start the execution of this
 	 * step in this thread, or start() to start it in a new step (recomended).
@@ -100,6 +109,7 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	 * processing by process() and then persisting by persist().
 	 * 
 	 */
+	@Override
 	public void run() {
 		
 		setContinueRunning(true);
@@ -116,20 +126,23 @@ public abstract class AbstractProcessStage extends AbstractStage {
 								+ " to process.");
 						ProcessThread processThread = new ProcessThread(getStageName());
 						processThread.setDocument(doc);
-
-						long startTime = System.currentTimeMillis();
+						
+						long startTime = timeProvider.getCurrentTime();
 						processThread.setDaemon(true);
 						processThread.start();
 
 						while (processThread.isRunning()) {
 							Thread.yield();
-
-							if (timeout > 0 && System.currentTimeMillis() - startTime > timeout) {
+							if (timeout > 0 && timeProvider.getCurrentTime() - startTime > timeout) {
+								String docId = null;
+								if (doc.getID() != null) {
+									docId = doc.getID().toString();
+								}
 								throw new ProcessException(
-										"Processing was not done within configured timout");
+										"Processing of " + docId + " by " + getStageName() + " was not done within configured timout");
 							} else if (logger.isTraceEnabled()) {
 								logger.trace("Waiting for processing. Waited "
-										+ (System.currentTimeMillis() - startTime)
+										+ (timeProvider.getCurrentTime() - startTime)
 										+ "ms so far...");
 							}
 						}
@@ -170,7 +183,9 @@ public abstract class AbstractProcessStage extends AbstractStage {
 		private volatile boolean running;
 
 		public ProcessThread(String name) {
-			super(name);
+			if (name != null) {
+				this.setName(name);
+			}
 			running = true;
 		}
 		
