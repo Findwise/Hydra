@@ -44,7 +44,8 @@ public class StageRunner extends Thread {
     private int loggingPort;
     private boolean started;
 
-    private boolean wasKilled = false;;
+    private boolean wasKilled = false;
+    private TerminationHandler terminationHandler;
 
     public synchronized void setHasQueried() {
         hasQueried = true;
@@ -54,13 +55,14 @@ public class StageRunner extends Thread {
         return hasQueried;
     }
 
-    public StageRunner(StageGroup stageGroup, File baseDirectory, int pipelinePort, boolean performanceLogging, int loggingPort) {
+    public StageRunner(StageGroup stageGroup, File baseDirectory, int pipelinePort, boolean performanceLogging, int loggingPort, TerminationHandler terminationHandler) {
         this.stageGroup = stageGroup;
         this.baseDirectory = baseDirectory;
         this.targetDirectory = new File(baseDirectory, stageGroup.getName());
         this.pipelinePort = pipelinePort;
         this.performanceLogging = performanceLogging;
         this.loggingPort = loggingPort;
+        this.terminationHandler = terminationHandler;
         timesStarted = 0;
     }
     
@@ -137,7 +139,7 @@ public class StageRunner extends Thread {
                 logger.error("The stage group " + stageGroup.getName() + " did not start. It will not be restarted until configuration changes.");
                 return;
             }
-        } while ((timesToRetry == -1 || timesToRetry >= timesStarted) && !Main.isShuttingDown());
+        } while ((timesToRetry == -1 || timesToRetry >= timesStarted) && !terminationHandler.isTerminating());
 
         logger.error("Stage group " + stageGroup.getName()
                 + " has failed and cannot be restarted. ");
