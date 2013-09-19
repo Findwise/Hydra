@@ -203,6 +203,7 @@ public abstract class AbstractProcessStage extends AbstractStage {
 				logger.trace("Processing document");
 				process(doc);
 			} catch (Exception e) {
+				logger.trace("Caught exception during processing", e);
 				exception = e;
 			} finally {
 				running = false;
