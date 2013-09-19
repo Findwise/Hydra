@@ -16,50 +16,43 @@ import com.findwise.hydra.mongodb.MongoType;
 import com.findwise.hydra.net.HttpRESTHandler;
 import com.findwise.hydra.net.RESTServer;
 
-public final class Main {
+public final class Main implements TerminationHandler {
 
 	private Main() {
 	}
 
-	private static Logger logger = LoggerFactory.getLogger(Main.class);
-	private static SimpleSocketServer simpleSocketServer = null;
-	private static RESTServer server = null;
+	private Logger logger = LoggerFactory.getLogger(Main.class);
+	private SimpleSocketServer simpleSocketServer = null;
+	private RESTServer server = null;
 
-	private static boolean shuttingDown = false;
-
-	private static UncaughtExceptionHandler uncaughtExceptionHandler = new UncaughtExceptionHandler() {
-		@Override
-		public void uncaughtException(Thread t, Throwable e) {
-			if (!shuttingDown) {
-				logger.error("Got an uncaught exception. Shutting down Hydra", e);
-				shutdown();
-			} else {
-				logger.error("Got exception while shutting down", e);
-			}
-		}
-	};
+	private volatile boolean shuttingDown = false;
 	
 	public static void main(String[] args) {
-		if (args.length > 1) {
-			logger.error("Some parameters on command line were ignored.");
-		}
 
-		Thread.setDefaultUncaughtExceptionHandler(uncaughtExceptionHandler);
+		Main main = new Main();
+		
+		if (args.length > 1) {
+			main.logger.error("Some parameters on command line were ignored.");
+		}
 		
 		CoreConfiguration conf;
 		if (args.length > 0) {
-			conf = getConfiguration(args[0]);
+			conf = main.getConfiguration(args[0]);
 		} else {
-			conf = getConfiguration(null);
+			conf = main.getConfiguration(null);
 		}
 
-        startup(conf);
+		main.startup(conf);
 	}
 
-	private static void startup(CoreConfiguration conf) {
+	private void startup(CoreConfiguration conf) {
+		ShuttingDownOnUncaughException uncaughtExceptionHandler = new ShuttingDownOnUncaughException(this);
+		Thread.setDefaultUncaughtExceptionHandler(uncaughtExceptionHandler);
 		simpleSocketServer = new SimpleSocketServer((LoggerContext) LoggerFactory.getILoggerFactory(), conf.getLoggingPort());
 		simpleSocketServer.start();
 
+
+		
 		DatabaseConnector<MongoType> backing = new MongoConnector(conf);
 		try {
 			backing.connect();
@@ -84,7 +77,8 @@ public final class Main {
 		NodeMaster<MongoType> nm = new NodeMaster<MongoType>(
 				conf, 
 				caching,
-				new Pipeline());
+				new Pipeline(), 
+				this);
 
 		server = new RESTServer(conf,
 				new HttpRESTHandler<MongoType>(
@@ -111,7 +105,7 @@ public final class Main {
 		}
 	}
 
-	private static void shutdown() {
+	public void shutdown() {
 		logger.info("Got shutdown request...");
 		shuttingDown = true;
 		long killDelay = TimeUnit.SECONDS.toMillis(30);
@@ -137,17 +131,19 @@ public final class Main {
 			}
 		} else {
 			logger.trace("server was null");
-		}		
+		}
 	}
 
-	private static void killUnlessShutdownWithin(long killDelay) {
+	private void killUnlessShutdownWithin(long killDelay) {
 
+		
 		if (killDelay < 0) {
 			return;
 		}
 		
 		class HydraKiller extends Thread {
 
+			Logger logger = LoggerFactory.getLogger(HydraKiller.class);
 			private final long killDelay;
 
 			public HydraKiller(long killDelay) {
@@ -174,11 +170,11 @@ public final class Main {
 	}
 
 	
-	public static boolean isShuttingDown() {
+	public boolean isTerminating() {
 		return shuttingDown;
 	}
 	
-	protected static CoreConfiguration getConfiguration(String fileName) {
+	protected CoreConfiguration getConfiguration(String fileName) {
 		try {
 			if (fileName != null) {
 				return new FileConfiguration(fileName);
@@ -191,4 +187,24 @@ public final class Main {
 		}
 	}
 
+	private class ShuttingDownOnUncaughException implements UncaughtExceptionHandler {
+
+		private final TerminationHandler terminationHandler;
+
+		public ShuttingDownOnUncaughException(TerminationHandler terminationHandler) {
+			this.terminationHandler = terminationHandler;
+		}
+
+		@Override
+		public void uncaughtException(Thread t, Throwable e) {
+			if (!terminationHandler.isTerminating()) {
+				logger.error("Got an uncaught exception. Shutting down Hydra", e);
+				terminationHandler.shutdown();
+			} else {
+				logger.error("Got exception while shutting down", e);
+			}
+		}
+		
+	}
+	
 }
