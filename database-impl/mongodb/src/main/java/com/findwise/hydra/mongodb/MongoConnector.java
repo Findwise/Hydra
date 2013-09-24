@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 
+import com.mongodb.MongoClientURI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +21,7 @@ import com.findwise.hydra.StatusUpdater;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.mongodb.DB;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
 import com.mongodb.gridfs.GridFS;
@@ -81,9 +82,9 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 
 	@Override
 	public void connect() throws IOException {
-		Mongo mongo;
+		MongoClient mongo;
 		try {
-			mongo = new Mongo(conf.getDatabaseUrl());
+			mongo = new MongoClient(new MongoClientURI(conf.getDatabaseUrl()));
 		} catch (UnknownHostException e) {
 			logger.error("Failed to establish connection to MongoDB at URL: "
 					+ conf.getDatabaseUrl(), e);
@@ -96,7 +97,7 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 		connect(mongo, true);
 	}
 
-	protected void connect(Mongo mongo, boolean startStatusUpdater) throws IOException {
+	protected void connect(MongoClient mongo, boolean startStatusUpdater) throws IOException {
 		db = mongo.getDB(conf.getNamespace());
 
 		if (requiresAuthentication(mongo)) {
@@ -156,7 +157,7 @@ public class MongoConnector implements DatabaseConnector<MongoType> {
 		return statusUpdater;
 	}
 
-	private boolean requiresAuthentication(Mongo mongo) {
+	private boolean requiresAuthentication(MongoClient mongo) {
 		try {
 			mongo.getDatabaseNames();
 			return false;

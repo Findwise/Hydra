@@ -28,7 +28,7 @@ public class DatabaseConfigurationFactory {
 			
 			@Override
 			public String getDatabaseUrl() {
-				return "localhost";
+				return "mongodb://localhost";
 			}
 			
 			@Override
