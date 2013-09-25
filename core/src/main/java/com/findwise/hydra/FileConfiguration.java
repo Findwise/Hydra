@@ -1,5 +1,6 @@
 package com.findwise.hydra;
 
+import com.findwise.hydra.mongodb.MongoConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.slf4j.Logger;
@@ -7,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.local.RemotePipeline;
 
-public class FileConfiguration implements CoreConfiguration {
+public class FileConfiguration implements CoreConfiguration, Configuration {
 	public static final String DEFAULT_PROPERTIES_FILE = "resource.properties";
 	
 	private static Logger logger = LoggerFactory.getLogger(Configuration.class);
@@ -29,12 +30,12 @@ public class FileConfiguration implements CoreConfiguration {
 
 	@Override
 	public String getNamespace() {
-		return conf.getString(NAMESPACE_PARAM);
+		return conf.getString(DATABASE_NAMESPACE);
 	}
 
 	@Override
 	public String getDatabaseUrl() {
-		return conf.getString(DATABASE_URL_PARAM, DATABASE_URL_DEFAULT);
+		return conf.getString(DATABASE_URL_PARAM, MongoConfiguration.DATABASE_URL_PARAM_DEFAULT);
 	}
 
 	@Override
