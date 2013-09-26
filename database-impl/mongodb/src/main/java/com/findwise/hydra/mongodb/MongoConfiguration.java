@@ -8,8 +8,8 @@ public class MongoConfiguration implements Configuration, DatabaseConfiguration 
 
 	public static final String DATABASE_URL_PARAM_DEFAULT = "mongodb://localhost:27017";
 	public static final String DATABASE_NAMESPACE_DEFAULT = "pipeline";
-	public static final String DATABASE_USER = "admin";
-	public static final String DATABASE_PASSWORD = "changeme";
+	public static final String DATABASE_USER_DEFAULT = "admin";
+	public static final String DATABASE_PASSWORD_DEFAULT = "changeme";
 	public static final int OLD_MAX_SIZE_MB_DEFAULT = 200;
 	public static final int OLD_MAX_COUNT_DEFAULT = 2000;
 
@@ -41,7 +41,7 @@ public class MongoConfiguration implements Configuration, DatabaseConfiguration 
 	}
 
 	public String getDatabaseUser() {
-		return getParameter(DATABASE_USER);
+		return getParameter(DATABASE_USER, DATABASE_USER_DEFAULT);
 	}
 
 	public void setDatabaseUser(String user) {
@@ -49,7 +49,7 @@ public class MongoConfiguration implements Configuration, DatabaseConfiguration 
 	}
 
 	public String getDatabasePassword() {
-		return getParameter(DATABASE_PASSWORD);
+		return getParameter(DATABASE_PASSWORD, DATABASE_PASSWORD_DEFAULT);
 	}
 
 	public void setDatabasePassword(String password) {
