@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.findwise.hydra.DatabaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,27 +42,56 @@ public class ConfigurationService<T extends DatabaseType> {
 		connector.connect();
 	}
 
-	public void addLibrary(String id, String filename, InputStream stream) throws IOException {
-		getConnector().getPipelineWriter().save(id, filename, stream);
-	}
-
-	public Map<String, Object> getLibraries() throws IOException {
-		Map<String, Object> map = new HashMap<String, Object>();
-
-		for (DatabaseFile df : getPipelineScanner().getLibraryFiles()) {
-			map.put(df.getId().toString(), getLibraryMap(df));
+	/**
+	 *
+	 * @param id the id that the library will be stored as
+	 * @param filename the library file name
+	 * @param stream library file stream
+	 * @throws DatabaseException if connecting to the database failed
+	 */
+	public void addLibrary(String id, String filename, InputStream stream) throws DatabaseException {
+		try {
+			getConnector().getPipelineWriter().save(id, filename, stream);
+		} catch (IOException e) {
+			throw new DatabaseException("Failed to connect to database", e);
 		}
-
-		return map;
 	}
-	
-	public Map<String, Object> getLibrary(String id) throws IOException {
-		for (DatabaseFile df : getPipelineScanner().getLibraryFiles()) {
-			if(df.getId().toString().equals(id)) {
-				return getLibraryMap(df);
+
+	/**
+	 *
+	 * @return map of available libraries
+	 * @throws DatabaseException if scanning the pipeline failed
+	 */
+	public Map<String, Object> getLibraries() throws DatabaseException {
+
+		try {
+			Map<String, Object> map = new HashMap<String, Object>();
+			for (DatabaseFile df : getPipelineScanner().getLibraryFiles()) {
+				map.put(df.getId().toString(), getLibraryMap(df));
 			}
+			return map;
+		} catch (IOException e) {
+			throw new DatabaseException("Failed to scan pipeline", e);
 		}
-		return null;
+	}
+
+	/**
+	 *
+	 * @param id the id of the library
+	 * @return map describing the library, or null if the library id does not exist
+	 * @throws DatabaseException if scanning the pipeline failed
+	 */
+	public Map<String, Object> getLibrary(String id) throws DatabaseException {
+		try {
+			for (DatabaseFile df : getPipelineScanner().getLibraryFiles()) {
+				if(df.getId().toString().equals(id)) {
+					return getLibraryMap(df);
+				}
+			}
+			return null;
+		} catch (IOException e) {
+			throw new DatabaseException("Failed to scan pipeline", e);
+		}
 	}
 
 	private Map<String, Object> getLibraryMap(DatabaseFile df) throws IOException {
@@ -72,11 +102,23 @@ public class ConfigurationService<T extends DatabaseType> {
 		return map;
 	}
 
-
-	public Map<String, Object> getStats() throws IOException {
+	/**
+	 *
+	 * @return map of statistics and current stage groups
+	 * @throws DatabaseException if connecting to the database failed
+	 */
+	public Map<String, Object> getStats() throws DatabaseException {
 		Map<String, Object> map = new HashMap<String, Object>();
 		Map<String, Object> documentMap = new HashMap<String, Object>();
-		DocumentReader<T> documentReader = getConnector().getDocumentReader();
+		DatabaseConnector<T> databaseConnector = null;
+		PipelineScanner<T> scanner = null;
+		try {
+			databaseConnector = getConnector();
+			scanner = getPipelineScanner();
+		} catch (IOException e) {
+			throw new DatabaseException("Failed to connect to database", e);
+		}
+		DocumentReader<T> documentReader = databaseConnector.getDocumentReader();
 		documentMap.put("current", documentReader.getActiveDatabaseSize());
 		documentMap.put("throughput", 0);
 		documentMap.put("archived", documentReader.getInactiveDatabaseSize());
@@ -87,10 +129,10 @@ public class ConfigurationService<T extends DatabaseType> {
 		Map<String, Object> stageMap = new HashMap<String, Object>();
 		map.put("groups", stageMap);
 
-		PipelineReader pipelineReader = getConnector().getPipelineReader();
-		stageMap.put("active", getPipelineScanner().getStageConfigMap(pipelineReader.getPipeline()));
+		PipelineReader pipelineReader = databaseConnector.getPipelineReader();
+		stageMap.put("active", scanner.getStageConfigMap(pipelineReader.getPipeline()));
 
-		stageMap.put("debug", getPipelineScanner().getStageConfigMap(pipelineReader.getDebugPipeline()));
+		stageMap.put("debug", scanner.getStageConfigMap(pipelineReader.getDebugPipeline()));
 
 		return map;
 	}

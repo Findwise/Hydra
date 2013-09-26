@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.findwise.hydra.DatabaseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -54,19 +55,19 @@ public class ConfigurationController {
 	
 	@ResponseBody
 	@RequestMapping(method=RequestMethod.GET, value="") 
-	public Map<String, Object> getStats() throws IOException {
+	public Map<String, Object> getStats() throws DatabaseException {
 		return service.getStats();
 	}
 	
 	@ResponseBody
 	@RequestMapping(method=RequestMethod.GET, value="/libraries")
-	public Map<String, Object> getLibraries() throws IOException {
+	public Map<String, Object> getLibraries() throws DatabaseException {
 		return service.getLibraries();
 	}
 	
 	@ResponseBody
 	@RequestMapping(method=RequestMethod.GET, value="/libraries/{id}")
-	public Map<String, Object> getLibrary(@PathVariable String id) throws IOException {
+	public Map<String, Object> getLibrary(@PathVariable String id) throws DatabaseException {
 		Map<String, Object> library = service.getLibrary(id);
 		if (null != library) {
 			return library;
@@ -78,7 +79,7 @@ public class ConfigurationController {
 	@ResponseStatus(HttpStatus.ACCEPTED)
 	@RequestMapping(method=RequestMethod.POST, value="/libraries/{id}")
 	@ResponseBody
-	public Map<String, Object> addLibrary(@PathVariable String id, @RequestParam MultipartFile file) throws IOException {
+	public Map<String, Object> addLibrary(@PathVariable String id, @RequestParam MultipartFile file) throws DatabaseException, IOException {
 		service.addLibrary(id, file.getOriginalFilename(), file.getInputStream());
 		return getLibrary(id);
 	}

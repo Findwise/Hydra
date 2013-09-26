@@ -8,6 +8,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.Map;
 
+import com.findwise.hydra.DatabaseException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,7 +65,7 @@ public class ConfigurationServiceTest {
 	}
 
 	@Test
-	public void testGetStats() throws IOException {
+	public void testGetStats() throws DatabaseException {
 		Map<String, Object> stats = service.getStats();
 		
 		verify(pipelineReader).getPipeline();
