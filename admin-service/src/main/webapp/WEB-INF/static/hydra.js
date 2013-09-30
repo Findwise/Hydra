@@ -61,11 +61,11 @@ function msToReadable(ms) {
 }
 
 function queryDocuments() {
-	var query = $("#documents_query_textarea").text();
+	var query = $("#documents_query_textarea").val();
 	$.getJSON(pages.documents + "?q=" + query,
 		function(data) {
 			console.log(data);
-			$("#documents_list").text(data);
+			$('#documents_list').html(window.templates['documents_list_items'](data));
 		}).fail(
 		function(obj, textStatus, errorThrown) {
 			alert("Query failed : " + errorThrown);
@@ -73,7 +73,9 @@ function queryDocuments() {
 }
 
 function addDocument() {
-	var docBody = $("#documents_add_textarea").text();
+	var stringDocBody = $("#documents_add_textarea").val();
+	var docBody = $.parseJSON(stringDocBody);
+	console.log(docBody);
 	$.post(pages.documents + "/new", docBody,
 		function(data) {
 			console.log(data);
@@ -82,6 +84,17 @@ function addDocument() {
 		function(obj, textStatus, errorThrown) {
 			alert("Query failed : " + errorThrown);
 		});
+}
+
+function listDocuments(context, options) {
+	var ret = "";
+
+	for(var i = 0, j=context.length; i<j; i++) {
+		ret = ret + "<div class='well'>";
+		ret = ret + "<pre>" + JSON.stringify(context[i], null, '\t') + "</pre>";
+		ret = ret + "</div>";
+	}
+	return ret;
 }
 
 function showCurrentPage() {
@@ -130,6 +143,7 @@ $(document).ready(
 			refreshPage(containerId);
 			showPage(containerId);
 		});
+	Handlebars.registerHelper('listDocuments', listDocuments);
 	showCurrentPage();
 	refreshCurrentPage();
 });

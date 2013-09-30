@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Hydra Admin Service GUI</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link type="text/css" rel="stylesheet" href="bootstrap.min.css"
-	media="screen">
-<link type="text/css" rel="stylesheet" href="hydra.css" media="screen">
-<script type="text/javascript" src="jquery.js"></script>
-<script type="text/javascript" src="hydra.js"></script>
-<script type="text/javascript" src="handlebars.js"></script>
-<script type="text/javascript" src="bootstrap.min.js"></script>
+    <title>Hydra Admin Service GUI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="bootstrap.min.css"
+        media="screen">
+    <link type="text/css" rel="stylesheet" href="hydra.css" media="screen">
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="hydra.js"></script>
+    <script type="text/javascript" src="handlebars.js"></script>
+    <script type="text/javascript" src="underscore.js"></script>
+    <script type="text/javascript" src="bootstrap.min.js"></script>
 </head>
 <body>
 	<div class="navbar navbar-inverse navbar-fixed-top">
@@ -211,16 +212,22 @@
 			</div>
 			<div id="documents_add">
 				<form id="documents_add_form">
-					<textarea rows="5" placeholder='{"field1": "a value", "field2": ["val1", "val2"]}' />
+					<textarea id="documents_add_textarea" rows="5" placeholder='{"field1": "a value", "field2": ["val1", "val2"]}' />
 					<button type="button" class="btn btn-primary" onClick="addDocument()">Add</button>
 				</form>
 			</div>
 		</div>
 		<div class="span9">
-			<div id="documents_list" class="well">
+			<div id="documents_list">
 			</div>
 		</div>
 	</div>
 	</script>
+    <script type="text/x-handlebars-template" id="documents_list_items"
+            class="template">
+                    {{#listDocuments documents}}
+                        {{this}}
+                    {{/listDocuments}}
+    </script>
 </body>
 </html>
