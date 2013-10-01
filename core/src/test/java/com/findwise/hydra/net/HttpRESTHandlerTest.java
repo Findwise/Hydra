@@ -4,7 +4,10 @@ import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Random;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -18,68 +21,79 @@ public class HttpRESTHandlerTest {
 	private MemoryConnector mc;
 	private RESTServer server;
 	private HttpRESTHandler<MemoryType> restHandler;
-	
+
 	@Before
 	public void setUp() {
 		mc = new MemoryConnector();
 		restHandler = new HttpRESTHandler<MemoryType>(mc);
 		server = RESTServer.getNewStartedRESTServer(20000, restHandler);
 	}
-	
+
 	@Test
-	public void testSupportsAllUrls() throws IllegalArgumentException, IllegalAccessException {
+	public void testSupportsAllUrls() throws
+			IllegalArgumentException,
+			IllegalAccessException {
 		Field[] fields = RemotePipeline.class.getFields();
-		for(Field f : fields) {
+		for (Field f : fields) {
 			int mod = f.getModifiers();
-			if(Modifier.isFinal(mod) && f.getName().endsWith("_URL")) {
-				if(!isSupported((String) f.get(null))) {
+			if (Modifier.isFinal(mod) && f.getName().endsWith("_URL")) {
+				if (!isSupported((String) f.get(null))) {
 					fail("Unsupported URL found!");
 				}
 			}
 		}
 	}
-	
+
 	private boolean isSupported(String url) {
-		for(String s : restHandler.getSupportedUrls()) {
-			if(url.equals(s)) {
+		for (String s : restHandler.getSupportedUrls()) {
+			if (url.equals(s)) {
 				return true;
 			}
 		}
 		return false;
 	}
-	
+
 	@Test
 	public void testAccessRestrictions() throws InterruptedException {
-        restHandler.setAllowedHosts(Arrays.asList("localhost"));
+		restHandler.setAllowedHosts(Arrays.asList("localhost"));
 
-        if(!server.isWorking(System.currentTimeMillis(), 200))
-        {
-            fail("Failed to connect when allowed hosts contained localhost");
-        }
+		if (!server.isWorking(System.currentTimeMillis(), 200)) {
+			fail("Failed to connect when allowed hosts contained localhost");
+		}
 
 		restHandler.setAllowedHosts(Arrays.asList("127.0.0.1"));
 
-		if(!server.isWorking(System.currentTimeMillis(), 200))
-		{
+		if (!server.isWorking(System.currentTimeMillis(), 200)) {
 			fail("Failed to connect when allowed hosts contained 127.0.0.1");
 		}
-		
+
 		restHandler.setAllowedHosts(Arrays.asList("127.0.0.2"));
-		
-		if(server.isWorking(System.currentTimeMillis(), 200))
-		{
+
+		if (server.isWorking(System.currentTimeMillis(), 200)) {
 			fail("Server should *not* have been working, since allowed hosts does not contain localhost");
 		}
 
 		restHandler.setAllowedHosts(null);
-		if(!server.isWorking(System.currentTimeMillis(), 200))
-		{
+		if (!server.isWorking(System.currentTimeMillis(), 200)) {
 			fail("Server should have been working, since allowed hosts is null");
 		}
 	}
 
-    @Test(expected = RuntimeException.class)
-    public void testSetAllowedHostsThrowsExceptionWhenUnknownHost(){
-        restHandler.setAllowedHosts(Arrays.asList("unknownhost"));
-    }
+	@Test(expected = RuntimeException.class)
+	public void testSetAllowedHostsThrowsExceptionWhenUnknownHost() {
+		restHandler.setAllowedHosts(Arrays.asList(findUnknownHost()));
+	}
+
+	private String findUnknownHost() {
+		Random random = new Random();
+		for (int i = 0; i < 10000; i++) {
+			String hostname = Integer.toHexString(random.nextInt()) + ".unknown";
+			try {
+				InetAddress.getByName(hostname);
+			} catch (UnknownHostException e) {
+				return hostname;
+			}
+		}
+		throw new AssertionError("Could not find a hostname which is unknown.");
+	}
 }

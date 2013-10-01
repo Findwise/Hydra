@@ -5,10 +5,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import junit.framework.Assert;
-
 import org.junit.Before;
 import org.junit.Test;
+
+import junit.framework.Assert;
 
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.SetStaticFieldStage.Policy;
@@ -45,7 +45,7 @@ public class SetStaticFieldStageTest {
 		Assert.assertTrue(((List<?>) doc.getContentField("list")).contains(1));
 		Assert.assertTrue(((List<?>) doc.getContentField("list")).contains("value"));
 	}
-	
+
 	@Test
 	public void testOverwrite() throws Exception {
 		init(Policy.OVERWRITE);
@@ -56,7 +56,7 @@ public class SetStaticFieldStageTest {
 		Assert.assertEquals(1, doc.getContentField("string"));
 		Assert.assertEquals("value", doc.getContentField("list"));
 	}
-	
+
 	@Test
 	public void testSkip() throws Exception {
 		init(Policy.SKIP);
@@ -68,7 +68,28 @@ public class SetStaticFieldStageTest {
 		Assert.assertTrue(((List<?>) doc.getContentField("list")).contains("x"));
 		Assert.assertTrue(((List<?>) doc.getContentField("list")).contains(1));
 	}
-	
+
+	@Test
+	public void testSkipEmptyString() throws Exception {
+		init(Policy.SKIP);
+
+		doc.putContentField("empty", "");
+		stage.process(doc);
+
+		Assert.assertEquals("Empty string should not count as content", "value",
+				doc.getContentField("empty"));
+	}
+
+	@Test
+	public void testSkipEmptyList() throws Exception {
+		init(Policy.SKIP);
+
+		doc.putContentField("empty", Arrays.asList());
+		stage.process(doc);
+
+		Assert.assertEquals("Empty list should not count as content", "value",
+				doc.getContentField("empty"));
+	}
 
 	@Test
 	public void testThrowPolicyNoCollision() throws Exception {
@@ -79,8 +100,8 @@ public class SetStaticFieldStageTest {
 		Assert.assertEquals("value", doc.getContentField("empty"));
 		Assert.assertEquals(1, doc.getContentField("string"));
 		Assert.assertEquals("value", doc.getContentField("list"));
-	}	
-	
+	}
+
 	@Test(expected = ProcessException.class)
 	public void testThrowPolicyWithCollision() throws Exception {
 		init(Policy.THROW);

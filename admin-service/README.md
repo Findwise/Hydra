@@ -1,6 +1,22 @@
 Hydra Admin Service
 ==========================
 
+Description
+-----------
+
+This service talks directly to the backend database. The service can configure pipelines without any running Core.
+
+As a webapp, this service needs to be deployed in a container such as Tomcat or Jetty.
+
+Configuration
+-------------
+
+If you need to set any of the configuration parameters (such as database authentication), you need to supply the `admin-service.properties` file via a JVM system property. Simply add the following to your Java startup command:
+
+    -Dhydra.admin.config.dir=<path-to-directory>
+
+Put your `admin-service.properties` in that directory and the admin service should load it when initiated.
+
 Available endpoints
 ----------------
 
@@ -389,5 +405,28 @@ Available endpoints
 		"abstract" : "This document is short and contains little information.",
 		"linked_file" : "http://bogus.url/document.xml",
 		"document_id" : "23432451"
+	}
+	```
+* **/documents/discard** - Method: GET
+	
+	Deletes the documents matching a query.
+	The number of documents to be deleted and what document to start deleting from, can be configured with request parameters
+	
+	Available parameters: 
+	
+		- q: A json query to be matched by the documents to be deleted
+		
+		- limit: The maximum number of documents to delete (*default: no limit*)
+		
+		- skip: The number of documents to skip (used for example if you want to delete all documents except the first 10) (*default: 0*)
+	
+	Sample request: http://localhost:8080/hydra/documents/discard?q={fetched:{rename:true}}&limit=10&skip=0
+	Deleted 10 documents matching the query, starting with the first one.
+	
+	Sample response: 
+	
+	```
+	{
+		success: true
 	}
 	```
