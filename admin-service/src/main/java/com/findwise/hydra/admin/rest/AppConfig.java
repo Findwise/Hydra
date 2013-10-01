@@ -56,6 +56,11 @@ public class AppConfig {
 		return cmr;
 	}
 
+        @Bean(name = "jsonpCallbackFilter")
+        public static JsonpCallbackFilter jsonpCallback(){
+            return new JsonpCallbackFilter();
+        }
+
 	@Bean
 	public static PropertyPlaceholderConfigurer properties() {
 		PropertyPlaceholderConfigurer ppc = new PropertyPlaceholderConfigurer();
@@ -75,7 +80,7 @@ public class AppConfig {
 		return new DocumentsService<MongoType>(connector);
 
 	}
-	
+
 	@Bean
 	public static StagesService<MongoType> stagesService() {
 		return new StagesService<MongoType>(connector);
