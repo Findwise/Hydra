@@ -133,7 +133,7 @@ public class StageRunner extends Thread {
 			return;
 		}
 
-		if (stageGroup.getSize() < 1) {
+		if (stageGroup.isEmpty()) {
 			logger.info("Stage group " + stageGroup.getName() + " has no stages, and can not be started.");
 			return;
 		}

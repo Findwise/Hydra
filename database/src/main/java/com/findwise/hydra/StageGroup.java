@@ -23,7 +23,7 @@ public class StageGroup {
 	public static final String CLASSPATH_KEY = "classpath";
 	public static final String JAVA_LOCATION_KEY = "java_location";
 	
-	private Map<String, Stage> stages;
+	private final Map<String, Stage> stages;
 	
 	private String jvmParameters;
 	private String classpath;
@@ -215,5 +215,9 @@ public class StageGroup {
 
 	public int getSize() {
 		return stages.size();
+	}
+
+	public boolean isEmpty() {
+		return stages.isEmpty();
 	}
 }
