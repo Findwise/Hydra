@@ -46,16 +46,11 @@
             <param-value>com.findwise.hydra.admin.rest</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
-
-
     </servlet>
-
-
     <servlet-mapping>
         <servlet-name>rest</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
-
 
     <welcome-file-list>
         <welcome-file />
