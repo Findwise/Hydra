@@ -2,6 +2,8 @@ package com.findwise.hydra.admin;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -20,6 +22,14 @@ import com.findwise.hydra.stage.Stage;
  *
  */
 public class StageScanner {
+	
+	public List<Class<?>> getClasses(List<URL> jars) {
+		ClassLoader cl = new URLClassLoader(jars.toArray(new URL[jars.size()]));
+		
+		Reflections reflections = new Reflections(jars, cl);
+		return getClasses(reflections);
+	}
+	
 	public List<Class<?>> getClasses(Reflections reflections) {
 		List<Class<?>> classes = new ArrayList<Class<?>>();
 		

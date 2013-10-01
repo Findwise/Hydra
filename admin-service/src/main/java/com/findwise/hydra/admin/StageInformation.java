@@ -11,7 +11,7 @@ public class StageInformation extends HashMap<String, Object>{
 
 	/**
 	 * @param clazz
-	 * @throws NoSuchElementException if the passed Class is not annotated with com.findwise.hydra.stage.Stage
+	 * @throws NoSuchElementException if the passed Class is not annotated with {@link com.findwise.hydra.stage.Stage}
 	 */
 	public StageInformation(Class<?> clazz) throws NoSuchElementException {
 		super();
