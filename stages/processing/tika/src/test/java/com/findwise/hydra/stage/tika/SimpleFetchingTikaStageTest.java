@@ -4,15 +4,19 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Arrays;
 
-import junit.framework.Assert;
+import org.junit.Assert;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+
+import com.google.common.io.ByteStreams;
+import org.junit.*;
 
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.sax.BodyContentHandler;
-import org.junit.Before;
-import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.findwise.hydra.local.LocalDocument;
@@ -23,7 +27,23 @@ public class SimpleFetchingTikaStageTest {
 	private SimpleFetchingTikaStage stage;
 	private LocalDocument doc;
 
-	private String pattern = "attachment_(.*)";
+	private final String pattern = "attachment_(.*)";
+
+	private static final String mockHost = "localhost";
+	private static final int mockPort = 37777;
+	private static final String mockUrl = "http://" + mockHost + ":" + mockPort;
+
+	@ClassRule
+	public static WireMockRule wireMockRule = new WireMockRule(wireMockConfig().port(mockPort));
+
+	@BeforeClass
+	public static void initClass() throws Exception {
+		// Make all requests to the mock host and port return src/test/resources/test.html
+		byte[] bytes = ByteStreams.toByteArray(
+			SimpleFetchingTikaStageTest.class.getClassLoader().getResourceAsStream("test.html")
+		);
+		stubFor(get(urlEqualTo("/")).willReturn(aResponse().withBody(bytes)));
+	}
 
 	@Before
 	public void init() {
@@ -36,7 +56,7 @@ public class SimpleFetchingTikaStageTest {
 	@Test(expected = RuntimeException.class)
 	public void testProcess() throws Exception {
 
-		doc.putContentField("attachment_a", "http://www.google.com");
+		doc.putContentField("attachment_a", mockUrl);
 
 		Parser parser = Mockito.mock(AutoDetectParser.class);
 		stage.setParser(parser);
@@ -48,12 +68,11 @@ public class SimpleFetchingTikaStageTest {
 						Mockito.any(Metadata.class),
 						Mockito.any(ParseContext.class));
 		stage.process(doc);
-
 	}
 	
 	@Test
 	public void testListAttachments() throws Exception {
-		doc.putContentField("attachment_links", Arrays.asList(new String[] {"http://www.google.com", "http://www.google.com", "http://www.google.com"}));
+		doc.putContentField("attachment_links", Arrays.asList(mockUrl, mockUrl, mockUrl));
 		
 		stage.process(doc);
 		
@@ -64,7 +83,7 @@ public class SimpleFetchingTikaStageTest {
 	
 	@Test
 	public void testURIEscaping() throws Exception {
-		doc.putContentField("attachment_a", "http://google.com/ arbitrary path with spaces/");
+		doc.putContentField("attachment_a", mockUrl + "/ arbitrary path with spaces/");
 		
 		try {
 			stage.process(doc);

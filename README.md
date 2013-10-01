@@ -40,7 +40,7 @@ There are a few pre-requisites: Hydra is built with Maven, and as such you will 
 
 1. Clone the repository.
 2. In the root directory, run `mvn clean install`
-3. To start, run `java -jar hydra-core.jar` from inside the `bin` directory
+3. To start, run `java -jar hydra-core.jar` from inside the `distribution/bin` directory
 
 Using Hydra
 -----------
@@ -51,8 +51,8 @@ You'll find the projects to build these two (using Maven) in `stages/processing/
 
 There are a few different methods for setting up pipelines in Hydra:
 
-* Script your pipeline setup with the `database-impl/mongo` package
-* Set up the Admin Service webapp and configure the pipeline using its REST interface
+* Script your pipeline setup with the `database-impl/mongodb` package
+* Set up the Admin Service webapp and configure the pipeline using its REST interface (see the readme file in the `admin-service` package)
 * Use the `CmdlineInserter`-class that you can find in the `examples` project under the Hydra root
 
 Using the CmdlineInserter, if you run `mvn clean install` on that project, you will get a runnable jar that you can use (`java -jar inserter-jar-with-dependencies.jar`) Below, we'll assume that's the method you are using. 
@@ -71,18 +71,31 @@ Now that you have a library inserted, you can add your stage by referencing the 
 In order to configure a stage, you'll need to know what stage it is you want to configure. A configuration for a SetStaticField-stage might look like this:
 
 ```
-{
-	stageClass: "com.findwise.hydra.stage.SetStaticFieldStage",
-	query: {"touched" : {"extractTitles" : true}, "exists" : {"source" : true} },
-	fieldValueMap: {"source": ["value1", "value2"] }
-}
+
+	{
+		stageClass: "com.findwise.hydra.stage.SetStaticFieldStage",
+		query: {"touched" : {"extractTitles" : true}, "exists" : {"source" : true} },
+		fieldValueMap: {"source": ["value1", "value2"] }
+	}
+
 ```
 
 * __stageClass__: *Required*. Must be the full name of the stage class to be configured. 
-* __query__: A serialized version of the query, that all documents this stage receives must match. In this example, all documents received by this stage will have already been processed by a stage called _extractTitles_ and they all have a field called _source_.
-* __fieldValueMap__: The input parameters specific for this stage. In this case, it expects a map from field names to any object.
+* __query__: A serialized version of the query, that all documents this stage receives must match. In this example, all documents received by this stage will have already been processed by a stage called _extractTitles_ and they all have a field called _source_. See below for more information about the query syntax.
+* __fieldValueMap__: A parameter expected by this stage. Parameters can be a number of different types and are used for stage-specific configuration. This parameter is a map from field names to objects (JSON arrays are converted to lists).
 
 Save the configuration in a file somewhere on disk, e.g. {mystage.properties}, for ease of use. 
+
+The possible configuration parameteras for each stage can be found using the `admin-service` web application. Try the `/libraries` endpoint to see all the stages of all your inserted libraries and their configurable parameters.
+
+##### Query syntax
+The `query` in the configuration is used to decide what documents the stage should make changes to. A document is picked up by the stage only if it matched *all* clauses in the query. The available options are:
+
+* { "touched" : { "stageId" : true/false } } - Matches if a documents has (or has not if value is `false`) been processed by the stage with id `stageId`
+* { "exists" : { "fieldName" : true/false } } - Matches if the document has (or has not if value is `false`) a field called `fieldName`
+* { "equals" : { "fieldName" : fieldValue} } - Matches if the document has a field called `fieldName` with the value `fieldValue` (where `fieldValue` may be any object)
+* { "notEquals" : { "fieldName" : fieldValue} } - Matches whenever equlas is not matching
+* { "action" : "ADD"/"UPDATE"/"DELETE" } - Matches if the action of the document is set to `ADD`, `UPDATE` or `DELETE`
 
 #### Inserting the configuration
 
@@ -92,3 +105,121 @@ Run the CmdlineInserter class (or the jar) with the following arguments:
 That's it. You now have a pipeline configured with a SetStaticField-stage. If your Hydra Core was running while you configured this, you'll notice that it picked up the change and launched the stage with the properties you provided. Any subsequent changes to the configuration will also make Hydra Core restart the stage.
 
 Next, you'll probably want to add an output stage, and then start pushing some documents in!
+
+#### Inserting documents
+
+There are a couple of way to import your documents into Hydra. The easiest way would be to post a document to the hydra admin-service (see documentation in the `admin-service` package). Adding documents this way is however not recommended in a production environment. Instead, create your own input connector using the `hydra-mongodb` package in `database-impl`. 
+
+Basically, an input connector pushes data directly to mongodb by creating an instance of `MongoDocumentIO` and calling its insert method:
+
+```
+
+	...
+	MongoDocumentIO io = new MongoDocumentIO(db, concern, documentsToKeep, oldDocsMaxSizeMB, updater, documentFs);
+	io.prepare();
+
+	MongoDocument document = new MongoDocument(jsonDocument);
+	io.insert(document);
+	...
+
+```
+
+A `StdinInput`connector can be found in the `stages/debugging` package, and can be used as a reference implementation.
+
+## Setting up a demo pipeline
+Start the mongo deamon (mongod), in your `mongodb/bin` folder
+
+Build the following projects by running `mvn clean install`
+
+* `parent` (creates `hydra-core.jar` in `distribution/bin`)
+* `examples` (creates `inserter-jar-with-dependencies.jar` in `examples/target`)
+* `stages/processing/basic` (creates `basic-jar-with-dependencies.jar` in `stages/processing/basic/target`)
+* `stages/debugging` (creates `debugging-jar-with-dependencies.jar` in `stages/debugging`)
+
+Insert the libraries to hydra:
+
+* 	`java -jar inserter-jar-with-dependencies.jar -a -p pipeline -l -i basic basic-jar-with-dependencies.jar`
+* 	 `java -jar inserter-jar-with-dependencies.jar -a -p pipeline -l -i debug debugging-jar-with-dependencies.jar`
+
+Create configuration files:
+
+* Create a file called `setTitleStage.properties` containing
+
+```
+
+	{
+		stageClass: "com.findwise.hydra.stage.SetStaticFieldStage",
+		fieldValueMap: {
+			"title" : "This is my title" 
+		}
+	}
+
+```
+
+* Create a file called `stdOutStage.properties` containing
+
+```
+
+	{
+		stageClass: "com.findwise.hydra.debugging.StdoutOutput"
+		query : { 
+			"touched" : { 
+				"setTitleStage" : true 
+			} 
+		}
+	}
+
+```
+
+Add the stages:
+
+* `java -jar inserter-jar-with-dependencies.jar -a -p pipeline -s -i basic -n setTitleStage setTitleStage.properties` 
+* `java -jar inserter-jar-with-dependencies.jar -a -p pipeline -s -i debug -n stdOutStage stdOutStage.properties` 
+
+Start hydra by running `java -jar hydra-core.jar`
+
+Everything is now up and running. To add a document for processing, just type
+
+```
+
+	java -cp hydra-debugging-jar-with-dependencies.jar com.findwise.hydra.debugging.StdinInput 
+	"{\"contents\":{\"text\":\"This is my text\"}}"
+
+```
+
+Hydra will print out the processed document, that should contain a title aswell as the imported text.
+
+
+## Debugging
+
+You can run your stages from the command line (or you IDE) if you need to debug them. 
+
+java -cp `{libraryJarWithDependencies}` com.findwise.hydra.stage.AbstractStage `{fieldName}` `{hydraHost}` `{hydraRestPort}` `{performaceLoggingEnabled}` `{loggingPort}` `{configuration}`
+
+i.e.
+```
+	java -cp basic-jar-with-dependincies.jar com.findwise.hydra.stage.AbstractStage staticField localhost 12001 false 12002 "{ stageClass: \"com.findwise.hydra.stage.SetStaticFieldStage\", fieldValueMap: {\"source\": \"my source\" } }"
+```
+
+
+## Scaling and Distribution
+
+You can easily start a stage with several threads on your machine. This can for example be done when you have one stage that is the bottleneck of your processing. Set the `numberOfThreads` parameter to the stage configuration and push the configuration to hydra and it will restart the stage with more threads.
+
+```
+
+	{
+		stageClass: "com.findwise.hydra.stage.SetStaticFieldStage",
+		fieldValueMap: {
+			"title" : "This is my title" 
+		},
+		numberOfThreads: 3
+	}
+
+```
+
+If you need to distribute Hydra, to make it run on several servers, the only thing you need to do is set up a second hydra-core using the same mongodb instance as your previously running hydra instance. The new core will automatically download the stages and start them. Each Hydra core instance will hold its own cache, meaning that a document that will probably not be passed around between the servers.
+
+Configuring the mongodb location is done in the `resource.properties` file, that is located in the `distribution/bin` folder.
+
+If you are running heavy processing in your stages, the cache may time out forcing a new call to mongodb. To prevent this from happening, increase the cache timeout in `resource.properties`. 
