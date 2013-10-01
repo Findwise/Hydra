@@ -48,6 +48,11 @@ public class AppConfig {
 		return cmr;
 	}
 
+        @Bean(name = "jsonpCallbackFilter")
+        public static JsonpCallbackFilter jsonpCallback(){
+            return new JsonpCallbackFilter();
+        }
+
 	@Bean
 	public PropertyPlaceholderConfigurer properties() {
 		String configurationDirectory = System.getProperty(CONFIG_DIR_PROPERTY);
