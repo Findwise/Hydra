@@ -38,8 +38,13 @@ public class AppConfig {
 					return "admin";
 				}
 
-				public String getDatabaseUrl() {
+				public String getDatabaseHost() {
 					return "localhost";
+				}
+
+				@Override
+				public int getDatabasePort() {
+					return 27017;
 				}
 
 				public String getDatabasePassword() {
@@ -59,7 +64,7 @@ public class AppConfig {
 	@Bean
 	public static PropertyPlaceholderConfigurer properties() {
 		PropertyPlaceholderConfigurer ppc = new PropertyPlaceholderConfigurer();
-		final Resource[] resources = new ClassPathResource[] {};
+		final Resource[] resources = new ClassPathResource[] { };
 		ppc.setLocations(resources);
 		ppc.setIgnoreUnresolvablePlaceholders(true);
 		return ppc;
@@ -75,7 +80,7 @@ public class AppConfig {
 		return new DocumentsService<MongoType>(connector);
 
 	}
-	
+
 	@Bean
 	public static StagesService<MongoType> stagesService() {
 		return new StagesService<MongoType>(connector);

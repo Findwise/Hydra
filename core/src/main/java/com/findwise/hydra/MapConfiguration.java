@@ -22,14 +22,23 @@ public class MapConfiguration implements CoreConfiguration {
 		return getParameter(NAMESPACE_PARAM);
 	}
 
-	public void setDatabaseUrl(String value) {
-		map.put(DATABASE_URL_PARAM, value);
+	public void setDatabaseHost(String value) {
+		map.put(DATABASE_HOST, value);
 	}
 
 	@Override
-	public String getDatabaseUrl() {
-		return getParameter(DATABASE_URL_PARAM,
-				DATABASE_URL_DEFAULT);
+	public String getDatabaseHost() {
+		return getParameter(DATABASE_HOST,
+				DATABASE_HOST_DEFAULT);
+	}
+
+	@Override
+	public int getDatabasePort() {
+		return Integer.parseInt(getParameter(DATABASE_PORT, "27017"));
+	}
+
+	public void setDatabasePort(int port) {
+		map.put(DATABASE_PORT, String.valueOf(port));
 	}
 
 	public void setPollingInterval(int value) {
@@ -124,17 +133,17 @@ public class MapConfiguration implements CoreConfiguration {
 		return Integer.parseInt(getParameter(getParameter(CACHE_TIMEOUT, ""
 				+ CachingDocumentNIO.CACHED_TIME_METADATA_KEY)));
 	}
-	
+
 	public void setCacheTimeout(int timeout) {
-		map.put(CACHE_TIMEOUT, ""+timeout);
+		map.put(CACHE_TIMEOUT, "" + timeout);
 	}
 
-    @Override
-    public int getLoggingPort() {
-        return Integer.parseInt(getParameter(LOGGING_PORT, "" + DEFAULT_LOGGING_PORT));
-    }
+	@Override
+	public int getLoggingPort() {
+		return Integer.parseInt(getParameter(LOGGING_PORT, "" + DEFAULT_LOGGING_PORT));
+	}
 
-    public void setLoggingPort(int loggingPort) {
-        map.put(LOGGING_PORT, "" + loggingPort);
-    }
+	public void setLoggingPort(int loggingPort) {
+		map.put(LOGGING_PORT, "" + loggingPort);
+	}
 }

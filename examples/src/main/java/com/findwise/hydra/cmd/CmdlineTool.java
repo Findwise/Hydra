@@ -20,109 +20,114 @@ import com.findwise.hydra.mongodb.MongoConnector;
 
 /**
  * Iool for uploading jar files or stages to mongodb. This can be
- * invoked either regular java class or as a commandline tool. 
- * 
+ * invoked either regular java class or as a commandline tool.
+ *
  * @author johan.sjoberg
  */
 public class CmdlineTool {
 
-    private static final Logger log = LoggerFactory.getLogger(CmdlineTool.class);
-    private final JsonPipelineUtil jsonReader = new JsonPipelineUtil();
-    private final StageFactory stageFactory = new StageFactory();
+	private static final Logger log = LoggerFactory.getLogger(CmdlineTool.class);
+	private final JsonPipelineUtil jsonReader = new JsonPipelineUtil();
+	private final StageFactory stageFactory = new StageFactory();
 
-    /**
-     * <pre>
-     * Usage: 
-     *     &lt;cmd&gt; &lt;opts&gt;
-     * 
-     *     upload -jar &lt;jarFile&gt; &lt;pipelineName&gt; &lt;jarId&gt;
-     *     upload -c &lt;pipelineName.json&gt;
-     * 
-     * <tt>pipelineName</tt> is the name of the pipeline to upload the jar file to. 
-     * <tt>jarId</tt> is the identifier stages use to reference the jar file. 
-     * 
-     * Commands:
-     *    upload 
-     *          upload a file or configuration to mongodb
-     * 
-     * Options: 
-     *    -c --config
-     *          the pipeline configuration to upload
-     * 
-     *    -s --stage
-     *          name of a specific stage in the pipeline to upload
-     *          Only makes sence to use when uploading a config "-c". 
-     * 
-     *    -f --jarfile 
-     *          the jar file to upload 
-     * 
-     *    -h --host
-     *          name of the host running mongodb. Defaults to localhost.
-     * 
-     * Sample usage:
-     *    upload -f myLib.jar the-pipeline myLib
-     *    upload -c hydra-pipeline.json
-     * 
-     * </pre>
-     * @param args 
-     */
-    public static void main(String[] args) throws IOException {
-        final UploadCommand upload = new UploadCommand();
-        final JCommander jc = new JCommander();
-        jc.addCommand("upload", upload);
-        jc.parse(args);
-        new CmdlineTool().performCommand(jc, upload);
-    }
+	/**
+	 * <pre>
+	 * Usage:
+	 *     &lt;cmd&gt; &lt;opts&gt;
+	 *
+	 *     upload -jar &lt;jarFile&gt; &lt;pipelineName&gt; &lt;jarId&gt;
+	 *     upload -c &lt;pipelineName.json&gt;
+	 *
+	 * <tt>pipelineName</tt> is the name of the pipeline to upload the jar file to.
+	 * <tt>jarId</tt> is the identifier stages use to reference the jar file.
+	 *
+	 * Commands:
+	 *    upload
+	 *          upload a file or configuration to mongodb
+	 *
+	 * Options:
+	 *    -c --config
+	 *          the pipeline configuration to upload
+	 *
+	 *    -s --stage
+	 *          name of a specific stage in the pipeline to upload
+	 *          Only makes sence to use when uploading a config "-c".
+	 *
+	 *    -f --jarfile
+	 *          the jar file to upload
+	 *
+	 *    -h --host
+	 *          name of the host running mongodb. Defaults to localhost.
+	 *
+	 * Sample usage:
+	 *    upload -f myLib.jar the-pipeline myLib
+	 *    upload -c hydra-pipeline.json
+	 *
+	 * </pre>
+	 *
+	 * @param args
+	 */
+	public static void main(String[] args) throws IOException {
+		final UploadCommand upload = new UploadCommand();
+		final JCommander jc = new JCommander();
+		jc.addCommand("upload", upload);
+		jc.parse(args);
+		new CmdlineTool().performCommand(jc, upload);
+	}
 
-    /**
-     * Performs the upload command
-     */
-    public void performCommand(JCommander jc, UploadCommand cmd) throws IOException {
-        log.info(cmd.toString());
-        if (!cmd.isValid() || cmd.isHelp()) {
-            jc.usage("upload");
-            return;
-        }
+	/**
+	 * Performs the upload command
+	 */
+	public void performCommand(JCommander jc, UploadCommand cmd) throws IOException {
+		log.info(cmd.toString());
+		if (!cmd.isValid() || cmd.isHelp()) {
+			jc.usage("upload");
+			return;
+		}
 
-        if (cmd.getJarFile() != null) {
-            File f = new File(cmd.getJarFile().getFilename());
+		if (cmd.getJarFile() != null) {
+			File f = new File(cmd.getJarFile().getFilename());
 
-            MongoDBConnectionConfig conf = new MongoDBConnectionConfig(cmd.getJarFile().getPipelinename(), cmd.getHost(), "", "");
-            MongoConnector mdc =new MongoConnector(conf.getConfiguration());
-            mdc.connect();
+			MongoDBConnectionConfig conf = new MongoDBConnectionConfig(
+					cmd.getJarFile().getPipelinename(), cmd.getHost(), 27017, "", "");
+			MongoConnector mdc = new MongoConnector(conf.getConfiguration());
+			mdc.connect();
 
-            log.info("Uploading jar file");
-            File file = new File(cmd.getJarFile().getFilename());
-            mdc.getPipelineWriter().save(cmd.getJarFile().getId(), file.getName(), new FileInputStream(f));
-        }
+			log.info("Uploading jar file");
+			File file = new File(cmd.getJarFile().getFilename());
+			mdc.getPipelineWriter()
+					.save(cmd.getJarFile().getId(), file.getName(),
+							new FileInputStream(f));
+		}
 
-        if (cmd.getConfig() != null) {
-            PipelineConfiguration pipelineConfig = jsonReader.fromJson(cmd.getConfig());
-            List<Stage> stages = stageFactory.createStages(pipelineConfig);
+		if (cmd.getConfig() != null) {
+			PipelineConfiguration pipelineConfig = jsonReader.fromJson(cmd.getConfig());
+			List<Stage> stages = stageFactory.createStages(pipelineConfig);
 
-            MongoDBConnectionConfig conf = new MongoDBConnectionConfig(pipelineConfig.getPipelineName(), cmd.getHost(), "", "");
-            MongoConnector mdc =new MongoConnector(conf.getConfiguration());
-            mdc.connect();
+			MongoDBConnectionConfig conf = new MongoDBConnectionConfig(
+					pipelineConfig.getPipelineName(), cmd.getHost(), 27017, "", "");
+			MongoConnector mdc = new MongoConnector(conf.getConfiguration());
+			mdc.connect();
 
-            Pipeline pipeline = mdc.getPipelineReader().getPipeline();
-            for (Stage stage : stages) {
-                if (cmd.getStageNames() != null) {
-                    if (cmd.getStageNames().contains(stage.getName())) {
-                        log.info("Preparing to upload stage, " + stage.getName());
-                        StageGroup g = new StageGroup(stage.getName());
-                        g.addStage(stage);
-                        pipeline.addGroup(g);
-                    }
-                } else {
-                    log.info("Preparing to upload stage, " + stage.getName());
-                    StageGroup g = new StageGroup(stage.getName());
-                    g.addStage(stage);
-                    pipeline.addGroup(g);
-                }
-            }
-            log.info("Uploading stages");
-            log.info(pipeline.toString());
-            mdc.getPipelineWriter().write(pipeline);
-        }
-    }
+			Pipeline pipeline = mdc.getPipelineReader().getPipeline();
+			for (Stage stage : stages) {
+				if (cmd.getStageNames() != null) {
+					if (cmd.getStageNames().contains(stage.getName())) {
+						log.info("Preparing to upload stage, " + stage.getName());
+						StageGroup g = new StageGroup(stage.getName());
+						g.addStage(stage);
+						pipeline.addGroup(g);
+					}
+				} else {
+					log.info("Preparing to upload stage, " + stage.getName());
+					StageGroup g = new StageGroup(stage.getName());
+					g.addStage(stage);
+					pipeline.addGroup(g);
+				}
+			}
+			log.info("Uploading stages");
+			log.info(pipeline.toString());
+			mdc.getPipelineWriter().write(pipeline);
+		}
+	}
 }

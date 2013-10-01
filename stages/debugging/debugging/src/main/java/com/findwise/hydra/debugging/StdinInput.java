@@ -29,8 +29,13 @@ public class StdinInput {
 			return "pipeline";
 		}
 
-		public String getDatabaseUrl() {
+		public String getDatabaseHost() {
 			return "localhost";
+		}
+
+		@Override
+		public int getDatabasePort() {
+			return 27017;
 		}
 
 		public String getDatabaseUser() {
@@ -43,7 +48,7 @@ public class StdinInput {
 	};
 
 	public static void main(String[] args) throws IOException, JsonException {
-		Mongo mongo = new Mongo(conf.getDatabaseUrl());
+		Mongo mongo = new Mongo(conf.getDatabaseHost(), conf.getDatabasePort());
 		DB db = mongo.getDB(conf.getNamespace());
 		WriteConcern concern = new WriteConcern();
 		long documentsToKeep = conf.getOldMaxCount();
@@ -55,7 +60,7 @@ public class StdinInput {
 				oldDocsMaxSizeMB, updater, documentFs);
 		io.prepare();
 
-		MongoDocument document = new MongoDocument(args[args.length-1]);
+		MongoDocument document = new MongoDocument(args[args.length - 1]);
 		io.insert(document);
 		System.out.println("Added document");
 	}
