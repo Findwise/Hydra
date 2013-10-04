@@ -7,7 +7,7 @@ import com.findwise.hydra.DatabaseConfiguration;
 public class DatabaseConfig implements DatabaseConfiguration {
 
 	private static final String DEFAULT_NAMESPACE = "pipeline";
-	private static final String DEFAULT_DB_URL = "localhost";
+	private static final String DEFAULT_DB_URL = "mongodb://localhost";
 	private static final String DEFAULT_DB_USER = "admin";
 	private static final String DEFAULT_DB_PASSWORD = "changeme";
 	private static final int DEFAULT_OLD_MAX_SIZE = 100;
