@@ -1,5 +1,6 @@
 package com.findwise.hydra.admin.rest;
 
+import com.findwise.hydra.admin.rest.jsonp.JsonpCallbackFilter;
 import java.io.File;
 
 import org.springframework.beans.factory.annotation.Autowired;
