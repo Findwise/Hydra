@@ -1,5 +1,6 @@
 package com.findwise.hydra.admin.rest;
 
+import com.findwise.hydra.admin.rest.jsonp.JsonpCallbackFilter;
 import java.io.File;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,11 @@ public class AppConfig {
 
 		return cmr;
 	}
+
+        @Bean(name = "jsonpCallbackFilter")
+        public static JsonpCallbackFilter jsonpCallback(){
+            return new JsonpCallbackFilter();
+        }
 
 	@Bean
 	public PropertyPlaceholderConfigurer properties() {

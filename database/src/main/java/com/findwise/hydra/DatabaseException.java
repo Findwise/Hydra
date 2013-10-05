@@ -18,7 +18,4 @@ public class DatabaseException extends Exception {
 		super(cause);
 	}
 
-	protected DatabaseException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
-	}
 }
