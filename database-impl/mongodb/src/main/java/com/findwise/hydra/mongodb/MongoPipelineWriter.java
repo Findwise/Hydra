@@ -14,11 +14,17 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MongoPipelineWriter implements PipelineWriter {
+
+	private final Logger logger = LoggerFactory.getLogger(MongoPipelineWriter.class);
+
 	private GridFS pipelinefs;
 	private DBCollection stages;
 	private MongoPipelineReader reader;
@@ -125,12 +131,18 @@ public class MongoPipelineWriter implements PipelineWriter {
 	
 	private void writeProperties(StageGroup stageGroup) {
 		DBObject q = reader.getGroupQuery(stageGroup.getName());
-		stages.update(q, getGroupDBObject(stageGroup), true, false, concern);
+		WriteResult result = stages.update(q, getGroupDBObject(stageGroup), true, false, concern);
+		if (logger.isDebugEnabled()) {
+			logger.debug("Wrote properties for group '{}', operation updated '{}' objects, got message '{}'", stageGroup.getName(), result.getN(), result);
+		}
 	}
 	
 	public void write(Stage stage, String group) throws IOException  {
 		DBObject q = reader.getStageQuery(stage.getName());
-		stages.update(q, getStageDBObject(stage, group), true, false, concern);
+		WriteResult result = stages.update(q, getStageDBObject(stage, group), true, false, concern);
+		if (logger.isDebugEnabled()) {
+			logger.debug("Wrote stage '{}' in group '{}', operation updated '{}' objects, got message '{}'", stage.getName(), group, result.getN(), result);
+		}
 	}
 
 	@Override
