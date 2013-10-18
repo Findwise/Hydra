@@ -2,9 +2,6 @@ package com.findwise.hydra;
 
 import java.io.IOException;
 
-import com.findwise.hydra.Document;
-import com.findwise.hydra.Query;
-
 public class CachingDatabaseConnector<BackingType extends DatabaseType>
 		implements DatabaseConnector<BackingType> {
 	private DatabaseConnector<BackingType> backing;

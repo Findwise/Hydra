@@ -8,10 +8,10 @@ import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.Stage;
 
-@Stage(description = "A stage that gets stuck in an infinit loop and never returns")
-public class InfinitLoopStage extends AbstractProcessStage {
+@Stage(description = "A stage that gets stuck in an infinite loop and never returns")
+public class InfiniteLoopStage extends AbstractProcessStage {
 
-	Logger logger = LoggerFactory.getLogger(InfinitLoopStage.class);
+	Logger logger = LoggerFactory.getLogger(InfiniteLoopStage.class);
 
 	@Override
 	public void process(LocalDocument doc) throws ProcessException {

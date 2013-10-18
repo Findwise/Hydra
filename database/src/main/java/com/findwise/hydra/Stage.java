@@ -3,8 +3,6 @@ package com.findwise.hydra;
 import java.util.Date;
 import java.util.Map;
 
-import com.findwise.hydra.SerializationUtils;
-
 public class Stage {
 	public enum Mode { ACTIVE, INACTIVE, DEBUG }
 	private String name;

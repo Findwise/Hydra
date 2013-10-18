@@ -41,7 +41,7 @@ public abstract class AbstractProcessStage extends AbstractStage {
 	private long holdInterval = DEFAULT_HOLD_INTERVAL;
 
 	private long terminationTimeout = DEFAULT_SHUTDOWN_TIMEOUT;
-	public static final int DEFAULT_SHUTDOWN_TIMEOUT = 2000;
+	public static final long DEFAULT_SHUTDOWN_TIMEOUT = TimeUnit.SECONDS.toMillis(2);
 
 	// The size of the thread pool is limited to 1, as the pool is only used for timeout functionality, not concurrency
 	private final ExecutorService executor;

@@ -18,7 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ * Starts a StageGroup in a new JVM by fetching stage names and setting up logging.
+ * This class delegates the actual startup procedure to {@link AbstractStage}.
+ *
  * @author joel.westberg
  *
  */

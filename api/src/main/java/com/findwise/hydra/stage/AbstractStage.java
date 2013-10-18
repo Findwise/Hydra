@@ -36,7 +36,7 @@ public abstract class AbstractStage extends Thread {
 	public static final String ARG_NAME_STAGE_CLASS = "stageClass";
 	public static final String PROPERTY_NAME_COMMANDLINE_ARGS = "cmdline_args";
 	
-	@Parameter(description="The Query that this stage will recieve documents matching")
+	@Parameter(description="The Query that this stage will receive documents matching")
 	private LocalQuery query = new LocalQuery();
 	
 	@Parameter(description="Number of instances (threads) to start of this stage within a single JVM. Defaults to 1.")

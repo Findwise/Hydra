@@ -18,6 +18,8 @@ import com.findwise.hydra.net.RESTServer;
 
 public final class Main implements TerminationHandler {
 
+	private static final long KILL_DELAY = TimeUnit.SECONDS.toMillis(30);
+
 	private Main() {
 	}
 
@@ -46,12 +48,10 @@ public final class Main implements TerminationHandler {
 	}
 
 	private void startup(CoreConfiguration conf) {
-		ShuttingDownOnUncaughException uncaughtExceptionHandler = new ShuttingDownOnUncaughException(this);
+		ShuttingDownOnUncaughtException uncaughtExceptionHandler = new ShuttingDownOnUncaughtException(this);
 		Thread.setDefaultUncaughtExceptionHandler(uncaughtExceptionHandler);
 		simpleSocketServer = new SimpleSocketServer((LoggerContext) LoggerFactory.getILoggerFactory(), conf.getLoggingPort());
 		simpleSocketServer.start();
-
-
 		
 		DatabaseConnector<MongoType> backing = new MongoConnector(conf);
 		try {
@@ -108,14 +108,13 @@ public final class Main implements TerminationHandler {
 	public void shutdown() {
 		logger.info("Got shutdown request...");
 		shuttingDown = true;
-		long killDelay = TimeUnit.SECONDS.toMillis(30);
-		killUnlessShutdownWithin(killDelay);
+		killUnlessShutdownWithin(KILL_DELAY);
 
 		if (simpleSocketServer != null) {
 			try {
 				simpleSocketServer.close();
 			} catch (Exception e) {
-				logger.debug("Caught exception while shuttin down simpleSocketSserver. Was is not started?", e);
+				logger.debug("Caught exception while shutting down simpleSocketServer. Was it not started?", e);
 			}
 		} else {
 			logger.trace("simpleSocketServer was null");
@@ -126,7 +125,7 @@ public final class Main implements TerminationHandler {
 				server.shutdown();
 				return;
 			} catch (Exception e) {
-				logger.debug("Caught exception while shuttin down the server. Was it not started?", e);
+				logger.debug("Caught exception while shutting down the server. Was it not started?", e);
 				System.exit(1);
 			}
 		} else {
@@ -134,44 +133,18 @@ public final class Main implements TerminationHandler {
 		}
 	}
 
-	private void killUnlessShutdownWithin(long killDelay) {
+	public boolean isTerminating() {
+		return shuttingDown;
+	}
 
+	private void killUnlessShutdownWithin(long killDelay) {
 		
 		if (killDelay < 0) {
 			return;
 		}
-		
-		class HydraKiller extends Thread {
-
-			Logger logger = LoggerFactory.getLogger(HydraKiller.class);
-			private final long killDelay;
-
-			public HydraKiller(long killDelay) {
-				this.killDelay = killDelay;
-			}
-
-			@Override
-			public void run() {
-				try {
-					logger.debug("Hydra will be killed in " + killDelay + "ms unless it is shut down gracefully untill then");
-					Thread.sleep(killDelay);
-					logger.info("Failed to shutdown hydra gracefully withing configured shutdown timout. Killing Hydra now");
-					System.exit(1);
-				} catch (Throwable e) {
-					logger.error("Caught exception in HydraKiller thread. Killing Hydra right away!", e);
-					System.exit(1);
-				}
-			}
-		}
-		
 		HydraKiller killerThread = new HydraKiller(killDelay);
 		killerThread.setDaemon(true);
 		killerThread.start();
-	}
-
-	
-	public boolean isTerminating() {
-		return shuttingDown;
 	}
 	
 	protected CoreConfiguration getConfiguration(String fileName) {
@@ -187,11 +160,11 @@ public final class Main implements TerminationHandler {
 		}
 	}
 
-	private class ShuttingDownOnUncaughException implements UncaughtExceptionHandler {
+	private class ShuttingDownOnUncaughtException implements UncaughtExceptionHandler {
 
 		private final TerminationHandler terminationHandler;
 
-		public ShuttingDownOnUncaughException(TerminationHandler terminationHandler) {
+		public ShuttingDownOnUncaughtException(TerminationHandler terminationHandler) {
 			this.terminationHandler = terminationHandler;
 		}
 
@@ -206,5 +179,27 @@ public final class Main implements TerminationHandler {
 		}
 		
 	}
-	
+
+	private class HydraKiller extends Thread {
+
+		Logger logger = LoggerFactory.getLogger(HydraKiller.class);
+		private final long killDelay;
+
+		public HydraKiller(long killDelay) {
+			this.killDelay = killDelay;
+		}
+
+		@Override
+		public void run() {
+			try {
+				logger.debug("Hydra will be killed in " + killDelay + "ms unless it is shut down gracefully before then");
+				Thread.sleep(killDelay);
+				logger.info("Failed to shutdown hydra gracefully within configured shutdown timeout. Killing Hydra now");
+				System.exit(1);
+			} catch (Throwable e) {
+				logger.error("Caught exception in HydraKiller thread. Killing Hydra right away!", e);
+				System.exit(1);
+			}
+		}
+	}
 }
