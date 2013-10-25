@@ -11,7 +11,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashMap;
-import java.util.concurrent.ExecutorService;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -115,7 +114,6 @@ public class AbstractProcessStageTest {
 
 	@Test
 	public void testPersistErrorOnSaveFailure() throws Exception {
-		Logging.setGlobalLoggingLevel(Level.DEBUG);
 		RemotePipeline rp = mock(RemotePipeline.class);
 		when(rp.getDocument(any(LocalQuery.class))).thenReturn(new LocalDocument());
 
@@ -142,12 +140,12 @@ public class AbstractProcessStageTest {
 		stage.setRemotePipeline(rp);
 
 		HashMap<String, Object> map = new HashMap<String, Object>();
-		map.put("processingTimeout", 10);
+		map.put("processingTimeout", 1);
 		stage.setParameters(map);
 
 		LocalDocument ld = mock(LocalDocument.class);
 
-		when(rp.getDocument(any(LocalQuery.class))).thenReturn(ld, (LocalDocument[]) null);
+		when(rp.getDocument(any(LocalQuery.class))).thenReturn(ld);
 		when(rp.releaseLastDocument()).thenReturn(true);
 		stage.start();
 
@@ -157,71 +155,29 @@ public class AbstractProcessStageTest {
 		verify(ld, times(1)).addError(eq(stage.getStageName()), any(Throwable.class));
 	}
 
-	@Stage
-	public static class InterruptibleWaitingStage extends AbstractProcessStage {
+	@Test
+	public void testProcess_execution_timeout_can_continue_processing() throws Exception {
+		stage = new LimitedCountInterruptibleWaitingStage(3);
+		stage.setName(stage.getClass().getCanonicalName());
+		RemotePipeline rp = mock(RemotePipeline.class);
+		stage.setRemotePipeline(rp);
 
-		public InterruptibleWaitingStage() {
-			super();
+		HashMap<String, Object> map = new HashMap<String, Object>();
+		map.put("processingTimeout", 1);
+		stage.setParameters(map);
+
+		LocalDocument ld = mock(LocalDocument.class);
+
+		when(rp.getDocument(any(LocalQuery.class))).thenReturn(ld);
+		when(rp.releaseLastDocument()).thenReturn(true);
+		stage.start();
+
+		while (stage.isAlive()) {
+			Thread.sleep(10);
 		}
 
-		@Override
-		public void process(LocalDocument doc) throws ProcessException {
-			try {
-				while (true) {
-					sleep(100);
-				}
-			} catch (InterruptedException e) {
-				return;
-			} finally {
-				stopStage();
-			}
-		}
+		verify(ld, times(3)).addError(eq(stage.getStageName()), any(Throwable.class));
 	}
 
-	@Stage
-	public static class SingleDocumentExceptionStage extends AbstractProcessStage {
-
-		@Override
-		public void process(LocalDocument doc) throws ProcessException {
-			try {
-				throw new ProcessException("msg");
-			} finally {
-				stopStage();
-			}
-		}
-	}
-
-	@Stage
-	public static class LimitedCountExceptionStage extends AbstractProcessStage {
-
-		private int count = 0;
-		private final int limit;
-
-		public LimitedCountExceptionStage(int limit) {
-			super();
-			this.limit = limit;
-		}
-
-		@Override
-		public void process(LocalDocument doc) throws ProcessException {
-			try {
-				count++;
-				throw new ProcessException("processed: " + count);
-			} finally {
-				if (count >= limit) {
-					stopStage();
-				}
-			}
-
-		}
-	}
-
-	@Stage
-	public static class ImmediateStoppingStage extends AbstractProcessStage {
-
-		@Override
-		public void process(LocalDocument doc) throws ProcessException {
-			stopStage();
-		}
-	}
+	// TODO: Test that stages shut down when processing threads cannot be stopped
 }
