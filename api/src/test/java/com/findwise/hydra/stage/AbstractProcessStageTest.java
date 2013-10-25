@@ -38,7 +38,7 @@ public class AbstractProcessStageTest {
 	}
 
 	@Test
-	public void testDocumentProcessException() throws Exception {
+	public void testProcess_does_not_fail_document_when_failDocumentOnProcessException_is_false() throws Exception {
 		rp = mock(RemotePipeline.class);
 		stage = new LimitedCountExceptionStage(3);
 		stage.setRemotePipeline(rp);
@@ -65,7 +65,7 @@ public class AbstractProcessStageTest {
 	}
 
 	@Test
-	public void testFailDocumentOnProcessException() throws Exception {
+	public void testProcess_fails_document_on_processException() throws Exception {
 		rp = mock(RemotePipeline.class);
 		stage = new LimitedCountExceptionStage(3);
 		stage.setRemotePipeline(rp);
@@ -92,7 +92,7 @@ public class AbstractProcessStageTest {
 	}
 
 	@Test
-	public void testPersistError() throws Exception {
+	public void testProcess_persists_error() throws Exception {
 		stage = new SingleDocumentExceptionStage();
 		stage.setName("stagename");
 		RemotePipeline rp = mock(RemotePipeline.class);
@@ -113,7 +113,7 @@ public class AbstractProcessStageTest {
 	}
 
 	@Test
-	public void testPersistErrorOnSaveFailure() throws Exception {
+	public void testProcess_persists_error_on_save_failure() throws Exception {
 		RemotePipeline rp = mock(RemotePipeline.class);
 		when(rp.getDocument(any(LocalQuery.class))).thenReturn(new LocalDocument());
 
