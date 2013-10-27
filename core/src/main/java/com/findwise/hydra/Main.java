@@ -16,7 +16,7 @@ import com.findwise.hydra.mongodb.MongoType;
 import com.findwise.hydra.net.HttpRESTHandler;
 import com.findwise.hydra.net.RESTServer;
 
-public final class Main implements TerminationHandler {
+public final class Main implements ShutdownHandler {
 
 	private static final long KILL_DELAY = TimeUnit.SECONDS.toMillis(30);
 
@@ -133,7 +133,7 @@ public final class Main implements TerminationHandler {
 		}
 	}
 
-	public boolean isTerminating() {
+	public boolean isShuttingDown() {
 		return shuttingDown;
 	}
 
@@ -162,17 +162,17 @@ public final class Main implements TerminationHandler {
 
 	private class ShuttingDownOnUncaughtException implements UncaughtExceptionHandler {
 
-		private final TerminationHandler terminationHandler;
+		private final ShutdownHandler shutdownHandler;
 
-		public ShuttingDownOnUncaughtException(TerminationHandler terminationHandler) {
-			this.terminationHandler = terminationHandler;
+		public ShuttingDownOnUncaughtException(ShutdownHandler shutdownHandler) {
+			this.shutdownHandler = shutdownHandler;
 		}
 
 		@Override
 		public void uncaughtException(Thread t, Throwable e) {
-			if (!terminationHandler.isTerminating()) {
+			if (!shutdownHandler.isShuttingDown()) {
 				logger.error("Got an uncaught exception. Shutting down Hydra", e);
-				terminationHandler.shutdown();
+				shutdownHandler.shutdown();
 			} else {
 				logger.error("Got exception while shutting down", e);
 			}
