@@ -3,17 +3,24 @@ package com.findwise.hydra;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 @RunWith(MockitoJUnitRunner.class)
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -276,5 +283,100 @@ public class MemoryCacheTest {
 		assertEquals(1, c.size());
 		assertTrue(c.contains(doc1));
 		assertEquals(0, cache.getSize());
+	}
+
+	/**
+	 * Test case for competing for a critical section in {@link MemoryCache#getAndTag(DatabaseQuery, String...)}
+	 *
+	 * One thread (t1) will enter the section while the other (t2) is blocked until t1 terminates
+	 * */
+	@Test(timeout=10000) // async test case, timeout needed just in case ;)
+	public void concurrentGetAndTagTest() throws Exception
+	{
+		final Semaphore semaphore = new Semaphore(0);
+		final Semaphore t1Semaphore = new Semaphore(0);
+		final ArrayList<DatabaseDocument<TestType>> results = new ArrayList<DatabaseDocument<TestType>>();
+		final Thread t1 = new Thread() {
+			@Override
+			public void run() {
+				DatabaseDocument<TestType> d1 = cache.getAndTag(q1, "foo");
+				results.add(d1);
+			}
+		};
+		final Thread t2 = new Thread() {
+			@Override
+			public void run() {
+				DatabaseDocument<TestType> d2 = cache.getAndTag(q1, "bar");
+				results.add(d2);
+			}
+		};
+
+		Map<DocumentID<TestType>, DatabaseDocument<TestType>> map = new HashMap<DocumentID<TestType>, DatabaseDocument<TestType>>();
+		map.put(id1, doc1);
+		Map<DocumentID<TestType>, Long> lastTouched = mock(Map.class);
+		when(lastTouched.containsKey(anyObject())).then(new Answer<Boolean>() {
+			@Override
+			public Boolean answer(InvocationOnMock invocation) throws Throwable {
+				// this is a good place to intercept the first thread and block to trigger a race condition
+				if (Thread.currentThread().equals(t1)) {
+					try {
+						semaphore.release();
+						assertTrue(t1Semaphore.tryAcquire(1, 10000, TimeUnit.MILLISECONDS));
+					} catch(InterruptedException e) {
+
+						fail("Got interrupted while running test"); // NOTE: the fail is cannot be dispatched to JUnit test thread, but will result will be null!
+					}
+				}
+
+				return true;
+			}
+		});
+
+		cache.setUnitTestMode(map, lastTouched);
+
+		t1.start();
+		assertTrue(semaphore.tryAcquire(1, 10000, TimeUnit.MILLISECONDS));
+		// t1 has been started and is now in the middle of cache#freshen, starting t2 will eventually trigger the race condition!
+
+		t2.start();
+
+		// if NOT synchronized, t2 should have finished after a short while.
+		assertTrue(waitForThreadState(t2, Thread.State.BLOCKED, 10000));
+
+		// t2 has been blocked - this is what we wanted. let t1 finish and and join the threads
+		t1Semaphore.release();
+		t1.join();
+		assertEquals(Thread.State.TERMINATED, t1.getState());
+
+		t2.join();
+		assertEquals(Thread.State.TERMINATED, t2.getState());
+
+		assertEquals("in thread-unsafe env, this would be 2", 1, cache.getSize());
+		assertEquals("result from t1", doc1, results.get(0));
+
+		// This will indirectly check that both threads have finished gracefully, since there
+		// is a problem with dispatching assertionFailures across threads
+		assertEquals("a thread was gracefully terminated", 2, results.size());
+		// in a "real" environment, this would be null, since the "query.matches" would return false the second time!
+		assertEquals("result from t2", doc1, results.get(1));
+	}
+
+	/** Polls the thread state */
+	private boolean waitForThreadState(Thread t, Thread.State state, long timeout)
+	{
+		long now = System.currentTimeMillis();
+		while (now + timeout > System.currentTimeMillis())
+		{
+			if (t.getState().equals(state)) {
+				return true;
+			}
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				/*ignore*/
+			}
+		}
+
+		return false;
 	}
 }
