@@ -11,12 +11,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class MemoryCache<T extends DatabaseType> implements Cache<T> {
 
-	private ConcurrentHashMap<DocumentID<T>, DatabaseDocument<T>> map;
-	private ConcurrentHashMap<DocumentID<T>, Long> lastTouched;
+	private Map<DocumentID<T>, DatabaseDocument<T>> map;
+	private Map<DocumentID<T>, Long> lastTouched;
 
 	public MemoryCache() {
 		map = new ConcurrentHashMap<DocumentID<T>, DatabaseDocument<T>>();
 		lastTouched = new ConcurrentHashMap<DocumentID<T>, Long>();
+	}
+	public void setUnitTestMode(Map<DocumentID<T>, DatabaseDocument<T>> map, Map<DocumentID<T>, Long> lastTouched) {
+		this.map = map;
+		this.lastTouched = lastTouched;
 	}
 
 	@Override
@@ -101,12 +105,15 @@ public class MemoryCache<T extends DatabaseType> implements Cache<T> {
 		for(String tag : tags) {
 			query.requireNotFetchedByStage(tag);
 		}
-		DatabaseDocument<T> doc = getDocument(query);
+		DatabaseDocument<T> doc = null;
+		synchronized (this) {
+			doc = getDocument(query);
 
-		if (doc != null) {
-			freshen(doc.getID());
-			for(String tag : tags) {
-				doc.setFetchedBy(tag, new Date());
+			if (doc != null) {
+				freshen(doc.getID());
+				for(String tag : tags) {
+					doc.setFetchedBy(tag, new Date());
+				}
 			}
 		}
 
@@ -119,12 +126,15 @@ public class MemoryCache<T extends DatabaseType> implements Cache<T> {
 		for(String tag : tags) {
 			query.requireNotFetchedByStage(tag);
 		}
-		ArrayList<DatabaseDocument<T>> list = getDocument(query, n);
+		ArrayList<DatabaseDocument<T>> list = null;
+		synchronized (this) {
+			list = getDocument(query, n);
 
-		for (DatabaseDocument<T> d : list) {
-			freshen(d.getID());
-			for(String tag : tags) {
-				d.setFetchedBy(tag, new Date());
+			for (DatabaseDocument<T> d : list) {
+				freshen(d.getID());
+				for(String tag : tags) {
+					d.setFetchedBy(tag, new Date());
+				}
 			}
 		}
 
@@ -144,11 +154,14 @@ public class MemoryCache<T extends DatabaseType> implements Cache<T> {
 
 	@Override
 	public boolean markTouched(DocumentID<T> id, String tag) {
-		DatabaseDocument<T> inCache = getDocumentById(id);
-		if (inCache != null) {
-			freshen(inCache.getID());
-			inCache.setTouchedBy(tag, new Date());
-			return true;
+		DatabaseDocument<T> inCache = null;
+		synchronized (this) {
+			inCache = getDocumentById(id);
+			if (inCache != null) {
+				freshen(inCache.getID());
+				inCache.setTouchedBy(tag, new Date());
+				return true;
+			}
 		}
 		return false;
 	}
@@ -161,18 +174,20 @@ public class MemoryCache<T extends DatabaseType> implements Cache<T> {
 	@Override
 	public Collection<DatabaseDocument<T>> removeStale(int stalerThanMs) {
 		ArrayList<DatabaseDocument<T>> list = new ArrayList<DatabaseDocument<T>>();
-		long time = System.currentTimeMillis();
+		synchronized (this) {
+			long time = System.currentTimeMillis();
 
-		
-		Iterator<Map.Entry<DocumentID<T>, Long>> it = lastTouched.entrySet().iterator();
-		
-		while(it.hasNext()) {
-			Entry<DocumentID<T>, Long> entry = it.next();
-			if (time - entry.getValue() > stalerThanMs) {
-				DatabaseDocument<T> d = getDocumentById(entry.getKey());
-				list.add(d);
-				map.remove(d.getID());
-				it.remove();
+
+			Iterator<Map.Entry<DocumentID<T>, Long>> it = lastTouched.entrySet().iterator();
+
+			while(it.hasNext()) {
+				Entry<DocumentID<T>, Long> entry = it.next();
+				if (time - entry.getValue() > stalerThanMs) {
+					DatabaseDocument<T> d = getDocumentById(entry.getKey());
+					list.add(d);
+					map.remove(d.getID());
+					it.remove();
+				}
 			}
 		}
 
