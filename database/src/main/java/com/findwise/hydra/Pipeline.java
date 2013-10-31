@@ -5,8 +5,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.findwise.hydra.SerializationUtils;
-
 public class Pipeline {
 	private Map<String, StageGroup> stageGroups;
 	

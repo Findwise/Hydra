@@ -9,11 +9,13 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.findwise.hydra.CachingDocumentNIO;
 import com.findwise.hydra.ConfigurationFactory;
 import com.findwise.hydra.CoreConfiguration;
 import com.findwise.hydra.DatabaseDocument;
+import com.findwise.hydra.ShutdownHandler;
 import com.findwise.hydra.Document.Action;
 import com.findwise.hydra.DocumentFile;
 import com.findwise.hydra.NodeMaster;
@@ -43,7 +45,11 @@ public class RemotePipelineIT {
 		CoreConfiguration conf = ConfigurationFactory.getConfiguration("jUnit-RemotePipelineTest");
 		dbc = new MongoConnector(conf);
 		
-		nm = new NodeMaster<MongoType>(conf, new CachingDocumentNIO<MongoType>(dbc, new NoopCache<MongoType>(), false), new Pipeline());
+		ShutdownHandler shutdownHandler = Mockito.mock(ShutdownHandler.class);
+		
+		Mockito.when(shutdownHandler.isShuttingDown()).thenReturn(false);
+		
+		nm = new NodeMaster<MongoType>(conf, new CachingDocumentNIO<MongoType>(dbc, new NoopCache<MongoType>(), false), new Pipeline(), shutdownHandler);
 		if(!nm.isAlive()) {
 			nm.blockingStart();
 		

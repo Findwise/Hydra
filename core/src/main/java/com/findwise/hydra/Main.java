@@ -1,39 +1,58 @@
 package com.findwise.hydra;
 
 import java.io.IOException;
+import java.lang.Thread.UncaughtExceptionHandler;
+import java.util.concurrent.TimeUnit;
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.net.SimpleSocketServer;
 import org.apache.commons.configuration.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.net.SimpleSocketServer;
 
 import com.findwise.hydra.mongodb.MongoConnector;
 import com.findwise.hydra.mongodb.MongoType;
 import com.findwise.hydra.net.HttpRESTHandler;
 import com.findwise.hydra.net.RESTServer;
 
-public final class Main {
+public final class Main implements ShutdownHandler {
+
+	private static final long KILL_DELAY = TimeUnit.SECONDS.toMillis(30);
 
 	private Main() {
 	}
 
-	private static Logger logger = LoggerFactory.getLogger(Main.class);
+	private Logger logger = LoggerFactory.getLogger(Main.class);
+	private SimpleSocketServer simpleSocketServer = null;
+	private RESTServer server = null;
 
+	private volatile boolean shuttingDown = false;
+	
 	public static void main(String[] args) {
-		if (args.length > 1) {
-			logger.error("Some parameters on command line were ignored.");
-		}
 
+		Main main = new Main();
+		
+		if (args.length > 1) {
+			main.logger.error("Some parameters on command line were ignored.");
+		}
+		
 		CoreConfiguration conf;
 		if (args.length > 0) {
-			conf = getConfiguration(args[0]);
+			conf = main.getConfiguration(args[0]);
 		} else {
-			conf = getConfiguration(null);
+			conf = main.getConfiguration(null);
 		}
 
-        new SimpleSocketServer((LoggerContext) LoggerFactory.getILoggerFactory(), conf.getLoggingPort()).start();
+		main.startup(conf);
+	}
 
+	private void startup(CoreConfiguration conf) {
+		ShuttingDownOnUncaughtException uncaughtExceptionHandler = new ShuttingDownOnUncaughtException(this);
+		Thread.setDefaultUncaughtExceptionHandler(uncaughtExceptionHandler);
+		simpleSocketServer = new SimpleSocketServer((LoggerContext) LoggerFactory.getILoggerFactory(), conf.getLoggingPort());
+		simpleSocketServer.start();
+		
 		DatabaseConnector<MongoType> backing = new MongoConnector(conf);
 		try {
 			backing.connect();
@@ -58,9 +77,10 @@ public final class Main {
 		NodeMaster<MongoType> nm = new NodeMaster<MongoType>(
 				conf, 
 				caching,
-				new Pipeline());
+				new Pipeline(), 
+				this);
 
-		RESTServer server = new RESTServer(conf,
+		server = new RESTServer(conf,
 				new HttpRESTHandler<MongoType>(
 						nm.getDocumentIO(),
 						backing.getPipelineReader(), 
@@ -73,31 +93,61 @@ public final class Main {
 			} else {
 				logger.error("Failed to start REST server");
 			}
-			try {
-				server.shutdown();
-			} catch (IOException e2) {
-				logger.error(
-						"IOException caught while shutting down REST server thread",
-						e2);
-				System.exit(1);
-			}
-			return;
+			
+			shutdown();
 		}
 
 		try {
 			nm.blockingStart();
 		} catch (IOException e) {
 			logger.error("Unable to start nodemaster... Shutting down.");
-			try {
-				server.shutdown();
-			} catch (IOException e2) {
-				logger.error("IOException caught while shutting down", e2);
-				System.exit(1);
-			}
+			shutdown();
 		}
 	}
 
-	protected static CoreConfiguration getConfiguration(String fileName) {
+	public void shutdown() {
+		logger.info("Got shutdown request...");
+		shuttingDown = true;
+		killUnlessShutdownWithin(KILL_DELAY);
+
+		if (simpleSocketServer != null) {
+			try {
+				simpleSocketServer.close();
+			} catch (Exception e) {
+				logger.debug("Caught exception while shutting down simpleSocketServer. Was it not started?", e);
+			}
+		} else {
+			logger.trace("simpleSocketServer was null");
+		}
+
+		if (server != null) {
+			try {
+				server.shutdown();
+				return;
+			} catch (Exception e) {
+				logger.debug("Caught exception while shutting down the server. Was it not started?", e);
+				System.exit(1);
+			}
+		} else {
+			logger.trace("server was null");
+		}
+	}
+
+	public boolean isShuttingDown() {
+		return shuttingDown;
+	}
+
+	private void killUnlessShutdownWithin(long killDelay) {
+		
+		if (killDelay < 0) {
+			return;
+		}
+		HydraKiller killerThread = new HydraKiller(killDelay);
+		killerThread.setDaemon(true);
+		killerThread.start();
+	}
+	
+	protected CoreConfiguration getConfiguration(String fileName) {
 		try {
 			if (fileName != null) {
 				return new FileConfiguration(fileName);
@@ -110,4 +160,46 @@ public final class Main {
 		}
 	}
 
+	private class ShuttingDownOnUncaughtException implements UncaughtExceptionHandler {
+
+		private final ShutdownHandler shutdownHandler;
+
+		public ShuttingDownOnUncaughtException(ShutdownHandler shutdownHandler) {
+			this.shutdownHandler = shutdownHandler;
+		}
+
+		@Override
+		public void uncaughtException(Thread t, Throwable e) {
+			if (!shutdownHandler.isShuttingDown()) {
+				logger.error("Got an uncaught exception. Shutting down Hydra", e);
+				shutdownHandler.shutdown();
+			} else {
+				logger.error("Got exception while shutting down", e);
+			}
+		}
+		
+	}
+
+	private class HydraKiller extends Thread {
+
+		Logger logger = LoggerFactory.getLogger(HydraKiller.class);
+		private final long killDelay;
+
+		public HydraKiller(long killDelay) {
+			this.killDelay = killDelay;
+		}
+
+		@Override
+		public void run() {
+			try {
+				logger.debug("Hydra will be killed in " + killDelay + "ms unless it is shut down gracefully before then");
+				Thread.sleep(killDelay);
+				logger.info("Failed to shutdown hydra gracefully within configured shutdown timeout. Killing Hydra now");
+				System.exit(1);
+			} catch (Throwable e) {
+				logger.error("Caught exception in HydraKiller thread. Killing Hydra right away!", e);
+				System.exit(1);
+			}
+		}
+	}
 }

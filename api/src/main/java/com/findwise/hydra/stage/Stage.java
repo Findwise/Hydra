@@ -8,8 +8,7 @@ import java.lang.annotation.Target;
 
 /**
  * Denotes a Hydra Stage
- * 
- * Strictly a label for now
+ *
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

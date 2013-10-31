@@ -36,15 +36,13 @@ public abstract class AbstractStage extends Thread {
 	public static final String ARG_NAME_STAGE_CLASS = "stageClass";
 	public static final String PROPERTY_NAME_COMMANDLINE_ARGS = "cmdline_args";
 	
-	@Parameter(description="The Query that this stage will recieve documents matching")
+	@Parameter(description="The Query that this stage will receive documents matching")
 	private LocalQuery query = new LocalQuery();
 	
 	@Parameter(description="Number of instances (threads) to start of this stage within a single JVM. Defaults to 1.")
 	private int numberOfThreads = 1;
-	
-	public LocalQuery getQuery() {
-		return query;
-	}
+
+	private StageKiller stageKiller = new JvmStageKiller();
 	
 	public static final int CMDLINE_STAGE_NAME_PARAM = 0;
 	public static final int CMDLINE_PIPELINE_HOST_PARAM = 1;
@@ -54,7 +52,10 @@ public abstract class AbstractStage extends Thread {
 	public static final int DEFAULT_HOLD_INTERVAL = 2000;
 	private RemotePipeline remotePipeline = null;
 	private Thread shutDownHook;
-	
+
+	private String stageName;
+	private boolean continueRunning;
+
 	/**
 	 * Initiates an implementation of AbstractDocument. When this method is
 	 * called, and Object of the class has been initialized. The arguments
@@ -74,9 +75,6 @@ public abstract class AbstractStage extends Thread {
 	public void setShutDownHook(Thread shutDownHook) {
 		this.shutDownHook = shutDownHook;
 	}
-
-	private String stageName;
-	private boolean continueRunning;
 
 	/**
 	 * 
@@ -120,6 +118,17 @@ public abstract class AbstractStage extends Thread {
 		return stageName;
 	}
 
+	public LocalQuery getQuery() {
+		return query;
+	}
+
+	public void setStageKiller(StageKiller stageKiller) {
+		this.stageKiller = stageKiller;
+	}
+
+	public void killStage() {
+		this.stageKiller.kill(this);
+	}
 	
 	/**
 	 * Injects the parameters found in the map to any fields annotated with @Stage, whose names matches

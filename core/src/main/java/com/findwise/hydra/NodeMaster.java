@@ -24,9 +24,11 @@ public final class NodeMaster<T extends DatabaseType> extends Thread {
 	private int port;
 	
 	private CoreConfiguration conf;
+	private ShutdownHandler shutdownHandler;
 	
-	public NodeMaster(CoreConfiguration conf, CachingDocumentNIO<T> documentNIO, Pipeline pipeline) {
+	public NodeMaster(CoreConfiguration conf, CachingDocumentNIO<T> documentNIO, Pipeline pipeline, ShutdownHandler shutdownHandler) {
 		this.conf = conf;
+		this.shutdownHandler = shutdownHandler;
 		sm = StageManager.getStageManager();
 		this.pipeline = pipeline;
 		this.pollingInterval = conf.getPollingInterval();
@@ -129,7 +131,7 @@ public final class NodeMaster<T extends DatabaseType> extends Thread {
 			if(!pipeline.hasGroup(group.getName())) {
 				pipeline.addGroup(group);
 				if(attachFiles(group)) {
-					sm.addRunner(new StageRunner(group, new File(namespace), port, conf.isPerformanceLogging(), conf.getLoggingPort()));
+					sm.addRunner(new StageRunner(group, new File(namespace), port, conf.isPerformanceLogging(), conf.getLoggingPort(), shutdownHandler));
 				} else {
 					logger.error("Was unable to start the stage group '"+group.getName()+"' due to missing libraries.");
 				}
