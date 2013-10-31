@@ -101,12 +101,15 @@ public class MemoryCache<T extends DatabaseType> implements Cache<T> {
 		for(String tag : tags) {
 			query.requireNotFetchedByStage(tag);
 		}
-		DatabaseDocument<T> doc = getDocument(query);
+		DatabaseDocument<T> doc;
+		synchronized (this) {
+			doc = getDocument(query);
 
-		if (doc != null) {
-			freshen(doc.getID());
-			for(String tag : tags) {
-				doc.setFetchedBy(tag, new Date());
+			if (doc != null) {
+				freshen(doc.getID());
+				for(String tag : tags) {
+					doc.setFetchedBy(tag, new Date());
+				}
 			}
 		}
 
@@ -119,12 +122,15 @@ public class MemoryCache<T extends DatabaseType> implements Cache<T> {
 		for(String tag : tags) {
 			query.requireNotFetchedByStage(tag);
 		}
-		ArrayList<DatabaseDocument<T>> list = getDocument(query, n);
+		ArrayList<DatabaseDocument<T>> list;
+		synchronized (this) {
+			list = getDocument(query, n);
 
-		for (DatabaseDocument<T> d : list) {
-			freshen(d.getID());
-			for(String tag : tags) {
-				d.setFetchedBy(tag, new Date());
+			for (DatabaseDocument<T> d : list) {
+				freshen(d.getID());
+				for(String tag : tags) {
+					d.setFetchedBy(tag, new Date());
+				}
 			}
 		}
 
@@ -144,11 +150,14 @@ public class MemoryCache<T extends DatabaseType> implements Cache<T> {
 
 	@Override
 	public boolean markTouched(DocumentID<T> id, String tag) {
-		DatabaseDocument<T> inCache = getDocumentById(id);
-		if (inCache != null) {
-			freshen(inCache.getID());
-			inCache.setTouchedBy(tag, new Date());
-			return true;
+		DatabaseDocument<T> inCache;
+		synchronized (this) {
+			inCache = getDocumentById(id);
+			if (inCache != null) {
+				freshen(inCache.getID());
+				inCache.setTouchedBy(tag, new Date());
+				return true;
+			}
 		}
 		return false;
 	}
@@ -161,18 +170,19 @@ public class MemoryCache<T extends DatabaseType> implements Cache<T> {
 	@Override
 	public Collection<DatabaseDocument<T>> removeStale(int stalerThanMs) {
 		ArrayList<DatabaseDocument<T>> list = new ArrayList<DatabaseDocument<T>>();
-		long time = System.currentTimeMillis();
+		synchronized (this) {
+			long time = System.currentTimeMillis();
 
-		
-		Iterator<Map.Entry<DocumentID<T>, Long>> it = lastTouched.entrySet().iterator();
-		
-		while(it.hasNext()) {
-			Entry<DocumentID<T>, Long> entry = it.next();
-			if (time - entry.getValue() > stalerThanMs) {
-				DatabaseDocument<T> d = getDocumentById(entry.getKey());
-				list.add(d);
-				map.remove(d.getID());
-				it.remove();
+			Iterator<Map.Entry<DocumentID<T>, Long>> it = lastTouched.entrySet().iterator();
+
+			while(it.hasNext()) {
+				Entry<DocumentID<T>, Long> entry = it.next();
+				if (time - entry.getValue() > stalerThanMs) {
+					DatabaseDocument<T> d = getDocumentById(entry.getKey());
+					list.add(d);
+					map.remove(d.getID());
+					it.remove();
+				}
 			}
 		}
 
