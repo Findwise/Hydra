@@ -52,6 +52,10 @@ public final class Main implements ShutdownHandler {
 		Thread.setDefaultUncaughtExceptionHandler(uncaughtExceptionHandler);
 		simpleSocketServer = new SimpleSocketServer((LoggerContext) LoggerFactory.getILoggerFactory(), conf.getLoggingPort());
 		simpleSocketServer.start();
+
+		logger.info("Hydra Core creating connector, {}='{}', {}='{}'",
+				DatabaseConfiguration.DATABASE_URL_PARAM, conf.getDatabaseUrl(),
+				DatabaseConfiguration.DATABASE_NAMESPACE, conf.getNamespace());
 		
 		DatabaseConnector<MongoType> backing = new MongoConnector(conf);
 		try {
