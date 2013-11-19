@@ -3,6 +3,7 @@ package com.findwise.hydra.mongodb;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
@@ -16,8 +17,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-
-import junit.framework.Assert;
 
 import org.apache.commons.io.IOUtils;
 import org.bson.types.ObjectId;
@@ -82,7 +81,7 @@ public class MongoDocumentIOIT {
 			fail("Test error");
 		}
 		
-		Assert.assertFalse(isCapped());
+		assertFalse(isCapped());
 		
 		mdc.connect();
 
@@ -126,7 +125,7 @@ public class MongoDocumentIOIT {
 	@Test
 	public void testNullFields() throws Exception {
 		MongoConnector mdc = mongoConnectorResource.getConnector();
-		MongoDocumentIO dw = (MongoDocumentIO) mdc.getDocumentWriter();
+		MongoDocumentIO dw = mdc.getDocumentWriter();
 		MongoDocument md = new MongoDocument();
 		md.putContentField("field", "value");
 		md.putContentField("nullfield", null);
@@ -137,7 +136,7 @@ public class MongoDocumentIOIT {
 		if(indb.hasContentField("nullfield")) {
 			fail("Null field was persisted in database on insert");
 		}
-		Assert.assertEquals("value", indb.getContentField("field"));
+		assertEquals("value", indb.getContentField("field"));
 		
 		md.putContentField("field", null);
 		
@@ -339,7 +338,7 @@ public class MongoDocumentIOIT {
 	@Test
 	public void testFetchRemoval() throws Exception {
 		MongoConnector mdc = mongoConnectorResource.getConnector();
-		MongoDocumentIO dw = (MongoDocumentIO) mdc.getDocumentWriter();
+		MongoDocumentIO dw = mdc.getDocumentWriter();
 		MongoDocument md = new MongoDocument();
 		md.putContentField("field", "value");
 		dw.insert(md);
@@ -350,14 +349,14 @@ public class MongoDocumentIOIT {
 
 		MongoDocument d2 = dw.getDocumentById(md.getID());
 
-		Assert.assertNotNull(d2.getFetchedBy());
+		assertNotNull(d2.getFetchedBy());
 		
 		
-		Assert.assertTrue(d2.fetchedBy("tag"));
+		assertTrue(d2.fetchedBy("tag"));
 		d2.removeFetchedBy("tag");
 		dw.update(new MongoDocument(d2.toJson()));
 		
-		Assert.assertFalse(dw.getDocumentById(d2.getID()).fetchedBy("tag"));
+		assertFalse(dw.getDocumentById(d2.getID()).fetchedBy("tag"));
 	}
 	
 	@Ignore
