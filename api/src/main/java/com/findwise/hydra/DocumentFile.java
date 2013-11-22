@@ -3,6 +3,14 @@ package com.findwise.hydra;
 import java.io.InputStream;
 import java.util.Date;
 
+/**
+ * Represents a file attachment to a document
+ *
+ * Equality of a {@link DocumentFile} depends only on <strong>metadata</strong>,
+ * not actual file content.
+ *
+ * @param <T>
+ */
 public class DocumentFile<T> {
 	private InputStream stream;
 	private String fileName;
@@ -83,29 +91,32 @@ public class DocumentFile<T> {
 	public String getEncoding() {
 		return encoding;
 	}
-	
-//	@Override
-//	public String toJson() {
-//		HashMap<String, Object> map = new HashMap<String, Object>();
-//		
-//		map.put("stream", stream);
-//		map.put("fileName", fileName);
-//		map.put("uploadDate", uploadDate);
-//		map.put("documentId", documentId.getID());
-//		map.put("savedByStage", savedByStage);
-//		map.put("encoding", encoding);
-//		map.put("mimetype", mimetype);
-//		
-//		return SerializationUtils.toJson(map);
-//	}
 
-//	@Override
-//	public void fromJson(String json) throws JsonException {
-//		Map<String, Object> map = SerializationUtils.fromJson(json);
-//		
-//		stream = (InputStream) map.get("stream");
-//		fileName = (String) map.get("fileName");
-//		uploadDate = (Date) map.get("uploadDate");
-//		documentId = new map.get("stream");
-//	}
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		DocumentFile that = (DocumentFile) o;
+
+		if (documentId != null ? !documentId.equals(that.documentId) : that.documentId != null) return false;
+		if (encoding != null ? !encoding.equals(that.encoding) : that.encoding != null) return false;
+		if (fileName != null ? !fileName.equals(that.fileName) : that.fileName != null) return false;
+		if (mimetype != null ? !mimetype.equals(that.mimetype) : that.mimetype != null) return false;
+		if (savedByStage != null ? !savedByStage.equals(that.savedByStage) : that.savedByStage != null) return false;
+		if (uploadDate != null ? uploadDate.compareTo(that.uploadDate) != 0 : that.uploadDate != null) return false;
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = fileName != null ? fileName.hashCode() : 0;
+		result = 31 * result + (uploadDate != null ? (int)uploadDate.getTime() : 0);
+		result = 31 * result + (documentId != null ? documentId.hashCode() : 0);
+		result = 31 * result + (savedByStage != null ? savedByStage.hashCode() : 0);
+		result = 31 * result + (encoding != null ? encoding.hashCode() : 0);
+		result = 31 * result + (mimetype != null ? mimetype.hashCode() : 0);
+		return result;
+	}
 }

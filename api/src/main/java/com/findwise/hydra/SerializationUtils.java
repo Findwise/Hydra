@@ -40,6 +40,10 @@ public final class SerializationUtils {
     private static Logger internalLogger = LoggerFactory.getLogger("internal");
 
     private static SimpleDateFormat getDateFormat() {
+		return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+	}
+
+	private static SimpleDateFormat getLegacyDateFormat() {
 		return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 	}
 	
@@ -185,7 +189,11 @@ public final class SerializationUtils {
 				try {
 					return getDateFormat().parse(json.getAsString());
 				} catch(ParseException e) {
-					return json.getAsString();
+					try {
+						return getLegacyDateFormat().parse(json.getAsString());
+					} catch (ParseException e2) {
+						return json.getAsString();
+					}
 				}
 			} else {
 				BigDecimal bigDec = json.getAsBigDecimal();

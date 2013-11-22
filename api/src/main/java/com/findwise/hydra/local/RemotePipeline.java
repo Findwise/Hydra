@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -409,7 +410,7 @@ public class RemotePipeline {
 
 	@SuppressWarnings("unchecked")
 	public List<String> getFileNames(DocumentID<?> docid) throws IOException {
-		HttpResponse response = core.get(fileUrl+"&"+RemotePipeline.DOCID_PARAM+"="+URLEncoder.encode(docid.toJSON(), "UTF-8"));
+		HttpResponse response = core.get(fileUrl + "&" + RemotePipeline.DOCID_PARAM + "=" + URLEncoder.encode(docid.toJSON(), "UTF-8"));
 
 		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 			try {
@@ -421,6 +422,15 @@ public class RemotePipeline {
 			logUnexpected(response);
 			return null;
 		}
+	}
+
+	public List<DocumentFile<Local>> getFiles(DocumentID<Local> docid) throws IOException {
+		List<String> fileNames = getFileNames(docid);
+		List<DocumentFile<Local>> files = new ArrayList<DocumentFile<Local>>();
+		for (String fileName : fileNames) {
+			files.add(getFile(fileName, docid));
+		}
+		return files;
 	}
 	
 	public String getStageName() {
