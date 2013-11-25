@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.JsonParseException;
 import org.bson.types.ObjectId;
 
 import com.findwise.hydra.DatabaseConnector;
@@ -89,7 +90,13 @@ public class StagesService<T extends DatabaseType> {
 	public void addStage(String libraryId, String groupName, String name, String jsonConfig, boolean debug) throws JsonException, IOException {
 
 		Stage s = new Stage(name, toDatabaseFile(libraryId));
-		s.setProperties(SerializationUtils.fromJson(jsonConfig));
+		Map<String, Object> config = SerializationUtils.fromJson(jsonConfig);
+		if (null == config) {
+			throw new JsonException(new JsonParseException("Configuration was empty"));
+		} else if (!config.containsKey("stageClass")) {
+			throw new JsonException(new JsonParseException("Required configuration parameter 'stageClass' missing"));
+		}
+		s.setProperties(config);
 		if (debug) {
 			s.setMode(Stage.Mode.DEBUG);
 		} else {
