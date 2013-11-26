@@ -1,5 +1,8 @@
 package com.findwise.hydra.output.solr;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -98,15 +101,15 @@ public class SolrOutputStageTest {
 		SolrInputDocument inputDoc = solrOutput
 				.createSolrInputDocumentWithFieldConfig(doc);
 
-		org.junit.Assert.assertEquals(inputDoc.getFieldValue("fullname"), doc
+		assertEquals(inputDoc.getFieldValue("fullname"), doc
 				.getContentField("name").toString());
 
-		org.junit.Assert.assertArrayEquals(multiValued.toArray(), inputDoc
+		assertArrayEquals(multiValued.toArray(), inputDoc
 				.getFieldValues("heroes").toArray());
 		
-		org.junit.Assert.assertEquals(inputDoc.getFieldValue("explode1"), doc.getContentField("explode"));
-		org.junit.Assert.assertEquals(inputDoc.getFieldValue("explode2"), doc.getContentField("explode"));
-		org.junit.Assert.assertEquals(inputDoc.getFieldValue("explode3"), doc.getContentField("explode"));
+		assertEquals(inputDoc.getFieldValue("explode1"), doc.getContentField("explode"));
+		assertEquals(inputDoc.getFieldValue("explode2"), doc.getContentField("explode"));
+		assertEquals(inputDoc.getFieldValue("explode3"), doc.getContentField("explode"));
 	}
 
 	@Test
@@ -122,13 +125,13 @@ public class SolrOutputStageTest {
 		SolrInputDocument inputDoc = solrOutput
 				.createSolrInputDocumentWithFieldConfig(doc);
 
-		org.junit.Assert.assertEquals(inputDoc.getFieldValue("name"), doc
+		assertEquals(inputDoc.getFieldValue("name"), doc
 				.getContentField("name").toString());
 
-		org.junit.Assert.assertEquals(inputDoc.getFieldValue("reference"), doc
+		assertEquals(inputDoc.getFieldValue("reference"), doc
 				.getContentField("reference").toString());
 
-		org.junit.Assert.assertArrayEquals(((ArrayList<?>) doc
+		assertArrayEquals(((ArrayList<?>) doc
 				.getContentField("hero")).toArray(),
 				inputDoc.getFieldValues("hero").toArray());
 

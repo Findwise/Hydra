@@ -21,7 +21,7 @@
 		<dependency>
 			<artifactId>solr-solrj</artifactId>
 			<groupId>org.apache.solr</groupId>
-			<version>4.0.0</version>
+			<version>4.5.0</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
