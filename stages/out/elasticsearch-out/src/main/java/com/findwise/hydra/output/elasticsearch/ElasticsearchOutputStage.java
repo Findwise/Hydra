@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.findwise.hydra.stage.InitFailedException;
 import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -56,8 +57,12 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 	private Client client;
 
 	@Override
-	public void init() throws RequiredArgumentMissingException {
-		client = constructClient();
+	public void init() throws RequiredArgumentMissingException, InitFailedException {
+		try {
+			client = constructClient();
+		} catch (Exception e) {
+			throw new InitFailedException("Could not construct client", e);
+		}
 	}
 
 	@Override
