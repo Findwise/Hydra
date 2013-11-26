@@ -1,5 +1,6 @@
 package com.findwise.hydra;
 
+import com.findwise.hydra.mongodb.MongoConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.slf4j.Logger;
@@ -7,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.local.RemotePipeline;
 
-public class FileConfiguration implements CoreConfiguration {
+public class FileConfiguration implements CoreConfiguration, Configuration {
 	public static final String DEFAULT_PROPERTIES_FILE = "resource.properties";
 	
 	private static Logger logger = LoggerFactory.getLogger(Configuration.class);
@@ -29,12 +30,12 @@ public class FileConfiguration implements CoreConfiguration {
 
 	@Override
 	public String getNamespace() {
-		return conf.getString(NAMESPACE_PARAM);
+		return conf.getString(DATABASE_NAMESPACE, MongoConfiguration.DATABASE_NAMESPACE_DEFAULT);
 	}
 
 	@Override
 	public String getDatabaseUrl() {
-		return conf.getString(DATABASE_URL_PARAM, DATABASE_URL_DEFAULT);
+		return conf.getString(DATABASE_URL_PARAM, MongoConfiguration.DATABASE_URL_PARAM_DEFAULT);
 	}
 
 	@Override
@@ -54,22 +55,22 @@ public class FileConfiguration implements CoreConfiguration {
 
 	@Override
 	public String getDatabaseUser() {
-		return conf.getString(DATABASE_USER, "");
+		return conf.getString(DATABASE_USER, MongoConfiguration.DATABASE_USER_DEFAULT);
 	}
 
 	@Override
 	public String getDatabasePassword() {
-		return conf.getString(DATABASE_PASSWORD, "");
+		return conf.getString(DATABASE_PASSWORD, MongoConfiguration.DATABASE_PASSWORD_DEFAULT);
 	}
 
 	@Override
 	public int getOldMaxSize() {
-		return conf.getInt(OLD_MAX_SIZE_MB, 100);
+		return conf.getInt(OLD_MAX_SIZE_MB, MongoConfiguration.OLD_MAX_SIZE_MB_DEFAULT);
 	}
 
 	@Override
 	public int getOldMaxCount() {
-		return conf.getInt(OLD_MAX_COUNT, 1000);
+		return conf.getInt(OLD_MAX_COUNT, MongoConfiguration.OLD_MAX_COUNT_DEFAULT);
 	}
 	
 	@Override

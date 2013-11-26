@@ -1,14 +1,10 @@
 package com.findwise.hydra;
 
+import com.findwise.hydra.mongodb.MongoConfiguration;
+
 public class ConfigurationFactory {
 	public static CoreConfiguration getConfiguration(final String namespace) {
-		MapConfiguration mc = new MapConfiguration();
-		mc.setDatabaseUrl("127.0.0.1");
-		mc.setRestPort(12001);
-		mc.setNamespace(namespace);
-		mc.setOldMaxCount(1000);
-		mc.setOldMaxSize(10);
-
+		CoreMapConfiguration mc = new CoreMapConfiguration(new MongoConfiguration(), new MapConfiguration());
 		return mc;
 		
 	}

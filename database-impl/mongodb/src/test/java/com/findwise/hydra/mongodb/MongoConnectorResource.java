@@ -1,11 +1,10 @@
 package com.findwise.hydra.mongodb;
 
-import java.io.IOException;
-
+import com.findwise.hydra.DatabaseConfiguration;
+import com.mongodb.MongoClient;
 import org.junit.rules.ExternalResource;
 
-import com.findwise.hydra.DatabaseConfiguration;
-import com.mongodb.Mongo;
+import java.io.IOException;
 
 public class MongoConnectorResource extends ExternalResource {
 
@@ -14,7 +13,7 @@ public class MongoConnectorResource extends ExternalResource {
 	private final String dbName;
 
 	private MongoConnector mdc;
-	private Mongo mongo;
+	private MongoClient mongo;
 	
 	public MongoConnectorResource(Class<?> testClass) {
 		this.dbName = DB_PREFIX + testClass.getSimpleName();
@@ -40,7 +39,7 @@ public class MongoConnectorResource extends ExternalResource {
 	}
 
 	private void connect() throws IOException {
-		mongo = new Mongo();
+		mongo = new MongoClient();
 		DatabaseConfiguration conf = DatabaseConfigurationFactory.getDatabaseConfiguration(dbName);
 		mdc = new MongoConnector(conf);
 		mdc.waitForWrites(true);

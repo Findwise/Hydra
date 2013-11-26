@@ -1,9 +1,8 @@
 package com.findwise.hydra.mongodb;
 
-import org.junit.rules.ExternalResource;
-
 import com.mongodb.DB;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
+import org.junit.rules.ExternalResource;
 
 public class MongoDatabaseResource extends ExternalResource {
 
@@ -11,7 +10,7 @@ public class MongoDatabaseResource extends ExternalResource {
 
 	private final String dbName;
 
-	private Mongo mongo;
+	private MongoClient mongo;
 
 	private DB db;
 
@@ -21,7 +20,7 @@ public class MongoDatabaseResource extends ExternalResource {
 
 	@Override
 	protected void before() throws Throwable {
-		mongo = new Mongo();
+		mongo = new MongoClient();
 		db = mongo.getDB(dbName);
 	}
 
