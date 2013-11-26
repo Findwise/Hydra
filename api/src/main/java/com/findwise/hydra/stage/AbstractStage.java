@@ -63,8 +63,9 @@ public abstract class AbstractStage extends Thread {
 	 * argName)
 	 * 
 	 * @throws RequiredArgumentMissingException
+	 * @throws InitFailedException
 	 */
-	public void init() throws RequiredArgumentMissingException {
+	public void init() throws RequiredArgumentMissingException, InitFailedException {
 		
 	}
 
@@ -276,6 +277,8 @@ public abstract class AbstractStage extends Thread {
 
 		} catch (RequiredArgumentMissingException e) {
 			logger.error("Failed to read arguments", e);
+		} catch (InitFailedException e) {
+			logger.error("Failed to initialize Stage", e);
 		} catch (ClassNotFoundException e) {
 			logger.error("Could not find the Stage class in classpath", e);
 		} catch (InstantiationException e) {

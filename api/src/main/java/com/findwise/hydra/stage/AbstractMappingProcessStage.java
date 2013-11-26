@@ -21,14 +21,14 @@ public abstract class AbstractMappingProcessStage extends AbstractProcessStage {
 	
 
 	@Override
-	public final void init() throws RequiredArgumentMissingException {
+	public final void init() throws RequiredArgumentMissingException, InitFailedException {
 		if(map==null || map.size()==0)  {
 			throw new RequiredArgumentMissingException("Required argument 'map' is missing or zero-size");
 		}
 		stageInit();
 	}
 
-	public abstract void stageInit() throws RequiredArgumentMissingException;
+	public abstract void stageInit() throws RequiredArgumentMissingException, InitFailedException;
 
 	public abstract void processField(LocalDocument doc, String fromField, String toField) throws ProcessException;
 }

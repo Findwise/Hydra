@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.findwise.hydra.stage.InitFailedException;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -63,11 +64,11 @@ public class SolrOutputStage extends AbstractOutputStage {
 	}
 
 	@Override
-	public void init() throws RequiredArgumentMissingException {
+	public void init() throws RequiredArgumentMissingException, InitFailedException {
 		try {
 			solr = getSolrServer();
 		} catch (MalformedURLException e) {
-			throw new RequiredArgumentMissingException("Solr URL malformed.");
+			throw new InitFailedException("Solr URL malformed", e);
 		}
 	}
 	
