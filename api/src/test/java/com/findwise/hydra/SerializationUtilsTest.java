@@ -1,20 +1,32 @@
 package com.findwise.hydra;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import junit.framework.Assert;
 
 import org.junit.Test;
 
-import com.findwise.hydra.SerializationUtils;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class SerializationUtilsTest {
 
 	@Test
-	public void testDates() throws Exception {
-		Assert.assertEquals(Date.class, SerializationUtils.toObject(SerializationUtils.toJson(new Date())).getClass());
-		
-		//SerializationUtils.toJson(SerializationUtils.fromJson("{_action=null, _id={_inc=-1320293295, _new=false, _time=1354236890, _machine=1951282283}, contents={id=xdIJbiV1BlSD, f=JsNOwXa1, d=DQkP, e=Umj9n, b=p5d4wNOtPbs2QC5VQ9, c=Fize, a=0SVtbmBhlPbOw, in=e, z=r1I0vOMlEs, y=f1mkaEna1L2iVdg, x=15}, metadata={touched={insertStage=Fri Nov 30 01:54:50 CET 2012, sleepy1=Fri Nov 30 01:56:42 CET 2012, sleepy3=Fri Nov 30 01:56:42 CET 2012, sleepy4=Fri Nov 30 01:56:41 CET 2012, sleepy5=Fri Nov 30 01:56:42 CET 2012, sleepy6=Fri Nov 30 01:56:41 CET 2012, sleepy7=Fri Nov 30 01:56:42 CET 2012, sleepy8=Fri Nov 30 01:56:42 CET 2012, sleepy9=Fri Nov 30 01:56:32 CET 2012}, fetched={sleepy1=Fri Nov 30 01:56:42 CET 2012, sleepy0=Fri Nov 30 01:56:42 CET 2012, sleepy3=Fri Nov 30 01:56:42 CET 2012, sleepy4=Fri Nov 30 01:56:41 CET 2012, sleepy5=Fri Nov 30 01:56:41 CET 2012, sleepy6=Fri Nov 30 01:56:41 CET 2012, sleepy7=Fri Nov 30 01:56:42 CET 2012, sleepy8=Fri Nov 30 01:56:42 CET 2012, sleepy9=Fri Nov 30 01:56:32 CET 2012}}}"));
+	public void testDate_serialization_equality() throws JsonException {
+		Date date = new Date();
+		Object deserializedDate = SerializationUtils.toObject(SerializationUtils.toJson(date));
+		assertEquals(Date.class, deserializedDate.getClass());
+		assertTrue(date.compareTo((Date)deserializedDate) == 0);
+	}
+
+	@Test
+	public void testDates_can_deserialize_legacy_date_format() throws JsonException {
+		Date date = new Date();
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+		Object deserializedDate = SerializationUtils.toObject("\"" + format.format(date) + "\"");
+		assertEquals(Date.class, deserializedDate.getClass());
+		// Legacy date format does not handle sub-second time
+		assertTrue(date.after((Date)deserializedDate));
+		assertTrue(date.getTime() - ((Date)deserializedDate).getTime() < 1000L);
 	}
 
 }
