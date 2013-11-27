@@ -8,8 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -232,5 +231,23 @@ public class RegexStageTest {
 		doc.putContentField("rawcontent", "$1$2$1$2");
 		regexStage.process(doc);
 		Assert.assertEquals("$2$1$2$1", doc.getContentField("out"));
+	}
+
+	@Test
+	public void testShouldLoopThroughSecondConfigWhenFirstConfigIsMissingInput() throws Exception {
+		config1.put("regex", "(.*)");
+		config1.put("substitute", "$1");
+		configs.add(config1);
+		HashMap<String, String> config2 = new HashMap<String, String>();
+		config2.put("inField", "rawcontent2");
+		config2.put("outField", "out2");
+		config2.put("regex", "(.*)");
+		config2.put("substitute", "$1");
+		configs.add(config2);
+		setParameters();
+		doc.putContentField("rawcontent2", "content2");
+		regexStage.process(doc);
+		Assert.assertNull(doc.getContentField("out"));
+		Assert.assertEquals("content2", doc.getContentField("out2"));
 	}
 }
