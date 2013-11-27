@@ -59,7 +59,7 @@ public class RegexStage extends AbstractProcessStage {
             Pattern pattern = Pattern.compile(regexConf.get("regex"), Pattern.DOTALL);
             Object value = doc.getContentField(regexConf.get("inField"));
             if (value == null) {
-                return;
+                continue;
             }
             List<List<String>> outData = new ArrayList<List<String>>();
             if (value instanceof String) {
