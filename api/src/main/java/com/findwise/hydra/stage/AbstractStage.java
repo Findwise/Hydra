@@ -288,7 +288,7 @@ public abstract class AbstractStage extends Thread {
 		} catch (UnknownHostException e) {
 			throw e;
 		} catch (IOException e) {
-			logger.error("Communication failiure when reading properties", e);
+			logger.error("Communication failure when reading properties", e);
 		}
 		return null;
 	}
