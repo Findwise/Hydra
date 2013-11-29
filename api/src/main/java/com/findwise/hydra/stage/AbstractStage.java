@@ -219,18 +219,18 @@ public abstract class AbstractStage extends Thread {
 	public static List<AbstractStage> getInstances(String[] args) throws UnknownHostException {
 		List<AbstractStage> list = new ArrayList<AbstractStage>();
 		
-		int numberOfThreads = 1;
-		
-		do {
-			AbstractStage stage = getInstance(args);
-			if(stage==null) {
-				return null;
-			}
-			numberOfThreads = stage.numberOfThreads;
-
-			list.add(stage);
-		} while(list.size()<numberOfThreads);
-		
+		// Since the number of threads to spawn is an instance variable of the stage, we
+		// need to construct at least one in order to know how many to construct. That's
+		// why this logic is so strange.
+		AbstractStage stage = getInstance(args);
+		if(stage == null) {
+			// TODO: Is it safe to return null here? What is the contract?
+			return null;
+		}
+		list.add(stage);
+		for(int i = 0; i < stage.numberOfThreads - 1; i++) {
+			list.add(getInstance(args));
+		}
 		return list;
 	}
 	
