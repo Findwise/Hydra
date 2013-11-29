@@ -2,8 +2,10 @@ package com.findwise.hydra.local;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashMap;
@@ -122,9 +124,177 @@ public class LocalDocument implements Document<Local> {
 		return getMetadataMap().put(fieldName, value);
 	}
 
+	/**
+	 * Appends a value to a content field, converting the field into a list if it is not already one.
+	 * <strong>WARNING: This method does not check the type of inserted values, or the type of the field it appends to</strong>
+	 *
+	 * @param fieldName content field
+	 * @param value the value to append with
+	 */
+	@SuppressWarnings("unchecked")
+	public void appendToContentField(String fieldName, Object value) {
+		List<Object> list = null;
+		if (hasContentField(fieldName)) {
+			Object fieldValue = getContentField(fieldName);
+			if (fieldValue instanceof List<?>) {
+				list = (List<Object>)fieldValue;
+				list.add(value);
+			} else {
+				list = new ArrayList<Object>();
+				list.add(fieldValue);
+				list.add(value);
+			}
+		} else {
+			list = new ArrayList<Object>();
+			list.add(value);
+		}
+		putContentField(fieldName, list);
+	}
+
+	/**
+	 * Get the value of a content field
+	 *
+	 * Beware that changes to this object will not be saved!
+	 * Use putContentField() to update the value of a field.
+	 *
+	 * @param fieldName content field
+	 * @return the value of the field
+	 */
 	@Override
 	public Object getContentField(String fieldName) {
 		return getContentMap().get(fieldName);
+	}
+
+	/**
+	 * Gets and copies the value of a content field as a String
+	 *
+	 * @param fieldName content field
+	 * @return the value in fieldName as a String
+	 * @throws IncorrectFieldTypeException if the field does not contain a String
+	 */
+	public String getContentFieldAsString(String fieldName) throws IncorrectFieldTypeException {
+		return getContentFieldAsType(fieldName, String.class);
+	}
+
+	/**
+	 * Gets the value of a content field as a list of strings
+	 *
+	 * @param fieldName content field
+	 * @return the value in fieldName as a list of strings, or an empty list if the field is empty
+	 * @throws IncorrectFieldTypeException if the field does not contain a list
+	 */
+	@SuppressWarnings("unchecked")
+	public List<String> getContentFieldAsStrings(String fieldName) throws IncorrectFieldTypeException {
+		List<String> list;
+		list = getContentFieldAsType(fieldName, List.class);
+		if (null == list) {
+			list = new ArrayList<String>();
+		}
+		return list;
+	}
+
+	/**
+	 * Gets the value of a content field as a map
+	 *
+	 * @param fieldName content field
+	 * @return the map in the content field, or an empty map if the field is empty
+	 * @throws IncorrectFieldTypeException if the field does not contain a map
+	 */
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> getContentFieldAsMap(String fieldName) throws IncorrectFieldTypeException {
+		Map<String, Object> map;
+		map = getContentFieldAsType(fieldName, Map.class);
+		if (null == map) {
+			map = new HashMap<String, Object>();
+		}
+		return map;
+	}
+
+	/**
+	 * Gets the value of a content field as a long
+	 *
+	 * @param fieldName content field
+	 * @return the value as a long
+	 * @throws FieldIsEmptyException if the field is empty
+	 * @throws IncorrectFieldTypeException if the field is not of type long
+	 */
+	public long getContentFieldAsLong(String fieldName) throws FieldIsEmptyException, IncorrectFieldTypeException {
+		Number val;
+		val = getContentFieldAsType(fieldName, Number.class);
+		if (null != val) {
+			return val.longValue();
+		} else {
+			throw new FieldIsEmptyException("Field '" + fieldName + "' is empty");
+		}
+	}
+
+	/**
+	 * Gets the value of a content field as a long
+	 *
+	 * @param fieldName content field
+	 * @param defaultValue the value to return if the field is not a long
+	 * @return the value as a long, or defaultValue if the field is empty
+	 */
+	public long getContentFieldAsLong(String fieldName, long defaultValue) throws IncorrectFieldTypeException {
+		Number val = getContentFieldAsType(fieldName, Number.class);
+		if (null != val) {
+			return val.longValue();
+		} else {
+			return defaultValue;
+		}
+	}
+
+	/**
+	 * Gets the value of a content field as a double
+	 *
+	 * @param fieldName content field
+	 * @return the value as a double
+	 * @throws FieldIsEmptyException if the field is empty
+	 * @throws IncorrectFieldTypeException if the field is not of type double
+	 */
+	public double getContentFieldAsDouble(String fieldName) throws FieldIsEmptyException, IncorrectFieldTypeException {
+		Number val;
+		val = getContentFieldAsType(fieldName, Number.class);
+		if (null != val) {
+			return val.doubleValue();
+		} else {
+			throw new FieldIsEmptyException("Field '" + fieldName + "' is empty");
+		}
+	}
+
+	/**
+	 * Gets the value of a content field as a double
+	 *
+	 * @param fieldName content field
+	 * @param defaultValue the value to return if the field is not a double
+	 * @return the value as a double, or defaultValue if the field is empty
+	 */
+	public double getContentFieldAsDouble(String fieldName, double defaultValue) throws IncorrectFieldTypeException {
+		Number val = getContentFieldAsType(fieldName, Number.class);
+		if (null != val) {
+			return val.doubleValue();
+		} else {
+			return defaultValue;
+		}
+	}
+
+	/**
+	 * Gets the value of a content field as type T
+	 *
+	 * @param fieldName content field
+	 * @param <T> the expected type
+	 * @return the value of type T, or null if the content field is empty
+	 * @throws IncorrectFieldTypeException if the field value cannot be cast to T
+	 */
+	public <T> T getContentFieldAsType(String fieldName, Class<? extends T> type) throws IncorrectFieldTypeException {
+		if (hasContentField(fieldName)) {
+			try {
+				return type.cast(getContentField(fieldName));
+			} catch (ClassCastException e) {
+				throw new IncorrectFieldTypeException("Field '" + fieldName + "' is not of type '" + type.getCanonicalName() + "'");
+			}
+		}
+		return null;
 	}
 
 	private Object getMetadataField(String fieldName) {
