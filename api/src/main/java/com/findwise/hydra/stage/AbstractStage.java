@@ -2,9 +2,7 @@ package com.findwise.hydra.stage;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -43,12 +41,6 @@ public abstract class AbstractStage extends Thread {
 	private int numberOfThreads = 1;
 
 	private StageKiller stageKiller = new JvmStageKiller();
-	
-	public static final int CMDLINE_STAGE_NAME_PARAM = 0;
-	public static final int CMDLINE_PIPELINE_HOST_PARAM = 1;
-	public static final int CMDLINE_PIPELINE_PORT_PARAM = 2;
-	public static final int CMDLINE_PERFORMANCE_LOG_PARAM = 3;
-	
 	public static final int DEFAULT_HOLD_INTERVAL = 2000;
 	private RemotePipeline remotePipeline = null;
 	private Thread shutDownHook;
@@ -67,6 +59,10 @@ public abstract class AbstractStage extends Thread {
 	 */
 	public void init() throws RequiredArgumentMissingException, InitFailedException {
 		
+	}
+
+	public int getNumberOfThreads() {
+		return numberOfThreads;
 	}
 
 	public Thread getShutDownHook() {
@@ -215,115 +211,26 @@ public abstract class AbstractStage extends Thread {
 		setParameters(properties);
 		this.createAndApplyShutDownHook();
 	}
-	
-	public static List<AbstractStage> getInstances(String[] args) throws UnknownHostException {
-		List<AbstractStage> list = new ArrayList<AbstractStage>();
-		
-		int numberOfThreads = 1;
-		
-		do {
-			AbstractStage stage = getInstance(args);
-			if(stage==null) {
-				return null;
-			}
-			numberOfThreads = stage.numberOfThreads;
 
-			list.add(stage);
-		} while(list.size()<numberOfThreads);
-		
-		return list;
-	}
-	
-	public static RemotePipeline getRemotePipeline(String[] args) {
-		String stageName = (CMDLINE_STAGE_NAME_PARAM<args.length) ? args[CMDLINE_STAGE_NAME_PARAM] : null;
-		String hostName = (CMDLINE_PIPELINE_HOST_PARAM<args.length) ? args[CMDLINE_PIPELINE_HOST_PARAM] : RemotePipeline.DEFAULT_HOST; 
-		String port = (CMDLINE_PIPELINE_PORT_PARAM<args.length) ? args[CMDLINE_PIPELINE_PORT_PARAM] : ""+RemotePipeline.DEFAULT_PORT; 
-		boolean logging = (CMDLINE_PERFORMANCE_LOG_PARAM<args.length) ? Boolean.parseBoolean(args[CMDLINE_PERFORMANCE_LOG_PARAM]) : false;
-		
-		RemotePipeline rp = new RemotePipeline(hostName, Integer.parseInt(port), stageName);
-		rp.setPerformanceLogging(logging);
-		return rp;
-	}
-	
-	@SuppressWarnings("unchecked")
-	public static AbstractStage getInstance(String[] args) throws UnknownHostException {
-        logger.debug("Getting AbstractStage with args: " + Arrays.toString(args));
-		if (args.length < 1) {
-			logger.error("No stage name found", new RequiredArgumentMissingException("No stage name was specified"));
+	public static void main(String args[]) throws Exception {
+		try {
+			StageCommandLineArguments commandLineArguments = StageCommandLineArguments.parse(args);
+
+			String host = commandLineArguments.getHost();
+			String stageName = commandLineArguments.getStageName();
+			int port = commandLineArguments.getPort();
+			boolean performanceLogging = commandLineArguments.isPerformanceLogging();
+			Map<String, Object> stageOverrideProperties = commandLineArguments.getStageOverrideProperties();
+
+			// TODO: Why don't we want to log remotely if args.length == 1 ?
+			if( args.length > 1) {
+				Logging.setup(host, commandLineArguments.getLogPort());
+			}
+
+			new StageFactory(stageName, host, port, performanceLogging, stageOverrideProperties).createAndStartStages();
+		} catch(Exception e) {
+			logger.error("Caught exception while starting stage(s).", e);
 			System.exit(1);
-		}
-        try {
-			RemotePipeline rp = getRemotePipeline(args);
-
-			Map<String, Object> properties = getParameters(args, rp);
-			String stageClass;
-			if(properties.containsKey(ARG_NAME_STAGE_CLASS)) {
-				stageClass = (String) properties.get(ARG_NAME_STAGE_CLASS);
-			}
-			else {
-				throw new RequiredArgumentMissingException("No class specified in the '"+ARG_NAME_STAGE_CLASS+"' property.");
-			}
-			
-			Class<? extends AbstractStage> actualClass = (Class<? extends AbstractStage>) Class
-					.forName(stageClass);
-			AbstractStage stage = actualClass.newInstance();
-			
-			stage.setName(rp.getStageName());
-			stage.setStageName(rp.getStageName());
-			stage.setUp(rp, properties);
-			stage.init();
-			
-			return stage;
-
-		} catch (RequiredArgumentMissingException e) {
-			logger.error("Failed to read arguments", e);
-		} catch (InitFailedException e) {
-			logger.error("Failed to initialize Stage", e);
-		} catch (ClassNotFoundException e) {
-			logger.error("Could not find the Stage class in classpath", e);
-		} catch (InstantiationException e) {
-			logger.error("Could not instantiate the Stage class", e);
-		} catch (IllegalAccessException e) {
-			logger.error("Could not access constructor of Stage class", e);
-		} catch (UnknownHostException e) {
-			throw e;
-		} catch (IOException e) {
-			logger.error("Communication failure when reading properties", e);
-		}
-		return null;
-	}
-
-	private static Map<String, Object> getParameters(String[] args,
-			RemotePipeline rp)
-			throws IOException {
-		Map<String, Object> properties;
-		if (args.length > 5) {
-			try {
-				properties = SerializationUtils.fromJson(args[5]);
-			} catch (JsonException e) {
-				logger.warn("Failed to parse supplied configuration. Using what is stored in database");
-				properties = rp.getProperties();
-			}
-		} else {
-			properties = rp.getProperties();
-		}
-		return properties;
-	}
-
-	public static void main(String args[]) throws UnknownHostException {
-		if( args.length > 1) {
-			Logging.setup(args[1], Integer.parseInt(args[4]));
-		}
-		List<AbstractStage> stages = getInstances(args);
-		
-		if(stages==null || stages.size()<1) {
-			logger.error("Unable to instantiate any stages for input: "+Arrays.toString(args));
-		}
-		else {
-			for(AbstractStage stage : stages) {
-				stage.start();
-			}
-			logger.info("Started "+stages.size()+" instances of stage: " + stages.get(0).getName()+". Running with the query: "+stages.get(0).getQuery());
 		}
 	}
 
