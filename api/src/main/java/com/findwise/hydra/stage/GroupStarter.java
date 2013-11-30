@@ -30,31 +30,39 @@ public class GroupStarter {
 	public static final String GROUP_PARAM = "group";
 	
 	public static void main(String[] args) throws UnknownHostException {
-		if (args.length < 1) {
-			logger.error("No group name found", new RequiredArgumentMissingException("No group name specified"));
-			System.exit(1);
-		} 
-		String host;
-		String port;
-		String groupName = args[0];
-		String logging;
-		String logPort;
-		
-		host = (args.length>1) ? args[1] : "localhost";
-		port = (args.length>2) ? args[2] : "12001";
-		logging = (args.length>3) ? args[3] : "false";
-		logPort = (args.length>4) ? args[4] : "12002";
-
+		StageCommandLineArguments cmdLineArgs = null;
 		try {
-			Logging.setup(host, Integer.parseInt(logPort));
-		} catch (UnknownHostException e) {
-			logger.error("Unable to connect to remote logging host on "+host+":"+logPort, e);
-			return;
+			cmdLineArgs = StageCommandLineArguments.parse(args);
+		} catch (Exception e) {
+			logger.error("Error parsing arguments", e);
+			System.exit(1);
 		}
 
-		List<String> stages;
+		String groupName = cmdLineArgs.getStageGroupName();
+		String host = cmdLineArgs.getHost();
+		int port = cmdLineArgs.getPort();
+		boolean performanceLogging = cmdLineArgs.isPerformanceLogging();
+		int logPort = cmdLineArgs.getLogPort();
+
 		try {
-			stages = getStages(host, Integer.parseInt(port), groupName);
+			Logging.setup(host, logPort);
+		} catch (UnknownHostException e) {
+			logger.error("Unable to connect to remote logging host on "+ host +":"+cmdLineArgs.getLogPort(), e);
+			System.exit(1);
+		}
+
+		createAndStartGroup(
+			groupName,
+			host,
+			port,
+			performanceLogging
+		);
+	}
+
+	private static void createAndStartGroup(String groupName, String host, int port, boolean performanceLogging) {
+		List<String> stageNames;
+		try {
+			stageNames = getStages(host, port, groupName);
 		} catch (IOException e) {
 			Logging.addConsoleAppender();
 			logger.error("Unable to get stages for the group '"+groupName+"'", e);
@@ -62,9 +70,9 @@ public class GroupStarter {
 		}
 
 		try {
-			for (String stage : stages) {
-				logger.debug("Attempting to start stage: " + stage);
-				AbstractStage.main(new String[] { stage, host, port, logging, logPort });
+			for (String stageName : stageNames) {
+				logger.debug("Attempting to start stage: " + stageName);
+				new StageFactory(stageName, host, port, performanceLogging, null).createAndStartStages();
 			}
 		} catch (Exception e) {
 			Logging.addConsoleAppender();
