@@ -45,7 +45,8 @@ public class RemotePipeline {
 	public static final String FILENAME_PARAM = "filename";
 
 	public static final int DEFAULT_PORT = 12001;
-	public static final String DEFAULT_HOST = "127.0.0.1";
+	public static final String DEFAULT_HOST = "localhost";
+	public static final int DEFAULT_LOG_PORT = 12002;
 
 	private boolean performanceLogging = false;
 
