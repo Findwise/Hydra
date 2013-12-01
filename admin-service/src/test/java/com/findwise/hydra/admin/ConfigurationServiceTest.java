@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.findwise.hydra.DatabaseException;
+import com.findwise.hydra.PipelineStatus;
+import com.findwise.hydra.StatusReader;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,6 +36,12 @@ public class ConfigurationServiceTest {
 	
 	@Mock
 	private PipelineWriter pipelineWriter;
+
+	@Mock
+	private StatusReader<AdminServiceType> statusReader;
+
+	@Mock
+	private PipelineStatus<AdminServiceType> pipelineStatus;
 	
 	@Mock
 	private Pipeline pipeline;
@@ -56,9 +64,12 @@ public class ConfigurationServiceTest {
 		
 		when(pipelineReader.getPipeline()).thenReturn(pipeline);
 		when(pipelineReader.getDebugPipeline()).thenReturn(debugPipeline);
+
+		when(statusReader.getStatus()).thenReturn(pipelineStatus);
 		
 		when(connector.getPipelineReader()).thenReturn(pipelineReader);
 		when(connector.getPipelineWriter()).thenReturn(pipelineWriter);
+		when(connector.getStatusReader()).thenReturn(statusReader);
 		when(connector.getDocumentReader()).thenReturn(documentReader);
 		when(connector.getDocumentWriter()).thenReturn(documentWriter);
 		service = new ConfigurationService<AdminServiceType>(connector);
