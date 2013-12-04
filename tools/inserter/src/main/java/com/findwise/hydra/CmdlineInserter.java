@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import com.findwise.hydra.mongodb.MongoConfiguration;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -24,8 +25,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.UnrecognizedOptionException;
 import org.bson.types.ObjectId;
 
-import com.findwise.hydra.JsonException;
-import com.findwise.hydra.SerializationUtils;
 import com.findwise.hydra.mongodb.MongoConnector;
 
 public class CmdlineInserter {
@@ -64,7 +63,7 @@ public class CmdlineInserter {
 	
 	@SuppressWarnings("static-access")
 	private static Option getMongoOption() {
-		return OptionBuilder.withLongOpt("mongo").hasArg().withDescription("the MongoDB host").create("m");
+		return OptionBuilder.withLongOpt("mongo").hasArg().withDescription("the MongoDB uri of format mongodb://host:port,host:port").create("m");
 	}
 	
 	private static Options getOptions() {
@@ -213,23 +212,19 @@ public class CmdlineInserter {
 			printUsage(cmd);
 			return;
 		}
-		
-		String host;
-		
+
+		MongoConfiguration conf = new MongoConfiguration();
+
+		conf.setNamespace(cmd.getOptionValue("p"));
+
 		if(cmd.hasOption("m")) {
-			host = cmd.getOptionValue("m");
-		} else {
-			host = "127.0.0.1";
-			System.out.println("No MongoDB host specified. Defaulting to "+host);
+			conf.setDatabaseUrl(cmd.getOptionValue("m"));
 		}
-		
-		TestConfiguration conf = new TestConfiguration(cmd.getOptionValue("p"), host);
-		
 		if(cmd.hasOption("user")) {
-			conf.setUsername(cmd.getOptionValue("user"));
+			conf.setDatabaseUser(cmd.getOptionValue("user"));
 		}
 		if(cmd.hasOption("password")) {
-			conf.setPassword(cmd.getOptionValue("password"));
+			conf.setDatabasePassword(cmd.getOptionValue("password"));
 		}
 		
 		MongoConnector mdc = new MongoConnector(conf);

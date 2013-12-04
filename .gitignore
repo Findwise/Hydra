@@ -4,7 +4,8 @@ target/
 .project
 examples/src/main/resources/*.jar
 .springBeans
-bin/
+distribution/bin/
+distribution/tools/
 nbactions.xml
 nb-configuration.xml
 .DS_Store
