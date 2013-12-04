@@ -199,16 +199,17 @@ public class ConfigurationController {
 	@ResponseBody
 	@ExceptionHandler(JsonException.class)
 	public Map<String, Object> handleJsonError(Exception exception) {
-		Map<String, Object> ret = new HashMap<String, Object>();
-		ret.put("message", exception.getMessage());
-		ret.put("exception", exception.getClass());
-		return ret;
+		return getErrorMap(exception);
 	}
 
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	@ResponseBody
 	@ExceptionHandler({IOException.class, DatabaseException.class, MongoException.class})
 	public Map<String, Object> handleIoError(Exception exception) {
+		return getErrorMap(exception);
+	}
+
+	private Map<String, Object> getErrorMap(Exception exception) {
 		Map<String, Object> ret = new HashMap<String, Object>();
 		ret.put("message", exception.getMessage());
 		ret.put("exception", exception.getClass());
