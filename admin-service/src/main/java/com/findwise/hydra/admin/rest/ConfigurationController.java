@@ -1,13 +1,17 @@
 package com.findwise.hydra.admin.rest;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.findwise.hydra.DatabaseException;
+import com.google.gson.JsonParseException;
+import com.mongodb.MongoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +28,8 @@ import com.findwise.hydra.admin.documents.DocumentsService;
 
 import com.findwise.hydra.admin.stages.StagesService;
 import com.findwise.hydra.JsonException;
+
+import javax.servlet.http.HttpServletRequest;
 
 
 @Controller("/rest")
@@ -188,5 +194,25 @@ public class ConfigurationController {
 			@RequestBody String content) {
 		return documentService.putDocument(action, content);
 	}
-	
+
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ResponseBody
+	@ExceptionHandler(JsonException.class)
+	public Map<String, Object> handleJsonError(Exception exception) {
+		return getErrorMap(exception);
+	}
+
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	@ResponseBody
+	@ExceptionHandler({IOException.class, DatabaseException.class, MongoException.class})
+	public Map<String, Object> handleIoError(Exception exception) {
+		return getErrorMap(exception);
+	}
+
+	private Map<String, Object> getErrorMap(Exception exception) {
+		Map<String, Object> ret = new HashMap<String, Object>();
+		ret.put("message", exception.getMessage());
+		ret.put("exception", exception.getClass());
+		return ret;
+	}
 }
