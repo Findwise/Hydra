@@ -133,6 +133,7 @@ public abstract class AbstractProcessStage extends AbstractStage {
 			} catch (Exception e) {
 				logger.error("Caught exception while running", e);
 				killStage();
+				return;
 			}
 		}
 		shutdownProcessing();
@@ -166,13 +167,12 @@ public abstract class AbstractProcessStage extends AbstractStage {
 				throw e;
 			}
 		} catch (TimeoutException e) {
-			boolean interruptIfRunning = true;
-			boolean cancelSucceeded = future.cancel(interruptIfRunning);
+			// Extreme solution here. If the stage thread did not finish in a timely manner,
+			// we restart the whole process. Canceling the future doesn't really help, since
+			// we can't easily tell whether the thread running the future task manages to shut
+			// down cleanly. // TODO: A better solution would be nice.
 			handleProcessException(doc, new ProcessException(e));
-			if (!cancelSucceeded) {
-				logger.error("Processing for doc '{}' timed out and processing thread could not be cancelled", doc.getID());
-				throw e;
-			}
+			throw e;
 		}
 	}
 
