@@ -11,7 +11,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeast;
@@ -25,11 +28,16 @@ import static org.mockito.Mockito.when;
 public class AbstractProcessStageTest {
 
 	private AbstractProcessStage stage;
+	private StageKiller mockStageKiller;
 	RemotePipeline rp;
 
 	@Before
 	public void setUp() throws Exception {
 		Logging.setGlobalLoggingLevel(Level.OFF);
+
+		// We don't like System.exit() in tests.
+		// TODO: We don't like System.exit() at all :)
+		mockStageKiller = mock(StageKiller.class);
 	}
 
 	@After
@@ -37,11 +45,12 @@ public class AbstractProcessStageTest {
 
 	}
 
-	@Test
+	@Test(timeout = 1000)
 	public void testProcess_does_not_fail_document_when_failDocumentOnProcessException_is_false() throws Exception {
 		rp = mock(RemotePipeline.class);
 		stage = new LimitedCountExceptionStage(3);
 		stage.setRemotePipeline(rp);
+		stage.setStageKiller(mockStageKiller);
 		spy(stage);
 
 		LocalDocument testDoc1 = mock(LocalDocument.class);
@@ -52,10 +61,7 @@ public class AbstractProcessStageTest {
 		when(rp.getDocument(any(LocalQuery.class))).thenReturn(testDoc1);
 		when(rp.releaseLastDocument()).thenReturn(true);
 
-		stage.start();
-		while (stage.isAlive()) {
-			Thread.sleep(10);
-		}
+		stage.run();
 
 		verify(rp, atLeast(3)).getDocument(any(LocalQuery.class));
 		verify(rp, atLeast(3)).saveCurrentDocument();
@@ -64,11 +70,12 @@ public class AbstractProcessStageTest {
 		verify(testDoc1, atLeast(3)).addError(any(String.class), any(Throwable.class));
 	}
 
-	@Test
+	@Test(timeout = 1000)
 	public void testProcess_fails_document_on_processException() throws Exception {
 		rp = mock(RemotePipeline.class);
 		stage = new LimitedCountExceptionStage(3);
 		stage.setRemotePipeline(rp);
+		stage.setStageKiller(mockStageKiller);
 		HashMap<String, Object> map = new HashMap<String, Object>();
 		map.put("failDocumentOnProcessException", true);
 		stage.setParameters(map);
@@ -82,37 +89,30 @@ public class AbstractProcessStageTest {
 		when(rp.getDocument(any(LocalQuery.class))).thenReturn(testDoc1);
 		when(rp.releaseLastDocument()).thenReturn(true);
 
-		stage.start();
-
-		while (stage.isAlive()) {
-			Thread.sleep(10);
-		}
+		stage.run();
 
 		verify(rp, times(3)).markFailed(any(LocalDocument.class), any(ProcessException.class));
 	}
 
-	@Test
+	@Test(timeout = 1000)
 	public void testProcess_persists_error() throws Exception {
 		stage = new SingleDocumentExceptionStage();
 		stage.setName("stagename");
 		RemotePipeline rp = mock(RemotePipeline.class);
 		stage.setRemotePipeline(rp);
+		stage.setStageKiller(mockStageKiller);
 
 		LocalDocument ld = mock(LocalDocument.class);
 
 		when(rp.getDocument(any(LocalQuery.class))).thenReturn(ld);
 		when(rp.releaseLastDocument()).thenReturn(true);
 
-		stage.start();
-
-		while (stage.isAlive()) {
-			Thread.sleep(10);
-		}
+		stage.run();
 
 		verify(ld, times(1)).addError(eq(stage.getStageName()), any(Throwable.class));
 	}
 
-	@Test
+	@Test(timeout = 1000)
 	public void testProcess_persists_error_on_save_failure() throws Exception {
 		RemotePipeline rp = mock(RemotePipeline.class);
 		when(rp.getDocument(any(LocalQuery.class))).thenReturn(new LocalDocument());
@@ -122,22 +122,20 @@ public class AbstractProcessStageTest {
 
 		stage = new ImmediateStoppingStage();
 		stage.setRemotePipeline(rp);
-		stage.start();
-
-		while (stage.isAlive()) {
-			Thread.sleep(10);
-		}
+		stage.setStageKiller(mockStageKiller);
+		stage.run();
 
 		verify(rp, times(1)).saveCurrentDocument();
 		verify(rp, times(1)).markFailed(any(LocalDocument.class), any(Throwable.class));
 	}
 
-	@Test
+	@Test(timeout = 1000)
 	public void testProcess_execution_timeout_fails_document() throws Exception {
 		stage = new InterruptibleWaitingStage();
 		stage.setName(stage.getClass().getCanonicalName());
 		RemotePipeline rp = mock(RemotePipeline.class);
 		stage.setRemotePipeline(rp);
+		stage.setStageKiller(mockStageKiller);
 
 		HashMap<String, Object> map = new HashMap<String, Object>();
 		map.put("processingTimeout", 1);
@@ -147,21 +145,20 @@ public class AbstractProcessStageTest {
 
 		when(rp.getDocument(any(LocalQuery.class))).thenReturn(ld);
 		when(rp.releaseLastDocument()).thenReturn(true);
-		stage.start();
+		stage.run();
 
-		while (stage.isAlive()) {
-			Thread.sleep(10);
-		}
 		verify(ld, times(1)).addError(eq(stage.getStageName()), any(Throwable.class));
 	}
 
-	@Test
-	public void testProcess_execution_timeout_can_continue_processing() throws Exception {
-		stage = new LimitedCountInterruptibleWaitingStage(3);
+	@Test(timeout = 1000)
+	public void testProcess_execution_timeout_kills_stage() throws Exception {
+		stage = new HangingStage();
 		stage.setName(stage.getClass().getCanonicalName());
 		RemotePipeline rp = mock(RemotePipeline.class);
 		stage.setRemotePipeline(rp);
 
+		stage.setStageKiller(mockStageKiller);
+
 		HashMap<String, Object> map = new HashMap<String, Object>();
 		map.put("processingTimeout", 1);
 		stage.setParameters(map);
@@ -170,14 +167,8 @@ public class AbstractProcessStageTest {
 
 		when(rp.getDocument(any(LocalQuery.class))).thenReturn(ld);
 		when(rp.releaseLastDocument()).thenReturn(true);
-		stage.start();
+		stage.run();
 
-		while (stage.isAlive()) {
-			Thread.sleep(10);
-		}
-
-		verify(ld, times(3)).addError(eq(stage.getStageName()), any(Throwable.class));
+		verify(mockStageKiller).kill(eq(stage));
 	}
-
-	// TODO: Test that stages shut down when processing threads cannot be stopped
 }
