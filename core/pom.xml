@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.findwise.hydra</groupId>
 		<artifactId>hydra-parent</artifactId>
-		<version>0.4.0</version>
+		<version>0.5.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>hydra-core</artifactId>
 	<packaging>jar</packaging>
@@ -91,7 +91,7 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-api</artifactId>
-			<version>0.4.0</version>
+			<version>0.5.0-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
@@ -144,21 +144,21 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-database</artifactId>
-			<version>0.4.0</version>
+			<version>0.5.0-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-mongodb</artifactId>
-			<version>0.4.0</version>
+			<version>0.5.0-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-memorydb</artifactId>
-			<version>0.4.0</version>
+			<version>0.5.0-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
