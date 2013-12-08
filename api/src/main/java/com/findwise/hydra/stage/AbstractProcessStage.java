@@ -152,7 +152,8 @@ public abstract class AbstractProcessStage extends AbstractStage {
 			logger.trace("Processing finished of doc '{}'", doc.getID());
 			boolean persistSucceeded = persist();
 			if(!persistSucceeded) {
-				LocalDocument ld = new LocalDocument(doc.toJson());
+				// TODO: Why are we cloning here?
+				LocalDocument ld = new LocalDocument(doc);
 				IOException e = new IOException("Unable to save changes to core");
 				if(!persistFailure(ld, e)) {
 					logger.error("Unable to persist an error to the database for doc '" + doc.getID() + "'", e);

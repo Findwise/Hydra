@@ -71,8 +71,8 @@ public class LocalDocumentTest {
 		LocalDocument ld = new LocalDocument();
 		
 		ld.setAction(Action.DELETE);
-		
-		LocalDocument ld2 = new LocalDocument(ld.toJson());
+
+		LocalDocument ld2 = new LocalDocument(ld);
 		if(ld.getAction() != ld2.getAction()) {
 			fail("Action wasn't serialized, should have been "+ld.getAction()+" but was "+ld2.getAction());
 		}
@@ -90,8 +90,8 @@ public class LocalDocumentTest {
 	public void testBackslashTransfer() throws Exception {
 		LocalDocument ld = new LocalDocument();
 		ld.putContentField("test", "escaped \\\\ slash");
-		
-		LocalDocument ld2 = new LocalDocument(ld.toJson());
+
+		LocalDocument ld2 = new LocalDocument(ld);
 		
 		if(!ld.isEqual(ld2)) {
 			fail("Documents not equal");
@@ -139,8 +139,8 @@ public class LocalDocumentTest {
 		if(test.isEqual(test2)) {
 			fail("test2 and test are equal"); //Just a sanity check on equals
 		}
-		
-		LocalDocument test3 = new LocalDocument(test.toJson());
+
+		LocalDocument test3 = new LocalDocument(test);
 		if(!test.isEqual(test3)) {
 			fail("JSON-generated document is not equal to the JSON source");
 		}
@@ -227,8 +227,8 @@ public class LocalDocumentTest {
 		if(d.isSynced()) {
 			fail("Document should be out of sync.");
 		}
-		
-		LocalDocument d2 = new LocalDocument(d.toJson());
+
+		LocalDocument d2 = new LocalDocument(d);
 		if(!d2.isSynced()) {
 			fail("Document should be in sync.");
 		}

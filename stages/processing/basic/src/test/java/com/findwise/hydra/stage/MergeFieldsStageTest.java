@@ -50,8 +50,8 @@ public class MergeFieldsStageTest {
 		LocalDocument doc = new LocalDocument();
 		doc.putContentField("out", "xyz");
 		doc.putContentField("test", "test");
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		Assert.assertTrue(doc.isEqual(doc2));
@@ -74,8 +74,8 @@ public class MergeFieldsStageTest {
 		
 		LocalDocument doc = getDocument();
 		doc.putContentField("out", "xyz");
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		Assert.assertEquals(doc.getContentField("in1"), doc2.getContentField("in1"));
@@ -106,8 +106,8 @@ public class MergeFieldsStageTest {
 		mfs.setParameters(map);
 		
 		LocalDocument doc = getDocument();
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		String[] outString = doc2.getContentField("out").toString().split(" ");
@@ -134,8 +134,8 @@ public class MergeFieldsStageTest {
 		mfs.setParameters(map);
 		
 		LocalDocument doc = getDocument();
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		String[] outString = doc2.getContentField("out").toString().split("___");
@@ -164,8 +164,8 @@ public class MergeFieldsStageTest {
 		map.put("fromFields", list);
 		
 		mfs.setParameters(map);
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		Assert.assertNull(doc2.getContentField("out"));
@@ -175,8 +175,8 @@ public class MergeFieldsStageTest {
 		list.add("in3");
 		
 		mfs.setParameters(map);
-		
-		doc2 = new LocalDocument(doc.toJson());
+
+		doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		String[] outString = doc2.getContentField("out").toString().split(" ");
@@ -202,8 +202,8 @@ public class MergeFieldsStageTest {
 		
 		LocalDocument doc = getDocument();
 		doc.putContentField("out", "xyz");
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		String[] outString = doc2.getContentField("out").toString().split(" ");
@@ -231,8 +231,8 @@ public class MergeFieldsStageTest {
 		
 		LocalDocument doc = getDocument();
 		doc.putContentField("out", "xyz");
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 
 		String[] newString = doc2.getContentField("newfield").toString().split(" ");
@@ -263,8 +263,8 @@ public class MergeFieldsStageTest {
 		doc.putContentField("in1", 1);
 		doc.putContentField("in2", 2);
 		doc.putContentField("in3", 5);
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		Assert.assertEquals(1+2+5, doc2.getContentField("out"));
@@ -290,8 +290,8 @@ public class MergeFieldsStageTest {
 		doc.putContentField("in1", 1);
 		doc.putContentField("in2", 2.2);
 		doc.putContentField("in3", 5.3);
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		Assert.assertEquals(8.5, doc2.getContentField("out"));
@@ -317,8 +317,8 @@ public class MergeFieldsStageTest {
 		doc.putContentField("in1", 1);
 		doc.putContentField("in2", 2.2);
 		doc.putContentField("in3", "string");
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		Assert.assertEquals(String.class, doc2.getContentField("out").getClass());
@@ -373,8 +373,8 @@ public class MergeFieldsStageTest {
 		map.put("fromFields", list);
 		
 		mfs.setParameters(map);
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		

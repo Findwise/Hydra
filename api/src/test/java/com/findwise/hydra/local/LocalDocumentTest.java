@@ -99,7 +99,7 @@ public class LocalDocumentTest {
 
 		ld.setAction(Action.DELETE);
 
-		LocalDocument ld2 = new LocalDocument(ld.toJson());
+		LocalDocument ld2 = new LocalDocument(ld);
 		if (ld.getAction() != ld2.getAction()) {
 			fail("Action wasn't serialized, should have been " + ld.getAction() + " but was " + ld2.getAction());
 		}
@@ -118,7 +118,7 @@ public class LocalDocumentTest {
 		LocalDocument ld = new LocalDocument();
 		ld.putContentField("test", "escaped \\\\ slash");
 
-		LocalDocument ld2 = new LocalDocument(ld.toJson());
+		LocalDocument ld2 = new LocalDocument(ld);
 
 		if (!ld.isEqual(ld2)) {
 			fail("Documents not equal");
@@ -167,7 +167,7 @@ public class LocalDocumentTest {
 			fail("test2 and test are equal"); //Just a sanity check on equals
 		}
 
-		LocalDocument test3 = new LocalDocument(test.toJson());
+		LocalDocument test3 = new LocalDocument(test);
 		if (!test.isEqual(test3)) {
 			fail("JSON-generated document is not equal to the JSON source");
 		}
@@ -262,11 +262,31 @@ public class LocalDocumentTest {
 		if (d.isSynced()) {
 			fail("Document should be out of sync.");
 		}
+	}
 
-		LocalDocument d2 = new LocalDocument(d.toJson());
-		if (!d2.isSynced()) {
-			fail("Document should be in sync.");
-		}
+	@Test
+	public void testDocumentsCreatedFromJsonAreSynced() throws Exception {
+		LocalDocument doc = new LocalDocument();
+		doc.putContentField("x", "y");
+		LocalDocument newFromJson = new LocalDocument(doc.toJson());
+		assertTrue("Document created from json should be synced", newFromJson.isSynced());
+	}
+
+	@Test
+	public void testCopyOfAnUnsyncedDocumentIsUnsynced() throws Exception {
+		LocalDocument doc = new LocalDocument();
+		doc.putContentField("x", "y");
+		LocalDocument docCopy = new LocalDocument(doc);
+		assertFalse("Copy of unsynced document should be unsynced", docCopy.isSynced());
+	}
+
+	@Test
+	public void testCopyOfASyncedDocumentIsSynced() throws Exception {
+		LocalDocument doc = new LocalDocument();
+		doc.putContentField("x", "y");
+		doc.markSynced();
+		LocalDocument docCopy = new LocalDocument(doc);
+		assertTrue("Copy of synced document should be synced", docCopy.isSynced());
 	}
 
 	@Test
