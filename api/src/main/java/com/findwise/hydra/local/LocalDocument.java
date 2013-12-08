@@ -45,7 +45,22 @@ public class LocalDocument implements Document<Local> {
 		// let's clean that up in this case
 		markSynced();
 	}
-	
+
+	public LocalDocument(LocalDocument doc) {
+		this();
+		try {
+			fromJson(doc.toJson());
+		} catch (JsonException e) {
+			// I don't want to expose that we are reusing the json stuff for copying
+			// Also, this should *never* happen since doc.toJson() should hopefully
+			// always return valid json.
+			throw new RuntimeException(e);
+		}
+		touchedContent = new HashSet<String>(doc.touchedContent);
+		touchedMetadata = new HashSet<String>(doc.touchedMetadata);
+		touchedAction = doc.touchedAction;
+	}
+
 	@Override
 	public Action getAction() {
 		return (Action) documentMap.get(ACTION_KEY);
