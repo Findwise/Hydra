@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.findwise.hydra.stage.AbstractProcessStage;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;

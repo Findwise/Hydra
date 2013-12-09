@@ -9,12 +9,10 @@ class InterruptibleWaitingStage extends AbstractProcessStage {
 	public void process(LocalDocument doc) throws ProcessException {
 		try {
 			while (true) {
-				sleep(100);
+				Thread.sleep(100);
 			}
 		} catch (InterruptedException e) {
 			return;
-		} finally {
-			stopStage();
 		}
 	}
 }

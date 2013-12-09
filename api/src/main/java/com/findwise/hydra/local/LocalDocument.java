@@ -37,6 +37,8 @@ public class LocalDocument implements Document<Local> {
 	// TODO: Code smell...
 	private DocumentFileRepository documentFileRepository = new UnsetDocumentFileRepository();
 
+	private boolean discardAfterProcessing = false;
+
 	public LocalDocument() {
 		documentMap = new HashMap<String, Object>();
 		documentMap.put(CONTENTS_KEY, new HashMap<String, Object>());
@@ -605,6 +607,20 @@ public class LocalDocument implements Document<Local> {
 
 	public boolean deleteFile(String fileName) {
 		return documentFileRepository.deleteFile(fileName, getID());
+	}
+
+	/**
+	 * Sets this document to be discarded after processing.
+	 *
+	 * N.B. Throwing an exception in a stage after discarding the document
+	 * will still set the document as failed instead of discarded.
+	 */
+	public void discard() {
+		this.discardAfterProcessing = true;
+	}
+
+	public boolean isDiscarded() {
+		return discardAfterProcessing;
 	}
 
 	private class UnsetDocumentFileRepository implements DocumentFileRepository {

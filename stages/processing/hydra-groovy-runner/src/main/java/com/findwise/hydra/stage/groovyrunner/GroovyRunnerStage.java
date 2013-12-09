@@ -1,9 +1,9 @@
 package com.findwise.hydra.stage.groovyrunner;
 
+import com.findwise.hydra.stage.AbstractProcessStage;
 import groovy.lang.GroovyClassLoader;
 
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.Stage;

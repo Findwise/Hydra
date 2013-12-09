@@ -12,7 +12,7 @@ public class HangingStage extends AbstractProcessStage {
 	public void process(LocalDocument doc) throws ProcessException {
 		while (true) {
 			try {
-				sleep(1000);
+				Thread.sleep(1000);
 			} catch (InterruptedException e) {}
 		}
 	}

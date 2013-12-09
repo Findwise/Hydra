@@ -1,10 +1,8 @@
 package com.findwise.hydra.output.elasticsearch;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.findwise.hydra.stage.InitFailedException;
 import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -14,14 +12,17 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.findwise.hydra.Document.Action;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractOutputStage;
+import com.findwise.hydra.stage.InitFailedException;
 import com.findwise.hydra.stage.Parameter;
+import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Writes to elasticsearch via the Transport protocol.
@@ -66,7 +67,7 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 	}
 
 	@Override
-	public void output(LocalDocument document) {
+	public void output(LocalDocument document) throws ProcessException {
 		final Action action = document.getAction();
 		
 		try {
@@ -82,21 +83,18 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 				update(document);
 				break;
 			default:
-				failDocument(document, new RequiredArgumentMissingException("Action must be ADD, DELETE or UPDATE."));
-				break;
+				throw new ProcessException("Action must be ADD, DELETE or UPDATE.");
 			}
 		} catch (ElasticSearchException e) {
-			failDocument(document, e);
-		} catch (IOException e) {
-			failDocument(document, e);
+			throw new ProcessException(e);
 		}
 	}
 
-	private void update(LocalDocument document) throws ElasticSearchException, IOException {
+	private void update(LocalDocument document) throws ElasticSearchException {
 		add(document);
 	}
 
-	private void add(LocalDocument document) throws ElasticSearchException, IOException {
+	private void add(LocalDocument document) throws ElasticSearchException {
 		String docId = getDocumentId(document);
 		String json = document.contentFieldsToJson(document.getContentFields());
 		logger.debug("Indexing document " + getDocumentId(document) + " to index " + documentIndex + " with type " + documentType);
@@ -105,10 +103,9 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 			.execute();
 		IndexResponse response = actionFuture.actionGet(requestTimeout);
 		logger.debug("Got response for docId " + response.getId());
-		accept(document);
 	}
 
-	private void delete(LocalDocument document) throws IOException {
+	private void delete(LocalDocument document) {
 		
 		String docId = getDocumentId(document);
 		
@@ -120,16 +117,6 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 		}
 		else {
 			logger.debug("Deleted document with id " + response.getId());
-		}
-		accept(document);
-	}
-
-	private void failDocument(LocalDocument doc, Throwable reason) {
-		try {
-			logger.error("Failing document " + doc.getID(), reason);
-			fail(doc, reason);
-		} catch (Exception e) {
-			logger.error("Could not fail document with hydra id: " + doc.getID(), e);
 		}
 	}
 

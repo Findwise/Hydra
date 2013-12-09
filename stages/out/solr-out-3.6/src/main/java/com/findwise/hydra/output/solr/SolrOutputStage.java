@@ -6,20 +6,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.findwise.hydra.stage.InitFailedException;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.common.SolrInputDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.Document.Action;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractOutputStage;
+import com.findwise.hydra.stage.InitFailedException;
 import com.findwise.hydra.stage.Parameter;
+import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Stage(description="Writes documents to Solr")
 public class SolrOutputStage extends AbstractOutputStage {
@@ -39,7 +40,7 @@ public class SolrOutputStage extends AbstractOutputStage {
 	private SolrServer solr;
 
 	@Override
-	public void output(LocalDocument doc) {
+	public void output(LocalDocument doc) throws ProcessException {
 		final Action action = doc.getAction();
 
 		try {
@@ -49,14 +50,16 @@ public class SolrOutputStage extends AbstractOutputStage {
 		} else if (action == Action.DELETE) {
 			delete(doc);
 		} else{
-			failDocument(doc, new RequiredArgumentMissingException("action not set in document. This document would never be sent to solr"));
+			throw new ProcessException("action not set in document. This document would never be sent to solr");
 		}
+		} catch (ProcessException e) {
+			throw e;
 		} catch (SolrServerException e) {
-			failDocument(doc, e);
+			throw new ProcessException(e);
 		} catch (IOException e) {
-			failDocument(doc, e);
+			throw new ProcessException(e);
 		} catch (RequiredArgumentMissingException e) {
-			failDocument(doc, e);
+			throw new ProcessException(e);
 		}
 	}
 
@@ -77,7 +80,6 @@ public class SolrOutputStage extends AbstractOutputStage {
 		else {
 			solr.add(solrdoc);
 		}
-		accept(doc);
 	}
 	
 	private void delete(LocalDocument doc) throws SolrServerException, IOException, RequiredArgumentMissingException {
@@ -89,7 +91,6 @@ public class SolrOutputStage extends AbstractOutputStage {
 		} else {
 			solr.deleteById(doc.getContentField(idField).toString());
 		}
-		accept(doc);
 	}
 	
 
@@ -121,15 +122,6 @@ public class SolrOutputStage extends AbstractOutputStage {
 					inputDoc.addField(s, doc.getContentField(field));
 				}
 			}
-		}
-	}
-
-	private void failDocument(LocalDocument doc, Throwable reason) {
-		try {
-			logger.error("Failing document "+doc.getID(), reason);
-			fail(doc, reason);
-		} catch (Exception e) {
-			logger.error("Could not fail document with hydra id: " + doc.getID(), e);
 		}
 	}
 

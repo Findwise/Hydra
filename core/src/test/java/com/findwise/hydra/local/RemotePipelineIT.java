@@ -153,34 +153,6 @@ public class RemotePipelineIT {
 	
 
 	@Test
-	public void testSaveCurrentDocument() throws Exception {
-		RemotePipeline rp1 = new RemotePipeline("127.0.0.1", server.getPort(), "stage1");
-		RemotePipeline rp2 = new RemotePipeline("127.0.0.1", server.getPort(), "stage2");
-		LocalDocument d = rp1.getDocument(new LocalQuery());
-		d.putContentField("value", "newField");
-
-		rp1.saveCurrentDocument();
-		
-		if(!d.isSynced()) {
-			fail("Document should be in sync");
-		}
-
-		if(rp1.saveCurrentDocument()) {
-			fail("Should not be any documents to save..");
-		}
-		LocalQuery lq = new LocalQuery();
-		lq.requireTouchedByStage("stage1");
-		if(null==rp2.getDocument(lq)) {
-			fail("The document was not marked as touched properly by stage1");
-		}
-		rp2.saveCurrentDocument();
-		
-		if(null!=rp2.getDocument(lq)) {
-			fail("Was not expecting to find another document there..");
-		}
-	}
-	
-	@Test
 	public void testSave() throws Exception {
 		RemotePipeline rp1 = new RemotePipeline("127.0.0.1", server.getPort(), "stage1");
 		LocalDocument d1 = rp1.getDocument(new LocalQuery());
@@ -189,8 +161,8 @@ public class RemotePipelineIT {
 		d1.addError("s1", new NullPointerException("xyz"));
 		rp1.save(d1);
 		d2.putContentField("x2", "z");
-		rp1.saveCurrentDocument();
-		
+		rp1.save(d2);
+
 		RemotePipeline rp2 = new RemotePipeline("127.0.0.1", server.getPort(), "stage2");
 		LocalQuery query = new LocalQuery();
 		query.requireContentFieldExists("x");
