@@ -154,4 +154,16 @@ public class RegexStage extends AbstractProcessStage {
 		}
 		return ret;
 	}
+
+	public void setRegexConfigs(List<Map<String, String>> regexConfigs) {
+		this.regexConfigs = regexConfigs;
+	}
+
+	public void setConcatenateMatches(boolean concatenateMatches) {
+		this.concatenateMatches = concatenateMatches;
+	}
+
+	public void setConcatenateListElements(boolean concatenateListElements) {
+		this.concatenateListElements = concatenateListElements;
+	}
 }

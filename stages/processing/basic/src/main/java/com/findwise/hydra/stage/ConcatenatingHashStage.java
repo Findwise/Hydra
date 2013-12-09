@@ -58,5 +58,20 @@ public class ConcatenatingHashStage extends AbstractProcessStage {
         if(!sb.toString().isEmpty())
             doc.putContentField(output, hasher.hashString(sb.toString()));
     }
-    
+
+	public void setAlgorithm(String algorithm) {
+		this.algorithm = algorithm;
+	}
+
+	public void setFields(List<String> fields) {
+		this.fields = fields;
+	}
+
+	public void setOutput(String output) {
+		this.output = output;
+	}
+
+	public void setHasher(Hasher hasher) {
+		this.hasher = hasher;
+	}
 }

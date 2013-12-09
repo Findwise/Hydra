@@ -29,4 +29,12 @@ public class HashStage extends AbstractMappingProcessStage {
 			throws ProcessException {
 		doc.putContentField(toField, hasher.hashString(doc.getContentField(fromField).toString()));
 	}
+
+	public void setAlgorithm(String algorithm) {
+		this.algorithm = algorithm;
+	}
+
+	public void setHasher(Hasher hasher) {
+		this.hasher = hasher;
+	}
 }

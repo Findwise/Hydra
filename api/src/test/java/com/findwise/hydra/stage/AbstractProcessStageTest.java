@@ -11,8 +11,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -75,9 +73,7 @@ public class AbstractProcessStageTest {
 		stage = new LimitedCountExceptionStage(3);
 		stage.setRemotePipeline(rp);
 		stage.setStageKiller(mockStageKiller);
-		HashMap<String, Object> map = new HashMap<String, Object>();
-		map.put("failDocumentOnProcessException", true);
-		stage.setParameters(map);
+		stage.setFailDocumentOnProcessException(true);
 
 		spy(stage);
 
@@ -133,10 +129,7 @@ public class AbstractProcessStageTest {
 		RemotePipeline rp = mock(RemotePipeline.class);
 		stage.setRemotePipeline(rp);
 		stage.setStageKiller(mockStageKiller);
-
-		HashMap<String, Object> map = new HashMap<String, Object>();
-		map.put("processingTimeout", 1);
-		stage.setParameters(map);
+		stage.setProcessingTimeout(1);
 
 		LocalDocument ld = mock(LocalDocument.class);
 
@@ -154,10 +147,7 @@ public class AbstractProcessStageTest {
 		stage.setRemotePipeline(rp);
 
 		stage.setStageKiller(mockStageKiller);
-
-		HashMap<String, Object> map = new HashMap<String, Object>();
-		map.put("processingTimeout", 1);
-		stage.setParameters(map);
+		stage.setProcessingTimeout(1);
 
 		LocalDocument ld = mock(LocalDocument.class);
 
