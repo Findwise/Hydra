@@ -1,9 +1,6 @@
 package com.findwise.hydra.stage;
 
-import com.findwise.hydra.SerializationUtils;
 import com.findwise.hydra.local.RemotePipeline;
-
-import java.util.Map;
 
 public class StageCommandLineArguments {
 	private static final int STAGE_NAME_PARAM = 0;
@@ -20,15 +17,15 @@ public class StageCommandLineArguments {
 	private final int logPort;
 
 	/* @Nullable */
-	private final Map<String, Object> stageOverrideProperties;
+	private final AbstractProcessStage stage;
 
-	private StageCommandLineArguments(String stageName, String host, int port, boolean performanceLogging, int logPort, Map<String, Object> stageOverrideProperties) {
+	private StageCommandLineArguments(String stageName, String host, int port, boolean performanceLogging, int logPort, AbstractProcessStage stage) {
 		this.stageName = stageName;
 		this.host = host;
 		this.port = port;
 		this.performanceLogging = performanceLogging;
 		this.logPort = logPort;
-		this.stageOverrideProperties = stageOverrideProperties;
+		this.stage = stage;
 	}
 
 	public static StageCommandLineArguments parse(String[] args) throws Exception {
@@ -41,7 +38,7 @@ public class StageCommandLineArguments {
 		int port = (args.length>PIPELINE_PORT_PARAM) ? Integer.parseInt(args[PIPELINE_PORT_PARAM]) : RemotePipeline.DEFAULT_PORT;
 		boolean usePerformanceLogging = (args.length>PERFORMANCE_LOG_PARAM) ? Boolean.parseBoolean(args[PERFORMANCE_LOG_PARAM]) : false;
 		int logPort = (args.length>LOG_PORT_PARAM) ? Integer.parseInt(args[LOG_PORT_PARAM]) : RemotePipeline.DEFAULT_LOG_PORT;
-		Map<String, Object> stageOverrideProperties = (args.length>OVERRIDE_PROPERTIES_PARAM) ? SerializationUtils.fromJson(args[OVERRIDE_PROPERTIES_PARAM]) : null;
+		AbstractProcessStage stageOverrideProperties = (args.length>OVERRIDE_PROPERTIES_PARAM) ? AbstractProcessStageMapper.fromJsonString(args[OVERRIDE_PROPERTIES_PARAM]) : null;
 
 		return new StageCommandLineArguments(stageName, host, port, usePerformanceLogging, logPort, stageOverrideProperties);
 	}
@@ -50,7 +47,7 @@ public class StageCommandLineArguments {
 		return stageName;
 	}
 
-	// A bit of a hack here. AbstractStage and GroupStarter takes the same command line
+	// A bit of a hack here. StageStarter and GroupStarter takes the same command line
 	// arguments, but in the case of GroupStarter, the first argument is the name of the stage group.
 	public String getStageGroupName() {
 		return stageName;
@@ -72,7 +69,7 @@ public class StageCommandLineArguments {
 		return logPort;
 	}
 
-	public Map<String, Object> getStageOverrideProperties() {
-		return stageOverrideProperties;
+	public AbstractProcessStage getStage() {
+		return stage;
 	}
 }

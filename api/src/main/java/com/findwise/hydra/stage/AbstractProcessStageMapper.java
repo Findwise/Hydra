@@ -16,15 +16,38 @@ import com.findwise.hydra.SerializationUtils;
 public class AbstractProcessStageMapper {
 	Logger logger = LoggerFactory.getLogger(AbstractProcessStageMapper.class);
 
+	public static final String ARG_NAME_STAGE_CLASS = "stageClass";
+
+	public static AbstractProcessStage fromJsonString(String json) throws JsonException, ClassNotFoundException, InstantiationException, IllegalAccessException, InitFailedException, RequiredArgumentMissingException {
+		Map<String, Object> properties = SerializationUtils.fromJson(json);
+		return fromMap(properties);
+	}
+
+	private static AbstractProcessStage fromMap(Map<String, Object> properties) throws RequiredArgumentMissingException, ClassNotFoundException, IllegalAccessException, InstantiationException, InitFailedException {
+		String stageClass;
+		if (properties.containsKey(ARG_NAME_STAGE_CLASS)) {
+			stageClass = (String) properties.get(ARG_NAME_STAGE_CLASS);
+		} else {
+			throw new RequiredArgumentMissingException("No class specified in the '" + ARG_NAME_STAGE_CLASS + "' property.");
+		}
+
+		Class<? extends AbstractProcessStage> actualClass = (Class<? extends AbstractProcessStage>) Class
+				.forName(stageClass);
+		AbstractProcessStage stage = actualClass.newInstance();
+		setParameters(stage, properties);
+		stage.init();
+
+		return stage;
+	}
+
 	/**
 	 * Injects the parameters found in the map to any fields annotated with @Stage, whose names matches
 	 * the keys in this map.
-	 * @param o
 	 * @param map
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */
-	public static void setParameters(Object o, Map<String, Object> map) throws IllegalArgumentException, IllegalAccessException, RequiredArgumentMissingException {
+	private static void setParameters(Object o, Map<String, Object> map) throws IllegalArgumentException, IllegalAccessException, RequiredArgumentMissingException {
 		if (o.getClass().isAnnotationPresent(Stage.class)) {
 			for(Field field : getParameterFields(o)) {
 				Parameter fieldAnnotation = field.getAnnotation(Parameter.class);
@@ -65,7 +88,7 @@ public class AbstractProcessStageMapper {
 				}
 			}
 		} else {
-			throw new NoSuchElementException("No Stage-annotation found on the specified class "+ o.getClass().getCanonicalName());
+			throw new NoSuchElementException("No Stage-annotation found on the specified class " + o.getClass().getCanonicalName());
 		}
 	}
 

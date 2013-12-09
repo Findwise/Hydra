@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.findwise.hydra.Logging;
+import com.google.common.util.concurrent.ServiceManager;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.util.EntityUtils;
@@ -19,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Starts a StageGroup in a new JVM by fetching stage names and setting up logging.
- * This class delegates the actual startup procedure to {@link AbstractStage}.
  *
  * @author joel.westberg
  *
@@ -46,38 +46,34 @@ public class GroupStarter {
 
 		try {
 			Logging.setup(host, logPort);
-		} catch (UnknownHostException e) {
+		} catch (Exception e) {
 			logger.error("Unable to connect to remote logging host on "+ host +":"+cmdLineArgs.getLogPort(), e);
 			System.exit(1);
 		}
 
-		createAndStartGroup(
-			groupName,
-			host,
-			port,
-			performanceLogging
-		);
+		final ServiceManager manager;
+		try {
+			manager = getServiceManager(groupName, host, port, performanceLogging);
+		} catch (Exception e) {
+			logger.error("Failed to get stage service manager. Shutting down.", e);
+			System.exit(1);
+			return; // Otherwise compiler doesn't understand that manager is initialized.
+		}
+		try {
+			StageStarter.startServices(manager);
+		} catch (Exception e) {
+			logger.error("Failed to start services. Shutting down.", e);
+			System.exit(1);
+		}
 	}
 
-	private static void createAndStartGroup(String groupName, String host, int port, boolean performanceLogging) {
-		List<String> stageNames;
-		try {
-			stageNames = getStages(host, port, groupName);
-		} catch (IOException e) {
-			Logging.addConsoleAppender();
-			logger.error("Unable to get stages for the group '"+groupName+"'", e);
-			return;
+	private static ServiceManager getServiceManager(String groupName, String host, int port, boolean performanceLogging) throws Exception {
+		List<StageService> stageServices = new ArrayList<StageService>();
+		for (String stageName : getStages(host, port, groupName)) {
+			List<StageService> stageServicesForStage = StageServiceFactory.createStageServices(stageName, host, port, performanceLogging, null);
+			stageServices.addAll(stageServicesForStage);
 		}
-
-		try {
-			for (String stageName : stageNames) {
-				logger.debug("Attempting to start stage: " + stageName);
-				new StageFactory(stageName, host, port, performanceLogging, null).createAndStartStages();
-			}
-		} catch (Exception e) {
-			Logging.addConsoleAppender();
-			logger.error("An exception was thrown when starting the stages in the group", e);
-		}
+		return new ServiceManager(stageServices);
 	}
 
     @SuppressWarnings("unchecked")

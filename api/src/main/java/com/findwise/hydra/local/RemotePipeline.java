@@ -22,6 +22,10 @@ import com.findwise.hydra.DocumentFileRepository;
 import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.SerializationUtils;
+import com.findwise.hydra.stage.AbstractProcessStage;
+import com.findwise.hydra.stage.AbstractProcessStageMapper;
+import com.findwise.hydra.stage.InitFailedException;
+import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.tools.HttpConnection;
 
 public class RemotePipeline implements DocumentFileRepository {
@@ -48,22 +52,20 @@ public class RemotePipeline implements DocumentFileRepository {
 	public static final String DEFAULT_HOST = "localhost";
 	public static final int DEFAULT_LOG_PORT = 12002;
 
-	private boolean performanceLogging = false;
+	private final boolean performanceLogging;
 
-	private HttpConnection core;
+	private final HttpConnection core;
 
-	private String getUrl;
-	private String writeUrl;
-	private String processedUrl;
-	private String failedUrl;
-	private String pendingUrl;
-	private String discardedUrl;
-	private String propertyUrl;
-	private String fileUrl;
+	private final String getUrl;
+	private final String writeUrl;
+	private final String processedUrl;
+	private final String failedUrl;
+	private final String pendingUrl;
+	private final String discardedUrl;
+	private final String propertyUrl;
+	private final String fileUrl;
 
-	private String stageName;
-
-	private LocalDocument currentDocument;
+	private final String stageName;
 
 	/**
 	 * Calls RemotePipeline(String, int, String) with default values for
@@ -72,10 +74,14 @@ public class RemotePipeline implements DocumentFileRepository {
 	 * @param stageName
 	 */
 	public RemotePipeline(String stageName) {
-		this(DEFAULT_HOST, DEFAULT_PORT, stageName);
+		this(DEFAULT_HOST, DEFAULT_PORT, stageName, false);
 	}
 
 	public RemotePipeline(String hostName, int port, String stageName) {
+		this(hostName, port, stageName, false);
+	}
+
+	public RemotePipeline(String hostName, int port, String stageName, boolean performanceLogging) {
 		this.stageName = stageName;
 		getUrl = "/" + GET_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
 		writeUrl = "/" + WRITE_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
@@ -87,6 +93,7 @@ public class RemotePipeline implements DocumentFileRepository {
 		fileUrl = "/" + FILE_URL + "?" + STAGE_PARAM + "=" + stageName;
 
 		core = new HttpConnection(hostName, port);
+		this.performanceLogging = performanceLogging;
 	}
 
 	/**
@@ -108,7 +115,6 @@ public class RemotePipeline implements DocumentFileRepository {
 			startJson = System.currentTimeMillis();
 			ld = buildDocument(s);
 			internalLogger.debug("Received document with ID " + ld.getID());
-			currentDocument = ld;
 		} else if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
 			internalLogger.debug("No document found matching query");
 			EntityUtils.consume(response.getEntity());
@@ -138,22 +144,6 @@ public class RemotePipeline implements DocumentFileRepository {
 	private static void logUnexpected(HttpResponse response) throws IOException {
 		internalLogger.error("Node gave an unexpected response: " + response.getStatusLine());
 		internalLogger.error("Message: " + EntityUtils.toString(response.getEntity()));
-	}
-
-	/**
-	 * Writes all outstanding updates to the last document fetched from the pipeline.
-	 */
-	public boolean saveCurrentDocument() throws IOException, JsonException {
-		if (currentDocument == null) {
-			internalLogger.error("There is no document to write.");
-			return false;
-		}
-		boolean x = save(currentDocument);
-		if (x) {
-			currentDocument = null;
-		}
-
-		return x;
 	}
 
 	/**
@@ -276,26 +266,27 @@ public class RemotePipeline implements DocumentFileRepository {
 		return s;
 	}
 
-	public Map<String, Object> getProperties() throws IOException {
+	public AbstractProcessStage getStageInstance() throws IOException, IllegalAccessException, InitFailedException, InstantiationException, JsonException, RequiredArgumentMissingException, ClassNotFoundException {
+		String jsonString = getStagePropertiesJsonString();
+		return AbstractProcessStageMapper.fromJsonString(jsonString);
+	}
+
+	private String getStagePropertiesJsonString() throws IOException {
 		HttpResponse response = core.get(propertyUrl);
 
+		String jsonString;
 		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-			Map<String, Object> map;
-			try {
-				map = SerializationUtils.fromJson(EntityUtils.toString(response.getEntity()));
-			} catch (JsonException e) {
-				throw new IOException(e);
-			}
-			internalLogger.debug("Successfully retrieved propertyMap with " + map.size() + " entries");
-			return map;
+			internalLogger.debug("Successfully retrieved propertyMap");
+			jsonString = EntityUtils.toString(response.getEntity());
 		} else if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
 			internalLogger.debug("No document found matching query");
 			EntityUtils.consume(response.getEntity());
-			return null;
+			throw new RuntimeException("No stage properties found for " + stageName);
 		} else {
 			logUnexpected(response);
-			return null;
+			throw new RuntimeException("Unexpected error while fetching stage properties for " + stageName);
 		}
+		return jsonString;
 	}
 
 	private String getFileUrl(DocumentFile<Local> df) throws UnsupportedEncodingException {
@@ -412,10 +403,6 @@ public class RemotePipeline implements DocumentFileRepository {
 
 	public String getStageName() {
 		return stageName;
-	}
-
-	public void setPerformanceLogging(boolean performanceLogging) {
-		this.performanceLogging = performanceLogging;
 	}
 
 	public boolean isPerformanceLogging() {

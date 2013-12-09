@@ -44,7 +44,7 @@ public class RemotePipelineTest {
 
 	@Before
 	public void setUp() {
-		rp = new RemotePipeline(mockHost, mockPort, stageName);
+		rp = new RemotePipeline(mockHost, mockPort, stageName, false);
 		doc = new LocalDocument();
 		doc.setID(new LocalDocumentID("testdoc"));
 	}
