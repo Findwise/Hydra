@@ -41,10 +41,10 @@ public class FilesToDiskDumper extends AbstractProcessStage {
 
         List<String> files;
         try {
-            files = getRemotePipeline().getFileNames(doc.getID());
+            files = doc.getFileNames();
 
             for (String fileName : files) {
-                DocumentFile<Local> df = getRemotePipeline().getFile(fileName, doc.getID());
+                DocumentFile<Local> df = doc.getFile(fileName);
 
                 File dir = new File(path + "/");
                 dir.mkdirs();
