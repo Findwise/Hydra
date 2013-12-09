@@ -31,4 +31,8 @@ public abstract class AbstractMappingProcessStage extends AbstractProcessStage {
 	public abstract void stageInit() throws RequiredArgumentMissingException, InitFailedException;
 
 	public abstract void processField(LocalDocument doc, String fromField, String toField) throws ProcessException;
+
+	public void setMap(Map<String, String> map) {
+		this.map = map;
+	}
 }

@@ -19,11 +19,9 @@ public class HashStageTest {
 	@Test
 	public void testMd5() throws Exception {
 		HashStage hs = new HashStage();
-		Map<String, Object> settings = new HashMap<String, Object>();
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("from", "to");
-		settings.put("map", map);
-		hs.setParameters(settings);
+		hs.setMap(map);
 		hs.init();
 		
 		testStringMD5(hs, RandomStringUtils.randomAscii(10000));
@@ -47,12 +45,10 @@ public class HashStageTest {
 	@Test
 	public void testSha256() throws Exception {
 		HashStage hs = new HashStage();
-		Map<String, Object> settings = new HashMap<String, Object>();
+		hs.setAlgorithm("SHA-256");
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("from", "to");
-		settings.put("map", map);
-		settings.put("algorithm", "SHA-256");
-		hs.setParameters(settings);
+		hs.setMap(map);
 		hs.init();
 		
 		testStringSha256(hs, RandomStringUtils.randomAscii(10000));

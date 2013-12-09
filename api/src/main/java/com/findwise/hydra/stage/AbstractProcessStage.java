@@ -201,6 +201,14 @@ public abstract class AbstractProcessStage extends AbstractStage {
 		return getRemotePipeline().markFailed(doc, e);
 	}
 
+	public void setFailDocumentOnProcessException(boolean failDocumentOnProcessException) {
+		this.failDocumentOnProcessException = failDocumentOnProcessException;
+	}
+
+	public void setProcessingTimeout(long processingTimeout) {
+		this.processingTimeout = processingTimeout;
+	}
+
 	class ProcessCallable implements Callable<Object> {
 
 		private final LocalDocument doc; // TODO: Can stages reassign the doc object?

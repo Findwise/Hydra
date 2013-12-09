@@ -115,4 +115,28 @@ public class MergeFieldsStage extends AbstractProcessStage {
 			return x.intValue() + y.intValue();
 		}
 	}
+
+	public void setOutputField(String outputField) {
+		this.outputField = outputField;
+	}
+
+	public void setFromFields(List<String> fromFields) {
+		this.fromFields = fromFields;
+	}
+
+	public void setClearOutputField(boolean clearOutputField) {
+		this.clearOutputField = clearOutputField;
+	}
+
+	public void setSeparator(String separator) {
+		this.separator = separator;
+	}
+
+	public void setAdditionIfNumbers(boolean additionIfNumbers) {
+		this.additionIfNumbers = additionIfNumbers;
+	}
+
+	public void setCreateList(boolean createList) {
+		this.createList = createList;
+	}
 }

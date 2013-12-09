@@ -110,15 +110,12 @@ public class SetStaticFieldStageTest {
 	}
 
 	public void init(Policy policy) throws Exception {
-		HashMap<String, Object> map = new HashMap<String, Object>();
-		map.put("overwritePolicy", policy);
+		stage.setOverwritePolicy(policy);
 		HashMap<String, Object> fieldValueMap = new HashMap<String, Object>();
 		fieldValueMap.put("empty", "value");
 		fieldValueMap.put("string", 1);
 		fieldValueMap.put("list", "value");
-		map.put("fieldValueMap", fieldValueMap);
-		stage.setParameters(map);
-
+		stage.setFieldValueMap(fieldValueMap);
 		stage.init();
 	}
 }

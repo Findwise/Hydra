@@ -72,4 +72,12 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 			doc.putContentField(fieldName, list);
 		}
 	}
+
+	public void setFieldValueMap(Map<String, Object> fieldValueMap) {
+		this.fieldValueMap = fieldValueMap;
+	}
+
+	public void setOverwritePolicy(Policy overwritePolicy) {
+		this.overwritePolicy = overwritePolicy;
+	}
 }
