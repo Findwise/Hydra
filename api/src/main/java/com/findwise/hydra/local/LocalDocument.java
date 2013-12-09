@@ -3,21 +3,24 @@ package com.findwise.hydra.local;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashMap;
+
+import com.google.gson.JsonParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.Document;
+import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.DocumentFileRepository;
 import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.SerializationUtils;
 import com.findwise.tools.Comparator;
-import com.google.gson.JsonParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LocalDocument implements Document<Local> {
     private static Logger internalLogger = LoggerFactory.getLogger("internal");
@@ -27,6 +30,12 @@ public class LocalDocument implements Document<Local> {
 
 	private Set<String> touchedMetadata;
 	private boolean touchedAction;
+
+	// For backwards compatibility, the documentFileRepository is set by a setter instead
+	// of in the constructor. If it is unset, a stubbed variant is supplied that raises
+	// exceptions for all methods.
+	// TODO: Code smell...
+	private DocumentFileRepository documentFileRepository = new UnsetDocumentFileRepository();
 
 	public LocalDocument() {
 		documentMap = new HashMap<String, Object>();
@@ -58,7 +67,9 @@ public class LocalDocument implements Document<Local> {
 		}
 		touchedContent = new HashSet<String>(doc.touchedContent);
 		touchedMetadata = new HashSet<String>(doc.touchedMetadata);
+		// The following objects are immutable so don't need to be copied
 		touchedAction = doc.touchedAction;
+		documentFileRepository = doc.documentFileRepository;
 	}
 
 	@Override
@@ -570,5 +581,56 @@ public class LocalDocument implements Document<Local> {
 	@Override
 	public Object removeContentField(String key) {
 		return putContentField(key, null);
+	}
+
+	public void setDocumentFileRepository(DocumentFileRepository documentFileRepository) {
+		this.documentFileRepository = documentFileRepository;
+	}
+
+	public List<String> getFileNames() {
+		return documentFileRepository.getFileNames(getID());
+	}
+
+	public DocumentFile<Local> getFile(String fileName) {
+		return documentFileRepository.getFile(fileName, getID());
+	}
+
+	public List<DocumentFile<Local>> getFiles() {
+		return documentFileRepository.getFiles(getID());
+	}
+
+	public boolean saveFile(DocumentFile<Local> file) {
+		return documentFileRepository.saveFile(file);
+	}
+
+	public boolean deleteFile(String fileName) {
+		return documentFileRepository.deleteFile(fileName, getID());
+	}
+
+	private class UnsetDocumentFileRepository implements DocumentFileRepository {
+		@Override
+		public DocumentFile<Local> getFile(String fileName, DocumentID<Local> docid) {
+			throw new UnsupportedOperationException("You are trying to use files in a LocalDocument with an UnsetDocumentFileRepository");
+		}
+
+		@Override
+		public List<DocumentFile<Local>> getFiles(DocumentID<Local> docid) {
+			throw new UnsupportedOperationException("You are trying to use files in a LocalDocument with an UnsetDocumentFileRepository");
+		}
+
+		@Override
+		public List<String> getFileNames(DocumentID<?> docid) {
+			throw new UnsupportedOperationException("You are trying to use files in a LocalDocument with an UnsetDocumentFileRepository");
+		}
+
+		@Override
+		public boolean deleteFile(String fileName, DocumentID<Local> docid) {
+			throw new UnsupportedOperationException("You are trying to use files in a LocalDocument with an UnsetDocumentFileRepository");
+		}
+
+		@Override
+		public boolean saveFile(DocumentFile<Local> df) {
+			throw new UnsupportedOperationException("You are trying to use files in a LocalDocument with an UnsetDocumentFileRepository");
+		}
 	}
 }

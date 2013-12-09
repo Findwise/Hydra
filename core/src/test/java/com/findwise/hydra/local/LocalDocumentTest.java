@@ -16,6 +16,7 @@ import com.findwise.hydra.SerializationUtils;
 import com.findwise.hydra.Document.Action;
 import com.findwise.tools.Comparator;
 
+// TODO: Duplicate of same test in hydra-api ?
 public class LocalDocumentTest {
 
 	String test1s;
@@ -226,11 +227,6 @@ public class LocalDocumentTest {
 		d.putContentField("x2", "y");
 		if(d.isSynced()) {
 			fail("Document should be out of sync.");
-		}
-
-		LocalDocument d2 = new LocalDocument(d);
-		if(!d2.isSynced()) {
-			fail("Document should be in sync.");
 		}
 	}
 	

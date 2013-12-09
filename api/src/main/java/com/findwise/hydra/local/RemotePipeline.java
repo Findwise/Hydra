@@ -11,20 +11,20 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.DocumentFileRepository;
 import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.SerializationUtils;
 import com.findwise.tools.HttpConnection;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
-public class RemotePipeline {
+public class RemotePipeline implements DocumentFileRepository {
 	private static final Logger internalLogger = LoggerFactory.getLogger("internal");
 	private static final Logger logger = LoggerFactory.getLogger(RemotePipeline.class);
 
@@ -105,12 +105,8 @@ public class RemotePipeline {
 		LocalDocument ld = null;
 		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 			String s = EntityUtils.toString(response.getEntity());
-			try {
-				startJson = System.currentTimeMillis();
-				ld = new LocalDocument(s);
-			} catch (JsonException e) {
-				throw new IOException(e);
-			}
+			startJson = System.currentTimeMillis();
+			ld = buildDocument(s);
 			internalLogger.debug("Received document with ID " + ld.getID());
 			currentDocument = ld;
 		} else if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
@@ -124,6 +120,18 @@ public class RemotePipeline {
 			Object docId = ld != null ? ld.getID() : null;
 			logger.info(String.format("type=performance event=query stage_name=%s doc_id=\"%s\" start=%d fetch=%d entitystring=%d serialize=%d end=%d total=%d", stageName, docId, start, startSerialize - start, startJson - startSerialize, end - startJson, end, end - start));
 		}
+		return ld;
+	}
+
+	private LocalDocument buildDocument(String s) throws IOException {
+		LocalDocument ld;
+		try {
+			ld = new LocalDocument(s);
+		} catch (JsonException e) {
+			// TODO: Why IOException here?
+			throw new IOException(e);
+		}
+		ld.setDocumentFileRepository(this);
 		return ld;
 	}
 
@@ -298,85 +306,102 @@ public class RemotePipeline {
 		return fileUrl + "&" + RemotePipeline.FILENAME_PARAM + "=" + fileName + "&" + RemotePipeline.DOCID_PARAM + "=" + URLEncoder.encode(docid.toJSON(), "UTF-8");
 	}
 
-	public DocumentFile<Local> getFile(String fileName, DocumentID<Local> docid) throws IOException {
-		HttpResponse response = core.get(getFileUrl(fileName, docid));
+	public DocumentFile<Local> getFile(String fileName, DocumentID<Local> docid) {
+		try {
+			HttpResponse response = core.get(getFileUrl(fileName, docid));
 
-		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-			Object o;
-			try {
-				o = SerializationUtils.toObject(EntityUtils.toString(response.getEntity()));
-			} catch (JsonException e) {
-				throw new IOException(e);
-			}
-			if (!(o instanceof Map)) {
+			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+				Object o;
+				try {
+					o = SerializationUtils.toObject(EntityUtils.toString(response.getEntity()));
+				} catch (JsonException e) {
+					throw new IOException(e);
+				}
+				if (!(o instanceof Map)) {
+					return null;
+				}
+
+				@SuppressWarnings("unchecked")
+				Map<String, Object> map = (Map<String, Object>) o;
+				Date d = (Date) map.get("uploadDate");
+				String encoding = (String) map.get("encoding");
+				String mimetype = (String) map.get("mimetype");
+				String savedByStage = (String) map.get("savedByStage");
+				InputStream is;
+				if (encoding == null) {
+					is = new ByteArrayInputStream(Base64.decodeBase64(((String) map.get("stream")).getBytes("UTF-8")));
+				} else {
+					is = new ByteArrayInputStream(Base64.decodeBase64(((String) map.get("stream")).getBytes(encoding)));
+				}
+
+				DocumentFile<Local> df = new DocumentFile<Local>(docid, fileName, is, savedByStage, d);
+				df.setEncoding(encoding);
+				df.setMimetype(mimetype);
+
+				return df;
+			} else {
+				logUnexpected(response);
 				return null;
 			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-			@SuppressWarnings("unchecked")
-			Map<String, Object> map = (Map<String, Object>) o;
-			Date d = (Date) map.get("uploadDate");
-			String encoding = (String) map.get("encoding");
-			String mimetype = (String) map.get("mimetype");
-			String savedByStage = (String) map.get("savedByStage");
-			InputStream is;
-			if (encoding == null) {
-				is = new ByteArrayInputStream(Base64.decodeBase64(((String) map.get("stream")).getBytes("UTF-8")));
+	public boolean saveFile(DocumentFile<Local> df) {
+		try {
+			HttpResponse response = core.post(getFileUrl(df), SerializationUtils.toJson(df));
+			int code = response.getStatusLine().getStatusCode();
+			if (code == HttpStatus.SC_OK || code == HttpStatus.SC_NO_CONTENT) {
+				EntityUtils.consume(response.getEntity());
+				return true;
 			} else {
-				is = new ByteArrayInputStream(Base64.decodeBase64(((String) map.get("stream")).getBytes(encoding)));
+				logUnexpected(response);
+				return false;
 			}
-
-			DocumentFile<Local> df = new DocumentFile<Local>(docid, fileName, is, savedByStage, d);
-			df.setEncoding(encoding);
-			df.setMimetype(mimetype);
-
-			return df;
-		} else {
-			logUnexpected(response);
-			return null;
+		} catch(IOException e) {
+			// TODO: Something else here?
+			throw new RuntimeException(e);
 		}
 	}
 
-	public boolean saveFile(DocumentFile<Local> df) throws IOException {
-		HttpResponse response = core.post(getFileUrl(df), SerializationUtils.toJson(df));
-		int code = response.getStatusLine().getStatusCode();
-		if (code == HttpStatus.SC_OK || code == HttpStatus.SC_NO_CONTENT) {
-			EntityUtils.consume(response.getEntity());
-			return true;
-		} else {
-			logUnexpected(response);
-			return false;
-		}
-	}
+	public boolean deleteFile(String fileName, DocumentID<Local> docid) {
+		try {
+			HttpResponse response = core.delete(getFileUrl(fileName, docid));
 
-	public boolean deleteFile(String fileName, DocumentID<Local> docid) throws IOException {
-		HttpResponse response = core.delete(getFileUrl(fileName, docid));
-
-		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-			EntityUtils.consume(response.getEntity());
-			return true;
-		} else {
-			logUnexpected(response);
-			return false;
+			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+				EntityUtils.consume(response.getEntity());
+				return true;
+			} else {
+				logUnexpected(response);
+				return false;
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<String> getFileNames(DocumentID<?> docid) throws IOException {
-		HttpResponse response = core.get(fileUrl + "&" + RemotePipeline.DOCID_PARAM + "=" + URLEncoder.encode(docid.toJSON(), "UTF-8"));
+	public List<String> getFileNames(DocumentID<?> docid) {
+		try {
+			HttpResponse response = core.get(fileUrl + "&" + RemotePipeline.DOCID_PARAM + "=" + URLEncoder.encode(docid.toJSON(), "UTF-8"));
 
-		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-			try {
-				return (List<String>) SerializationUtils.toObject(EntityUtils.toString(response.getEntity()));
-			} catch (JsonException e) {
-				throw new IOException(e);
+			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+				try {
+					return (List<String>) SerializationUtils.toObject(EntityUtils.toString(response.getEntity()));
+				} catch (JsonException e) {
+					throw new IOException(e);
+				}
+			} else {
+				logUnexpected(response);
+				return null;
 			}
-		} else {
-			logUnexpected(response);
-			return null;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
-	public List<DocumentFile<Local>> getFiles(DocumentID<Local> docid) throws IOException {
+	public List<DocumentFile<Local>> getFiles(DocumentID<Local> docid) {
 		List<String> fileNames = getFileNames(docid);
 		List<DocumentFile<Local>> files = new ArrayList<DocumentFile<Local>>();
 		for (String fileName : fileNames) {

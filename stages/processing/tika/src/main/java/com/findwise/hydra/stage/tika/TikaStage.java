@@ -33,9 +33,9 @@ public class TikaStage extends AbstractProcessStage {
 	@Override
 	public void process(LocalDocument doc) throws ProcessException { 
 		try {
-			List<String> files = getRemotePipeline().getFileNames(doc.getID());
+			List<String> files = doc.getFileNames();
 			for(String fileName : files) {
-				DocumentFile<Local> df = getRemotePipeline().getFile(fileName, doc.getID());
+				DocumentFile<Local> df = doc.getFile(fileName);
 				TikaUtils.enrichDocumentWithFileContents(doc, fileName.replace('.', '_')+"_", df.getStream(), parser, addMetaData, addLanguage);
 			}
 		} catch (IOException e) {
@@ -46,4 +46,21 @@ public class TikaStage extends AbstractProcessStage {
 			throw new ProcessException("Got exception from Tika", e);
 		}
 	}
+
+	public boolean isAddMetaData() {
+		return addMetaData;
+	}
+
+	public void setAddMetaData(boolean addMetaData) {
+		this.addMetaData = addMetaData;
+	}
+
+	public boolean isAddLanguage() {
+		return addLanguage;
+	}
+
+	public void setAddLanguage(boolean addLanguage) {
+		this.addLanguage = addLanguage;
+	}
+
 }
