@@ -89,7 +89,9 @@ public class StageRunner extends Thread {
 			File f = new File(targetDirectory, df.getFilename());
 			files.add(f);
 			InputStream dfis = df.getInputStream();
+			assert(dfis != null);
 			FileOutputStream fos = new FileOutputStream(f);
+			assert(fos != null);
 			try {
 				IOUtils.copy(dfis, fos);
 			} finally {
