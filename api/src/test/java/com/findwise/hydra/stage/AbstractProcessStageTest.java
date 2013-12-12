@@ -59,7 +59,6 @@ public class AbstractProcessStageTest {
 		when(testDoc1.getID()).thenReturn(new LocalDocumentID("doc1"));
 
 		when(rp.getDocument(any(LocalQuery.class))).thenReturn(testDoc1);
-		when(rp.releaseLastDocument()).thenReturn(true);
 
 		stage.run();
 
@@ -87,7 +86,6 @@ public class AbstractProcessStageTest {
 		when(testDoc1.getContentField("testField1")).thenReturn("test2");
 
 		when(rp.getDocument(any(LocalQuery.class))).thenReturn(testDoc1);
-		when(rp.releaseLastDocument()).thenReturn(true);
 
 		stage.run();
 
@@ -105,7 +103,6 @@ public class AbstractProcessStageTest {
 		LocalDocument ld = mock(LocalDocument.class);
 
 		when(rp.getDocument(any(LocalQuery.class))).thenReturn(ld);
-		when(rp.releaseLastDocument()).thenReturn(true);
 
 		stage.run();
 
@@ -144,7 +141,6 @@ public class AbstractProcessStageTest {
 		LocalDocument ld = mock(LocalDocument.class);
 
 		when(rp.getDocument(any(LocalQuery.class))).thenReturn(ld);
-		when(rp.releaseLastDocument()).thenReturn(true);
 		stage.run();
 
 		verify(ld, times(1)).addError(eq(stage.getStageName()), any(Throwable.class));
@@ -166,7 +162,6 @@ public class AbstractProcessStageTest {
 		LocalDocument ld = mock(LocalDocument.class);
 
 		when(rp.getDocument(any(LocalQuery.class))).thenReturn(ld);
-		when(rp.releaseLastDocument()).thenReturn(true);
 		stage.run();
 
 		verify(mockStageKiller).kill(eq(stage));

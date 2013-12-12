@@ -151,34 +151,6 @@ public class RemotePipelineIT {
 		}
 	}
 	
-	@Test
-	public void testReleaseDocument() throws Exception {
-		RemotePipeline rp1 = new RemotePipeline("127.0.0.1", server.getPort(), "stage1");
-		RemotePipeline rp2 = new RemotePipeline("127.0.0.1", server.getPort(), "stage2");
-		
-		LocalQuery lq = new LocalQuery();
-		lq.requireTouchedByStage("stage1");
-		
-		if(null!=rp2.getDocument(lq)) {
-			fail("Got document, but was expecting null. No documents have been touched by stage1");
-		}
-		
-		rp1.getDocument(new LocalQuery());
-		if(!rp1.releaseLastDocument()) {
-			fail("releaseLastDocument() returned false");
-		}
-		
-		LocalDocument ld = rp2.getDocument(lq);
-		if(null==ld) {
-			fail("Was expecting a document, but got null. One document has been touched by stage1");
-		}
-		
-		lq = new LocalQuery();
-		lq.requireNotTouchedByStage("stage1");
-		if(ld.isEqual(rp2.getDocument(lq))) {
-			fail("Expected these two documents to not be equal, one has been touched by stage1, one hasn't.");
-		}
-	}
 
 	@Test
 	public void testSaveCurrentDocument() throws Exception {

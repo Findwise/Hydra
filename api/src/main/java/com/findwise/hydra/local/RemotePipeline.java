@@ -132,30 +132,6 @@ public class RemotePipeline {
 		return ld;
 	}
 
-	/**
-	 * Releases the most recently read document back to the pipeline
-	 *
-	 * @return true if there was a document to release
-	 * @throws HttpException
-	 * @throws IOException
-	 */
-	public boolean releaseLastDocument() throws IOException {
-		if (currentDocument == null) {
-			internalLogger.debug("There is no document to release...");
-			return false;
-		}
-		HttpResponse response = core.post(releaseUrl, currentDocument.contentFieldsToJson(null));
-		currentDocument = null;
-		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-			EntityUtils.consume(response.getEntity());
-			return true;
-		}
-
-		logUnexpected(response);
-
-		return false;
-	}
-
 	private static void logUnexpected(HttpResponse response) throws IOException {
 		internalLogger.error("Node gave an unexpected response: " + response.getStatusLine());
 		internalLogger.error("Message: " + EntityUtils.toString(response.getEntity()));
