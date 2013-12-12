@@ -51,8 +51,6 @@ public class RemotePipeline {
 
 	private HttpConnection core;
 
-	private boolean keepLock;
-
 	private String getUrl;
 	private String writeUrl;
 	private String processedUrl;
@@ -86,8 +84,6 @@ public class RemotePipeline {
 		discardedUrl = "/" + DISCARDED_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
 		propertyUrl = "/" + GET_PROPERTIES_URL + "?" + STAGE_PARAM + "=" + stageName;
 		fileUrl = "/" + FILE_URL + "?" + STAGE_PARAM + "=" + stageName;
-
-		keepLock = false;
 
 		core = new HttpConnection(hostName, port);
 	}
@@ -139,13 +135,12 @@ public class RemotePipeline {
 	 * Writes all outstanding updates to the last document fetched from the pipeline.
 	 */
 	public boolean saveCurrentDocument() throws IOException, JsonException {
-		boolean keepingLock = keepLock;
 		if (currentDocument == null) {
 			internalLogger.error("There is no document to write.");
 			return false;
 		}
 		boolean x = save(currentDocument);
-		if (x && !keepingLock) {
+		if (x) {
 			currentDocument = null;
 		}
 
@@ -159,7 +154,6 @@ public class RemotePipeline {
 		boolean res = save(d, false);
 		if (res) {
 			d.markSynced();
-			keepLock = false;
 		}
 		return res;
 	}
@@ -171,7 +165,6 @@ public class RemotePipeline {
 		boolean res = save(d, true);
 		if (res) {
 			d.markSynced();
-			keepLock = false;
 		}
 		return res;
 	}
@@ -265,11 +258,7 @@ public class RemotePipeline {
 
 	private String getWriteUrl(boolean partialUpdate) {
 		String s = writeUrl;
-		if (keepLock) {
-			s += "&" + NORELEASE_PARAM + "=1";
-		} else {
-			s += "&" + NORELEASE_PARAM + "=0";
-		}
+		s += "&" + NORELEASE_PARAM + "=0";
 		if (partialUpdate) {
 			s += "&" + PARTIAL_PARAM + "=1";
 		} else {
