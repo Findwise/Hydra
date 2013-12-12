@@ -295,35 +295,6 @@ public class RemotePipelineIT {
 	}
 	
 	@Test
-	public void testKeepLock() throws Exception {
-		RemotePipeline rp1 = new RemotePipeline("127.0.0.1", server.getPort(), "stage1");
-		RemotePipeline rp2 = new RemotePipeline("127.0.0.1", server.getPort(), "stage2");
-		LocalDocument d = rp1.getDocument(new LocalQuery());
-		d.putContentField("value", "newField");
-
-		rp1.keepLock();
-		rp1.saveCurrentDocument();
-		
-		if(!d.isSynced()) {
-			fail("Document should be in sync");
-		}
-
-		LocalQuery lq = new LocalQuery();
-		lq.requireTouchedByStage("stage1");
-		if(null!=rp2.getDocument(lq)) {
-			fail("The document should not have been marked as touched yet by stage1");
-		}
-		
-		if(!rp1.saveCurrentDocument()) {
-			fail("Document should be ok to save");
-		}
-		
-		if(null==rp2.getDocument(lq)) {
-			fail("The document should have been marked as touched by stage1 now");
-		}
-	}
-	
-	@Test
 	public void testMarkProcessed() throws Exception {
 		RemotePipeline rp1 = new RemotePipeline("127.0.0.1", server.getPort(), "stage1");
 		RemotePipeline rp2 = new RemotePipeline("127.0.0.1", server.getPort(), "outputNode");

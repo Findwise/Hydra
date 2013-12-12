@@ -136,13 +136,6 @@ public class RemotePipeline {
 	}
 
 	/**
-	 * Calling this will allow you save a document. Note, this will need to be reset every time you wish to partially save a document.
-	 */
-	public void keepLock() {
-		keepLock = true;
-	}
-
-	/**
 	 * Writes all outstanding updates to the last document fetched from the pipeline.
 	 */
 	public boolean saveCurrentDocument() throws IOException, JsonException {
