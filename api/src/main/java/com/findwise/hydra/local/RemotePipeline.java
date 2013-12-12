@@ -55,7 +55,6 @@ public class RemotePipeline {
 
 	private String getUrl;
 	private String writeUrl;
-	private String releaseUrl;
 	private String processedUrl;
 	private String failedUrl;
 	private String pendingUrl;
@@ -81,7 +80,6 @@ public class RemotePipeline {
 		this.stageName = stageName;
 		getUrl = "/" + GET_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
 		writeUrl = "/" + WRITE_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
-		releaseUrl = "/" + RELEASE_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
 		processedUrl = "/" + PROCESSED_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
 		failedUrl = "/" + FAILED_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
 		pendingUrl = "/" + PENDING_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
