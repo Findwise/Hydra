@@ -51,11 +51,8 @@ public class RemotePipeline {
 
 	private HttpConnection core;
 
-	private boolean keepLock;
-
 	private String getUrl;
 	private String writeUrl;
-	private String releaseUrl;
 	private String processedUrl;
 	private String failedUrl;
 	private String pendingUrl;
@@ -81,15 +78,12 @@ public class RemotePipeline {
 		this.stageName = stageName;
 		getUrl = "/" + GET_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
 		writeUrl = "/" + WRITE_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
-		releaseUrl = "/" + RELEASE_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
 		processedUrl = "/" + PROCESSED_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
 		failedUrl = "/" + FAILED_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
 		pendingUrl = "/" + PENDING_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
 		discardedUrl = "/" + DISCARDED_DOCUMENT_URL + "?" + STAGE_PARAM + "=" + stageName;
 		propertyUrl = "/" + GET_PROPERTIES_URL + "?" + STAGE_PARAM + "=" + stageName;
 		fileUrl = "/" + FILE_URL + "?" + STAGE_PARAM + "=" + stageName;
-
-		keepLock = false;
 
 		core = new HttpConnection(hostName, port);
 	}
@@ -132,53 +126,21 @@ public class RemotePipeline {
 		return ld;
 	}
 
-	/**
-	 * Releases the most recently read document back to the pipeline
-	 *
-	 * @return true if there was a document to release
-	 * @throws HttpException
-	 * @throws IOException
-	 */
-	public boolean releaseLastDocument() throws IOException {
-		if (currentDocument == null) {
-			internalLogger.debug("There is no document to release...");
-			return false;
-		}
-		HttpResponse response = core.post(releaseUrl, currentDocument.contentFieldsToJson(null));
-		currentDocument = null;
-		if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-			EntityUtils.consume(response.getEntity());
-			return true;
-		}
-
-		logUnexpected(response);
-
-		return false;
-	}
-
 	private static void logUnexpected(HttpResponse response) throws IOException {
 		internalLogger.error("Node gave an unexpected response: " + response.getStatusLine());
 		internalLogger.error("Message: " + EntityUtils.toString(response.getEntity()));
 	}
 
 	/**
-	 * Calling this will allow you save a document. Note, this will need to be reset every time you wish to partially save a document.
-	 */
-	public void keepLock() {
-		keepLock = true;
-	}
-
-	/**
 	 * Writes all outstanding updates to the last document fetched from the pipeline.
 	 */
 	public boolean saveCurrentDocument() throws IOException, JsonException {
-		boolean keepingLock = keepLock;
 		if (currentDocument == null) {
 			internalLogger.error("There is no document to write.");
 			return false;
 		}
 		boolean x = save(currentDocument);
-		if (x && !keepingLock) {
+		if (x) {
 			currentDocument = null;
 		}
 
@@ -192,7 +154,6 @@ public class RemotePipeline {
 		boolean res = save(d, false);
 		if (res) {
 			d.markSynced();
-			keepLock = false;
 		}
 		return res;
 	}
@@ -204,7 +165,6 @@ public class RemotePipeline {
 		boolean res = save(d, true);
 		if (res) {
 			d.markSynced();
-			keepLock = false;
 		}
 		return res;
 	}
@@ -298,11 +258,7 @@ public class RemotePipeline {
 
 	private String getWriteUrl(boolean partialUpdate) {
 		String s = writeUrl;
-		if (keepLock) {
-			s += "&" + NORELEASE_PARAM + "=1";
-		} else {
-			s += "&" + NORELEASE_PARAM + "=0";
-		}
+		s += "&" + NORELEASE_PARAM + "=0";
 		if (partialUpdate) {
 			s += "&" + PARTIAL_PARAM + "=1";
 		} else {
