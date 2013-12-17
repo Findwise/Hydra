@@ -9,6 +9,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>utils/http</module>
         <module>debugging/debugging</module>
         <module>in/json-in</module>
         <module>in/server</module>
