@@ -1,5 +1,11 @@
 package com.findwise.hydra.debugging;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
 import com.findwise.hydra.DocumentFile;
 import com.findwise.hydra.local.Local;
 import com.findwise.hydra.local.LocalDocument;
@@ -7,9 +13,6 @@ import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
-
-import java.io.*;
-import java.util.List;
 
 /**
  * This stage will print any files to a specified folder (intended for debugging)
