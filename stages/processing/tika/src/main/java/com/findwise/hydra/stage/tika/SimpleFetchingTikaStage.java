@@ -23,6 +23,18 @@ import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
 import com.findwise.hydra.stage.tika.utils.TikaUtils;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.logging.Level;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import org.apache.http.HttpConnection;
 
 @Stage(description = "A stage that fetches the content from a given url and appends it the the document")
 public class SimpleFetchingTikaStage extends AbstractProcessStage {
@@ -51,6 +63,7 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 	public void process(LocalDocument doc) throws ProcessException {
 		Map<String, Object> urls = TikaUtils.getFieldMatchingPattern(doc,
 				urlFieldPattern);
+              
 		for (String field : urls.keySet()) {
 			try {
 				Iterator<URL> it = TikaUtils.getUrlsFromObject(urls.get(field))
@@ -78,13 +91,55 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 				throw new ProcessException("Failed parsing document", e);
 			} catch (TikaException e) {
 				throw new ProcessException("Got exception from Tika", e);
-			}
+			} catch (NoSuchAlgorithmException ex) {
+                            throw new ProcessException("Bad algo", ex);
+                    } catch (KeyManagementException ex) {
+                        throw new ProcessException("Key was stupid", ex);
+                    }
 		}
 
 	}
+        
+    
 
 	private URLConnection createConnection(URL url) throws ProcessException,
-			IOException {
+			IOException,
+			NoSuchAlgorithmException,
+			KeyManagementException {
+              // Create a trust manager that does not validate certificate chains
+		TrustManager[] trustAllCerts = new TrustManager[] {
+                    new X509TrustManager() {
+                                @Override
+				public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+					return null;
+				}
+                                @Override
+				public void checkClientTrusted(X509Certificate[] certs, String authType) {
+				}
+                                @Override
+				public void checkServerTrusted(X509Certificate[] certs, String authType) {
+				}
+
+                    
+		}};
+
+		// Install the all-trusting trust manager
+		SSLContext sc = SSLContext.getInstance("SSL");
+		sc.init(null, trustAllCerts, new java.security.SecureRandom());
+		HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+		// Create all-trusting host name verifier
+		HostnameVerifier allHostsValid = new HostnameVerifier() {
+                        @Override
+			public boolean verify(String hostname, SSLSession session) {
+				return true;
+			}
+		};
+
+		// Install the all-trusting host verifier
+		HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+
+                
 		URLConnection connection = url.openConnection();
 		if (useBasicAuthentication()) {
 			String authString = username + ":" + password;
