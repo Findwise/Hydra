@@ -2,37 +2,44 @@
 <html lang="en">
 <head>
     <title>Hydra Admin Service GUI</title>
+    <meta charset="utf-8"> 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link type="text/css" rel="stylesheet" href="bootstrap.min.css"
-        media="screen">
+    <!--<link type="text/css" rel="stylesheet" href="bootstrap.min.css"
+        media="screen"> -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+    
     <link type="text/css" rel="stylesheet" href="hydra.css" media="screen">
     <script type="text/javascript" src="jquery.js"></script>
     <script type="text/javascript" src="handlebars.js"></script>
     <script type="text/javascript" src="handlebars.form-helpers.min.js"></script>
     <script type="text/javascript" src="underscore.js"></script>
-    <script type="text/javascript" src="bootstrap.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+    <!--<script type="text/javascript" src="bootstrap.min.js"></script> -->
 </head>
 <body>
-	<div class="navbar navbar-inverse navbar-fixed-top">
-		<div class="navbar-inner">
-			<div class="container">
-				<button type="button" class="btn btn-navbar" data-toggle="collapse"
-					data-target=".nav-collapse">
-					<span class="icon-bar"></span> <span class="icon-bar"></span> <span
-						class="icon-bar"></span>
-				</button>
-				<a class="brand" href="./">Hydra Admin Service</a>
-				<div class="nav-collapse collapse">
-					<ul class="nav" id="navigation">
-						<li class="active"><a href="#status">Status</a></li>
-						<li><a href="#stagegroups">Stage groups</a></li>
-						<li><a href="#libraries"><i class="icon-book"></i>Libraries</a></li>
-						<li><a href="#documents">Documents</a></li>
-					</ul>
-				</div>
-			</div>
-		</div>
-	</div>
+    <header>
+            <div class="navbar navbar-inverse navbar-fixed-top">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navigation">
+                      <span class="sr-only">Toggle navigation</span>
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="./">Hydra Admin Service</a>
+                  </div>
+
+                <div class="collapse navbar-collapse" id="navigation">
+                    <ul class="nav navbar-nav">
+                        <li class="active"><a href="#status">Status</a></li>
+                        <li><a href="#stagegroups">Stage groups</a></li>
+                        <li><a href="#libraries"><span class="glyphicon glyphicon-book"></span> Libraries</a></li>
+                        <li><a href="#documents"><span class="glyphicon glyphicon-file"></span> Documents</a></li>
+                    </ul>                
+                 </div>
+            </div>
+        
+        </header>
 	<main>
 	<article id="status_content" class="container"></article>
 	<article id="stagegroups_content" class="container"
@@ -78,28 +85,32 @@
 	<script type="text/x-handlebars-template" id="stagegroups"
 		class="template">
 	<div class="row">
-		<div class="span2">
-			{{> stagegroups_menu}}
+		<div class="col-md-3">
+                     <div class="bs-sidebar affix" role="complementary">
+            		{{> stagegroups_menu}}
+                    </div>
 		</div>
-		<div class="span10">
+		<div class="col-md-9">
 			{{#each stagegroups}}
-			<div class="well" id="{{this.name}}">
-				<h1>{{this.name}}</h1>
-				{{#each this.stages}}
-					{{> stagegroups_stage}}
-				{{/each}}
-			</div>
+                            <div class="well" id="{{this.name}}">
+                                    <h1>{{this.name}}</h1>
+                                    {{#each this.stages}}
+                                            {{> stagegroups_stage}}
+                                    {{/each}}
+                            </div>
 			{{/each}}
 		</div>
 	</div>
 	</script>
 	<script type="text/x-handlebars-template" id="stagegroups_menu"
 		class="partial_template">
-			<ul class="nav nav-tabs nav-stacked affix">
+            
+			<ul class="nav bs-sidenav">
 				{{#each stagegroups}}
 				<li><a href="#{{this.name}}">{{this.name}}</a></li>
 				{{/each}}
 			</ul>
+                        
 	</script>
 	<script type="text/x-handlebars-template" id="stagegroups_stage"
 		class="partial_template">
@@ -127,11 +138,13 @@
 	</script>
 	<script type="text/x-handlebars-template" id="libraries" class="template">
 	<div class="row">
-		<div class="span2">
+		<div class="col-md-3">
+                     <div class="bs-sidebar affix" role="complementary">
+            
 			{{> libraries_menu}}
-                        
+                        </div>
 		</div>
-		<div class="span10" data-spy="scroll" data-target=".nav-tabs">
+		<div class="col-md-9">
 			{{#each libraries}}
 			<div class="well" id="{{this.id}}">
 				<h1>{{this.id}}</h1>
@@ -147,38 +160,50 @@
 			</div>
 			{{/each}}
 		</div>
+                {{> libraries_upload}}
 	</div>
 	</script>
 	<script type="text/x-handlebars-template" id="libraries_menu"
 		class="partial_template">
-			<ul class="nav nav-tabs nav-stacked affix">
-                        	<li><a href="#upload" class="btn btn-primary">Upload</a></li>
-				{{#each libraries}}
-				<li><a href="#{{this.id}}">{{this.id}}</a></li>
+                        <ul class="nav  nav-pills nav-stacked">
+                             <li>
+                                <button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#upload-lib" >
+                                    <span class="glyphicon glyphicon-cloud-upload"></span>
+                                    Upload lib
+                                </button>
+                            </li>
+                            <li class="divider"></li>
+                                {{#each libraries}}
+				<li><a href="#{{this.id}}">
+                                <span class="glyphicon glyphicon-book"></span>
+                                    {{this.id}}
+                                </a></li>
 				{{/each}}
 			</ul>
+                        
 	</script>
 	<script type="text/x-handlebars-template" id="libraries_stage"
 		class="partial_template">
-					<div>
-						<h3>{{this.name}}</h3>
-						<p>{{this.className}}</p>
-						<p>{{this.description}}</p>
-						<div class="accordion" id="{{@index}}-{{this.name}}">
-							<div class="accordion-group">
-								<div class="accordion-heading">
-									<a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#{{@index}}-{{this.name}}" href="#{{@index}}-{{this.name}}-parameters">
-										Parameters
-									</a>
-								</div>
-								<div id="{{@index}}-{{this.name}}-parameters" class="accordion-body collapse">
-									<div class="accordion-inner">
-										{{> libraries_stage_parameters}}
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
+            
+                        <div>
+                                <h3>{{this.name}}</h3>
+                                <p>{{this.className}}</p>
+                                <p>{{this.description}}</p>
+                                <div class="accordion" id="{{@index}}-{{this.name}}">
+                                        <div class="accordion-group">
+                                                <div class="accordion-heading">
+                                                        <a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#{{@index}}-{{this.name}}" href="#{{@index}}-{{this.name}}-parameters">
+                                                                Parameters
+                                                        </a>
+                                                </div>
+                                                <div id="{{@index}}-{{this.name}}-parameters" class="accordion-body collapse">
+                                                        <div class="accordion-inner">
+                                                                {{> libraries_stage_parameters}}
+                                                        </div>
+                                                </div>
+                                        </div>
+                                </div>
+                        </div>
 	</script>
 	<script type="text/x-handlebars-template" id="libraries_stage_parameters"
 		class="partial_template">
@@ -203,6 +228,58 @@
                             </tbody>
                     </table>
 	</script>
+        
+        <script type="text/x-handlebars-template" id="libraries_upload" class="partial_template">
+                        <div class="modal fade" id="upload-lib" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                              <h4 class="modal-title" id="uploadModalLabel">Upload liberary</h4>
+                            </div>
+                            <form action="#upload" class="form-horizontal" role="form" method="post" onSubmit="return addLibrary();" id="library-upload" enctype="multipart/form-data">
+                         
+                          <div class="modal-body">
+                                    <div id="libUploadSuccess" class="alert alert-success" style="display: none">
+                                         Upload successfull!
+                                    </div>
+                                
+                                    <div id="libUploadError" class="alert alert-error" style="display: none">
+                                        <strong>Error uploading the library</strong>
+                                    </div>
+                                <div class="form-group" >
+                                    <label class="col-sm-2 control-label" for="lib-id">
+                                        Library Id
+                                    </label>
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control" id="upload-lib-id" placeholder="Library Id" required />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label" for="lib-jar">
+                                        Jar-file
+                                    </label>
+                                    <div class="col-sm-10">
+                                        <input type="file" name="file" class="form-control" id="upload-lib-jar" placeholder="Library Id" required />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label" for="jarupload">
+                                        Progress
+                                    </label>
+                                    <div class="col-sm-10">
+                                        <progress id="jarupload" class="form-control" value="0"></progress>
+                                    </div>
+                            </div>
+                          
+                          <div class="modal-footer">
+                            <button class="btn" data-dismiss="modal" onClick="location.reload()" aria-hidden="true">Close</button>
+                            <button type="submit"  class="btn btn-primary">Upload</button>
+                            </div>
+                          </div>
+                          </form>
+                        </div>
+        </script>
 	<script type="text/x-handlebars-template" id="documents"
 		class="template">
 
@@ -232,35 +309,6 @@
                     {{#listDocuments documents}}
                         {{this}}
                     {{/listDocuments}}
-    </script>
-    <script type="text/x-handlebars-template" id="upload" class="template">
-              <div class="row span10 offset2">
-                    <h1>Upload a library</h1>
-                    <progress id="jarupload" value="0"></progress>
-                    <div class="well">
-                        <form action="#" class="form-horizontal" onSubmit="return addLibrary();" id="library-upload" enctype="multipart/form-data">
-                            <div class="control-group">
-                                <label class="control-label" for="lib-id">
-                                    Library Id
-                                </label>
-                                <div class="controls">
-                                    <input type="text" id="upload-lib-id" placeholder="Library Id" />
-                                </div>
-                           </div>
-                           <div class="control-group">
-                                <label class="control-label" for="lib-jar">Jar-file</label>
-                                <div class="controls">
-                                    <input type="file" name="file" id="upload-lib-jar" placeholder="Library Id" />
-                                </div>
-                           </div>
-                           <div class="control-group">
-                                <div class="form-actions">
-                                    <button type="submit"  class="btn btn-primary">Upload</button>
-                                </div>
-                          </div>
-                         </form>
-                    </div>
-                </div>
     </script>
     <script type="text/javascript" src="hydra.js"></script>
     

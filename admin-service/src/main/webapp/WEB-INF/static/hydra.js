@@ -31,7 +31,7 @@ function refreshPage(pageId) {
 			return data;
 		};
 	}
-         
+        
         else {
 		callback = function(data) {
 			return data;
@@ -91,35 +91,45 @@ function addDocument() {
 }
 
 function addLibrary(){
-        var form = $('#library-upload')[0];
-        
-        var formData = new FormData(form);
+        var formData = new FormData($('#library-upload')[0]);
         var libid = $('#upload-lib-id').val();
-        console.log(libid);
-        var postUrl = pages.upload + '/' + libid;
-        console.log("Posting to " + postUrl );
-        $.ajax({
-            url: postUrl,  //Server script to process data
-            type: 'POST',
-            xhr: function() {  // Custom XMLHttpRequest
-                var myXhr = $.ajaxSettings.xhr();
-                if(myXhr.upload){ // Check if upload property exists
-                    myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // For handling the progress of the upload
-                }
-                return myXhr;
-            },
-            //Ajax events
-           // beforeSend: beforeSendHandler,
-           // success: completeHandler,
-           // error: errorHandler,
-            // Form data
-            data: formData,
-            //Options to tell jQuery not to process data or worry about content-type.
-            cache: false,
-            contentType: false,
-            processData: false
-        });
-    
+        if(libid){
+            var postUrl = pages.upload + '/' + libid;
+            console.log("Posting to " + postUrl );
+            $.ajax({
+                url: postUrl,  //Server script to process data
+                type: 'POST',
+                xhr: function() {  // Custom XMLHttpRequest
+                    var myXhr = $.ajaxSettings.xhr();
+                    if(myXhr.upload){ // Check if upload property exists
+                        myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // For handling the progress of the upload
+                    }
+                    return myXhr;
+                },
+                //Ajax events
+               success: function(data){
+                   $('#libUploadSuccess').show();
+
+               },
+               error: function(data){
+                   $('#libUploadFail').show();
+
+               },
+                // Form data
+                data: formData,
+                //Options to tell jQuery not to process data or worry about content-type.
+                cache: false,
+                contentType: false,
+                processData: false
+            });
+            return false;
+        } else {
+           var data = {};
+           data.submitted = false;
+           data.error = true;
+           $('#upload_content').html(window.templates['upload'](data));
+            
+        }
 }
 
 function progressHandlingFunction(e){
