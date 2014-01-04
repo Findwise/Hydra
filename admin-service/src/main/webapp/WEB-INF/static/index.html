@@ -7,8 +7,8 @@
         media="screen">
     <link type="text/css" rel="stylesheet" href="hydra.css" media="screen">
     <script type="text/javascript" src="jquery.js"></script>
-    <script type="text/javascript" src="hydra.js"></script>
     <script type="text/javascript" src="handlebars.js"></script>
+    <script type="text/javascript" src="handlebars.form-helpers.min.js"></script>
     <script type="text/javascript" src="underscore.js"></script>
     <script type="text/javascript" src="bootstrap.min.js"></script>
 </head>
@@ -26,7 +26,7 @@
 					<ul class="nav" id="navigation">
 						<li class="active"><a href="#status">Status</a></li>
 						<li><a href="#stagegroups">Stage groups</a></li>
-						<li><a href="#libraries">Libraries</a></li>
+						<li><a href="#libraries"><i class="icon-book"></i>Libraries</a></li>
 						<li><a href="#documents">Documents</a></li>
 					</ul>
 				</div>
@@ -41,7 +41,10 @@
 		style="display: none"></article>
 	<article id="documents_content" class="container"
 		style="display: none"></article>
-	</main>
+	<article id="upload_content" class="container"
+		style="display: none"></article>
+	
+        </main>
 	<script type="text/x-handlebars-template" id="status"
 		class="template">
 	{{#with documents}}
@@ -122,11 +125,11 @@
 			{{/each}}
 		</div>
 	</script>
-	<script type="text/x-handlebars-template" id="libraries"
-		class="template">
+	<script type="text/x-handlebars-template" id="libraries" class="template">
 	<div class="row">
 		<div class="span2">
 			{{> libraries_menu}}
+                        
 		</div>
 		<div class="span10" data-spy="scroll" data-target=".nav-tabs">
 			{{#each libraries}}
@@ -149,6 +152,7 @@
 	<script type="text/x-handlebars-template" id="libraries_menu"
 		class="partial_template">
 			<ul class="nav nav-tabs nav-stacked affix">
+                        	<li><a href="#upload" class="btn btn-primary">Upload</a></li>
 				{{#each libraries}}
 				<li><a href="#{{this.id}}">{{this.id}}</a></li>
 				{{/each}}
@@ -178,26 +182,26 @@
 	</script>
 	<script type="text/x-handlebars-template" id="libraries_stage_parameters"
 		class="partial_template">
-										<table class="table table-striped table-bordered sinks">
-											<thead>
-												<tr>
-													<th>Parameter</th>
-													<th>Type</th>
-													<th>Required</th>
-													<th>Description</th>
-												</tr>
-											</thead>
-											<tbody>
-											{{#each this.parameters}}
-												<tr>
-													<td>{{@key}}</td>
-													<td>{{this.type}}</td>
-													<td>{{#if this.required}}true{{else}}false{{/if}}</td>
-													<td>{{this.description}}</td>
-												</tr>
-											{{/each}}
-											</tbody>
-										</table>
+                    <table class="table table-striped table-bordered sinks">
+                            <thead>
+                                    <tr>
+                                            <th>Parameter</th>
+                                            <th>Type</th>
+                                            <th>Required</th>
+                                            <th>Description</th>
+                                    </tr>
+                            </thead>
+                            <tbody>
+                            {{#each this.parameters}}
+                                    <tr>
+                                            <td>{{@key}}</td>
+                                            <td>{{this.type}}</td>
+                                            <td>{{#if this.required}}true{{else}}false{{/if}}</td>
+                                            <td>{{this.description}}</td>
+                                    </tr>
+                            {{/each}}
+                            </tbody>
+                    </table>
 	</script>
 	<script type="text/x-handlebars-template" id="documents"
 		class="template">
@@ -229,5 +233,36 @@
                         {{this}}
                     {{/listDocuments}}
     </script>
+    <script type="text/x-handlebars-template" id="upload" class="template">
+              <div class="row span10 offset2">
+                    <h1>Upload a library</h1>
+                    <progress id="jarupload" value="0"></progress>
+                    <div class="well">
+                        <form action="#" class="form-horizontal" onSubmit="return addLibrary();" id="library-upload" enctype="multipart/form-data">
+                            <div class="control-group">
+                                <label class="control-label" for="lib-id">
+                                    Library Id
+                                </label>
+                                <div class="controls">
+                                    <input type="text" id="upload-lib-id" placeholder="Library Id" />
+                                </div>
+                           </div>
+                           <div class="control-group">
+                                <label class="control-label" for="lib-jar">Jar-file</label>
+                                <div class="controls">
+                                    <input type="file" name="file" id="upload-lib-jar" placeholder="Library Id" />
+                                </div>
+                           </div>
+                           <div class="control-group">
+                                <div class="form-actions">
+                                    <button type="submit"  class="btn btn-primary">Upload</button>
+                                </div>
+                          </div>
+                         </form>
+                    </div>
+                </div>
+    </script>
+    <script type="text/javascript" src="hydra.js"></script>
+    
 </body>
 </html>

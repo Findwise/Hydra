@@ -2,7 +2,8 @@ var pages = {
 	'status': '/hydra',
 	'stagegroups': '/hydra/stagegroups',
 	'libraries' : '/hydra/libraries',
-	'documents' : '/hydra/documents'
+	'documents' : '/hydra/documents',
+        'upload' : '/hydra/libraries'
 };
 
 function refreshAll() {
@@ -16,9 +17,10 @@ function refreshCurrentPage() {
 }
 
 function refreshPage(pageId) {
+    
 	var endpoint = pages[pageId];
 	
-	if (pageId == "libraries") {
+        if (pageId == "libraries") {
 		callback = function(data) {
 			data.libraries.forEach(function(library) {
 				for (var stage in library.stages) {
@@ -28,7 +30,9 @@ function refreshPage(pageId) {
 			});
 			return data;
 		};
-	} else {
+	}
+         
+        else {
 		callback = function(data) {
 			return data;
 		};
@@ -86,6 +90,44 @@ function addDocument() {
 		});
 }
 
+function addLibrary(){
+        var form = $('#library-upload')[0];
+        
+        var formData = new FormData(form);
+        var libid = $('#upload-lib-id').val();
+        console.log(libid);
+        var postUrl = pages.upload + '/' + libid;
+        console.log("Posting to " + postUrl );
+        $.ajax({
+            url: postUrl,  //Server script to process data
+            type: 'POST',
+            xhr: function() {  // Custom XMLHttpRequest
+                var myXhr = $.ajaxSettings.xhr();
+                if(myXhr.upload){ // Check if upload property exists
+                    myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // For handling the progress of the upload
+                }
+                return myXhr;
+            },
+            //Ajax events
+           // beforeSend: beforeSendHandler,
+           // success: completeHandler,
+           // error: errorHandler,
+            // Form data
+            data: formData,
+            //Options to tell jQuery not to process data or worry about content-type.
+            cache: false,
+            contentType: false,
+            processData: false
+        });
+    
+}
+
+function progressHandlingFunction(e){
+    if(e.lengthComputable){
+        $('#jarupload').attr({value:e.loaded,max:e.total});
+    }
+}
+
 function listDocuments(context, options) {
 	var ret = "";
 
@@ -122,10 +164,12 @@ function showPage(containerId) {
 	$("#" + containerId + "_content").css("display", "block");
 }
 
+
 window.templates = {};
 
 $(document).ready(
 	function() {
+                
 	$('.template').each(
 		function(i, container) {
 			window.templates[container.id] = Handlebars.compile($(
@@ -143,7 +187,8 @@ $(document).ready(
 			refreshPage(containerId);
 			showPage(containerId);
 		});
-	Handlebars.registerHelper('listDocuments', listDocuments);
+        Handlebars.registerHelper('listDocuments', listDocuments);
 	showCurrentPage();
 	refreshCurrentPage();
 });
+
