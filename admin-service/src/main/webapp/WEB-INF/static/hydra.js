@@ -40,7 +40,7 @@ function refreshPage(pageId) {
 
 	$.get(endpoint, function(data) {
 		data = callback(data);
-		$('#' + pageId + '_content').html(window.templates[pageId](data));
+                $('#' + pageId + '_content').html(window.templates[pageId](data));
 	});
 }
 
@@ -95,7 +95,6 @@ function addLibrary(){
         var libid = $('#upload-lib-id').val();
         if(libid){
             var postUrl = pages.upload + '/' + libid;
-            console.log("Posting to " + postUrl );
             $.ajax({
                 url: postUrl,  //Server script to process data
                 type: 'POST',
@@ -108,10 +107,11 @@ function addLibrary(){
                 },
                 //Ajax events
                success: function(data){
+                   //should properly progagete data back to model
                    $('#libUploadSuccess').show();
-
                },
                error: function(data){
+                   //should properly progagete data back to model
                    $('#libUploadFail').show();
 
                },
@@ -124,11 +124,7 @@ function addLibrary(){
             });
             return false;
         } else {
-           var data = {};
-           data.submitted = false;
-           data.error = true;
-           $('#upload_content').html(window.templates['upload'](data));
-            
+           $('#libUploadFail').show();
         }
 }
 
@@ -136,6 +132,38 @@ function progressHandlingFunction(e){
     if(e.lengthComputable){
         $('#jarupload').attr({value:e.loaded,max:e.total});
     }
+}
+
+function addStage(config){
+    var stage_config = {};
+    $.each(config,function(index,item){
+       var key = $(this).attr('id');
+       var value = $(this).val();
+       if(value != ''){
+            stage_config[key]=value;
+       }
+    });
+    return false;
+}
+
+function propertyField(property, name){
+    var ret = "";
+    if(this.type == 'Map' || this.type=='LocalQuery'){
+        ret = ret + '<textarea name="' + name + '" class="form-control" row="3"  id="' + name +'" placeholder="' + this.type + '"';
+        if(this.required){
+            ret = ret + ' required';
+        }
+        ret = ret + '></textarea>';
+    }
+    else {
+        ret = '<input type="text" name="' + name + '" class="form-control" id="' + name + '" placeholder="' + this.type + '"';
+        if(this.required){
+            ret = ret + ' required';
+        }
+        ret = ret + ' />';
+    }
+    var safeRet = new Handlebars.SafeString(ret);
+    return safeRet;
 }
 
 function listDocuments(context, options) {
@@ -198,6 +226,7 @@ $(document).ready(
 			showPage(containerId);
 		});
         Handlebars.registerHelper('listDocuments', listDocuments);
+        Handlebars.registerHelper('propertyField', propertyField);
 	showCurrentPage();
 	refreshCurrentPage();
 });
