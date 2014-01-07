@@ -26,7 +26,9 @@ function refreshPage(pageId) {
 				for (var stage in library.stages) {
 					library.stages[stage].name = stage.split('.').pop();
 					library.stages[stage].className = stage;
+                                        library.stages[stage].libId = library.id;
 				}
+                                
 			});
 			return data;
 		};
@@ -140,9 +142,38 @@ function addStage(config){
        var key = $(this).attr('id');
        var value = $(this).val();
        if(value != ''){
+           try{
+            stage_config[key]=JSON.parse(value);
+        } catch(e){
             stage_config[key]=value;
+        }
        }
     });
+    var jsonData = JSON.stringify(stage_config);
+    console.log(stage_config);
+    console.log(jsonData);
+    //var jsonData = stage_config;
+    var postUrl = pages.upload + '/' + stage_config.libId + '/stages/';
+    if(stage_config.stageGroup){
+        postUrl = postUrl + stage_config.stageGroup;
+    } else {
+        postUrl = postUrl + stage_config.stageName;
+    }
+    postUrl = postUrl + '/' + stage_config.stageName;
+    $.ajax({
+        type: "POST",
+        url: postUrl,
+        data: JSON.stringify(stage_config),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(data){
+            console.log('Hurray');
+        },
+        error: function(data){
+            console.log(data);
+        }
+    });
+    
     return false;
 }
 
