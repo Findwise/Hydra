@@ -7,6 +7,8 @@ Mailing list/group: [hydra-processing google group](https://groups.google.com/fo
 
 Current snapshot: [![Build Status](https://secure.travis-ci.org/Findwise/Hydra.png?branch=master)](https://travis-ci.org/Findwise/Hydra)
 
+This readme uses Google Analytics for basic visit statistics thanks to ga-beacon: [![Analytics](https://ga-beacon.appspot.com/UA-45204268-3/Hydra/readme)](https://github.com/igrigorik/ga-beacon)
+
 What you'll need
 ----------------
 
