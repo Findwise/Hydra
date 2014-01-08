@@ -40,24 +40,34 @@ public class ProcessStageRunner {
 			logger.trace("Waiting for processing of doc '{}'", doc.getID());
 			processWithTimeout(doc);
 			logger.trace("Processing finished of doc '{}'", doc.getID());
-		} catch (ProcessException e) {
-			handleProcessException(doc, e);
+		} catch (ExecutionException e) {
+			onException(doc, unwrapExecutionException(e));
 			return;
 		} catch (TimeoutException e) {
 			// Extreme solution here. If the stage thread did not finish in a timely manner,
 			// we restart the whole process. Canceling the future doesn't really help, since
 			// we can't easily tell whether the thread running the future task manages to shut
 			// down cleanly. // TODO: A better solution would be nice.
-			handleProcessException(doc, new ProcessException(e));
+			onException(doc, e);
 			throw e;
-		} catch (Exception e) {
-			handleProcessException(doc, e);
-			throw e;
+		} catch (InterruptedException e) {
+			logger.info("Processing was interrupted");
+			Thread.currentThread().interrupt();
+			return;
 		}
-		postProcess(doc);
+		onSuccess(doc);
 	}
 
-	private void postProcess(LocalDocument doc) throws IOException, JsonException {
+	private Exception unwrapExecutionException(ExecutionException e) {
+		Throwable cause = e.getCause();
+		if(cause instanceof Error) {
+			throw (Error)cause;
+		} else {
+			return (Exception)cause;
+		}
+	}
+
+	private void onSuccess(LocalDocument doc) throws IOException, JsonException {
 		if(doc.isDiscarded()) {
 			remotePipeline.markDiscarded(doc);
 		} else {
@@ -70,24 +80,12 @@ public class ProcessStageRunner {
 		}
 	}
 
-	private void processWithTimeout(LocalDocument doc) throws InterruptedException, TimeoutException, ProcessException {
+	private void processWithTimeout(LocalDocument doc) throws InterruptedException, ExecutionException, TimeoutException {
 		Future<Object> future = executor.submit(new ProcessCallable(doc, stage));
-		try {
-			if (stage.getProcessingTimeout() > 0) {
-				future.get(stage.getProcessingTimeout(), TimeUnit.MILLISECONDS);
-			} else {
-				future.get();
-			}
-		} catch (ExecutionException e) {
-			if(e.getCause() instanceof ProcessException) {
-				throw (ProcessException)e.getCause();
-			} else if(e.getCause() instanceof RuntimeException) {
-				throw (RuntimeException)e.getCause();
-			} else if(e.getCause() instanceof Error) {
-				throw (Error)e.getCause();
-			} else {
-				throw new RuntimeException(e.getCause());
-			}
+		if (stage.getProcessingTimeout() > 0) {
+			future.get(stage.getProcessingTimeout(), TimeUnit.MILLISECONDS);
+		} else {
+			future.get();
 		}
 	}
 
@@ -97,7 +95,7 @@ public class ProcessStageRunner {
 			// TODO: Why are we cloning here?
 			LocalDocument ld = new LocalDocument(doc);
 			IOException e = new IOException("Unable to save changes to core");
-			if(!persistFailure(ld, e)) {
+			if(!onException(ld, e)) {
 				logger.error("Unable to persist an error to the database for doc '" + doc.getID() + "'", e);
 			}
 		}
@@ -114,23 +112,9 @@ public class ProcessStageRunner {
 		}
 	}
 
-	protected void handleProcessException(LocalDocument doc, Exception e) throws IOException, JsonException {
-		if(stage.isFailDocumentOnProcessException()) {
-			persistFailure(doc, e);
-		} else {
-			persistError(doc, e);
-		}
-	}
-
-	protected boolean persistFailure(LocalDocument doc, Exception e) throws IOException {
+	protected boolean onException(LocalDocument doc, Exception e) throws IOException, JsonException {
 		logger.debug("Failing doc '{}'", doc.getID());
 		return remotePipeline.markFailed(doc, e);
-	}
-
-	protected boolean persistError(LocalDocument d, Exception e) throws IOException, JsonException {
-		logger.error("Trying to release document due to error in processing", e);
-		d.addError(stageName, e);
-		return remotePipeline.save(d);
 	}
 
 	static class ProcessCallable implements Callable<Object> {
@@ -143,7 +127,7 @@ public class ProcessStageRunner {
 		}
 
 		@Override
-		public Object call() throws ProcessException {
+		public Object call() throws Exception {
 			processStage.process(doc);
 			return null;
 		}

@@ -139,15 +139,13 @@ public class FullScaleIT {
 		fieldValueMap.put("testField", "Set by SetStaticFieldStage");
 		HashMap<String, Object> staticStageParams = new HashMap<String, Object>();
 		staticStageParams.put("fieldValueMap", fieldValueMap);
-		Map<String, Object> initRequiredParams = new HashMap<String, Object>();
-		initRequiredParams.put("failDocumentOnProcessException", true);
 		new LinearPipelineBuilder().
 			addStages(
 				new StageBuilder()
 					.stageName("initRequired")
 					.className("com.findwise.hydra.stage.InitRequiredStage")
 					.libraryId("integration-test-stages-jar-with-dependencies.jar")
-					.stageProperties(initRequiredParams).build(),
+					.build(),
 				new StageBuilder()
 					.stageName("staticFieldSetter")
 					.className("com.findwise.hydra.stage.SetStaticFieldStage")

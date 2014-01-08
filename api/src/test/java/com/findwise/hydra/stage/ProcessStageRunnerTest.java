@@ -39,75 +39,24 @@ public class ProcessStageRunnerTest {
 		return new ProcessStageRunner("testStage", stage, rp);
 	}
 
-	@Test(timeout = 1000)
-	public void testPerformProcessing_does_not_fail_document_when_failDocumentOnProcessException_is_false() throws Exception {
+	@Test
+	public void testPerformProcessing_fails_document_if_stage_throws_exceptions() throws Exception {
 		ProcessStageRunner stageRunner = buildStageRunner(new AbstractProcessStage() {
 			@Override
-			public void process(LocalDocument doc) throws ProcessException {
-				throw new ProcessException("Document failed for some reason");
+			public void process(LocalDocument doc) throws Exception {
+				throw new Exception("Stage failed for some reason");
 			}
 		});
 
 		spy(stageRunner);
 
 		LocalDocument testDoc1 = mock(LocalDocument.class);
-		when(testDoc1.getContentField("testField1")).thenReturn("test1");
-		when(testDoc1.getContentField("testField1")).thenReturn("test2");
-		when(testDoc1.getID()).thenReturn(new LocalDocumentID("doc1"));
-
-		stageRunner.performProcessing(testDoc1);
-		stageRunner.performProcessing(testDoc1);
 		stageRunner.performProcessing(testDoc1);
 
-		verify(rp, atLeast(3)).save(testDoc1);
-		verify(rp, never()).markFailed(testDoc1);
-		verify(rp, never()).markFailed(any(LocalDocument.class), any(Throwable.class));
-		verify(testDoc1, atLeast(3)).addError(any(String.class), any(Throwable.class));
+		verify(rp, times(1)).markFailed(eq(testDoc1), any(Exception.class));
 	}
 
-	@Test(timeout = 1000)
-	public void testPerformProcessing_fails_document_on_processException() throws Exception {
-		ProcessStageRunner stageRunner = buildStageRunner(new AbstractProcessStage() {
-			@Override
-			public void process(LocalDocument doc) throws ProcessException {
-				throw new ProcessException("Stage failed for some reason");
-			}
-
-			@Override
-			public boolean isFailDocumentOnProcessException() {
-				return true;
-			}
-		});
-
-		spy(stageRunner);
-
-		LocalDocument testDoc1 = mock(LocalDocument.class);
-		when(testDoc1.getContentField("testField1")).thenReturn("test1");
-		when(testDoc1.getContentField("testField1")).thenReturn("test2");
-
-		stageRunner.performProcessing(testDoc1);
-		stageRunner.performProcessing(testDoc1);
-		stageRunner.performProcessing(testDoc1);
-
-		verify(rp, times(3)).markFailed(any(LocalDocument.class), any(ProcessException.class));
-	}
-
-	@Test(timeout = 1000)
-	public void testPerformProcessing_persists_error() throws Exception {
-		ProcessStageRunner stageRunner = buildStageRunner(new AbstractProcessStage() {
-			@Override
-			public void process(LocalDocument doc) throws ProcessException {
-				throw new ProcessException("Processing failed for some reason");
-			}
-		});
-
-		LocalDocument ld = mock(LocalDocument.class);
-		stageRunner.performProcessing(ld);
-
-		verify(ld, times(1)).addError(eq("testStage"), any(Throwable.class));
-	}
-
-	@Test(timeout = 1000)
+	@Test
 	public void testPerformProcessing_persists_error_on_save_failure() throws Exception {
 		when(rp.save(any(LocalDocument.class))).thenReturn(false);
 		when(rp.markFailed(any(LocalDocument.class), any(Throwable.class))).thenReturn(false);
@@ -124,26 +73,22 @@ public class ProcessStageRunnerTest {
 	}
 
 	@Test(timeout = 1000)
-	public void testPerformProcessing_execution_timeout_fails_document() throws Exception {
-		InterruptibleWaitingStage processStage = new InterruptibleWaitingStage();
-		processStage.setProcessingTimeout(1);
-		ProcessStageRunner stageRunner = buildStageRunner(processStage);
-
-		LocalDocument ld = mock(LocalDocument.class);
-
-		try {
-			stageRunner.performProcessing(ld);
-		} catch (TimeoutException e) {}
-
-		verify(ld, times(1)).addError(eq("testStage"), any(Throwable.class));
-	}
-
-	@Test(timeout = 1000)
-	public void testPerformProcessing_execution_timeout_throws_timeout_exception() throws Exception {
+	public void testPerformProcessing_throws_timeout_exception_if_timeout_exceeded() throws Exception {
 		exception.expect(TimeoutException.class);
 		HangingStage processStage = new HangingStage();
 		processStage.setProcessingTimeout(1);
 		ProcessStageRunner stageRunner = buildStageRunner(processStage);
+		stageRunner.performProcessing(mock(LocalDocument.class));
+	}
+
+	@Test
+	public void testPerformProcessing_does_not_rethrow_timeout_exception_if_thrown_by_stage() throws Exception {
+		ProcessStageRunner stageRunner = buildStageRunner(new AbstractProcessStage() {
+			@Override
+			public void process(LocalDocument doc) throws Exception {
+				throw new TimeoutException();
+			}
+		});
 		stageRunner.performProcessing(mock(LocalDocument.class));
 	}
 }
