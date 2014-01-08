@@ -26,7 +26,7 @@ public class RemoveFieldsStage extends AbstractProcessStage {
     }
 
     @Override
-    public void process(LocalDocument doc) throws ProcessException {
+    public void process(LocalDocument doc) {
     	for(String field : doc.getContentFields()) {
     		for (String regex : removeFields) {
     			if(field.matches(regex)) {

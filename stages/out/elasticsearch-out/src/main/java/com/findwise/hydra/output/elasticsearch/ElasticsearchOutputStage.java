@@ -20,7 +20,6 @@ import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractOutputStage;
 import com.findwise.hydra.stage.InitFailedException;
 import com.findwise.hydra.stage.Parameter;
-import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
 
@@ -67,26 +66,22 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 	}
 
 	@Override
-	public void output(LocalDocument document) throws ProcessException {
+	public void output(LocalDocument document) {
 		final Action action = document.getAction();
 		
-		try {
-			logger.debug(action.toString());
-			switch (action) {
-			case ADD:
-				add(document);
-				break;
-			case DELETE:
-				delete(document);
-				break;
-			case UPDATE:
-				update(document);
-				break;
-			default:
-				throw new ProcessException("Action must be ADD, DELETE or UPDATE.");
-			}
-		} catch (ElasticSearchException e) {
-			throw new ProcessException(e);
+		logger.debug(action.toString());
+		switch (action) {
+		case ADD:
+			add(document);
+			break;
+		case DELETE:
+			delete(document);
+			break;
+		case UPDATE:
+			update(document);
+			break;
+		default:
+			throw new IllegalArgumentException("Action must be ADD, DELETE or UPDATE.");
 		}
 	}
 

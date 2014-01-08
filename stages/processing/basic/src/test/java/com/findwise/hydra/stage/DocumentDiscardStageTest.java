@@ -69,7 +69,7 @@ public class DocumentDiscardStageTest {
     }
 
 	@Test
-	public void testSingleConfig() throws RequiredArgumentMissingException, ProcessException, HttpException, IOException, IllegalArgumentException, IllegalAccessException {
+	public void testSingleConfig() throws Exception {
 		// set test properties and initialize stage
 		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
 		Map<String, String> config = new HashMap<String, String>();
@@ -107,7 +107,7 @@ public class DocumentDiscardStageTest {
 	}
 	
 	@Test
-	public void testMultipleConfigs() throws RequiredArgumentMissingException, ProcessException, HttpException, IOException, IllegalArgumentException, IllegalAccessException {
+	public void testMultipleConfigs() throws Exception {
 		// set test properties and initialize stage
 		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
 		Map<String, String> config1 = new HashMap<String, String>();
@@ -161,7 +161,7 @@ public class DocumentDiscardStageTest {
 	}
 	
 	@Test
-	public void testNoHitsNameDiscard() throws ProcessException, IOException, HttpException{
+	public void testNoHitsNameDiscard() throws Exception {
 		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
 		Map<String, String> config = new HashMap<String, String>();
 		config.put("field", "FIELD_DISPLAY_NAME");
@@ -175,7 +175,7 @@ public class DocumentDiscardStageTest {
 	}
 	
 	@Test
-	public void testMultipleValuedField() throws ProcessException, IOException, HttpException {
+	public void testMultipleValuedField() throws Exception {
 		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
 		Map<String, String> config = new HashMap<String, String>();
 		config.put("field", "FIELD_DISPLAY_NAME");
@@ -190,7 +190,7 @@ public class DocumentDiscardStageTest {
 
 
 	@Test
-	public void testMultipleValuedFieldSecond() throws ProcessException, IOException, HttpException {
+	public void testMultipleValuedFieldSecond() throws Exception {
 		List<Map<String, String>> configs = new ArrayList<Map<String, String>>();
 		Map<String, String> config = new HashMap<String, String>();
 		config.put("field", "FIELD_DISPLAY_NAME");

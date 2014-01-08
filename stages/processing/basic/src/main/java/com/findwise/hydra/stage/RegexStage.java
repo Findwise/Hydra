@@ -54,7 +54,7 @@ public class RegexStage extends AbstractProcessStage {
     }
 
     @Override
-    public void process(LocalDocument doc) throws ProcessException {
+    public void process(LocalDocument doc) {
         for (Map<String, String> regexConf : regexConfigs) {
             Pattern pattern = Pattern.compile(regexConf.get("regex"), Pattern.DOTALL);
             Object value = doc.getContentField(regexConf.get("inField"));

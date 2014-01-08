@@ -4,14 +4,14 @@ import static org.junit.Assert.fail;
 import org.junit.Test;
 
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.stage.ProcessException;
+
 import java.util.LinkedList;
 import java.util.List;
 import junit.framework.Assert;
 
 public class PrioritizedCopyStageTest {
     @Test
-    public void testConditionalCopyFalse() throws ProcessException {
+    public void testConditionalCopyFalse() throws Exception {
 
         PrioritizedCopyStage s = new PrioritizedCopyStage();
 
@@ -37,7 +37,7 @@ public class PrioritizedCopyStageTest {
         }
     }
     @Test
-    public void testConditionalCopyTrue() throws ProcessException {
+    public void testConditionalCopyTrue() throws Exception {
 
         PrioritizedCopyStage s = new PrioritizedCopyStage();
 
@@ -63,7 +63,7 @@ public class PrioritizedCopyStageTest {
         }
     }
     @Test
-    public void testOverwriteEmptyString() throws ProcessException {
+    public void testOverwriteEmptyString() throws Exception {
 
         PrioritizedCopyStage s = new PrioritizedCopyStage();
 
@@ -85,7 +85,7 @@ public class PrioritizedCopyStageTest {
     }
     
     @Test
-    public void testCopyAlreadyExist() throws ProcessException {
+    public void testCopyAlreadyExist() throws Exception {
 
         PrioritizedCopyStage s = new PrioritizedCopyStage();
 
@@ -108,7 +108,7 @@ public class PrioritizedCopyStageTest {
     }
 
     @Test
-    public void testCopyAlreadyButOverWriteIsTrue() throws ProcessException {
+    public void testCopyAlreadyButOverWriteIsTrue() throws Exception {
 
         PrioritizedCopyStage s = new PrioritizedCopyStage();
 
@@ -133,7 +133,7 @@ public class PrioritizedCopyStageTest {
     }
     
     @Test
-    public void testFoundInFirst() throws ProcessException {
+    public void testFoundInFirst() throws Exception {
 
         PrioritizedCopyStage s = new PrioritizedCopyStage();
 
@@ -155,7 +155,7 @@ public class PrioritizedCopyStageTest {
     }
 
     @Test
-    public void testFoundInSecond() throws ProcessException {
+    public void testFoundInSecond() throws Exception {
 
         PrioritizedCopyStage s = new PrioritizedCopyStage();
 
@@ -176,7 +176,7 @@ public class PrioritizedCopyStageTest {
     }
     
         @Test
-    public void testNotFound() throws ProcessException {
+    public void testNotFound() throws Exception {
 
         PrioritizedCopyStage s = new PrioritizedCopyStage();
 

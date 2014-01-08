@@ -13,9 +13,9 @@ public class InitRequiredStage extends AbstractProcessStage {
 	}
 
 	@Override
-	public void process(LocalDocument document) throws ProcessException {
+	public void process(LocalDocument document) throws Exception {
 		if (!hasInitialized) {
-			throw new ProcessException("Stage not initialized");
+			throw new RuntimeException("Stage not initialized");
 		}
 	}
 }

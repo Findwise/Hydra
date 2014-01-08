@@ -23,7 +23,7 @@ public class MapStringsStage extends AbstractProcessStage {
 	private Map<String, String> map;
 
 	@Override
-	public void process(LocalDocument doc) throws ProcessException {
+	public void process(LocalDocument doc) {
 
 		Object value = doc.getContentField(inField);
 		if (value == null) {

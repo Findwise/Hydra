@@ -15,7 +15,6 @@ import org.junit.rules.TemporaryFolder;
 
 import com.findwise.hydra.Document.Action;
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.stage.ProcessException;
 
 public class ElasticsearchOutputStageIT {
 	
@@ -57,7 +56,7 @@ public class ElasticsearchOutputStageIT {
 	}
 	
 	@Test
-	public void testCanAddAndDelete() throws ProcessException {
+	public void testCanAddAndDelete() {
 		stage.output(addDocument);
 		
 		ListenableActionFuture<GetResponse> addActionFuture = client.prepareGet()

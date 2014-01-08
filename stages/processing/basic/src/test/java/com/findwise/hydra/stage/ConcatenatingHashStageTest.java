@@ -41,7 +41,7 @@ public class ConcatenatingHashStageTest {
         }
     }
     
-    private void testStringMD5(ConcatenatingHashStage chs, String s, String s1) throws ProcessException {
+    private void testStringMD5(ConcatenatingHashStage chs, String s, String s1) {
         LocalDocument ld = new LocalDocument();
         ld.putContentField("content", s);
         ld.putContentField("title", s1);

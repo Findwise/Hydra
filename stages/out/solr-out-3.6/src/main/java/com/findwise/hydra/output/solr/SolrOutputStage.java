@@ -18,7 +18,6 @@ import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractOutputStage;
 import com.findwise.hydra.stage.InitFailedException;
 import com.findwise.hydra.stage.Parameter;
-import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
 
@@ -40,26 +39,15 @@ public class SolrOutputStage extends AbstractOutputStage {
 	private SolrServer solr;
 
 	@Override
-	public void output(LocalDocument doc) throws ProcessException {
+	public void output(LocalDocument doc) throws IOException, SolrServerException, RequiredArgumentMissingException {
 		final Action action = doc.getAction();
 
-		try {
-			
 		if (action == Action.ADD || action == Action.UPDATE) {
 			add(doc);
 		} else if (action == Action.DELETE) {
 			delete(doc);
 		} else{
-			throw new ProcessException("action not set in document. This document would never be sent to solr");
-		}
-		} catch (ProcessException e) {
-			throw e;
-		} catch (SolrServerException e) {
-			throw new ProcessException(e);
-		} catch (IOException e) {
-			throw new ProcessException(e);
-		} catch (RequiredArgumentMissingException e) {
-			throw new ProcessException(e);
+			throw new IllegalArgumentException("action not set in document. This document would never be sent to solr");
 		}
 	}
 
