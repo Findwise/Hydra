@@ -102,7 +102,7 @@ public class SetStaticFieldStageTest {
 		Assert.assertEquals("value", doc.getContentField("list"));
 	}
 
-	@Test(expected = ProcessException.class)
+	@Test(expected = SetStaticFieldStage.FieldAlreadyExistsException.class)
 	public void testThrowPolicyWithCollision() throws Exception {
 		init(Policy.THROW);
 

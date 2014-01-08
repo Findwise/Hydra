@@ -10,7 +10,6 @@ import org.jsoup.nodes.Document;
 
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.Parameter;
-import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +54,7 @@ public abstract class AbstractJsoupSelector extends AbstractProcessStage {
 	}
 
 	@Override
-	public void process(LocalDocument doc) throws ProcessException {
+	public void process(LocalDocument doc) {
 		
         Object value = doc.getContentField(htmlField);
         

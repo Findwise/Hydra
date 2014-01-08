@@ -42,7 +42,7 @@ public class DateFormatterStageTest {
 
     @Test
     public void testFromEpochToZuluDate_withUTC()
-            throws ProcessException, IllegalArgumentException,
+            throws Exception, IllegalArgumentException,
             IllegalAccessException, RequiredArgumentMissingException {
 
         String epochTest = "1377174053";
@@ -60,12 +60,12 @@ public class DateFormatterStageTest {
 
     @Test
     public void testFromEpochToZuluDate_withSetTimeZone()
-            throws ProcessException, IllegalArgumentException,
+            throws Exception, IllegalArgumentException,
             IllegalAccessException, RequiredArgumentMissingException {
 
         String epochTest = "1377174053";
         String expected = "2013-08-22T14:20:53Z";
-        settings.put("epochTimeZone", "+0200");
+        subject.setEpochTimeZone("+0200");
         setupStage();
 
         LocalDocument ld = new LocalDocument();
@@ -79,7 +79,7 @@ public class DateFormatterStageTest {
     @Test
     public void testISO8601FormatToZuluDate()
             throws IllegalArgumentException, IllegalAccessException,
-            ProcessException, RequiredArgumentMissingException {
+            Exception, RequiredArgumentMissingException {
         String iso8601 = "2012-06-29T10:42:53+02:00";
         String expected = "2012-06-29T08:42:53Z";
         setupStage();
@@ -95,8 +95,7 @@ public class DateFormatterStageTest {
     private void setupStage() throws IllegalArgumentException,
             IllegalAccessException,
             RequiredArgumentMissingException {
-        settings.put("dateFields", fields);
-        subject.setParameters(settings);
+        subject.setDateFields(fields);
         subject.init();
     }
 }

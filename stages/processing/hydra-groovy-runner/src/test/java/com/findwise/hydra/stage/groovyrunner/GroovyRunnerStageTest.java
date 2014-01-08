@@ -1,6 +1,5 @@
 package com.findwise.hydra.stage.groovyrunner;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 import junit.framework.Assert;
@@ -8,8 +7,6 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.stage.ProcessException;
-import com.findwise.hydra.stage.RequiredArgumentMissingException;
 
 import static org.junit.Assert.assertEquals;
 
@@ -24,8 +21,7 @@ public class GroovyRunnerStageTest {
 	}
 
 	@Test
-	public void testCanLoadGroovyStage() throws InstantiationException,
-			IllegalAccessException {
+	public void testCanLoadGroovyStage() throws Exception {
 		GroovyRunnerStage runner = new GroovyRunnerStage();
 		String className = "DumbGroovyStage";
 
@@ -38,9 +34,7 @@ public class GroovyRunnerStageTest {
 	}
 
 	@Test
-	public void testGroovyScriptCanModifyDocument() throws IOException,
-			InstantiationException, IllegalAccessException, ProcessException,
-			RequiredArgumentMissingException {
+	public void testGroovyScriptCanModifyDocument() throws Exception {
 
 		GroovyRunnerStage runner = new GroovyRunnerStage();
 		String script = readStringFromFile("com" + IOUtils.DIR_SEPARATOR
@@ -57,7 +51,7 @@ public class GroovyRunnerStageTest {
 		assertEquals("value", actualValue);
 	}
 
-	private String readStringFromFile(String fileName) throws IOException {
+	private String readStringFromFile(String fileName) throws Exception {
 		InputStream stream = this.getClass().getClassLoader()
 				.getResourceAsStream(fileName);
 		return IOUtils.toString(stream);

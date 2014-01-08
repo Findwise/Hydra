@@ -9,7 +9,7 @@ public class HangingStage extends AbstractProcessStage {
 	Logger logger = LoggerFactory.getLogger(HangingStage.class);
 
 	@Override
-	public void process(LocalDocument doc) throws ProcessException {
+	public void process(LocalDocument doc) {
 		while (true) {
 			try {
 				Thread.sleep(1000);

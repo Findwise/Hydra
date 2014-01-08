@@ -26,7 +26,7 @@ public class MergeListsStage extends AbstractProcessStage {
 	
 	
 	@Override
-	public void process(LocalDocument doc) throws ProcessException {
+	public void process(LocalDocument doc) {
 		
 		List<String> outList = new ArrayList<String>();
 		List<List<String>> inLists = new ArrayList<List<String>>();

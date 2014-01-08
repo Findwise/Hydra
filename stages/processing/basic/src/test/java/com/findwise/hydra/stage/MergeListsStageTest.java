@@ -22,7 +22,7 @@ public class MergeListsStageTest {
 	}	
 	
 	@Test
-	public void testSingleInFieldIsUnaffected() throws ProcessException {
+	public void testSingleInFieldIsUnaffected() throws Exception {
 		List<String> inFields = new ArrayList<String>();
 		inFields.add("list");
 		stage.inFields = inFields;
@@ -43,7 +43,7 @@ public class MergeListsStageTest {
 	}
 	
 	@Test
-	public void testCanMergeTwoLists() throws ProcessException {
+	public void testCanMergeTwoLists() throws Exception {
 		List<String> inFields = new ArrayList<String>();
 		inFields.add("list1");
 		inFields.add("list2");
@@ -71,7 +71,7 @@ public class MergeListsStageTest {
 	
 	
 	@Test
-	public void testSkipDifferentLengthLists() throws ProcessException {
+	public void testSkipDifferentLengthLists() throws Exception {
 		List<String> inFields = new ArrayList<String>();
 		inFields.add("list1");
 		inFields.add("list2");
@@ -102,7 +102,7 @@ public class MergeListsStageTest {
 	}
 	
 	@Test
-	public void testSkipNonLists() throws ProcessException {
+	public void testSkipNonLists() throws Exception {
 		List<String> inFields = new ArrayList<String>();
 		inFields.add("list");
 		inFields.add("notalist");
@@ -124,7 +124,7 @@ public class MergeListsStageTest {
 	}
 	
 	@Test
-	public void testSkipNonexistingFields() throws ProcessException {
+	public void testSkipNonexistingFields() throws Exception {
 		List<String> inFields = new ArrayList<String>();
 		inFields.add("nonexistingfield");
 		stage.inFields = inFields;

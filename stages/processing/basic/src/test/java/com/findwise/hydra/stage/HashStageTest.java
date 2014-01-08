@@ -32,7 +32,7 @@ public class HashStageTest {
 		}
 	}
 	
-	private void testStringMD5(HashStage hs, String s) throws ProcessException {
+	private void testStringMD5(HashStage hs, String s) {
 		LocalDocument ld = new LocalDocument();
 		ld.putContentField("from", s);
 		hs.processField(ld, "from", "to");
@@ -59,7 +59,7 @@ public class HashStageTest {
 		}
 	}
 	
-	private void testStringSha256(HashStage hs, String s) throws ProcessException {
+	private void testStringSha256(HashStage hs, String s) {
 		LocalDocument ld = new LocalDocument();
 		ld.putContentField("from", s);
 		hs.processField(ld, "from", "to");

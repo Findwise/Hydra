@@ -64,7 +64,7 @@ public class AbstractProcessStageMapperTest {
 		private boolean initialized = false;
 
 		@Override
-		public void process(LocalDocument document) throws ProcessException {}
+		public void process(LocalDocument document) {}
 
 		@Override
 		public void init() throws RequiredArgumentMissingException, InitFailedException {

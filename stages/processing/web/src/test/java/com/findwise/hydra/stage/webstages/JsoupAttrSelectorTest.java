@@ -13,8 +13,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.stage.ProcessException;
-import com.findwise.hydra.stage.RequiredArgumentMissingException;
 
 public class JsoupAttrSelectorTest {
 
@@ -64,7 +62,7 @@ public class JsoupAttrSelectorTest {
 	}
 
 	@Test
-	public void testGetSingleH1TagClass() throws ProcessException, RequiredArgumentMissingException, IllegalArgumentException, IllegalAccessException {
+	public void testGetSingleH1TagClass() throws Exception {
 		
 		jsoup.process(doc);
 		
@@ -73,7 +71,7 @@ public class JsoupAttrSelectorTest {
 	}
 	
 	@Test
-	public void testExtractCanonicalLink() throws ProcessException, RequiredArgumentMissingException, IllegalArgumentException, IllegalAccessException {
+	public void testExtractCanonicalLink() throws Exception {
 
 		jsoup.process(doc);
 		
@@ -82,7 +80,7 @@ public class JsoupAttrSelectorTest {
 	}
 	
 	@Test
-	public void testExtractAllHyperLinksOne() throws ProcessException, RequiredArgumentMissingException, IllegalArgumentException, IllegalAccessException {
+	public void testExtractAllHyperLinksOne() throws Exception {
 
 		jsoup.process(doc);
 						
@@ -91,7 +89,7 @@ public class JsoupAttrSelectorTest {
 	}
 	
 	@Test
-	public void testEmptyField() throws ProcessException, RequiredArgumentMissingException, IllegalArgumentException, IllegalAccessException {
+	public void testEmptyField() throws Exception {
 		
 		doc.putContentField("rawcontent", "");
 
@@ -102,7 +100,7 @@ public class JsoupAttrSelectorTest {
 	
 
 	@Test
-	public void testExtractAllHyperLinksSeveral() throws ProcessException, RequiredArgumentMissingException, IllegalArgumentException, IllegalAccessException {
+	public void testExtractAllHyperLinksSeveral() throws Exception {
 
 		String content = "<html><head></head><body><p><a href='www.test.com'><span>one<span></a></p><p><a href=\"http://www.findwise.com\"><span>two<span></a></p></body></html>";
 
@@ -119,7 +117,7 @@ public class JsoupAttrSelectorTest {
 	
 	
 	@Test
-	public void testUnavailablefield() throws ProcessException, RequiredArgumentMissingException, IllegalArgumentException, IllegalAccessException {
+	public void testUnavailablefield() throws Exception {
 		
 		jsoup.process(new LocalDocument());
                 assertNull(doc.getContentField("h1-class"));
@@ -128,7 +126,7 @@ public class JsoupAttrSelectorTest {
 	}
 	
 	@Test
-	public void testPseudoSelector() throws ProcessException {
+	public void testPseudoSelector() throws Exception {
 
 		String content = "<html><head></head><body><p>one</p><p><a href='www.test.com'><span>two<span></a></p></body></html>";
 
@@ -145,7 +143,7 @@ public class JsoupAttrSelectorTest {
 	}
 	
 	@Test
-	public void testParagraphId() throws ProcessException {
+	public void testParagraphId() throws Exception {
 		String content = "<html><head></head><body><p id=\"paragraph\">one</p><p>two</p></body></html>";
 
 		doc.putContentField("othercontent", content);

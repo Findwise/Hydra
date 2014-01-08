@@ -64,7 +64,7 @@ public abstract class AbstractHttpFetchingProcessStageTest {
 
 	@Test
 	public void testProcess_calls_fetch()
-			throws ProcessException, IOException,
+			throws Exception, IOException,
 			URISyntaxException {
 		doc = new LocalDocument();
 		String testIdentifier = createTestIdentifier("someidentifier");
@@ -75,7 +75,7 @@ public abstract class AbstractHttpFetchingProcessStageTest {
 
 	@Test
 	public void testProcess_calls_client_with_request_for_url_list()
-			throws ProcessException, IOException,
+			throws Exception, IOException,
 			URISyntaxException {
 		doc = new LocalDocument();
 		List<String> urls = Arrays.asList(
@@ -91,7 +91,7 @@ public abstract class AbstractHttpFetchingProcessStageTest {
 
 	@Test
 	public void testProcess_adds_ignored_identifier_to_mapped_field() throws
-			ProcessException,
+			Exception,
 			IOException,
 			URISyntaxException {
 		doc = new LocalDocument();

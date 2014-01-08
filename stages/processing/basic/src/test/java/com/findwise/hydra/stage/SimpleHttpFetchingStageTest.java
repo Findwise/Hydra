@@ -38,7 +38,7 @@ public class SimpleHttpFetchingStageTest extends AbstractHttpFetchingProcessStag
 	}
 
 	@Test
-	public void testAddsContentToOutput() throws ProcessException, IncorrectFieldTypeException {
+	public void testAddsContentToOutput() throws Exception, IncorrectFieldTypeException {
 		LocalDocument doc = new LocalDocument();
 		doc.putContentField("url", "testurl");
 		stage.process(doc);

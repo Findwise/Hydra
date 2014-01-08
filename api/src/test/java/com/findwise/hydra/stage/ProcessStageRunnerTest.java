@@ -63,8 +63,7 @@ public class ProcessStageRunnerTest {
 
 		ProcessStageRunner stageRunner = buildStageRunner(new AbstractProcessStage() {
 			@Override
-			public void process(LocalDocument doc) throws ProcessException {
-			}
+			public void process(LocalDocument doc) {}
 		});
 		stageRunner.performProcessing(new LocalDocument());
 

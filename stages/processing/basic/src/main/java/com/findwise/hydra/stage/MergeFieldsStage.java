@@ -43,7 +43,7 @@ public class MergeFieldsStage extends AbstractProcessStage {
 	}
 	
 	@Override
-	public void process(LocalDocument doc) throws ProcessException {
+	public void process(LocalDocument doc) {
 		if(clearOutputField) {
 			doc.putContentField(outputField, null);
 		}

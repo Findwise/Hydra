@@ -25,7 +25,7 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 	private Policy overwritePolicy = Policy.ADD;
 
 	@Override
-	public void process(LocalDocument doc) throws ProcessException {
+	public void process(LocalDocument doc) throws FieldAlreadyExistsException {
 		for (Map.Entry<String, Object> entry : fieldValueMap.entrySet()) {
 			final String key = entry.getKey();
 			if (!hasContent(doc, key) || overwritePolicy == Policy.OVERWRITE) {
@@ -33,7 +33,7 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 			} else if (overwritePolicy == Policy.ADD) {
 				addValueToField(doc, key, entry.getValue());
 			} else if (overwritePolicy == Policy.THROW) {
-				throw new ProcessException("Field " + key
+				throw new FieldAlreadyExistsException("Field " + key
 						+ " already has a value!");
 			}
 		}
@@ -79,5 +79,11 @@ public class SetStaticFieldStage extends AbstractProcessStage {
 
 	public void setOverwritePolicy(Policy overwritePolicy) {
 		this.overwritePolicy = overwritePolicy;
+	}
+
+	public static class FieldAlreadyExistsException extends Exception {
+		private FieldAlreadyExistsException(String message) {
+			super(message);
+		}
 	}
 }

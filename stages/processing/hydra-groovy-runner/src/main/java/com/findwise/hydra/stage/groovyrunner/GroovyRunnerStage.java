@@ -5,7 +5,6 @@ import groovy.lang.GroovyClassLoader;
 
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.Parameter;
-import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.Stage;
 
 @Stage(description = "Runs a specified Groovy script which may modify a Document")
@@ -21,7 +20,7 @@ public class GroovyRunnerStage extends AbstractProcessStage {
 	private GroovyStage instantiatedGroovyStage;
 
 	@Override
-	public void process(LocalDocument doc) throws ProcessException {
+	public void process(LocalDocument doc) throws Exception {
 		instantiatedGroovyStage.process(doc);
 	}
 

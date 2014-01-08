@@ -49,7 +49,7 @@ public class PrioritizedCopyStage extends AbstractProcessStage {
     }
 
     @Override
-    public void process(LocalDocument doc) throws ProcessException {
+    public void process(LocalDocument doc) throws Exception {
 
         logger.debug("Starting processing");
 
