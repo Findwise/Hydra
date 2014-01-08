@@ -15,10 +15,7 @@ public abstract class AbstractProcessStage {
 	@Parameter(description = "The maximum time (in milliseconds) the stage may process a single document before cancelling the processing. Default: -1 (unlimited)")
 	private long processingTimeout = -1;
 
-	@Parameter(description = "If set, indicates that the document being processed should be FAILED if a ProcessException is thrown by the stage. If not set, the error will only be persisted and the document written back to Hydra.")
-	private boolean failDocumentOnProcessException = false;
-
-	public abstract void process(LocalDocument document) throws ProcessException;
+	public abstract void process(LocalDocument document) throws Exception;
 	public void init() throws RequiredArgumentMissingException, InitFailedException {}
 
 	public int getNumberOfThreads() {
@@ -43,13 +40,5 @@ public abstract class AbstractProcessStage {
 
 	public void setProcessingTimeout(long processingTimeout) {
 		this.processingTimeout = processingTimeout;
-	}
-
-	public boolean isFailDocumentOnProcessException() {
-		return failDocumentOnProcessException;
-	}
-
-	public void setFailDocumentOnProcessException(boolean failDocumentOnProcessException) {
-		this.failDocumentOnProcessException = failDocumentOnProcessException;
 	}
 }
