@@ -27,6 +27,7 @@ public class FullScaleIT {
 	@Before
 	public void setUp() throws Exception {
 		mongoConfiguration = new MongoConfiguration();
+		mongoConfiguration.setNamespace("hydra-test-FullScaleIT");
 		mongoConnector = new MongoConnector(mongoConfiguration);
 		mongoConnector.connect();
 
@@ -37,7 +38,7 @@ public class FullScaleIT {
 		mongoConnector.connect();
 
 		// Initialize core, but don't start until test wants to.
-		CoreConfiguration coreConfiguration = Main.getConfiguration(null);
+		CoreConfiguration coreConfiguration = new CoreMapConfiguration(mongoConfiguration, new MapConfiguration());
 		core = new Main(coreConfiguration);
 	}
 
