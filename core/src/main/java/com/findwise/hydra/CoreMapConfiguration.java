@@ -92,8 +92,8 @@ public class CoreMapConfiguration implements CoreConfiguration, Configuration {
 	}
 
 	public int getCacheTimeout() {
-		return Integer.parseInt(getParameter(getParameter(CACHE_TIMEOUT, ""
-				+ CachingDocumentNIO.CACHED_TIME_METADATA_KEY)));
+		return Integer.parseInt(getParameter(CACHE_TIMEOUT, ""
+				+ CachingDocumentNIO.DEFAULT_CACHE_TIMEOUT));
 	}
 	
 	public void setCacheTimeout(int timeout) {
