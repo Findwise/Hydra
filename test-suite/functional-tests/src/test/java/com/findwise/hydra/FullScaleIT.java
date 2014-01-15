@@ -15,6 +15,7 @@ import java.net.UnknownHostException;
 import java.util.*;
 
 import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class FullScaleIT {
@@ -26,6 +27,7 @@ public class FullScaleIT {
 	@Before
 	public void setUp() throws Exception {
 		mongoConfiguration = new MongoConfiguration();
+		mongoConfiguration.setNamespace("hydra-test-FullScaleIT");
 		mongoConnector = new MongoConnector(mongoConfiguration);
 		mongoConnector.connect();
 
@@ -36,7 +38,7 @@ public class FullScaleIT {
 		mongoConnector.connect();
 
 		// Initialize core, but don't start until test wants to.
-		CoreConfiguration coreConfiguration = Main.getConfiguration(null);
+		CoreConfiguration coreConfiguration = new CoreMapConfiguration(mongoConfiguration, new MapConfiguration());
 		core = new Main(coreConfiguration);
 	}
 
@@ -61,18 +63,26 @@ public class FullScaleIT {
 		fieldValueMap.put("testField", "Set by SetStaticFieldStage");
 		HashMap<String, Object> staticStageParams = new HashMap<String, Object>();
 		staticStageParams.put("fieldValueMap", fieldValueMap);
+		Map<String, Object> initRequiredParams = new HashMap<String, Object>();
+		initRequiredParams.put("failDocumentOnProcessException", true);
 		buildPipeline(
-			new StagePrototype(
-				"staticFieldSetter",
-				"com.findwise.hydra.stage.SetStaticFieldStage",
-				"hydra-basic-stages-jar-with-dependencies.jar",
-				staticStageParams
-			),
-			new StagePrototype(
-				"nullOutput",
-				"com.findwise.hydra.stage.NullOutputStage",
-				"integration-test-stages-jar-with-dependencies.jar"
-			)
+				new StagePrototype(
+						"initRequired",
+						"com.findwise.hydra.stage.InitRequiredStage",
+						"integration-test-stages-jar-with-dependencies.jar",
+						initRequiredParams
+				),
+				new StagePrototype(
+						"staticFieldSetter",
+						"com.findwise.hydra.stage.SetStaticFieldStage",
+						"hydra-basic-stages-jar-with-dependencies.jar",
+						staticStageParams
+				),
+				new StagePrototype(
+						"nullOutput",
+						"com.findwise.hydra.stage.NullOutputStage",
+						"integration-test-stages-jar-with-dependencies.jar"
+				)
 		);
 
 		// We start the core after we've inserted the stages and libraries so
@@ -99,6 +109,8 @@ public class FullScaleIT {
 			if(inactiveIterator.hasNext()) {
 				MongoDocument finishedDocument = inactiveIterator.next();
 				logger.info("Found finished document " + finishedDocument);
+				// Assert that the document was successfully processed
+				assertEquals(Document.Status.PROCESSED, finishedDocument.getStatus());
 				// Here we assert that we indeed have passed through the staticField stage
 				assertThat((String) finishedDocument.getContentField("testField"), equalTo("Set by SetStaticFieldStage"));
 				finishedDocumentIds.add((String) finishedDocument.getContentField("externalDocId"));
