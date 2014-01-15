@@ -18,7 +18,6 @@ import java.net.UnknownHostException;
 import java.util.*;
 
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 @RunWith(Parameterized.class)
@@ -94,7 +93,7 @@ public class FullScaleIT {
 				MongoDocument finishedDocument = inactiveIterator.next();
 				logger.info("Found finished document " + finishedDocument);
 				// Assert that the document was successfully processed
-				assertEquals(Document.Status.PROCESSED, finishedDocument.getStatus());
+				assertThat(finishedDocument.getStatus(), equalTo(Document.Status.PROCESSED));
 				// Here we assert that we indeed have passed through the staticField stage
 				assertThat((String) finishedDocument.getContentField("testField"), equalTo("Set by SetStaticFieldStage"));
 				finishedDocumentIds.add((String) finishedDocument.getContentField("externalDocId"));
