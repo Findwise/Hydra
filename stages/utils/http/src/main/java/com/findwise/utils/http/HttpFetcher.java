@@ -35,17 +35,16 @@ import org.apache.http.impl.client.cache.CachingHttpClient;
 import org.apache.http.impl.conn.BasicClientConnectionManager;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Generic HTTP fetching utility.
- *
+ * 
  * <p>
  * This class takes care of opening and closing connections.
  * </p>
- *
+ * 
  * Supports:
  * <ul>
  * <li>Basic Auth</li>
@@ -53,7 +52,10 @@ import org.slf4j.LoggerFactory;
  * <li>SSL, with optional exceptions for trusted hosts</li>
  * <li>Fetching of session cookies</li>
  * </ul>
- *
+ * 
+ * Users of this class is responsible for releasing resources allocated by
+ * returned objects of type {@link HttpEntity}.
+ * 
  * @author olof.nilsson@findwise.com
  * @author martin.nycander@findwise.com
  */
@@ -122,12 +124,7 @@ public class HttpFetcher {
                 attempts++;
                 StatusLine status = response.getStatusLine();
                 if (HttpStatus.SC_OK == status.getStatusCode()) {
-                    HttpEntity entity = response.getEntity();
-                    try {
-                        return entity;
-                    } finally {
-                        EntityUtils.consume(entity);
-                    }
+                    return response.getEntity();
                 } else if (HttpStatus.SC_BAD_REQUEST == status.getStatusCode()) {
                     // Request has gone bad, recreate it and ignore attempt
                     logger.debug(
