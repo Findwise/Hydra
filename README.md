@@ -55,9 +55,9 @@ There are a few different methods for setting up pipelines in Hydra:
 
 * Script your pipeline setup with the `database-impl/mongodb` package
 * Set up the Admin Service webapp and configure the pipeline using its REST interface (see the readme file in the `admin-service` package)
-* Use the `CmdlineInserter`-class that you can find in the `examples` project under the Hydra root
+* Use the `CmdlineInserter`-class that you can find in the `tools` project under the Hydra root
 
-Using the CmdlineInserter, if you run `mvn clean install` on that project, you will get a runnable jar that you can use (`java -jar inserter-jar-with-dependencies.jar`) Below, we'll assume that's the method you are using. 
+Using the CmdlineInserter, if you run `mvn clean install` on that project, you will get a runnable jar that you can use (`java -jar hydra-inserter.jar`) Below, we'll assume that's the method you are using. 
 
 ### Inserting a library into Hydra
 When inserting the library, you will need to provide the name of the jar and an ID that uniquely identifies this library. Should you give an ID that already exists, the old library will be overwritten and *any pipeline stages being run from it will be restarted.*
@@ -134,14 +134,14 @@ Start the mongo deamon (mongod), in your `mongodb/bin` folder
 Build the following projects by running `mvn clean install`
 
 * `parent` (creates `hydra-core.jar` in `distribution/bin`)
-* `examples` (creates `inserter-jar-with-dependencies.jar` in `examples/target`)
+* `tool` (creates `hydra-inserter.jar` in `distribution/tools`)
 * `stages/processing/basic` (creates `basic-jar-with-dependencies.jar` in `stages/processing/basic/target`)
 * `stages/debugging` (creates `debugging-jar-with-dependencies.jar` in `stages/debugging`)
 
 Insert the libraries to hydra:
 
-* 	`java -jar inserter-jar-with-dependencies.jar -a -p pipeline -l -i basic basic-jar-with-dependencies.jar`
-* 	 `java -jar inserter-jar-with-dependencies.jar -a -p pipeline -l -i debug debugging-jar-with-dependencies.jar`
+* 	`java -jar hydra-inserter.jar -a -p pipeline -l -i basic basic-jar-with-dependencies.jar`
+* 	 `java -jar hydra-inserter.jar -a -p pipeline -l -i debug debugging-jar-with-dependencies.jar`
 
 Create configuration files:
 
@@ -175,8 +175,8 @@ Create configuration files:
 
 Add the stages:
 
-* `java -jar inserter-jar-with-dependencies.jar -a -p pipeline -s -i basic -n setTitleStage setTitleStage.properties` 
-* `java -jar inserter-jar-with-dependencies.jar -a -p pipeline -s -i debug -n stdOutStage stdOutStage.properties` 
+* `java -jar hydra-inserter.jar -a -p pipeline -s -i basic -n setTitleStage setTitleStage.properties` 
+* `java -jar hydra-inserter.jar -a -p pipeline -s -i debug -n stdOutStage stdOutStage.properties` 
 
 Start hydra by running `java -jar hydra-core.jar`
 
