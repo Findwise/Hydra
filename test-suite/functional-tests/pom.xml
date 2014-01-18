@@ -1,0 +1,111 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>functional-tests</artifactId>
+
+	<parent>
+		<groupId>com.findwise.hydra</groupId>
+		<artifactId>hydra-test-suite</artifactId>
+		<version>0.5.0-SNAPSHOT</version>
+	</parent>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.findwise.hydra</groupId>
+			<artifactId>hydra-core</artifactId>
+			<version>${parent.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.findwise.hydra</groupId>
+			<artifactId>hydra-mongodb</artifactId>
+			<version>${parent.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit-dep</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.0.13</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<!-- Copy all stage jars into the integration test jar. This
+			     makes it accessible using getResources and independent on file system
+			     paths. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>2.8</version>
+				<executions>
+					<execution>
+						<id>copy</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/classes</outputDirectory>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>true</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+							<stripVersion>true</stripVersion>
+							<artifactItems>
+								<artifactItem>
+									<groupId>com.findwise.hydra</groupId>
+									<artifactId>hydra-basic-stages</artifactId>
+									<version>${project.version}</version>
+									<classifier>jar-with-dependencies</classifier>
+								</artifactItem>
+								<artifactItem>
+									<groupId>com.findwise.hydra</groupId>
+									<artifactId>hydra-tika-stages</artifactId>
+									<version>${project.version}</version>
+									<classifier>jar-with-dependencies</classifier>
+								</artifactItem>
+								<artifactItem>
+									<groupId>com.findwise.hydra</groupId>
+									<artifactId>integration-test-stages</artifactId>
+									<version>${project.version}</version>
+									<classifier>jar-with-dependencies</classifier>
+								</artifactItem>
+							</artifactItems>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>2.13</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<classpathDependencyExcludes>
+						<classpathDependencyExclude>com.findwise.hydra:hydra-basic-stages</classpathDependencyExclude>
+						<classpathDependencyExclude>com.findwise.hydra:hydra-tika-stages</classpathDependencyExclude>
+					</classpathDependencyExcludes>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+	</properties>
+</project>

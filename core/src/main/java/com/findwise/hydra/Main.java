@@ -19,45 +19,44 @@ import com.findwise.hydra.net.RESTServer;
 public final class Main implements ShutdownHandler {
 
 	private static final long KILL_DELAY = TimeUnit.SECONDS.toMillis(30);
+	private final CoreConfiguration coreConfiguration;
 
-	private Main() {
+	public Main(CoreConfiguration coreConfiguration) {
+		this.coreConfiguration = coreConfiguration;
 	}
 
-	private Logger logger = LoggerFactory.getLogger(Main.class);
+	private static Logger logger = LoggerFactory.getLogger(Main.class);
 	private SimpleSocketServer simpleSocketServer = null;
 	private RESTServer server = null;
 
 	private volatile boolean shuttingDown = false;
 	
 	public static void main(String[] args) {
-
-		Main main = new Main();
-		
 		if (args.length > 1) {
-			main.logger.error("Some parameters on command line were ignored.");
+			logger.error("Some parameters on command line were ignored.");
 		}
 		
 		CoreConfiguration conf;
 		if (args.length > 0) {
-			conf = main.getConfiguration(args[0]);
+			conf = getConfiguration(args[0]);
 		} else {
-			conf = main.getConfiguration(null);
+			conf = getConfiguration(null);
 		}
 
-		main.startup(conf);
+		new Main(conf).startup();
 	}
 
-	private void startup(CoreConfiguration conf) {
+	public void startup() {
 		ShuttingDownOnUncaughtException uncaughtExceptionHandler = new ShuttingDownOnUncaughtException(this);
 		Thread.setDefaultUncaughtExceptionHandler(uncaughtExceptionHandler);
-		simpleSocketServer = new SimpleSocketServer((LoggerContext) LoggerFactory.getILoggerFactory(), conf.getLoggingPort());
+		simpleSocketServer = new SimpleSocketServer((LoggerContext) LoggerFactory.getILoggerFactory(), coreConfiguration.getLoggingPort());
 		simpleSocketServer.start();
 
 		logger.info("Hydra Core creating connector, {}='{}', {}='{}'",
-				DatabaseConfiguration.DATABASE_URL_PARAM, conf.getDatabaseUrl(),
-				DatabaseConfiguration.DATABASE_NAMESPACE, conf.getNamespace());
+				DatabaseConfiguration.DATABASE_URL_PARAM, coreConfiguration.getDatabaseUrl(),
+				DatabaseConfiguration.DATABASE_NAMESPACE, coreConfiguration.getNamespace());
 		
-		DatabaseConnector<MongoType> backing = new MongoConnector(conf);
+		DatabaseConnector<MongoType> backing = new MongoConnector(coreConfiguration);
 		try {
 			backing.connect();
 		} catch (IOException e) {
@@ -66,7 +65,7 @@ public final class Main implements ShutdownHandler {
 		}
 
 		Cache<MongoType> cache;
-		if (conf.isCacheEnabled()) {
+		if (coreConfiguration.isCacheEnabled()) {
 			cache = new MemoryCache<MongoType>();
 		} else {
 			cache = new NoopCache<MongoType>();
@@ -75,21 +74,21 @@ public final class Main implements ShutdownHandler {
 		CachingDocumentNIO<MongoType> caching = new CachingDocumentNIO<MongoType>(
 				backing, 
 				cache, 
-				conf.isCacheEnabled(), 
-				conf.getCacheTimeout());
+				coreConfiguration.isCacheEnabled(),
+				coreConfiguration.getCacheTimeout());
 
 		NodeMaster<MongoType> nm = new NodeMaster<MongoType>(
-				conf, 
+				coreConfiguration,
 				caching,
 				new Pipeline(), 
 				this);
 
-		server = new RESTServer(conf,
+		server = new RESTServer(coreConfiguration,
 				new HttpRESTHandler<MongoType>(
 						nm.getDocumentIO(),
 						backing.getPipelineReader(), 
 						null,
-						conf.isPerformanceLogging()));
+						coreConfiguration.isPerformanceLogging()));
 
 		if (!server.blockingStart()) {
 			if (server.hasError()) {
@@ -151,7 +150,7 @@ public final class Main implements ShutdownHandler {
 		killerThread.start();
 	}
 	
-	protected CoreConfiguration getConfiguration(String fileName) {
+	protected static CoreConfiguration getConfiguration(String fileName) {
 		try {
 			if (fileName != null) {
 				return new FileConfiguration(fileName);
