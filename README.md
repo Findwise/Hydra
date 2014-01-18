@@ -129,23 +129,30 @@ Basically, an input connector pushes data directly to mongodb by creating an ins
 A `StdinInput`connector can be found in the `stages/debugging` package, and can be used as a reference implementation.
 
 ## Setting up a demo pipeline
-Start the mongo deamon (mongod), in your `mongodb/bin` folder
 
-Build the following projects by running `mvn clean install`
+To set up a pipeline, we want to *stage libraries* for containing stages, *stage configuration* to instruct Hydra how the stages should be run, and a document to process.
 
-* `parent` (creates `hydra-core.jar` in `distribution/bin`)
-* `tool` (creates `hydra-inserter.jar` in `distribution/tools`)
-* `stages/processing/basic` (creates `basic-jar-with-dependencies.jar` in `stages/processing/basic/target`)
-* `stages/debugging` (creates `debugging-jar-with-dependencies.jar` in `stages/debugging`)
+Start the mongo deamon (mongod), in your `mongodb/bin` folder.
+
+Get hold of the following jars, either by building Hydra or downloading from https://github.com/Findwise/Hydra/releases
+
+* Hydra Core: `hydra-core.jar`
+* Hydra Inserter (CmdLineInserter): `hydra-inserter.jar`
+* Stage library - Basic: `basic-jar-with-dependencies.jar`
+* Stage library - Debugging: `debugging-jar-with-dependencies.jar`
+
+Place the jars in a folder and enter it.
 
 Insert the libraries to hydra:
 
-* 	`java -jar hydra-inserter.jar -a -p pipeline -l -i basic basic-jar-with-dependencies.jar`
-* 	 `java -jar hydra-inserter.jar -a -p pipeline -l -i debug debugging-jar-with-dependencies.jar`
+* Basic stages as library "basic": `java -jar hydra-inserter.jar --add --pipeline pipeline --library --id basic basic-jar-with-dependencies.jar`
+* Debugging stages as library "debug": `java -jar hydra-inserter.jar --add --pipeline pipeline --library --id debug debugging-jar-with-dependencies.jar`
+
+You've now added the stage libraries `basic` and `debug` to the pipeline `pipeline`. The IDs given are used when setting up your stages, to tell Hydra where it should look for the stage class. They can be anything you want.
 
 Create configuration files:
 
-* Create a file called `setTitleStage.properties` containing
+* Create a file called `setTitleStage.json` containing
 
 ```
 
@@ -158,7 +165,7 @@ Create configuration files:
 
 ```
 
-* Create a file called `stdOutStage.properties` containing
+* Create a file called `stdOutStage.json` containing
 
 ```
 
@@ -175,10 +182,12 @@ Create configuration files:
 
 Add the stages:
 
-* `java -jar hydra-inserter.jar -a -p pipeline -s -i basic -n setTitleStage setTitleStage.properties` 
-* `java -jar hydra-inserter.jar -a -p pipeline -s -i debug -n stdOutStage stdOutStage.properties` 
+* `java -jar hydra-inserter.jar --add --pipeline pipeline --stage --id basic --name setTitleStage setTitleStage.json` 
+* `java -jar hydra-inserter.jar --add --pipeline pipeline --stage --id debug --name stdOutStage stdOutStage.json` 
 
-Start hydra by running `java -jar hydra-core.jar`
+You have now added the stages `setTitleStage` and `stdOutStage` to the pipeline `pipeline` using the stage libraries `basic` and `debug`, respectively.
+
+Start hydra by running `java -jar hydra-core.jar`. You will now see a lot of logging, and should see the two stages starting up. Wait until Hydra is logging `No updates found".
 
 Everything is now up and running. To add a document for processing, just type
 
@@ -189,7 +198,7 @@ Everything is now up and running. To add a document for processing, just type
 
 ```
 
-Hydra will print out the processed document, that should contain a title aswell as the imported text.
+Hydra will print out the processed document, that should contain a title as well as the imported text. Try modifying the configuration, inserting it again, then insert a new document and see what happens!
 
 
 ## Debugging
