@@ -13,10 +13,18 @@ public class MongoConnectorResource extends ExternalResource {
 	private final String dbName;
 
 	private MongoConnector mdc;
+	private DatabaseConfiguration databaseConfiguration;
 	private MongoClient mongo;
 	
 	public MongoConnectorResource(Class<?> testClass) {
 		this.dbName = DB_PREFIX + testClass.getSimpleName();
+		databaseConfiguration = DatabaseConfigurationFactory.getDatabaseConfiguration(dbName);
+	}
+
+	public MongoConnectorResource(Class<?> testClass, MongoConfiguration mongoConfiguration) {
+		this.dbName = DB_PREFIX + testClass.getSimpleName();
+		mongoConfiguration.setNamespace(dbName);
+		databaseConfiguration = mongoConfiguration;
 	}
 	
 	@Override
@@ -40,8 +48,7 @@ public class MongoConnectorResource extends ExternalResource {
 
 	private void connect() throws IOException {
 		mongo = new MongoClient();
-		DatabaseConfiguration conf = DatabaseConfigurationFactory.getDatabaseConfiguration(dbName);
-		mdc = new MongoConnector(conf);
+		mdc = new MongoConnector(databaseConfiguration);
 		mdc.waitForWrites(true);
 		mdc.connect(mongo, false);
 	}

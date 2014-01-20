@@ -8,4 +8,5 @@ public class DatabaseConfigurationFactory {
 		config.setNamespace(namespace);
 		return config;
 	}
+
 }
