@@ -258,7 +258,6 @@ public class MongoDocumentIOIT {
 		assertFalse(dw.getDocumentById(d2.getID()).fetchedBy("tag"));
 	}
 
-	@Ignore
 	@Test
 	public void testInsertLargeDocument() throws Exception {
 		MongoConnector mdc = mongoConnectorResource.getConnector();
@@ -274,13 +273,10 @@ public class MongoDocumentIOIT {
 	}
 	
 	@Test
-	@Ignore
 	public void testUpdateLargeDocument() throws Exception {
 		MongoConnector mdc = mongoConnectorResource.getConnector();
 		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
 		dw.prepare();
-		
-		
 		
 		MongoDocument d = new MongoDocument();
 		d.putContentField("some_field", "some data");
@@ -297,8 +293,10 @@ public class MongoDocumentIOIT {
 	private void makeDocumentTooLarge(MongoDocument d) {
 		MongoConnector mdc = mongoConnectorResource.getConnector();
 		int maxMongoDBObjectSize = mdc.getDB().getMongo().getConnector().getMaxBsonObjectSize();
-		while(d.toJson().getBytes().length <= maxMongoDBObjectSize) {
-			d.putContentField(getRandomString(5), getRandomString(1000000));
+		int fieldNameSize = 8;
+		int fieldSize = 1024*1024;
+		for (int i = 0 ; i <= maxMongoDBObjectSize / (fieldNameSize + fieldSize) ; i++) {
+			d.putContentField(getRandomString(fieldNameSize), getRandomString(fieldSize));
 		}
 	}
 
