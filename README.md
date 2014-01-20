@@ -130,7 +130,7 @@ A `StdinInput`connector can be found in the `stages/debugging` package, and can 
 
 ## Setting up a demo pipeline
 
-To set up a pipeline, we want to *stage libraries* for containing stages, *stage configuration* to instruct Hydra how the stages should be run, and a document to process.
+To set up a pipeline, we want to add *stage libraries* containing stages, *stage configuration* to instruct Hydra how the stages should be run, and a *document* to process.
 
 Start the mongo deamon (mongod), in your `mongodb/bin` folder.
 
@@ -170,7 +170,7 @@ Create configuration files:
 ```
 
 	{
-		stageClass: "com.findwise.hydra.debugging.StdoutOutput"
+		stageClass: "com.findwise.hydra.debugging.StdoutOutput",
 		query : { 
 			"touched" : { 
 				"setTitleStage" : true 
