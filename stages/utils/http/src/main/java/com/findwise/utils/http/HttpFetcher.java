@@ -108,10 +108,11 @@ public class HttpFetcher {
         try {
             int attempts = 0;
             while (true) {
+                request.reset();
                 request.setURI(uriProvider.getUriFromIdentifier(identifier, attempts));
                 request.addHeader(HttpHeaders.ACCEPT, acceptHeader);
                 logger.debug("Performing request, uriProvider:'{}', headers:'{}'",
-                        request.getURI(), request.getMethod(), request.getAllHeaders());
+                request.getURI(), request.getMethod(), request.getAllHeaders());
                 HttpResponse response = client.execute(request);
                 if (logger.isDebugEnabled()) {
                     List<String> headers = new ArrayList<String>();
@@ -131,12 +132,10 @@ public class HttpFetcher {
                             "Recreating request for identifier '{}' due to response '{}'",
                             identifier, status.getStatusCode());
                     --attempts;
-                    request.reset();
                     request = newDefaultRequest();
                 } else if (attempts <= settings.getRetries()) {
                     logger.debug("Retrying identifier '{}' due to response '{}'",
                             identifier, status.getStatusCode());
-                    request.reset();
                     continue;
                 } else {
                     throw new HttpResponseException(status.getStatusCode(),
@@ -156,8 +155,6 @@ public class HttpFetcher {
             throw new HttpFetchException(
                     "Could not construct URI from identifier '" + identifier
                             + "'", e);
-        } finally {
-            request.reset();
         }
     }
 
