@@ -61,27 +61,25 @@ import java.util.List;
  */
 public class HttpFetcher {
     private static final PlainUriProvider PLAIN_URI_PROVIDER = new PlainUriProvider();
+    private static final RequestProvider PLAIN_GET_REQUEST_PROVIDER = new PlainGetRequestProvider();
     private final Logger logger = LoggerFactory.getLogger(HttpFetcher.class);
     private final HttpFetchConfiguration settings;
 
     private final CookieStore cookieStore;
     private final HttpClient client;
 
-    private final RequestProvider requestProvider;
 
     public HttpFetcher(CookieStore cookieStore,
-            HttpClient client, RequestProvider requestProvider, HttpFetchConfiguration settings) {
+            HttpClient client, HttpFetchConfiguration settings) {
         this.cookieStore = cookieStore;
         this.client = client;
         this.settings = settings;
-        this.requestProvider = requestProvider;
     }
 
     public HttpFetcher(HttpFetchConfiguration settings) {
         this.settings = settings;
         this.cookieStore = new BasicCookieStore();
         this.client = newDefaultClient();
-        this.requestProvider = newDefaultRequestProvider();
     }
 
     public void ensureCookie() throws FailedFetchingCookieException {
@@ -97,12 +95,12 @@ public class HttpFetcher {
     }
 
     public HttpEntity fetch(String url, String acceptHeader) throws HttpFetchException {
-        return fetch(url, acceptHeader, PLAIN_URI_PROVIDER);
+        return fetch(url, acceptHeader, PLAIN_URI_PROVIDER, PLAIN_GET_REQUEST_PROVIDER);
     }
 
     public HttpEntity fetch(String identifier,
             String acceptHeader,
-            UriProvider uriProvider) throws HttpFetchException {
+            UriProvider uriProvider, RequestProvider requestProvider) throws HttpFetchException {
         try {
             int attempts = 0;
             while (true) {
@@ -230,10 +228,6 @@ public class HttpFetcher {
 
     public HttpClient getClient() {
         return client;
-    }
-
-    public RequestProvider getRequestProvider() {
-        return requestProvider;
     }
 
     public HttpFetchConfiguration getConfiguration() {

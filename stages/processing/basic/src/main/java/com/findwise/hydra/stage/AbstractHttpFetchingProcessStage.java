@@ -1,5 +1,6 @@
 package com.findwise.hydra.stage;
 
+import com.findwise.hydra.local.IncorrectFieldTypeException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.utils.http.HttpFetchConfiguration;
 import com.findwise.utils.http.HttpFetchConfigurationBuilder;
@@ -9,6 +10,7 @@ import com.findwise.utils.http.UriProvider;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +34,7 @@ import java.util.Map;
  * @author olof.nilsson@findwise.com
  */
 public abstract class AbstractHttpFetchingProcessStage extends AbstractProcessStage
-        implements UriProvider {
+        implements UriProvider, RequestProvider {
     private final Logger logger = LoggerFactory.getLogger(
             AbstractHttpFetchingProcessStage.class);
 
@@ -98,33 +100,24 @@ public abstract class AbstractHttpFetchingProcessStage extends AbstractProcessSt
     public void init() throws RequiredArgumentMissingException, InitFailedException {
         super.init();
         fetcher = new HttpFetcher(getSettings());
-
     }
 
-    public void setClient(HttpClient client) {
-        fetcher = new HttpFetcher(fetcher.getCookieStore(), client, fetcher.getRequestProvider(),
-                fetcher.getConfiguration());
-    }
-
-    public void setCookieStore(CookieStore cookieStore) {
-        fetcher = new HttpFetcher(cookieStore, fetcher.getClient(), fetcher.getRequestProvider(),
-                fetcher.getConfiguration());
-    }
-
-    public void setRequestProvider(RequestProvider requestProvider) {
-        fetcher = new HttpFetcher(fetcher.getCookieStore(), fetcher.getClient(), requestProvider,
-                fetcher.getConfiguration());
+    public void setFetcher(HttpFetcher fetcher) {
+        this.fetcher = fetcher;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void process(LocalDocument doc) throws ProcessException {
         List<String> identifiers = new ArrayList<String>();
-        Object field = doc.getContentField(identifierField);
-        if (field instanceof String) {
-            identifiers.add((String) field);
-        } else if (field instanceof List<?>) {
-            identifiers.addAll((List<String>) field);
+        try {
+            identifiers.add(doc.getContentFieldAsString(identifierField));
+        } catch (IncorrectFieldTypeException e1) {
+            try {
+                identifiers.addAll(doc.getContentFieldAsStrings(identifierField));
+            } catch (IncorrectFieldTypeException e2) {
+                throw new ProcessException("Field '" + identifierField + "' was not a String or List", e2);
+            }
         }
         try {
             fetcher.ensureCookie();
@@ -145,33 +138,13 @@ public abstract class AbstractHttpFetchingProcessStage extends AbstractProcessSt
             String fieldName = ignoredIdentifiers.get(identifier);
             logger.debug("Ignoring identifier '{}', copying it to '{}'", identifier,
                     fieldName);
-            List<String> output = getFieldAsStrings(doc, fieldName);
-            output.add(identifier);
-            doc.putContentField(fieldName, output);
+            doc.appendToContentField(fieldName, identifier);
             return;
         }
         HttpEntity entity = fetcher.fetch(identifier, getAcceptedContentHeader(),
-                this);
+                this, this);
 
         processResponseEntity(entity, doc);
-    }
-
-    @SuppressWarnings("unchecked")
-    public List<String> getFieldAsStrings(LocalDocument doc, String field) {
-        List<String> list = null;
-        if (doc.hasContentField(field)) {
-            Object previousFieldValue = doc.getContentField(field);
-            if (previousFieldValue instanceof String) {
-                list = new ArrayList<String>();
-                list.add((String) previousFieldValue);
-            } else if (previousFieldValue instanceof List<?>) {
-                list = (List<String>) previousFieldValue;
-            }
-        }
-        if (null == list) {
-            list = new ArrayList<String>();
-        }
-        return list;
     }
 
     /**
@@ -198,6 +171,13 @@ public abstract class AbstractHttpFetchingProcessStage extends AbstractProcessSt
      */
     public abstract String getAcceptedContentHeader();
 
+    /**
+     * Request object to use for requests. Should return a new object.
+     * This method can be used to set headers on all requests.
+     *
+     * @return request object to use
+     */
+    public abstract HttpRequestBase getRequest();
 
     public Map<String, String> getIgnoredIdentifiers() {
         return ignoredIdentifiers;
