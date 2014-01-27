@@ -1,13 +1,5 @@
 package com.findwise.utils.http;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.net.ssl.SSLContext;
-
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
@@ -20,8 +12,8 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
@@ -35,8 +27,16 @@ import org.apache.http.impl.client.cache.CachingHttpClient;
 import org.apache.http.impl.conn.BasicClientConnectionManager;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.net.ssl.SSLContext;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Generic HTTP fetching utility.
@@ -67,23 +67,21 @@ public class HttpFetcher {
     private final CookieStore cookieStore;
     private final HttpClient client;
 
-    private HttpGet request;
+    private final RequestProvider requestProvider;
 
     public HttpFetcher(CookieStore cookieStore,
-            HttpClient client,
-            HttpGet request, HttpFetchConfiguration settings) {
+            HttpClient client, RequestProvider requestProvider, HttpFetchConfiguration settings) {
         this.cookieStore = cookieStore;
         this.client = client;
-        this.request = request;
         this.settings = settings;
+        this.requestProvider = requestProvider;
     }
 
     public HttpFetcher(HttpFetchConfiguration settings) {
         this.settings = settings;
-
         this.cookieStore = new BasicCookieStore();
         this.client = newDefaultClient();
-        this.request = newDefaultRequest();
+        this.requestProvider = newDefaultRequestProvider();
     }
 
     public void ensureCookie() throws FailedFetchingCookieException {
@@ -108,7 +106,7 @@ public class HttpFetcher {
         try {
             int attempts = 0;
             while (true) {
-                request.reset();
+                HttpRequestBase request = requestProvider.getRequest();
                 request.setURI(uriProvider.getUriFromIdentifier(identifier, attempts));
                 request.addHeader(HttpHeaders.ACCEPT, acceptHeader);
                 logger.debug("Performing request, uriProvider:'{}', headers:'{}'",
@@ -126,17 +124,10 @@ public class HttpFetcher {
                 StatusLine status = response.getStatusLine();
                 if (HttpStatus.SC_OK == status.getStatusCode()) {
                     return response.getEntity();
-                } else if (HttpStatus.SC_BAD_REQUEST == status.getStatusCode()) {
-                    // Request has gone bad, recreate it and ignore attempt
-                    logger.debug(
-                            "Recreating request for identifier '{}' due to response '{}'",
-                            identifier, status.getStatusCode());
-                    --attempts;
-                    request = newDefaultRequest();
                 } else if (attempts <= settings.getRetries()) {
                     logger.debug("Retrying identifier '{}' due to response '{}'",
                             identifier, status.getStatusCode());
-                    continue;
+                    EntityUtils.consumeQuietly(response.getEntity());
                 } else {
                     throw new HttpResponseException(status.getStatusCode(),
                             status.getReasonPhrase());
@@ -229,20 +220,20 @@ public class HttpFetcher {
         }
     }
 
-    private HttpGet newDefaultRequest() {
-        return new HttpGet();
+    private RequestProvider newDefaultRequestProvider() {
+        return new PlainGetRequestProvider();
     }
 
     public CookieStore getCookieStore() {
         return cookieStore;
     }
 
-    public HttpGet getRequest() {
-        return request;
-    }
-
     public HttpClient getClient() {
         return client;
+    }
+
+    public RequestProvider getRequestProvider() {
+        return requestProvider;
     }
 
     public HttpFetchConfiguration getConfiguration() {

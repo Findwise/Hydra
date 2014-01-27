@@ -1,24 +1,23 @@
 package com.findwise.hydra.stage;
 
+import com.findwise.hydra.local.LocalDocument;
+import com.findwise.utils.http.HttpFetchConfiguration;
+import com.findwise.utils.http.HttpFetchConfigurationBuilder;
+import com.findwise.utils.http.HttpFetcher;
+import com.findwise.utils.http.RequestProvider;
+import com.findwise.utils.http.UriProvider;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.HttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.findwise.hydra.local.LocalDocument;
-import com.findwise.utils.http.HttpFetchConfiguration;
-import com.findwise.utils.http.HttpFetchConfigurationBuilder;
-import com.findwise.utils.http.HttpFetcher;
-import com.findwise.utils.http.UriProvider;
 
 /**
  * Generic HTTP fetching stage. Subclasses operate on one fetched URL at a time.
@@ -103,17 +102,17 @@ public abstract class AbstractHttpFetchingProcessStage extends AbstractProcessSt
     }
 
     public void setClient(HttpClient client) {
-        fetcher = new HttpFetcher(fetcher.getCookieStore(), client, fetcher.getRequest(),
+        fetcher = new HttpFetcher(fetcher.getCookieStore(), client, fetcher.getRequestProvider(),
                 fetcher.getConfiguration());
     }
 
     public void setCookieStore(CookieStore cookieStore) {
-        fetcher = new HttpFetcher(cookieStore, fetcher.getClient(), fetcher.getRequest(),
+        fetcher = new HttpFetcher(cookieStore, fetcher.getClient(), fetcher.getRequestProvider(),
                 fetcher.getConfiguration());
     }
 
-    public void setRequest(HttpGet request) {
-        fetcher = new HttpFetcher(fetcher.getCookieStore(), fetcher.getClient(), request,
+    public void setRequestProvider(RequestProvider requestProvider) {
+        fetcher = new HttpFetcher(fetcher.getCookieStore(), fetcher.getClient(), requestProvider,
                 fetcher.getConfiguration());
     }
 

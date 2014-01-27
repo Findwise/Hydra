@@ -1,21 +1,8 @@
 package com.findwise.hydra.stage;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.findwise.hydra.local.LocalDocument;
+import com.findwise.utils.http.RequestProvider;
+import junit.framework.Assert;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -33,9 +20,21 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
-import junit.framework.Assert;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import com.findwise.hydra.local.LocalDocument;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * @author olof.nilsson@findwise.com
@@ -49,6 +48,8 @@ public abstract class AbstractHttpFetchingProcessStageTest {
     protected LocalDocument doc;
     @Mock
     protected HttpClient client;
+    @Mock
+    protected RequestProvider requestProvider;
     @Mock
     protected HttpGet request;
     @Mock
@@ -83,7 +84,8 @@ public abstract class AbstractHttpFetchingProcessStageTest {
         when(client.execute(any(HttpUriRequest.class))).thenReturn(response);
         stage.setCookieStore(new BasicCookieStore());
         stage.setClient(client);
-        stage.setRequest(request);
+        when(requestProvider.getRequest()).thenReturn(request);
+        stage.setRequestProvider(requestProvider);
     }
 
     @Test
