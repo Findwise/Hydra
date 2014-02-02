@@ -11,6 +11,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,7 +145,11 @@ public abstract class AbstractHttpFetchingProcessStage extends AbstractProcessSt
         HttpEntity entity = fetcher.fetch(identifier, getAcceptedContentHeader(),
                 this, this);
 
-        processResponseEntity(entity, doc);
+        try {
+            processResponseEntity(entity, doc);
+        } finally {
+            EntityUtils.consumeQuietly(entity);
+        }
     }
 
     /**
@@ -158,6 +163,7 @@ public abstract class AbstractHttpFetchingProcessStage extends AbstractProcessSt
 
     /**
      * Process the response and do work on the document
+     * When this method returns, the superclass will consume the response enitity.
      *
      * @param responseEntity
      */

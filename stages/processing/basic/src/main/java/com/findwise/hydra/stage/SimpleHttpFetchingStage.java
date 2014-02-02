@@ -5,7 +5,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,7 +13,10 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 
-@Stage
+/**
+ * Simple implementation of a fetching stage.
+ */
+@Stage( description = "Fetches content over HTTP, using a URL from a field in the document. Outputs content as-is to a specified output field.")
 public class SimpleHttpFetchingStage extends AbstractHttpFetchingProcessStage {
 
 	@Parameter(description = "Content-type headers to accept")
@@ -39,8 +41,6 @@ public class SimpleHttpFetchingStage extends AbstractHttpFetchingProcessStage {
 			throw new ProcessException("Failed to read HTTP entity body", e);
 		} catch (UnsupportedCharsetException e) {
 			throw new ProcessException("Response used unsupported encoding", e);
-		} finally {
-			EntityUtils.consumeQuietly(responseEntity);
 		}
 	}
 
