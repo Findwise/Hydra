@@ -88,6 +88,8 @@ public class ProcessStageRunnerTest {
 				throw new TimeoutException();
 			}
 		});
+		// There are no asserts here since we are testing that performProcessing will *not*
+		// rethrow the TimeoutException.
 		stageRunner.performProcessing(mock(LocalDocument.class));
 	}
 }
