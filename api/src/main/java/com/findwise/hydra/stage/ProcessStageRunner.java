@@ -92,10 +92,8 @@ public class ProcessStageRunner {
 	private void persist(LocalDocument doc) throws IOException, JsonException {
 		logger.debug("Saving document to RemotePipeline..");
 		if(!remotePipeline.save(doc)) {
-			// TODO: Why are we cloning here?
-			LocalDocument ld = new LocalDocument(doc);
 			IOException e = new IOException("Unable to save changes to core");
-			if(!onException(ld, e)) {
+			if(!onException(doc, e)) {
 				logger.error("Unable to persist an error to the database for doc '" + doc.getID() + "'", e);
 			}
 		}
