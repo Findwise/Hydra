@@ -22,6 +22,8 @@ import com.findwise.hydra.JsonException;
 import com.findwise.hydra.SerializationUtils;
 import com.findwise.tools.Comparator;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class LocalDocument implements Document<Local> {
     private static Logger internalLogger = LoggerFactory.getLogger("internal");
 
@@ -31,11 +33,10 @@ public class LocalDocument implements Document<Local> {
 	private Set<String> touchedMetadata;
 	private boolean touchedAction;
 
-	// For backwards compatibility, the documentFileRepository is set by a setter instead
-	// of in the constructor. If it is unset, a stubbed variant is supplied that raises
-	// exceptions for all methods.
-	// TODO: Code smell...
-	private DocumentFileRepository documentFileRepository = new UnsetDocumentFileRepository();
+	// The documentFileRepository is set by a setter instead of in the constructor, since
+	// the class is also used in the core for serialization / deserialization. If it is unset,
+	// getFile et.al. will throw NPE. // TODO: Still code smell...
+	private DocumentFileRepository documentFileRepository;
 
 	private boolean discardAfterProcessing = false;
 
@@ -590,22 +591,27 @@ public class LocalDocument implements Document<Local> {
 	}
 
 	public List<String> getFileNames() {
+		checkNotNull(documentFileRepository, "documentFileRepository is not set!");
 		return documentFileRepository.getFileNames(getID());
 	}
 
 	public DocumentFile<Local> getFile(String fileName) {
+		checkNotNull(documentFileRepository, "documentFileRepository is not set!");
 		return documentFileRepository.getFile(fileName, getID());
 	}
 
 	public List<DocumentFile<Local>> getFiles() {
+		checkNotNull(documentFileRepository, "documentFileRepository is not set!");
 		return documentFileRepository.getFiles(getID());
 	}
 
 	public boolean saveFile(DocumentFile<Local> file) {
+		checkNotNull(documentFileRepository, "documentFileRepository is not set!");
 		return documentFileRepository.saveFile(file);
 	}
 
 	public boolean deleteFile(String fileName) {
+		checkNotNull(documentFileRepository, "documentFileRepository is not set!");
 		return documentFileRepository.deleteFile(fileName, getID());
 	}
 
@@ -623,30 +629,4 @@ public class LocalDocument implements Document<Local> {
 		return discardAfterProcessing;
 	}
 
-	private class UnsetDocumentFileRepository implements DocumentFileRepository {
-		@Override
-		public DocumentFile<Local> getFile(String fileName, DocumentID<Local> docid) {
-			throw new UnsupportedOperationException("You are trying to use files in a LocalDocument with an UnsetDocumentFileRepository");
-		}
-
-		@Override
-		public List<DocumentFile<Local>> getFiles(DocumentID<Local> docid) {
-			throw new UnsupportedOperationException("You are trying to use files in a LocalDocument with an UnsetDocumentFileRepository");
-		}
-
-		@Override
-		public List<String> getFileNames(DocumentID<?> docid) {
-			throw new UnsupportedOperationException("You are trying to use files in a LocalDocument with an UnsetDocumentFileRepository");
-		}
-
-		@Override
-		public boolean deleteFile(String fileName, DocumentID<Local> docid) {
-			throw new UnsupportedOperationException("You are trying to use files in a LocalDocument with an UnsetDocumentFileRepository");
-		}
-
-		@Override
-		public boolean saveFile(DocumentFile<Local> df) {
-			throw new UnsupportedOperationException("You are trying to use files in a LocalDocument with an UnsetDocumentFileRepository");
-		}
-	}
 }
