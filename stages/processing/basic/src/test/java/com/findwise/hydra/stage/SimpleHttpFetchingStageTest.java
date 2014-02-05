@@ -17,10 +17,9 @@ public class SimpleHttpFetchingStageTest extends AbstractHttpFetchingProcessStag
 
 	@Override
 	public void setUpStage() throws RequiredArgumentMissingException, IllegalAccessException {
-		stage = new SimpleHttpFetchingStage();
-		Map<String, Object> parameters = new HashMap<String, Object>();
-		parameters.put("outputField", "out");
-		stage.setParameters(parameters);
+		SimpleHttpFetchingStage simpleHttpFetchingStage = new SimpleHttpFetchingStage();
+		simpleHttpFetchingStage.setOutputField("out");
+		stage = simpleHttpFetchingStage;
 	}
 
 	@Override

@@ -44,6 +44,14 @@ public class SimpleHttpFetchingStage extends AbstractHttpFetchingProcessStage {
 		}
 	}
 
+	public void setOutputField(String outputField) {
+		this.outputField = outputField;
+	}
+
+	public void setAcceptedContent(String acceptedContent) {
+		this.acceptedContent = acceptedContent;
+	}
+
 	@Override
 	public String getAcceptedContentHeader() {
 		return acceptedContent;
