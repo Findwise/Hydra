@@ -118,14 +118,15 @@ public class HttpFetcher {
 					logger.debug("Received response, status:'{}', headers:'{}'",
 							response.getStatusLine().getStatusCode(), headers);
 				}
-				attempts++;
 				StatusLine status = response.getStatusLine();
 				if (HttpStatus.SC_OK == status.getStatusCode()) {
 					return response.getEntity();
-				} else if (attempts <= settings.getRetries()) {
+				} else if (attempts < settings.getRetries()) {
 					logger.debug("Retrying identifier '{}' due to response '{}'",
 							identifier, status.getStatusCode());
 					EntityUtils.consumeQuietly(response.getEntity());
+					attempts++;
+					continue;
 				} else {
 					throw new HttpResponseException(status.getStatusCode(),
 							status.getReasonPhrase());
