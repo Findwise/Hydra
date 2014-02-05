@@ -11,7 +11,6 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.ClientContext;
@@ -33,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -101,51 +101,71 @@ public class HttpFetcher {
 	public HttpEntity fetch(String identifier,
 	                        String acceptHeader,
 	                        UriProvider uriProvider, RequestProvider requestProvider) throws HttpFetchException {
-		try {
-			int attempts = 0;
-			while (true) {
-				HttpRequestBase request = requestProvider.getRequest();
-				request.setURI(uriProvider.getUriFromIdentifier(identifier, attempts));
-				request.addHeader(HttpHeaders.ACCEPT, acceptHeader);
-				logger.debug("Performing request, uriProvider:'{}', headers:'{}'",
-						request.getURI(), request.getMethod(), request.getAllHeaders());
-				HttpResponse response = client.execute(request);
-				if (logger.isDebugEnabled()) {
-					List<String> headers = new ArrayList<String>();
-					for (Header header : response.getAllHeaders()) {
-						headers.add(header.getName() + "=" + header.getValue());
-					}
-					logger.debug("Received response, status:'{}', headers:'{}'",
-							response.getStatusLine().getStatusCode(), headers);
-				}
-				StatusLine status = response.getStatusLine();
-				if (HttpStatus.SC_OK == status.getStatusCode()) {
-					return response.getEntity();
-				} else if (attempts < settings.getRetries()) {
-					logger.debug("Retrying identifier '{}' due to response '{}'",
-							identifier, status.getStatusCode());
-					EntityUtils.consumeQuietly(response.getEntity());
-					attempts++;
-					continue;
-				} else {
-					throw new HttpResponseException(status.getStatusCode(),
-							status.getReasonPhrase());
-				}
+		int attemptIndex = 0;
+		while (true) {
+			HttpResponse response = attemptFetch(identifier, acceptHeader, uriProvider, requestProvider, attemptIndex);
+			StatusLine status = response.getStatusLine();
+			if (HttpStatus.SC_OK == status.getStatusCode()) {
+				return response.getEntity();
+			} else if (attemptIndex < settings.getRetries()) { // If retries = 2, then we should attempt 3 times in total
+				logger.debug("Retrying identifier '{}' due to response '{}'",
+						identifier, status.getStatusCode());
+				EntityUtils.consumeQuietly(response.getEntity());
+				attemptIndex++;
+				continue;
+			} else {
+				throw new HttpFetchException(
+						String.format(
+								"Could not process identifier '%s', got response '%s'",
+								identifier,
+								status.toString()
+						)
+				);
 			}
-		} catch (HttpResponseException e) {
-			throw new HttpFetchException("Could not process identifier '"
-					+ identifier + "', got response '" + e.getStatusCode() + "'", e);
-		} catch (ClientProtocolException e) {
-			throw new HttpFetchException("Could not process identifier '"
-					+ identifier + "', HTTPClient reported error", e);
+		}
+	}
+
+	private HttpResponse attemptFetch(String identifier, String acceptHeader, UriProvider uriProvider, RequestProvider requestProvider, int attempts) {
+		HttpRequestBase request = createRequest(identifier, acceptHeader, uriProvider, requestProvider, attempts);
+		try {
+			return performRequest(request);
 		} catch (IOException e) {
 			throw new HttpFetchException("Could not process identifier '"
-					+ identifier + "'", e);
+					+ identifier + "', HTTPClient reported error", e);
+		}
+	}
+
+	private HttpRequestBase createRequest(String identifier, String acceptHeader, UriProvider uriProvider, RequestProvider requestProvider, int attempts) {
+		HttpRequestBase request = requestProvider.getRequest();
+		URI uriFromIdentifier = getUri(identifier, uriProvider, attempts);
+		request.setURI(uriFromIdentifier);
+		request.addHeader(HttpHeaders.ACCEPT, acceptHeader);
+		return request;
+	}
+
+	private URI getUri(String identifier, UriProvider uriProvider, int attempts) {
+		try {
+			return uriProvider.getUriFromIdentifier(identifier, attempts);
 		} catch (URISyntaxException e) {
 			throw new HttpFetchException(
 					"Could not construct URI from identifier '" + identifier
 							+ "'", e);
 		}
+	}
+
+	private HttpResponse performRequest(HttpRequestBase request) throws IOException {
+		logger.debug("Performing request, uriProvider:'{}', headers:'{}'",
+				request.getURI(), request.getMethod(), request.getAllHeaders());
+		HttpResponse response = client.execute(request);
+		if (logger.isDebugEnabled()) {
+			List<String> headers = new ArrayList<String>();
+			for (Header header : response.getAllHeaders()) {
+				headers.add(header.getName() + "=" + header.getValue());
+			}
+			logger.debug("Received response, status:'{}', headers:'{}'",
+					response.getStatusLine().getStatusCode(), headers);
+		}
+		return response;
 	}
 
 	private HttpClient newDefaultClient() {
