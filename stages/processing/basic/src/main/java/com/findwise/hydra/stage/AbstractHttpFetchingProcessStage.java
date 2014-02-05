@@ -80,10 +80,6 @@ public abstract class AbstractHttpFetchingProcessStage extends AbstractProcessSt
 
 	private HttpFetcher fetcher;
 
-	public AbstractHttpFetchingProcessStage() {
-		fetcher = new HttpFetcher(getSettings());
-	}
-
 	private HttpFetchConfiguration getSettings() {
 		HttpFetchConfigurationBuilder c = new HttpFetchConfigurationBuilder();
 		c.setBasicAuthHost(basicAuthHost);
@@ -100,7 +96,9 @@ public abstract class AbstractHttpFetchingProcessStage extends AbstractProcessSt
 	@Override
 	public void init() throws RequiredArgumentMissingException, InitFailedException {
 		super.init();
-		fetcher = new HttpFetcher(getSettings());
+		if(fetcher == null) {
+			fetcher = new HttpFetcher(getSettings());
+		}
 	}
 
 	public void setFetcher(HttpFetcher fetcher) {
