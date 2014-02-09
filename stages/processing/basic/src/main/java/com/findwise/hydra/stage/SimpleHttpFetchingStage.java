@@ -16,7 +16,7 @@ import java.nio.charset.UnsupportedCharsetException;
 /**
  * Simple implementation of a fetching stage.
  */
-@Stage( description = "Fetches content over HTTP, using a URL from a field in the document. Outputs content as-is to a specified output field.")
+@Stage(description = "Fetches content over HTTP, using a URL from a field in the document. Outputs content as-is to a specified output field.")
 public class SimpleHttpFetchingStage extends AbstractHttpFetchingProcessStage {
 
 	@Parameter(description = "Content-type headers to accept")
@@ -44,13 +44,21 @@ public class SimpleHttpFetchingStage extends AbstractHttpFetchingProcessStage {
 		}
 	}
 
+	public void setOutputField(String outputField) {
+		this.outputField = outputField;
+	}
+
+	public void setAcceptedContent(String acceptedContent) {
+		this.acceptedContent = acceptedContent;
+	}
+
 	@Override
 	public String getAcceptedContentHeader() {
 		return acceptedContent;
 	}
 
-    @Override
-    public HttpRequestBase getRequest() {
-        return new HttpGet();
-    }
+	@Override
+	public HttpRequestBase getRequest() {
+		return new HttpGet();
+	}
 }

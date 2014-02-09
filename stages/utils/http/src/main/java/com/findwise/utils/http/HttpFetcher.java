@@ -11,7 +11,6 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.ClientContext;
@@ -33,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -40,11 +40,11 @@ import java.util.List;
 
 /**
  * Generic HTTP fetching utility.
- * 
+ *
  * <p>
  * This class takes care of opening and closing connections.
  * </p>
- * 
+ *
  * Supports:
  * <ul>
  * <li>Basic Auth</li>
@@ -52,185 +52,206 @@ import java.util.List;
  * <li>SSL, with optional exceptions for trusted hosts</li>
  * <li>Fetching of session cookies</li>
  * </ul>
- * 
+ *
  * Users of this class is responsible for releasing resources allocated by
  * returned objects of type {@link HttpEntity}.
- * 
+ *
  * @author olof.nilsson@findwise.com
  * @author martin.nycander@findwise.com
  */
 public class HttpFetcher {
-    private static final PlainUriProvider PLAIN_URI_PROVIDER = new PlainUriProvider();
-    private static final RequestProvider PLAIN_GET_REQUEST_PROVIDER = new PlainGetRequestProvider();
-    private final Logger logger = LoggerFactory.getLogger(HttpFetcher.class);
-    private final HttpFetchConfiguration settings;
+	private static final PlainUriProvider PLAIN_URI_PROVIDER = new PlainUriProvider();
+	private static final RequestProvider PLAIN_GET_REQUEST_PROVIDER = new PlainGetRequestProvider();
+	private final Logger logger = LoggerFactory.getLogger(HttpFetcher.class);
+	private final HttpFetchConfiguration settings;
 
-    private final CookieStore cookieStore;
-    private final HttpClient client;
+	private final CookieStore cookieStore;
+	private final HttpClient client;
 
 
-    public HttpFetcher(CookieStore cookieStore,
-            HttpClient client, HttpFetchConfiguration settings) {
-        this.cookieStore = cookieStore;
-        this.client = client;
-        this.settings = settings;
-    }
+	public HttpFetcher(CookieStore cookieStore,
+	                   HttpClient client, HttpFetchConfiguration settings) {
+		this.cookieStore = cookieStore;
+		this.client = client;
+		this.settings = settings;
+	}
 
-    public HttpFetcher(HttpFetchConfiguration settings) {
-        this.settings = settings;
-        this.cookieStore = new BasicCookieStore();
-        this.client = newDefaultClient();
-    }
+	public HttpFetcher(HttpFetchConfiguration settings) {
+		this.settings = settings;
+		this.cookieStore = new BasicCookieStore();
+		this.client = newDefaultClient();
+	}
 
-    public void ensureCookie() throws FailedFetchingCookieException {
-        if (settings.hasCookieUri()) {
-            updateSessionCookie();
-        }
-    }
+	public void ensureCookie() throws FailedFetchingCookieException {
+		if (settings.hasCookieUri()) {
+			updateSessionCookie();
+		}
+	}
 
-    public void clearCookie() {
-        if (settings.hasCookieUri()) {
-            cookieStore.clear();
-        }
-    }
+	public void clearCookie() {
+		if (settings.hasCookieUri()) {
+			cookieStore.clear();
+		}
+	}
 
-    public HttpEntity fetch(String url, String acceptHeader) throws HttpFetchException {
-        return fetch(url, acceptHeader, PLAIN_URI_PROVIDER, PLAIN_GET_REQUEST_PROVIDER);
-    }
+	public HttpEntity fetch(String url, String acceptHeader) throws HttpFetchException {
+		return fetch(url, acceptHeader, PLAIN_URI_PROVIDER, PLAIN_GET_REQUEST_PROVIDER);
+	}
 
-    public HttpEntity fetch(String identifier,
-            String acceptHeader,
-            UriProvider uriProvider, RequestProvider requestProvider) throws HttpFetchException {
-        try {
-            int attempts = 0;
-            while (true) {
-                HttpRequestBase request = requestProvider.getRequest();
-                request.setURI(uriProvider.getUriFromIdentifier(identifier, attempts));
-                request.addHeader(HttpHeaders.ACCEPT, acceptHeader);
-                logger.debug("Performing request, uriProvider:'{}', headers:'{}'",
-                request.getURI(), request.getMethod(), request.getAllHeaders());
-                HttpResponse response = client.execute(request);
-                if (logger.isDebugEnabled()) {
-                    List<String> headers = new ArrayList<String>();
-                    for (Header header : response.getAllHeaders()) {
-                        headers.add(header.getName() + "=" + header.getValue());
-                    }
-                    logger.debug("Received response, status:'{}', headers:'{}'",
-                            response.getStatusLine().getStatusCode(), headers);
-                }
-                attempts++;
-                StatusLine status = response.getStatusLine();
-                if (HttpStatus.SC_OK == status.getStatusCode()) {
-                    return response.getEntity();
-                } else if (attempts <= settings.getRetries()) {
-                    logger.debug("Retrying identifier '{}' due to response '{}'",
-                            identifier, status.getStatusCode());
-                    EntityUtils.consumeQuietly(response.getEntity());
-                } else {
-                    throw new HttpResponseException(status.getStatusCode(),
-                            status.getReasonPhrase());
-                }
-            }
-        } catch (HttpResponseException e) {
-            throw new HttpFetchException("Could not process identifier '"
-                    + identifier + "', got response '" + e.getStatusCode() + "'", e);
-        } catch (ClientProtocolException e) {
-            throw new HttpFetchException("Could not process identifier '"
-                    + identifier + "', HTTPClient reported error", e);
-        } catch (IOException e) {
-            throw new HttpFetchException("Could not process identifier '"
-                    + identifier + "'", e);
-        } catch (URISyntaxException e) {
-            throw new HttpFetchException(
-                    "Could not construct URI from identifier '" + identifier
-                            + "'", e);
-        }
-    }
+	public HttpEntity fetch(String identifier,
+	                        String acceptHeader,
+	                        UriProvider uriProvider, RequestProvider requestProvider) throws HttpFetchException {
+		int attemptIndex = 0;
+		while (true) {
+			HttpResponse response = attemptFetch(identifier, acceptHeader, uriProvider, requestProvider, attemptIndex);
+			StatusLine status = response.getStatusLine();
+			if (HttpStatus.SC_OK == status.getStatusCode()) {
+				return response.getEntity();
+			} else if (attemptIndex < settings.getRetries()) { // If retries = 2, then we should attempt 3 times in total
+				logger.debug("Retrying identifier '{}' due to response '{}'",
+						identifier, status.getStatusCode());
+				EntityUtils.consumeQuietly(response.getEntity());
+				attemptIndex++;
+				continue;
+			} else {
+				throw new HttpFetchException(
+						String.format(
+								"Could not process identifier '%s', got response '%s'",
+								identifier,
+								status.toString()
+						)
+				);
+			}
+		}
+	}
 
-    private HttpClient newDefaultClient() {
-        try {
-            // Set up SSL exceptions
-            SchemeRegistry registry = new SchemeRegistry();
-            SSLSocketFactory defaultSocketFactory = SSLSocketFactory.getSocketFactory();
-            SSLContext context = SSLContext.getDefault();
-            X509HostnameVerifier hostnameVerifier = new SelectiveHostnameVerifier(
-                    defaultSocketFactory.getHostnameVerifier(),
-                    settings.getSslHostExceptions());
-            SSLSocketFactory socketFactory = new SSLSocketFactory(context,
-                    hostnameVerifier);
-            registry.register(new Scheme("https", 443, socketFactory));
-            registry.register(
-                    new Scheme("http", 80, PlainSocketFactory.getSocketFactory()));
-            BasicClientConnectionManager mgr = new BasicClientConnectionManager(registry);
-            DefaultHttpClient defaultClient = new DefaultHttpClient(mgr);
-            // Set up Basic Auth
-            if (settings.shouldUseBasicAuth()) {
-                defaultClient.getCredentialsProvider()
-                        .setCredentials(new AuthScope(
-                                settings.getBasicAuthHost(),
-                                settings.getBasicAuthPort()),
-                                new UsernamePasswordCredentials(
-                                        settings.getBasicAuthUsername(),
-                                        settings.getBasicAuthPassword()));
-            }
-            // Set up cookies
-            defaultClient.setCookieStore(cookieStore);
-            // Set up caching
-            if (settings.getCacheExpiration() >= 0L) {
-                CacheConfig cacheConfig = new CacheConfig();
-                cacheConfig.setMaxCacheEntries(1000);
-                cacheConfig.setHeuristicCachingEnabled(true);
-                cacheConfig.setHeuristicDefaultLifetime(
-                        settings.getCacheExpiration());
-                cacheConfig.setHeuristicCoefficient(0.9f);
-                CachingHttpClient cachingClient = new CachingHttpClient(
-                        defaultClient, cacheConfig);
-                return cachingClient;
-            } else {
-                return defaultClient;
-            }
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Could not create HTTP client", e);
-        }
-    }
+	private HttpResponse attemptFetch(String identifier, String acceptHeader, UriProvider uriProvider, RequestProvider requestProvider, int attempts) {
+		HttpRequestBase request = createRequest(identifier, acceptHeader, uriProvider, requestProvider, attempts);
+		try {
+			return performRequest(request);
+		} catch (IOException e) {
+			throw new HttpFetchException("Could not process identifier '"
+					+ identifier + "', HTTPClient reported error", e);
+		}
+	}
 
-    private void updateSessionCookie() throws FailedFetchingCookieException {
-        if (cookieStore.getCookies().isEmpty()) {
-            try {
-                // Fetch session cookie
-                logger.debug("Fetching session cookie from '{}'",
-                        settings.getSessionCookieUri());
-                HttpContext cookieContext = new BasicHttpContext();
-                cookieContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
-                HttpHead cookieRequest = new HttpHead(
-                        settings.getSessionCookieUri());
-                client.execute(cookieRequest, cookieContext);
-                cookieRequest.reset();
-            } catch (ClientProtocolException e) {
-                throw new FailedFetchingCookieException(
-                        "Failed to fetch cookie at URI '" +
-                                settings.getSessionCookieUri() + "'", e);
-            } catch (IOException e) {
-                throw new FailedFetchingCookieException(
-                        "Failed to fetch cookie at URI '" +
-                                settings.getSessionCookieUri() + "'", e);
-            }
-        }
-    }
+	private HttpRequestBase createRequest(String identifier, String acceptHeader, UriProvider uriProvider, RequestProvider requestProvider, int attempts) {
+		HttpRequestBase request = requestProvider.getRequest();
+		URI uriFromIdentifier = getUri(identifier, uriProvider, attempts);
+		request.setURI(uriFromIdentifier);
+		request.addHeader(HttpHeaders.ACCEPT, acceptHeader);
+		return request;
+	}
 
-    private RequestProvider newDefaultRequestProvider() {
-        return new PlainGetRequestProvider();
-    }
+	private URI getUri(String identifier, UriProvider uriProvider, int attempts) {
+		try {
+			return uriProvider.getUriFromIdentifier(identifier, attempts);
+		} catch (URISyntaxException e) {
+			throw new HttpFetchException(
+					"Could not construct URI from identifier '" + identifier
+							+ "'", e);
+		}
+	}
 
-    public CookieStore getCookieStore() {
-        return cookieStore;
-    }
+	private HttpResponse performRequest(HttpRequestBase request) throws IOException {
+		logger.debug("Performing request, uriProvider:'{}', headers:'{}'",
+				request.getURI(), request.getMethod(), request.getAllHeaders());
+		HttpResponse response = client.execute(request);
+		if (logger.isDebugEnabled()) {
+			List<String> headers = new ArrayList<String>();
+			for (Header header : response.getAllHeaders()) {
+				headers.add(header.getName() + "=" + header.getValue());
+			}
+			logger.debug("Received response, status:'{}', headers:'{}'",
+					response.getStatusLine().getStatusCode(), headers);
+		}
+		return response;
+	}
 
-    public HttpClient getClient() {
-        return client;
-    }
+	private HttpClient newDefaultClient() {
+		try {
+			// Set up SSL exceptions
+			SchemeRegistry registry = new SchemeRegistry();
+			SSLSocketFactory defaultSocketFactory = SSLSocketFactory.getSocketFactory();
+			SSLContext context = SSLContext.getDefault();
+			X509HostnameVerifier hostnameVerifier = new SelectiveHostnameVerifier(
+					defaultSocketFactory.getHostnameVerifier(),
+					settings.getSslHostExceptions());
+			SSLSocketFactory socketFactory = new SSLSocketFactory(context,
+					hostnameVerifier);
+			registry.register(new Scheme("https", 443, socketFactory));
+			registry.register(
+					new Scheme("http", 80, PlainSocketFactory.getSocketFactory()));
+			BasicClientConnectionManager mgr = new BasicClientConnectionManager(registry);
+			DefaultHttpClient defaultClient = new DefaultHttpClient(mgr);
+			// Set up Basic Auth
+			if (settings.shouldUseBasicAuth()) {
+				defaultClient.getCredentialsProvider()
+						.setCredentials(new AuthScope(
+								settings.getBasicAuthHost(),
+								settings.getBasicAuthPort()),
+								new UsernamePasswordCredentials(
+										settings.getBasicAuthUsername(),
+										settings.getBasicAuthPassword()));
+			}
+			// Set up cookies
+			defaultClient.setCookieStore(cookieStore);
+			// Set up caching
+			if (settings.getCacheExpiration() >= 0L) {
+				CacheConfig cacheConfig = new CacheConfig();
+				cacheConfig.setMaxCacheEntries(1000);
+				cacheConfig.setHeuristicCachingEnabled(true);
+				cacheConfig.setHeuristicDefaultLifetime(
+						settings.getCacheExpiration());
+				cacheConfig.setHeuristicCoefficient(0.9f);
+				CachingHttpClient cachingClient = new CachingHttpClient(
+						defaultClient, cacheConfig);
+				return cachingClient;
+			} else {
+				return defaultClient;
+			}
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException("Could not create HTTP client", e);
+		}
+	}
 
-    public HttpFetchConfiguration getConfiguration() {
-        return settings;
-    }
+	private void updateSessionCookie() throws FailedFetchingCookieException {
+		if (cookieStore.getCookies().isEmpty()) {
+			try {
+				// Fetch session cookie
+				logger.debug("Fetching session cookie from '{}'",
+						settings.getSessionCookieUri());
+				HttpContext cookieContext = new BasicHttpContext();
+				cookieContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
+				HttpHead cookieRequest = new HttpHead(
+						settings.getSessionCookieUri());
+				client.execute(cookieRequest, cookieContext);
+				cookieRequest.reset();
+			} catch (ClientProtocolException e) {
+				throw new FailedFetchingCookieException(
+						"Failed to fetch cookie at URI '" +
+								settings.getSessionCookieUri() + "'", e);
+			} catch (IOException e) {
+				throw new FailedFetchingCookieException(
+						"Failed to fetch cookie at URI '" +
+								settings.getSessionCookieUri() + "'", e);
+			}
+		}
+	}
+
+	private RequestProvider newDefaultRequestProvider() {
+		return new PlainGetRequestProvider();
+	}
+
+	public CookieStore getCookieStore() {
+		return cookieStore;
+	}
+
+	public HttpClient getClient() {
+		return client;
+	}
+
+	public HttpFetchConfiguration getConfiguration() {
+		return settings;
+	}
 }
