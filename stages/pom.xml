@@ -11,9 +11,6 @@
     <modules>
         <module>utils/http</module>
         <module>debugging/debugging</module>
-        <module>in/json-in</module>
-        <module>in/server</module>
-        <module>in/solr-in</module>
         <module>out/elasticsearch-out</module>
         <module>out/solr-out</module>
         <module>out/solr-out-3.6</module>

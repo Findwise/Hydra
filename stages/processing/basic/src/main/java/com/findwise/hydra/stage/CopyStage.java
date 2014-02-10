@@ -15,8 +15,7 @@ public class CopyStage extends AbstractMappingProcessStage {
 	public void stageInit() throws RequiredArgumentMissingException { }
 
 	@Override
-	public void processField(LocalDocument doc, String fromField, String toField)
-			throws ProcessException {
+	public void processField(LocalDocument doc, String fromField, String toField) {
 		Object val = doc.getContentField(fromField);
 		doc.putContentField(toField, val);
 		String valString = (val == null) ? null : val.toString();

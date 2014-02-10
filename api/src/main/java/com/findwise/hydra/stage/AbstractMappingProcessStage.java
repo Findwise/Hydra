@@ -11,7 +11,7 @@ public abstract class AbstractMappingProcessStage extends AbstractProcessStage {
 	private Map<String, String> map;
 	
 	@Override
-	public final void process(LocalDocument doc) throws ProcessException {
+	public final void process(LocalDocument doc) throws Exception {
 		for(Map.Entry<String, String> e : map.entrySet()) {
 			if(doc.hasContentField(e.getKey())) {
 				processField(doc, e.getKey(), e.getValue());
@@ -30,5 +30,9 @@ public abstract class AbstractMappingProcessStage extends AbstractProcessStage {
 
 	public abstract void stageInit() throws RequiredArgumentMissingException, InitFailedException;
 
-	public abstract void processField(LocalDocument doc, String fromField, String toField) throws ProcessException;
+	public abstract void processField(LocalDocument doc, String fromField, String toField) throws Exception;
+
+	public void setMap(Map<String, String> map) {
+		this.map = map;
+	}
 }

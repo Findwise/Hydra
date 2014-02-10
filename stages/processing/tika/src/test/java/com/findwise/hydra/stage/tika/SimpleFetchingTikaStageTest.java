@@ -15,11 +15,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.stage.ProcessException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -37,6 +38,9 @@ public class SimpleFetchingTikaStageTest {
 	private static final String mockHost = "localhost";
 	private static final int mockPort = 37777;
 	private static final String mockUrl = "http://" + mockHost + ":" + mockPort;
+
+	@Rule
+	public ExpectedException exception = ExpectedException.none();
 
 	@ClassRule
 	public static WireMockRule wireMockRule = new WireMockRule(wireMockConfig().port(mockPort));
@@ -87,14 +91,9 @@ public class SimpleFetchingTikaStageTest {
 	}
 	
 	@Test
-	public void testURIEscaping() throws Exception {
+	public void testURexceptionIEscaping() throws Exception {
 		doc.putContentField("attachment_a", mockUrl + "/ arbitrary path with spaces/");
-		
-		try {
-			stage.process(doc);
-			Assert.fail("Did not throw exception, path was incorrect");
-		} catch(ProcessException e) {
-			Assert.assertEquals(FileNotFoundException.class, e.getCause().getClass());
-		}
+		exception.expect(FileNotFoundException.class);
+		stage.process(doc);
 	}
 }

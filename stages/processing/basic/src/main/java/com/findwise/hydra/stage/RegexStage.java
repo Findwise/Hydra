@@ -54,7 +54,7 @@ public class RegexStage extends AbstractProcessStage {
     }
 
     @Override
-    public void process(LocalDocument doc) throws ProcessException {
+    public void process(LocalDocument doc) {
         for (Map<String, String> regexConf : regexConfigs) {
             Pattern pattern = Pattern.compile(regexConf.get("regex"), Pattern.DOTALL);
             Object value = doc.getContentField(regexConf.get("inField"));
@@ -153,5 +153,17 @@ public class RegexStage extends AbstractProcessStage {
 			ret.add(concatenateStrings(list));
 		}
 		return ret;
+	}
+
+	public void setRegexConfigs(List<Map<String, String>> regexConfigs) {
+		this.regexConfigs = regexConfigs;
+	}
+
+	public void setConcatenateMatches(boolean concatenateMatches) {
+		this.concatenateMatches = concatenateMatches;
+	}
+
+	public void setConcatenateListElements(boolean concatenateListElements) {
+		this.concatenateListElements = concatenateListElements;
 	}
 }

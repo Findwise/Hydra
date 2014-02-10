@@ -13,7 +13,6 @@ import com.findwise.hydra.local.Local;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
-import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.Stage;
 import com.findwise.hydra.stage.tika.utils.TikaUtils;
 
@@ -31,19 +30,28 @@ public class TikaStage extends AbstractProcessStage {
 	static private Parser parser = new AutoDetectParser();
 
 	@Override
-	public void process(LocalDocument doc) throws ProcessException { 
-		try {
-			List<String> files = getRemotePipeline().getFileNames(doc.getID());
-			for(String fileName : files) {
-				DocumentFile<Local> df = getRemotePipeline().getFile(fileName, doc.getID());
-				TikaUtils.enrichDocumentWithFileContents(doc, fileName.replace('.', '_')+"_", df.getStream(), parser, addMetaData, addLanguage);
-			}
-		} catch (IOException e) {
-			throw new ProcessException("Failed opening or reading from stream", e);
-		} catch (SAXException e) {
-			throw new ProcessException("Failed parsing document", e);
-		} catch (TikaException e) {
-			throw new ProcessException("Got exception from Tika", e);
+	public void process(LocalDocument doc) throws TikaException, SAXException, IOException {
+		List<String> files = doc.getFileNames();
+		for(String fileName : files) {
+			DocumentFile<Local> df = doc.getFile(fileName);
+			TikaUtils.enrichDocumentWithFileContents(doc, fileName.replace('.', '_')+"_", df.getStream(), parser, addMetaData, addLanguage);
 		}
 	}
+
+	public boolean isAddMetaData() {
+		return addMetaData;
+	}
+
+	public void setAddMetaData(boolean addMetaData) {
+		this.addMetaData = addMetaData;
+	}
+
+	public boolean isAddLanguage() {
+		return addLanguage;
+	}
+
+	public void setAddLanguage(boolean addLanguage) {
+		this.addLanguage = addLanguage;
+	}
+
 }

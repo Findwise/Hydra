@@ -12,12 +12,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mockito;
 
 import com.findwise.hydra.Document.Action;
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.local.RemotePipeline;
-import com.findwise.hydra.stage.ProcessException;
 
 public class ElasticsearchOutputStageIT {
 	
@@ -44,11 +41,9 @@ public class ElasticsearchOutputStageIT {
 		node.start();
 		client = node.client();
 
-		RemotePipeline mockRP = Mockito.mock(RemotePipeline.class);
 		stage = new ElasticsearchOutputStage();
 		stage.setClient(client);
-		stage.setRemotePipeline(mockRP);
-		
+
 		addDocument = new LocalDocument();
 		addDocument.setAction(Action.ADD);
 		addDocument.putContentField(stage.getIdField(), "document");
@@ -61,7 +56,7 @@ public class ElasticsearchOutputStageIT {
 	}
 	
 	@Test
-	public void testCanAddAndDelete() throws ProcessException {
+	public void testCanAddAndDelete() {
 		stage.output(addDocument);
 		
 		ListenableActionFuture<GetResponse> addActionFuture = client.prepareGet()

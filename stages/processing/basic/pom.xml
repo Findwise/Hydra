@@ -13,9 +13,9 @@
 	<name>${project.artifactId}</name>
 	<description>Basic Stages - A package of basic stages for Hydra</description>
 
-	<properties>
-		<main.class>com.findwise.hydra.stage.AbstractStage</main.class>
-	</properties>
+    <properties>
+        <main.class>com.findwise.hydra.stage.StageStarter</main.class>
+    </properties>
 
 	<dependencies>
 		<dependency>

@@ -1,11 +1,6 @@
 package com.findwise.hydra.stage;
 
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.stage.AbstractProcessStage;
-import com.findwise.hydra.stage.Parameter;
-import com.findwise.hydra.stage.ProcessException;
-import com.findwise.hydra.stage.RequiredArgumentMissingException;
-import com.findwise.hydra.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +49,7 @@ public class PrioritizedCopyStage extends AbstractProcessStage {
     }
 
     @Override
-    public void process(LocalDocument doc) throws ProcessException {
+    public void process(LocalDocument doc) throws Exception {
 
         logger.debug("Starting processing");
 

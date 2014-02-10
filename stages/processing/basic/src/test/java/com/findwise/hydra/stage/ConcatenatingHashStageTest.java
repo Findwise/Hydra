@@ -4,10 +4,7 @@
  */
 package com.findwise.hydra.stage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Arrays;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.RandomStringUtils;
@@ -32,17 +29,9 @@ public class ConcatenatingHashStageTest {
     @Test
     public void testProcess() throws Exception {
         ConcatenatingHashStage chs = new ConcatenatingHashStage();
-                
-        List<String> fields = new ArrayList<String>();
-        fields.add("content");
-        fields.add("title");
-        
-        Map<String, Object> settings = new HashMap<String, Object>();
-        settings.put("algorithm", "MD5");
-        settings.put("output", "md5");
-        settings.put("fields", fields);
-        
-        chs.setParameters(settings);
+        chs.setAlgorithm("MD5");
+        chs.setOutput("md5");
+        chs.setFields(Arrays.asList("content", "title"));
         chs.init();
         
         testStringMD5(chs, RandomStringUtils.randomAscii(10000), RandomStringUtils.randomAlphanumeric(10000));
@@ -52,7 +41,7 @@ public class ConcatenatingHashStageTest {
         }
     }
     
-    private void testStringMD5(ConcatenatingHashStage chs, String s, String s1) throws ProcessException {
+    private void testStringMD5(ConcatenatingHashStage chs, String s, String s1) {
         LocalDocument ld = new LocalDocument();
         ld.putContentField("content", s);
         ld.putContentField("title", s1);

@@ -88,8 +88,7 @@ public abstract class AbstractHttpFetchingProcessStageTest {
 
     @Test
     public void testProcess_calls_client_with_request_for_url()
-            throws ProcessException, ClientProtocolException, IOException,
-            URISyntaxException {
+            throws Exception {
         doc = new LocalDocument();
         doc.putContentField("url", createTestIdentifier("someidentifier"));
         stage.process(doc);
@@ -101,8 +100,7 @@ public abstract class AbstractHttpFetchingProcessStageTest {
 
     @Test
     public void testProcess_calls_client_with_request_for_url_list()
-            throws ProcessException, ClientProtocolException, IOException,
-            URISyntaxException {
+            throws Exception {
         doc = new LocalDocument();
         List<String> urls = Arrays.asList(
                 createTestIdentifier("someidentifier1"),
@@ -123,10 +121,7 @@ public abstract class AbstractHttpFetchingProcessStageTest {
 
     @Test
     public void testProcess_adds_ignored_identifier_to_mapped_field() throws
-            ProcessException,
-            ClientProtocolException,
-            IOException,
-            URISyntaxException {
+            Exception {
         doc = new LocalDocument();
         List<String> urls = Arrays.asList(
                 createTestIdentifier("someidentifier1"),

@@ -35,7 +35,7 @@ public class RegexStageTest {
 		config1.put("regex", "\\Q<![CDATA[<!DOCTYPE html>\\E(.*)\\Q]]>\\E");
 		config1.put("substitute", "$1");
 		configs.add(config1);
-		setParameters();
+		regexStage.setRegexConfigs(configs);
 
 		// should match
 		doc.putContentField(
@@ -55,18 +55,12 @@ public class RegexStageTest {
 		assertTrue(!doc2.hasContentField("out"));
 	}
 
-	private void setParameters() throws IllegalAccessException, IllegalArgumentException, RequiredArgumentMissingException {
-		Map<String, Object> parameters = new HashMap<String, Object>();
-		parameters.put("regexConfigs", configs);
-		regexStage.setParameters(parameters);
-	}
-
 	@Test
 	public void testReplaceString() throws Exception {
 		config1.put("regex", "(^[A-Za-z0-9]+.[A-Za-z0-9]+){1}.*");
 		config1.put("substitute", "$1.ru");
 		configs.add(config1);
-		setParameters();
+		regexStage.setRegexConfigs(configs);
 
 		doc.putContentField("rawcontent", "www.giantbomb.com");
 		regexStage.process(doc);
@@ -78,7 +72,7 @@ public class RegexStageTest {
 		config1.put("regex", "(^[A-Za-z0-9]+)(.)([A-Za-z0-9]+){1}.*");
 		config1.put("substitute", "$1$2$3.ru");
 		configs.add(config1);
-		setParameters();
+		regexStage.setRegexConfigs(configs);
 
 		doc.putContentField("rawcontent", "www.giantbomb.com");
 		regexStage.process(doc);
@@ -90,7 +84,7 @@ public class RegexStageTest {
 		config1.put("regex", "\ufffd*(.*)");
 		config1.put("substitute", "$1");
 		configs.add(config1);
-		setParameters();
+		regexStage.setRegexConfigs(configs);
 
 		doc.putContentField("rawcontent", "���Test");
 		regexStage.process(doc);
@@ -102,7 +96,7 @@ public class RegexStageTest {
 		config1.put("regex", "<[^>]+>([^<]+)");
 		config1.put("substitute", "$1");
 		configs.add(config1);
-		setParameters();
+		regexStage.setRegexConfigs(configs);
 		doc.putContentField(
 				"rawcontent",
 				"<html><div a=\"b\">this is the only text that should remain</div> after html is <b>removed</b><html>");
@@ -125,7 +119,7 @@ public class RegexStageTest {
 
 		configs.add(config1);
 		configs.add(config2);
-		setParameters();
+		regexStage.setRegexConfigs(configs);
 
 		doc.putContentField("rawcontent", "www.giantbomb.com");
 		regexStage.process(doc);
@@ -139,7 +133,7 @@ public class RegexStageTest {
 		config1.put("substitute", "Gaming website");
 
 		configs.add(config1);
-		setParameters();
+		regexStage.setRegexConfigs(configs);
 
 		doc.putContentField("rawcontent", "www.giantbomb.com");
 		regexStage.process(doc);
@@ -152,7 +146,7 @@ public class RegexStageTest {
 		config1.put("regex", "\\Q<![CDATA[<!DOCTYPE html>\\E(.*)\\Q]]>\\E");
 		config1.put("substitute", "$1");
 		configs.add(config1);
-		setParameters();
+		regexStage.setRegexConfigs(configs);
 
 		// should match
 		doc.putContentField("rawcontent",
@@ -168,7 +162,7 @@ public class RegexStageTest {
 		config1.put("substitute", "$1");
 		configs.add(config1);
 
-		setParameters();
+		regexStage.setRegexConfigs(configs);
 
 		doc.putContentField("rawcontent",
 				"<![CDATA[<!DOCTYPE html><html><head></head><body>\n</body></html>]]>");
@@ -182,7 +176,7 @@ public class RegexStageTest {
 		config1.put("regex", "<div id=\"mainContant\">(.*)<div id=\"footer\">");
 		config1.put("substitute", "$1");
 		configs.add(config1);
-		setParameters();
+		regexStage.setRegexConfigs(configs);
 
 		// should match
 		doc.putContentField(
@@ -197,10 +191,8 @@ public class RegexStageTest {
 		config1.put("regex", "23(.*?)87");
 		config1.put("substitute", "$1");
 		configs.add(config1);
-		Map<String, Object> parameters = new HashMap<String, Object>();
-		parameters.put("regexConfigs", configs);
-		parameters.put("concatenateMatches", false);
-		regexStage.setParameters(parameters);
+		regexStage.setRegexConfigs(configs);
+		regexStage.setConcatenateMatches(false);
 		doc.putContentField("rawcontent",
 				"23match187jan23match28723match387nomatch");
 		regexStage.process(doc);
@@ -216,7 +208,7 @@ public class RegexStageTest {
 		config1.put("regex", "(\\$1)");
 		config1.put("substitute", "$1$1");
 		configs.add(config1);
-		setParameters();
+		regexStage.setRegexConfigs(configs);
 		doc.putContentField("rawcontent", "$1$1$1");
 		regexStage.process(doc);
 		Assert.assertEquals("$1$1$1$1$1$1", doc.getContentField("out"));
@@ -227,7 +219,7 @@ public class RegexStageTest {
 		config1.put("regex", "(\\$1)(\\$2)");
 		config1.put("substitute", "$2$1");
 		configs.add(config1);
-		setParameters();
+		regexStage.setRegexConfigs(configs);
 		doc.putContentField("rawcontent", "$1$2$1$2");
 		regexStage.process(doc);
 		Assert.assertEquals("$2$1$2$1", doc.getContentField("out"));
@@ -244,7 +236,7 @@ public class RegexStageTest {
 		config2.put("regex", "(.*)");
 		config2.put("substitute", "$1");
 		configs.add(config2);
-		setParameters();
+		regexStage.setRegexConfigs(configs);
 		doc.putContentField("rawcontent2", "content2");
 		regexStage.process(doc);
 		Assert.assertNull(doc.getContentField("out"));

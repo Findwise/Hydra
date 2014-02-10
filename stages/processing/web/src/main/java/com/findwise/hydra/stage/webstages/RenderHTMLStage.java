@@ -7,7 +7,6 @@ import net.htmlparser.jericho.Source;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
-import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
 
@@ -28,7 +27,7 @@ public class RenderHTMLStage extends AbstractProcessStage {
 	}
 
 	@Override
-	public void process(LocalDocument doc) throws ProcessException {
+	public void process(LocalDocument doc) {
 
 		for (String field : fields) {
 			String stringToRender = (String) doc.getContentField(field);
