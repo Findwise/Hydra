@@ -42,7 +42,7 @@ public class AbstractStageTest {
 		Map<String, Object> serialized = SerializationUtils.fromJson(SerializationUtils.toJson(parameters));
 		
 		TestStage stage = new TestStage();
-		stage.setParameters(serialized);
+		AbstractProcessStageMapper.setParameters(stage, serialized);
 		
 		assertEquals("string", stage.string);
 		assertEquals(100, stage.integer);
@@ -68,7 +68,7 @@ public class AbstractStageTest {
 		Map<String, Object> serialized = SerializationUtils.fromJson(SerializationUtils.toJson(parameters));
 
 		TestStage stage = new TestStage();
-		stage.setParameters(serialized);
+		AbstractProcessStageMapper.setParameters(stage, serialized);
 	}
 
 	@Test
@@ -82,7 +82,7 @@ public class AbstractStageTest {
 		Map<String, Object> serialized = SerializationUtils.fromJson(SerializationUtils.toJson(parameters));
 
 		TestStage stage = new TestStage();
-		stage.setParameters(serialized);
+		AbstractProcessStageMapper.setParameters(stage, serialized);
 
 		assertEquals(2, stage.requiredInteger);
 		assertEquals(query.getAction(), stage.query.getAction());
