@@ -9,6 +9,9 @@ import java.util.Map;
 
 import com.findwise.hydra.DatabaseException;
 import com.findwise.hydra.PipelineStatus;
+import com.findwise.hydra.Stage;
+import com.findwise.hydra.admin.rest.StageClassNotFoundException;
+import com.findwise.hydra.stage.AbstractStage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,6 +108,28 @@ public class ConfigurationService<T extends DatabaseType> {
 		map.put("uploaded", df.getUploadDate());
 		map.put("stages", getPipelineScanner().getStagesMap(df));
 		return map;
+	}
+
+	/**
+	 *
+	 * @param stageInfo a serialized stage configuration
+	 * @return map of stage parameters
+	 * @throws IOException
+	 */
+	public Map<String, Object> getStageParameters(Stage stageInfo) throws DatabaseException, StageClassNotFoundException {
+		try {
+			Map<String, StageInformation> stages = getPipelineScanner().getStagesMap(stageInfo.getDatabaseFile());
+			String stageClass = (String) stageInfo.getProperties().get(AbstractStage.ARG_NAME_STAGE_CLASS);
+			if (null != stageClass && stages.containsKey(stageClass)) {
+				return stages.get(stageClass);
+			} else {
+				throw new StageClassNotFoundException("Stage class '" + stageClass
+						+ "' for stage '" + stageInfo.getName() + "' not found."
+						+ " Available stage classes: '" + stages.keySet() + "'");
+			}
+		} catch (IOException e) {
+			throw new DatabaseException("Failed to scan pipeline", e);
+		}
 	}
 
 	/**

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.findwise.hydra.DatabaseException;
-import com.google.gson.JsonParseException;
 import com.mongodb.MongoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.findwise.hydra.Stage;
@@ -28,8 +28,6 @@ import com.findwise.hydra.admin.documents.DocumentsService;
 
 import com.findwise.hydra.admin.stages.StagesService;
 import com.findwise.hydra.JsonException;
-
-import javax.servlet.http.HttpServletRequest;
 
 
 @Controller("/rest")
@@ -129,6 +127,17 @@ public class ConfigurationController {
 	}
 
 	@ResponseBody
+	@RequestMapping(method=RequestMethod.GET, value="/stages/{stageName}/parameters")
+	public Map<String, Object> getStageParameters(@PathVariable(value = "stageName") String stageName) throws DatabaseException, StageClassNotFoundException {
+		Stage stageInfo = stagesService.getStageInfo(stageName);
+		if (null != stageInfo) {
+			return service.getStageParameters(stageInfo);
+		} else {
+			throw new HttpResourceNotFoundException();
+		}
+	}
+
+	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/stages/{stageName}/delete")
 	public Map<String, Object> deleteStage(
 			@PathVariable(value = "stageName") String stageName) throws IOException{
@@ -204,7 +213,7 @@ public class ConfigurationController {
 
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	@ResponseBody
-	@ExceptionHandler({IOException.class, DatabaseException.class, MongoException.class})
+	@ExceptionHandler({IOException.class, DatabaseException.class, MongoException.class, StageClassNotFoundException.class})
 	public Map<String, Object> handleIoError(Exception exception) {
 		return getErrorMap(exception);
 	}

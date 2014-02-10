@@ -6,23 +6,18 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Map;
 
-import com.findwise.hydra.DatabaseException;
-import com.findwise.hydra.PipelineStatus;
-import com.findwise.hydra.StatusReader;
+import com.findwise.hydra.*;
+import com.findwise.hydra.admin.rest.StageClassNotFoundException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.findwise.hydra.DatabaseConnector;
-import com.findwise.hydra.DocumentReader;
-import com.findwise.hydra.DocumentWriter;
-import com.findwise.hydra.Pipeline;
-import com.findwise.hydra.PipelineReader;
-import com.findwise.hydra.PipelineWriter;
 import com.findwise.hydra.admin.database.AdminServiceType;
 
 @RunWith(MockitoJUnitRunner.class)
