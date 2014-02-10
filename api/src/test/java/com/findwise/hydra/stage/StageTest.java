@@ -25,7 +25,7 @@ public class StageTest {
 		list.add("3");
 		list.add("4");
 		map.put("stringList", list);
-		ps.setParameters(map);
+		AbstractProcessStageMapper.setParameters(ps, map);
 		
 		if(!"1".equals(ps.privateString)) {
 			fail("privateString not correctly set");
@@ -56,7 +56,7 @@ public class StageTest {
 		list.add("3");
 		list.add("4");
 		map.put("stringList", list);
-		ps.setParameters(map);
+		AbstractProcessStageMapper.setParameters(ps, map);
 		
 		if(!"1".equals(ps.getPrivateString())) {
 			fail("privateString not correctly set");
@@ -88,7 +88,7 @@ public class StageTest {
 		query.requireContentFieldExists("exists");
 		query.requireContentFieldNotExists("notexists");
 		map.put("query", SerializationUtils.fromJson(query.toJson()));
-		ps.setParameters(map);
+		AbstractProcessStageMapper.setParameters(ps, map);
 		
 		if(ps.getQuery().getAction()!=Action.ADD) {
 			fail("Did not get correct action");
