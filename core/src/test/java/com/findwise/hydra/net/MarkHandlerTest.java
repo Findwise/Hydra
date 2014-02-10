@@ -2,7 +2,6 @@ package com.findwise.hydra.net;
 
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 import com.findwise.hydra.Document.Status;
 import com.findwise.hydra.local.LocalDocument;
@@ -11,6 +10,8 @@ import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.memorydb.MemoryConnector;
 import com.findwise.hydra.memorydb.MemoryDocument;
 import com.findwise.hydra.memorydb.MemoryType;
+
+import static org.junit.Assert.fail;
 
 public class MarkHandlerTest {
 	private MemoryConnector mc;

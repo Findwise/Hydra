@@ -1,21 +1,17 @@
 package com.findwise.hydra.stage.groovyrunner;
 
-import static org.junit.Assert.*;
-
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.io.FileUtils;
+import junit.framework.Assert;
 import org.apache.commons.io.IOUtils;
-import org.codehaus.groovy.tools.groovydoc.ClasspathResourceManager;
 import org.junit.Test;
 
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
 
 public class GroovyRunnerStageTest {
 

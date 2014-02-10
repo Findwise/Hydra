@@ -1,8 +1,6 @@
 package com.findwise.hydra.stage.tika.utils;
 
 
-import static org.junit.Assert.*;
-
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -19,6 +17,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.findwise.hydra.local.LocalDocument;
+
+import static org.junit.Assert.fail;
 
 public class TikaUtilsTest {
 	private LocalDocument doc;

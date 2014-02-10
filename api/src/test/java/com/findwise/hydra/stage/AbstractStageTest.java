@@ -1,20 +1,22 @@
 package com.findwise.hydra.stage;
 
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.findwise.hydra.JsonException;
 import org.junit.Test;
 
 import com.findwise.hydra.Document.Action;
+import com.findwise.hydra.JsonException;
 import com.findwise.hydra.SerializationUtils;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.stage.AbstractStageTest.TestStage.Enumerable;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class AbstractStageTest {
 

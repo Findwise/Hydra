@@ -1,9 +1,14 @@
 package com.findwise.hydra.stage;
 
-import com.findwise.hydra.local.LocalDocument;
 import java.util.LinkedList;
+
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import com.findwise.hydra.local.LocalDocument;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /** 
  * @author Roar Granevang & Joel Westberg

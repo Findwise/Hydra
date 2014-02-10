@@ -1,13 +1,13 @@
 package com.findwise.hydra;
 
-import static org.junit.Assert.*;
-
 import java.util.Date;
 import java.util.HashMap;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+
+import static org.junit.Assert.assertEquals;
 
 public class StageGroupTest {
 

@@ -4,15 +4,18 @@
  */
 package com.findwise.hydra.stage;
 
-import com.findwise.hydra.local.LocalDocument;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.Test;
-import static org.junit.Assert.*;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.Test;
+
+import com.findwise.hydra.local.LocalDocument;
+
+import static org.junit.Assert.fail;
 
 /**
  *

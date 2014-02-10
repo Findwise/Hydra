@@ -1,9 +1,9 @@
-package com.findwise.hydra.stage.groovyrunner;
+package com.findwise.hydra.stage.groovyrunner
 
-import static org.junit.Assert.*;
-import org.junit.Test;
+import com.findwise.hydra.local.LocalDocument
+import org.junit.Test
 
-import com.findwise.hydra.local.LocalDocument;
+import static org.junit.Assert.assertEquals;
 
 class FieldAddingGroovyStageTest {
 
