@@ -8,9 +8,9 @@ import java.net.URISyntaxException;
  * of attempts.
  */
 public class PlainUriProvider implements UriProvider {
-    @Override
-    public URI getUriFromIdentifier(String identifier, int attempts) throws
-            URISyntaxException {
-        return new URI(identifier);
-    }
+	@Override
+	public URI getUriFromIdentifier(String identifier, int attempts) throws
+			URISyntaxException {
+		return new URI(identifier);
+	}
 }
