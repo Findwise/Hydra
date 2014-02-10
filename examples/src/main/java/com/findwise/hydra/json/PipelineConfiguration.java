@@ -1,6 +1,9 @@
 package com.findwise.hydra.json;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Representation of a pipeline configuration. The corresponding json format

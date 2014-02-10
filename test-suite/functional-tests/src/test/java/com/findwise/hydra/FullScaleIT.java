@@ -1,23 +1,36 @@
 package com.findwise.hydra;
 
-import com.findwise.hydra.mongodb.*;
+import java.io.InputStream;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.WriteConcern;
 import com.mongodb.gridfs.GridFS;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
-import java.net.UnknownHostException;
-import java.util.*;
+import com.findwise.hydra.mongodb.MongoConfiguration;
+import com.findwise.hydra.mongodb.MongoConnector;
+import com.findwise.hydra.mongodb.MongoDocument;
+import com.findwise.hydra.mongodb.MongoDocumentIO;
+import com.findwise.hydra.mongodb.MongoQuery;
+import com.findwise.hydra.mongodb.MongoTailableIterator;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 @RunWith(Parameterized.class)

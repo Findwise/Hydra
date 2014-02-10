@@ -11,7 +11,10 @@ import org.xml.sax.SAXException;
 import com.findwise.hydra.DocumentFile;
 import com.findwise.hydra.local.Local;
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.stage.*;
+import com.findwise.hydra.stage.AbstractProcessStage;
+import com.findwise.hydra.stage.Parameter;
+import com.findwise.hydra.stage.ProcessException;
+import com.findwise.hydra.stage.Stage;
 import com.findwise.hydra.stage.tika.utils.TikaUtils;
 
 /**
