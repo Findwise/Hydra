@@ -14,18 +14,18 @@ import static org.junit.Assert.*;
  * @author magnus.ebbesson
  * @author leonard.saers
  */
-public class ZuluDateFormatterTest {
+public class DateFormatterStageTest {
 
-    ZuluDateFormatter subject;
+    DateFormatterStage subject;
     Map<String, Object> settings;
     List<String> fields;
 
-    public ZuluDateFormatterTest() {
+    public DateFormatterStageTest() {
     }
 
     @Before
     public void setUp() {
-        subject = new ZuluDateFormatter();
+        subject = new DateFormatterStage();
 
         fields = new ArrayList<String>();
         fields.add("date");
