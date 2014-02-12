@@ -23,12 +23,16 @@ import org.slf4j.LoggerFactory;
  * Zulu time is ISO 8601 where the time zone is +0. The format has the following
  * pattern YYYY-MM-DDTHH:MM:SS.000Z
  * 
+ * At the moment, this stage only transforms date to zulu date. The plan is
+ * to extend functionality to transform from one given format to another given 
+ * format. See issue {@link https://github.com/Findwise/Hydra/pull/296}
+ * 
  *
  * Sample configuration:
  * <pre>
  * {@code 
         {
-          "stageClass": "com.findwise.hydra.stage.ZuluDateFormatter",
+          "stageClass": "com.findwise.hydra.stage.DateFormatterStage",
           "query": {
               "touched" : {"remove-blank-fields": true}
           },
@@ -43,9 +47,9 @@ import org.slf4j.LoggerFactory;
  */
 @Stage(description = "A stage that transfroms EPOCH and ISO8601 time to "
         + "Zulu Date format")
-public class ZuluDateFormatter extends AbstractProcessStage {
+public class DateFormatterStage extends AbstractProcessStage {
 
-    private Logger logger = LoggerFactory.getLogger(ZuluDateFormatter.class);
+    private Logger logger = LoggerFactory.getLogger(DateFormatterStage.class);
     
     private static final String EPOCH_PATTERN = "^[0-9]+$";
     private static final String ISO8601_PATTERN = 
@@ -92,8 +96,7 @@ public class ZuluDateFormatter extends AbstractProcessStage {
         } else if(iso8601Pattern.matcher(dateStr).matches()){
             dateStr = fromISO8601ToZuluDate((String) contentField.getValue());
         } else {
-            logger.info("Faild to parse date: " + dateStr + 
-                    " to Zulu date format");
+            logger.info("Faild to parse date: " + dateStr);
         }
         
         doc.putContentField(contentField.getKey(), dateStr);
@@ -106,10 +109,10 @@ public class ZuluDateFormatter extends AbstractProcessStage {
         return d.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss'Z"));
     }
 
-    private String fromEpocToZuluDate(String epoc) {
+    private String fromEpocToZuluDate(String epoch) {
         SimpleDateFormat formatter = 
                 new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-        long timestampInSec = Long.parseLong(epoc) * 1000;
+        long timestampInSec = Long.parseLong(epoch) * 1000;
         String formatedWithTimezoneInfo = 
                 formatter.format(new Date(timestampInSec));
         String[] atTimeZone = formatedWithTimezoneInfo.split("\\+");
