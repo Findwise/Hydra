@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,12 +41,31 @@ public class DateFormatterStageTest {
     }
 
     @Test
-    public void testFromEpocToZuluDate()
+    public void testFromEpochToZuluDate_withUTC()
+            throws ProcessException, IllegalArgumentException,
+            IllegalAccessException, RequiredArgumentMissingException {
+
+        String epochTest = "1377174053";
+        String expected = "2013-08-22T12:20:53Z";
+        setupStage();
+
+        LocalDocument ld = new LocalDocument();
+        ld.putContentField("date", epochTest);
+
+        subject.process(ld);
+
+        assertEquals(expected, ld.getContentField("date"));
+    }
+
+
+    @Test
+    public void testFromEpochToZuluDate_withSetTimeZone()
             throws ProcessException, IllegalArgumentException,
             IllegalAccessException, RequiredArgumentMissingException {
 
         String epochTest = "1377174053";
         String expected = "2013-08-22T14:20:53Z";
+        settings.put("epochTimeZone", "+0200");
         setupStage();
 
         LocalDocument ld = new LocalDocument();
