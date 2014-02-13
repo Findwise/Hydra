@@ -27,6 +27,8 @@ $(document).ready(
         Handlebars.registerHelper('msToReadable', msToReadable);
         Handlebars.registerHelper('propertyField', propertyField);
         Handlebars.registerHelper('stageModeLabel', stageModeLabel);
+        Handlebars.registerHelper('prettyPrint', prettyPrint);
+        Handlebars.registerHelper('printProperties', printProperties);
 	showCurrentPage();
 	refreshCurrentPage();
 });

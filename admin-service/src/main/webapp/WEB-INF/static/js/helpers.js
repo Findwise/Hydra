@@ -14,63 +14,117 @@
  * limitations under the License.
  */
 
-function propertyField(property, name){
-    var ret = "";
-    if(this.type == 'Map' || this.type=='LocalQuery'){
-        ret = ret + '<textarea name="' + name + '" class="form-control" row="3"  id="' + name +'" placeholder="' + this.type + '"';
-        if(this.required){
-            ret = ret + ' required';
-        }
-        ret = ret + '></textarea>';
-    }
-    else {
-        ret = '<input type="text" name="' + name + '" class="form-control" id="' + name + '" placeholder="' + this.type + '"';
-        if(this.required){
-            ret = ret + ' required';
-        }
-        ret = ret + ' />';
-    }
-    var safeRet = new Handlebars.SafeString(ret);
+function propertyField(name, property) {
+
+    var safeRet = new Handlebars.SafeString(propertyFieldHelper(name, property));
     return safeRet;
 }
 
-function listDocuments(context, options) {
-	var ret = "";
-
-	for(var i = 0, j=context.length; i<j; i++) {
-		ret = ret + "<div class='well'>";
-		ret = ret + "<pre>" + JSON.stringify(context[i], null, '\t') + "</pre>";
-		ret = ret + "</div>";
-	}
-	return ret;
+function propertyFieldHelper(name, property) {
+    var ret = "";
+    if (property.type == 'Map' || property.type == 'LocalQuery') {
+        ret = ret + '<textarea name="' + name + '" class="form-control" row="3"  id="' + name + '" placeholder="' + property.type + '"';
+        if (property.required) {
+            ret = ret + ' required';
+        }
+        ret = ret + '>';
+        if (property.value) {
+            ret = ret + prettyPrint(property);
+        }
+        ret = ret + '</textarea>';
+    }
+    else {
+        ret = '<input type="text" name="' + name + '" class="form-control" id="' + name + '" placeholder="' + property.type + '"';
+        if (property.required) {
+            ret = ret + ' required';
+        }
+        if (property.value) {
+            ret = ret + ' value=' + JSON.stringify(property.value);
+        }
+        ret = ret + ' />';
+    }
+    return ret;
 }
 
-function stageModeLabel(mode){
-    if(mode === 'ACTIVE'){
+function listDocuments(context, options) {
+    var ret = "";
+
+    for (var i = 0, j = context.length; i < j; i++) {
+        ret = ret + "<div class='well'>";
+        ret = ret + "<pre>" + JSON.stringify(context[i], null, '\t') + "</pre>";
+        ret = ret + "</div>";
+    }
+    return ret;
+}
+
+function stageModeLabel(mode) {
+    if (mode === 'ACTIVE') {
         return new Handlebars.SafeString('<span class="label label-success">Active</span>');
-    } else if(mode === 'DEBUG'){
+    } else if (mode === 'DEBUG') {
         return new Handlebars.SafeString('<span class="label label-warning">Debug</span>');
     } else {
         return new Handlebars.SafeString('<span class="label label-default">Unknown</span>');
     }
 }
 
-function msToReadable(ms) {
-	x = ms / 1000;
-	seconds = Math.round(x % 60);
-	x /= 60;
-	minutes = Math.round(x % 60);
-	x /= 60;
-	hours = Math.round(x % 24);
-	x /= 24;
-	days = Math.round(x);
 
-	var res = "";
-	if (days > 0)
-		res += days + " day" + (days != 1 ? "s" : "") + ", ";
-	if (hours > 0)
-		res += hours + " hour" + (hours != 1 ? "s" : "") + ", ";
-	if (minutes > 0)
-		res += minutes + " minute" + (minutes != 1 ? "s" : "") + " and ";
-	return res + seconds + " second" + (seconds != 1 ? "s" : "");
+function prettyPrint(value) {
+    if (typeof value == 'string') {
+        return new Handlebars.SafeString(value);
+    } else if (typeof value == 'object') {
+        if(value.value){
+            return new Handlebars.SafeString(JSON.stringify(value.value));
+        } else {
+             return new Handlebars.SafeString('-');
+        }
+    } else {
+        return new Handlebars.SafeString('-');
+    }
+
+}
+
+function printProperties(key, value) {
+
+    if (key == 'libId' || key == 'stageClass') {
+
+        return new Handlebars.SafeString('<input type="hidden" id="' + key + '" value="' + value + '" />');
+    } else if (key == 'stageName' && value) {
+        return new Handlebars.SafeString('<input type="hidden" id="' + key + '" value="' + value + '" />');
+    } else if (key == 'stageGroup' && value) {
+        return new Handlebars.SafeString('<input type="hidden" id="' + key + '" value="' + value + '" />');
+    }
+
+    else {
+
+        var ret = '<div class="form-group"><label class="col-sm-4 control-label" for="' + key + '">' + key;
+
+        if (value.required) {
+            ret = ret + '*';
+        }
+        ret = ret + '</label><div class="col-sm-8">';
+        ret = ret + propertyFieldHelper(key, value);
+        ret = ret + '<span class="help-block">' + this.description + '</span></div></div>';
+        return  new Handlebars.SafeString(ret);
+    }
+
+}
+
+function msToReadable(ms) {
+    x = ms / 1000;
+    seconds = Math.round(x % 60);
+    x /= 60;
+    minutes = Math.round(x % 60);
+    x /= 60;
+    hours = Math.round(x % 24);
+    x /= 24;
+    days = Math.round(x);
+
+    var res = "";
+    if (days > 0)
+        res += days + " day" + (days != 1 ? "s" : "") + ", ";
+    if (hours > 0)
+        res += hours + " hour" + (hours != 1 ? "s" : "") + ", ";
+    if (minutes > 0)
+        res += minutes + " minute" + (minutes != 1 ? "s" : "") + " and ";
+    return res + seconds + " second" + (seconds != 1 ? "s" : "");
 }

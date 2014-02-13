@@ -80,7 +80,6 @@
 		class="template">
 	<div class="row">
 		<div class="col-md-3">
-                     
                      <div class="panel panel-default bs-sidebar affix" role="complementary">
                        <div class="panel-heading">
                             <h1 class="panel-title">Stage groups</h1>        
@@ -93,19 +92,22 @@
 		<div class="col-md-9">
 			{{#each stagegroups}}
                             <div class="panel panel-default" id="{{this.name}}">
-                                 <div class="panel-heading">
+                                <div class="panel-heading">
                                     <h1 class="panel-title" > <span class="glyphicon glyphicon-tags"></span> {{this.name}}</h1>
-                                  </div>
-                                  <div class="panel-body">
-                                    {{#each this.stages}}
-                                            {{> stagegroups_stage}}
+                                </div>
+                                <div class="panel-body">
+                                    {{#each stages}}
+                                          {{> stagegroups_stage}}
                                     {{/each}}
-                                    </div>
-                            </div>
+                                </div>
+
+                           </div>
 			{{/each}}
 		</div>
 	</div>
 	</script>
+
+        <!-- Stage Groups Menu -->
 	<script type="text/x-handlebars-template" id="stagegroups_menu"
 		class="partial_template">
                     
@@ -120,27 +122,32 @@
 			</ul>
                         
 	</script>
+
+        <!-- Stage Groups View -->
 	<script type="text/x-handlebars-template" id="stagegroups_stage"
 		class="partial_template">
 		<div>
-			<h3><span class="glyphicon glyphicon-tag"></span>{{this.name}}</h3>
-                        <button class="btn-sm btn-success pull-right" data-toggle="modal" data-target="#{{@index}}-{{this.name}}-edit" >
+			<h3>
+                            <span class="glyphicon glyphicon-tag"></span>{{name}}
+                        </h3>
+                        <button class="btn-sm btn-success pull-right" data-toggle="modal" data-target="#{{@index}}-{{name}}-edit" >
                             <span class="glyphicon glyphicon-plus-sign"></span> Edit stage
                         </button> 
 			<dl class="dl-horizontal">
 				<dt>Mode</dt>
-				<dd>{{stageModeLabel this.mode}}</dd>
+				<dd>{{stageModeLabel mode}}</dd>
 				<dt>Library</dt>
-				<dd>{{this.databaseFile.id}}</dd>
+				<dd>{{databaseFile.id}}</dd>
 				<dt>Latest updated</dt>
-				<dd>{{msToReadable this.propertiesModifiedDate}}</dd>
+				<dd>{{msToReadable propertiesModifiedDate}}</dd>
 			</dl>
 			{{#each properties}}
-			<dl class="dl-horizontal">
-				<dt>{{@key}}</dt>
-				<dd>{{this}}</dd>
-			</dl>
+                            <dl class="dl-horizontal">
+                                    <dt>{{@key}}</dt>
+                                    <dd>{{prettyPrint this}}</dd>
+                            </dl>
 			{{/each}}
+                        </div>
 		</div>
                 <div class="modal fade" id="{{@index}}-{{this.name}}-edit" tabindex="-1" role="dialog" aria-labelledby="editStageModalLabel-{{this.className}}" aria-hidden="true">
                     <div class="modal-dialog">
@@ -151,12 +158,13 @@
                         </div>
                         <form action="#addstage" class="form-horizontal" role="form" 
                             method="post" id="{{this.className}}-form" onSubmit="return addStage(this);" >
+                            <input type="hidden" id="modalId" value="{{@index}}-{{this.name}}-edit" />
                             <div class="modal-body">
                                 {{> edit_stage_properties}}
                             </div>
                             <div class="modal-footer">
                               <button class="btn" data-dismiss="modal" onClick="return refreshCurrentPage()" aria-hidden="true">Cancel</button>
-                              <button type="submit" class="btn btn-primay">Save</button>
+                              <button type="submit" class="btn btn-primary">Save</button>
                             </div>
                         </form>
                     </div>
@@ -164,21 +172,14 @@
 	</script>
         <script type="text/x-handlebars-template" id="edit_stage_properties"
 		class="partial_template">
-                <input type="hidden" id="stageClass" value="{{this.className}}" />
-                <input type="hidden" id="libId" value="{{this.libId}}" />
                 
                 {{#each this.properties}}
-                    <div class="form-group">
-                       <label class="col-sm-4 control-label" for="{{@key}}">
-                           {{@key}}{{#if this.required}}*{{/if}}
-                       </label>
-                       <div class="col-sm-8">
-                           {{propertyField this @key}}
-                           <span class="help-block">{{this.description}}</span>
-                       </div>
-                   </div>
+                    {{printProperties @key this}}
                 {{/each}}
 	</script>
+        <!--  END StageGroups -->
+
+        <!--  Libraries -->
 	<script type="text/x-handlebars-template" id="libraries" class="template">
 	<div class="row">
 		<div class="col-md-3">
@@ -269,6 +270,7 @@
             </div>
                         <form action="#addstage" class="form-horizontal" role="form" 
                             method="post" id="{{this.className}}-form" onSubmit="return addStage(this);" >
+                             <input type="hidden" id="modalId" value="{{@index}}-{{this.name}}-add" />
                             <div class="modal-body">
                                 
                                 {{> libraries_add_stage_properties}}
@@ -309,15 +311,7 @@
                     </div>
                 </div>
                 {{#each this.parameters}}
-                    <div class="form-group">
-                       <label class="col-sm-4 control-label" for="{{@key}}">
-                           {{@key}}{{#if this.required}}*{{/if}}
-                       </label>
-                       <div class="col-sm-8">
-                           {{propertyField this @key}}
-                           <span class="help-block">{{this.description}}</span>
-                       </div>
-                   </div>
+                   {{printProperties @key this}}
                 {{/each}}
 	</script>
 	<script type="text/x-handlebars-template" id="libraries_stage_parameters"
@@ -388,7 +382,7 @@
                     </div>
                 <div class="modal-footer">
                   <button class="btn" data-dismiss="modal" onClick="return refreshCurrentPage()" aria-hidden="true">Close</button>
-                  <button type="submit" class="btn btn-primary">Upload</button>
+                  <button type="submit"  class="btn btn-primary">Upload</button>
                   </div>
                 </div>
                 </form>

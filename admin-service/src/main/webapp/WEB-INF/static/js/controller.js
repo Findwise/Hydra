@@ -148,10 +148,10 @@ function addStage(config){
         }
        }
     });
-    var jsonData = JSON.stringify(stage_config);
-    console.log(stage_config);
-    console.log(jsonData);
-    //var jsonData = stage_config;
+
+    var modualId = stage_config['modalId'];
+    delete stage_config['modalId'];
+    
     var postUrl = pages.upload + '/' + stage_config.libId + '/stages/';
     if(stage_config.stageGroup){
         postUrl = postUrl + stage_config.stageGroup;
@@ -159,6 +159,7 @@ function addStage(config){
         postUrl = postUrl + stage_config.stageName;
     }
     postUrl = postUrl + '/' + stage_config.stageName;
+    
     $.ajax({
         type: "POST",
         url: postUrl,
@@ -166,7 +167,9 @@ function addStage(config){
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function(data){
-            console.log('Hurray');
+            refreshCurrentPage();
+            $('#' + modualId).modal('hide');
+
         },
         error: function(data){
             console.log(data);
