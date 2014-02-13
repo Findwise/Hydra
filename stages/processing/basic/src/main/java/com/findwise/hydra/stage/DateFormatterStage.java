@@ -8,8 +8,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import com.findwise.hydra.local.LocalDocument;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.regex.Pattern;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -25,7 +23,7 @@ import org.slf4j.LoggerFactory;
  * 
  * At the moment, this stage only transforms date to zulu date. The plan is
  * to extend functionality to transform from one given format to another given 
- * format. See issue {@link https://github.com/Findwise/Hydra/pull/296}
+ * format. See issue https://github.com/Findwise/Hydra/pull/296
  * 
  *
  * Sample configuration:
@@ -49,10 +47,12 @@ import org.slf4j.LoggerFactory;
         + "Zulu Date format")
 public class DateFormatterStage extends AbstractProcessStage {
 
+    private static final String ZULU_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z";
     private Logger logger = LoggerFactory.getLogger(DateFormatterStage.class);
-    
+
     private static final String EPOCH_PATTERN = "^[0-9]+$";
-    private static final String ISO8601_PATTERN = 
+    private static final String ISO8601_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
+    private static final String ISO8601_PATTERN =
             "^(\\d{4}\\-\\d\\d\\-\\d\\d([tT][\\d:\\.]*)?)"
             + "([zZ]|([+\\-])(\\d\\d):?(\\d\\d))?$";
     Pattern epochPattern;
@@ -61,6 +61,9 @@ public class DateFormatterStage extends AbstractProcessStage {
     @Parameter(description = "List<String> - A list of field names that are to "
             + "be considered date fields")
     List<String> dateFields = new ArrayList<String>();
+
+    @Parameter(description = "Time zone to use for epoch time date fields. Default: UTC")
+    String epochTimeZone = "UTC";
 
     Set<String> dateFieldsSet;
 
@@ -87,35 +90,28 @@ public class DateFormatterStage extends AbstractProcessStage {
         }
     }
 
-    private void parseDate
-        (Entry<String, Object> contentField, LocalDocument doc) {
+    private void parseDate(Entry<String, Object> contentField, LocalDocument doc) {
         String dateStr = (String) contentField.getValue();
-        
+        DateTimeFormatter zuluFormat = DateTimeFormat.forPattern(ZULU_DATE_FORMAT);
         if(epochPattern.matcher(dateStr).matches()){
-            dateStr = fromEpocToZuluDate((String) contentField.getValue());
+            dateStr = fromEpochToZuluDate((String) contentField.getValue()).toString(zuluFormat);
         } else if(iso8601Pattern.matcher(dateStr).matches()){
-            dateStr = fromISO8601ToZuluDate((String) contentField.getValue());
+            dateStr = fromISO8601ToZuluDate((String) contentField.getValue()).toString(zuluFormat);
         } else {
-            logger.info("Faild to parse date: " + dateStr);
+            logger.info("Failed to parse date: " + dateStr);
         }
-        
         doc.putContentField(contentField.getKey(), dateStr);
     }
 
-    private String fromISO8601ToZuluDate(String date) {
-        DateTimeFormatter formatter = 
-                DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ");
-        DateTime d = formatter.parseDateTime(date).withZone(DateTimeZone.UTC);
-        return d.toString(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss'Z"));
+    private DateTime fromISO8601ToZuluDate(String date) {
+        return DateTimeFormat.forPattern(ISO8601_DATE_FORMAT)
+            .parseDateTime(date)
+            .withZone(DateTimeZone.UTC);
     }
 
-    private String fromEpocToZuluDate(String epoch) {
-        SimpleDateFormat formatter = 
-                new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-        long timestampInSec = Long.parseLong(epoch) * 1000;
-        String formatedWithTimezoneInfo = 
-                formatter.format(new Date(timestampInSec));
-        String[] atTimeZone = formatedWithTimezoneInfo.split("\\+");
-        return atTimeZone[0] + "Z";
+    private DateTime fromEpochToZuluDate(String epoch) {
+        long epochInMilliSeconds = Long.parseLong(epoch) * 1000;
+        return new DateTime(epochInMilliSeconds)
+            .withZone(DateTimeZone.forID(epochTimeZone));
     }
 }
