@@ -4,16 +4,11 @@
     <title>Hydra Admin Service GUI</title>
     <meta charset="utf-8"> 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!--<link type="text/css" rel="stylesheet" href="bootstrap.min.css"
-        media="screen"> -->
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
     
-    <link type="text/css" rel="stylesheet" href="hydra.css" media="screen">
-    <script type="text/javascript" src="jquery.js"></script>
-    <script type="text/javascript" src="handlebars.js"></script>
-    <script type="text/javascript" src="hydra.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
-    <!--<script type="text/javascript" src="bootstrap.min.js"></script> -->
+    <link type="text/css" rel="stylesheet" href="css/hydra.css" media="screen">
+    
+    
 </head>
 <body>
     <header>
@@ -99,7 +94,7 @@
 			{{#each stagegroups}}
                             <div class="panel panel-default" id="{{this.name}}">
                                  <div class="panel-heading">
-                                    <h1 class="panel-title" >{{this.name}}</h1>
+                                    <h1 class="panel-title" > <span class="glyphicon glyphicon-tags"></span> {{this.name}}</h1>
                                   </div>
                                   <div class="panel-body">
                                     {{#each this.stages}}
@@ -115,9 +110,6 @@
 		class="partial_template">
                     
 			<ul class="nav  nav-pills nav-stacked">
-                            <li>
-                                <hr />
-                            </li>
                             {{#each stagegroups}}
                             <li>
                                 <a href="#{{this.name}}">
@@ -131,19 +123,18 @@
 	<script type="text/x-handlebars-template" id="stagegroups_stage"
 		class="partial_template">
 		<div>
-			<h2>{{this.name}}</h2>
+			<h3><span class="glyphicon glyphicon-tag"></span>{{this.name}}</h3>
+                        <button class="btn-sm btn-success pull-right" data-toggle="modal" data-target="#{{@index}}-{{this.name}}-edit" >
+                            <span class="glyphicon glyphicon-plus-sign"></span> Edit stage
+                        </button> 
 			<dl class="dl-horizontal">
 				<dt>Mode</dt>
-				<dd>{{this.mode}}</dd>
+				<dd>{{stageModeLabel this.mode}}</dd>
 				<dt>Library</dt>
 				<dd>{{this.databaseFile.id}}</dd>
-				<dt>Properties modified date</dt>
-				<dd>{{this.propertiesModifiedDate}}</dd>
+				<dt>Latest updated</dt>
+				<dd>{{msToReadable this.propertiesModifiedDate}}</dd>
 			</dl>
-			<ul>
-				<li>Properties</li>
-				<li>Raw</li>
-			</ul>
 			{{#each properties}}
 			<dl class="dl-horizontal">
 				<dt>{{@key}}</dt>
@@ -151,6 +142,42 @@
 			</dl>
 			{{/each}}
 		</div>
+                <div class="modal fade" id="{{@index}}-{{this.name}}-edit" tabindex="-1" role="dialog" aria-labelledby="editStageModalLabel-{{this.className}}" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                          <h4 class="modal-title" id="editStageModalLabel-{{this.className}}">Edit {{this.name}}</h4>
+                        </div>
+                        <form action="#addstage" class="form-horizontal" role="form" 
+                            method="post" id="{{this.className}}-form" onSubmit="return addStage(this);" >
+                            <div class="modal-body">
+                                {{> edit_stage_properties}}
+                            </div>
+                            <div class="modal-footer">
+                              <button class="btn" data-dismiss="modal" onClick="return refreshCurrentPage()" aria-hidden="true">Cancel</button>
+                              <button type="submit" class="btn btn-primay">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+	</script>
+        <script type="text/x-handlebars-template" id="edit_stage_properties"
+		class="partial_template">
+                <input type="hidden" id="stageClass" value="{{this.className}}" />
+                <input type="hidden" id="libId" value="{{this.libId}}" />
+                
+                {{#each this.properties}}
+                    <div class="form-group">
+                       <label class="col-sm-4 control-label" for="{{@key}}">
+                           {{@key}}{{#if this.required}}*{{/if}}
+                       </label>
+                       <div class="col-sm-8">
+                           {{propertyField this @key}}
+                           <span class="help-block">{{this.description}}</span>
+                       </div>
+                   </div>
+                {{/each}}
 	</script>
 	<script type="text/x-handlebars-template" id="libraries" class="template">
 	<div class="row">
@@ -239,14 +266,14 @@
                         <div class="modal-header">
                           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                           <h4 class="modal-title" id="addStageModalLabel-{{this.className}}">Add {{this.name}}</h4>
-                        </div>
+            </div>
                         <form action="#addstage" class="form-horizontal" role="form" 
                             method="post" id="{{this.className}}-form" onSubmit="return addStage(this);" >
                             <div class="modal-body">
                                 
                                 {{> libraries_add_stage_properties}}
                                 
-                            </div>
+        </div>
                             
                             <div class="modal-footer">
                               <button class="btn" data-dismiss="modal" onClick="return refreshCurrentPage()" aria-hidden="true">Cancel</button>
@@ -368,8 +395,7 @@
             </div>
         </script>
         
-	<script type="text/x-handlebars-template" id="documents"
-		class="template">
+	<script type="text/x-handlebars-template" id="documents" class="template">
 
 	<div class="row">
 		<div class="span3">
@@ -399,6 +425,11 @@
                     {{/listDocuments}}
     </script>
     
-    
+    <script type="text/javascript" src="js/libs/jquery.js"></script>
+    <script type="text/javascript" src="js/controller.js"></script>
+    <script type="text/javascript" src="js/helpers.js"></script>
+    <script type="text/javascript" src="js/libs/handlebars.js"></script>
+    <script type="text/javascript" src="js/hydra.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 </body>
 </html>

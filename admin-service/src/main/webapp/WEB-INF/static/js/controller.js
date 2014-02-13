@@ -1,3 +1,18 @@
+/* 
+ * Copyright 2014 Magnus Ebbesson <magnus.ebbesson@findwise.com>.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 var pages = {
 	'status': '/hydra',
 	'stagegroups': '/hydra/stagegroups',
@@ -5,6 +20,8 @@ var pages = {
 	'documents' : '/hydra/documents',
         'upload' : '/hydra/libraries'
 };
+
+var qmodel = {};
 
 function refreshAll() {
 	for (var key in pages) {
@@ -20,7 +37,7 @@ function refreshPage(pageId) {
     
 	var endpoint = pages[pageId];
 	
-        if (pageId == "libraries") {
+        if (pageId === "libraries") {
 		callback = function(data) {
 			data.libraries.forEach(function(library) {
 				for (var stage in library.stages) {
@@ -42,29 +59,11 @@ function refreshPage(pageId) {
 
 	$.get(endpoint, function(data) {
 		data = callback(data);
+                model[pageId] = data;
                 $('#' + pageId + '_content').html(window.templates[pageId](data));
 	});
 }
 
-function msToReadable(ms) {
-	x = ms / 1000;
-	seconds = Math.round(x % 60);
-	x /= 60;
-	minutes = Math.round(x % 60);
-	x /= 60;
-	hours = Math.round(x % 24);
-	x /= 24;
-	days = Math.round(x);
-
-	var res = "";
-	if (days > 0)
-		res += days + " day" + (days != 1 ? "s" : "") + ", ";
-	if (hours > 0)
-		res += hours + " hour" + (hours != 1 ? "s" : "") + ", ";
-	if (minutes > 0)
-		res += minutes + " minute" + (minutes != 1 ? "s" : "") + " and ";
-	return res + seconds + " second" + (seconds != 1 ? "s" : "");
-}
 
 function queryDocuments() {
 	var query = $("#documents_query_textarea").val();
@@ -177,36 +176,6 @@ function addStage(config){
     return false;
 }
 
-function propertyField(property, name){
-    var ret = "";
-    if(this.type == 'Map' || this.type=='LocalQuery'){
-        ret = ret + '<textarea name="' + name + '" class="form-control" row="3"  id="' + name +'" placeholder="' + this.type + '"';
-        if(this.required){
-            ret = ret + ' required';
-        }
-        ret = ret + '></textarea>';
-    }
-    else {
-        ret = '<input type="text" name="' + name + '" class="form-control" id="' + name + '" placeholder="' + this.type + '"';
-        if(this.required){
-            ret = ret + ' required';
-        }
-        ret = ret + ' />';
-    }
-    var safeRet = new Handlebars.SafeString(ret);
-    return safeRet;
-}
-
-function listDocuments(context, options) {
-	var ret = "";
-
-	for(var i = 0, j=context.length; i<j; i++) {
-		ret = ret + "<div class='well'>";
-		ret = ret + "<pre>" + JSON.stringify(context[i], null, '\t') + "</pre>";
-		ret = ret + "</div>";
-	}
-	return ret;
-}
 
 function showCurrentPage() {
 	var currentPage = getCurrentPage();
@@ -232,33 +201,3 @@ function showPage(containerId) {
 			"active");
 	$("#" + containerId + "_content").css("display", "block");
 }
-
-
-window.templates = {};
-
-$(document).ready(
-	function() {
-                
-	$('.template').each(
-		function(i, container) {
-			window.templates[container.id] = Handlebars.compile($(
-					container).html());
-		});
-	$('.partial_template').each(
-		function(i, template) {
-			Handlebars.registerPartial(template.id, $(template).html());
-		});
-
-	$("#navigation a").click(
-		function() {
-			var containerId = this.href.substring(this.href
-					.lastIndexOf('#') + 1);
-			refreshPage(containerId);
-			showPage(containerId);
-		});
-        Handlebars.registerHelper('listDocuments', listDocuments);
-        Handlebars.registerHelper('propertyField', propertyField);
-	showCurrentPage();
-	refreshCurrentPage();
-});
-
