@@ -116,12 +116,22 @@ public class ConfigurationService<T extends DatabaseType> {
 	 * @return map of stage parameters
 	 * @throws IOException
 	 */
+	@SuppressWarnings("unchecked")
 	public Map<String, Object> getStageParameters(Stage stageInfo) throws DatabaseException, StageClassNotFoundException {
 		try {
 			Map<String, StageInformation> stages = getPipelineScanner().getStagesMap(stageInfo.getDatabaseFile());
 			String stageClass = (String) stageInfo.getProperties().get(AbstractStage.ARG_NAME_STAGE_CLASS);
 			if (null != stageClass && stages.containsKey(stageClass)) {
-				return stages.get(stageClass);
+				Map<String, Object> stageDescription = stages.get(stageClass);
+				Map<String, Object> parameters = (Map<String, Object>) stageDescription.get("parameters");
+				Map<String, Object> properties = stageInfo.getProperties();
+				for (String propertyName : properties.keySet()) {
+					Map<String, Object> parameter = (Map<String, Object>) parameters.get(propertyName);
+					if (null != parameter) {
+						parameter.put("value", properties.get(propertyName));
+					}
+				}
+				return stageDescription;
 			} else {
 				throw new StageClassNotFoundException("Stage class '" + stageClass
 						+ "' for stage '" + stageInfo.getName() + "' not found."
