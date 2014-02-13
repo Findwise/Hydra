@@ -36,10 +36,8 @@ public class StagesService<T extends DatabaseType> {
 		return ret;
 	}
 
-	public Map<String, List<StageGroup>> getStageGroups() {
-		Map<String, List<StageGroup>> ret = new HashMap<String, List<StageGroup>>();
-		ret.put("stagegroups", new ArrayList<StageGroup>(connector.getPipelineReader().getPipeline().getStageGroups()));
-		return ret;
+	public List<StageGroup> getStageGroups() {
+		return new ArrayList<StageGroup>(connector.getPipelineReader().getPipeline().getStageGroups());
 	}
 
 	public StageGroup getStageGroup(String groupName) {

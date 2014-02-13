@@ -127,17 +127,6 @@ public class ConfigurationController {
 	}
 
 	@ResponseBody
-	@RequestMapping(method=RequestMethod.GET, value="/stages/{stageName}/parameters")
-	public Map<String, Object> getStageParameters(@PathVariable(value = "stageName") String stageName) throws DatabaseException, StageClassNotFoundException {
-		Stage stageInfo = stagesService.getStageInfo(stageName);
-		if (null != stageInfo) {
-			return service.getStageParameters(stageInfo);
-		} else {
-			throw new HttpResourceNotFoundException();
-		}
-	}
-
-	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/stages/{stageName}/delete")
 	public Map<String, Object> deleteStage(
 			@PathVariable(value = "stageName") String stageName) throws IOException{
@@ -146,8 +135,16 @@ public class ConfigurationController {
 
 	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/stagegroups")
-	public Map<String,List<StageGroup>> getStageGroups() {
-		return stagesService.getStageGroups();
+	public Map<String,List<StageGroup>> getStageGroups() throws DatabaseException, StageClassNotFoundException {
+		List<StageGroup> stageGroups = stagesService.getStageGroups();
+		for (StageGroup stageGroup : stageGroups) {
+			for (Stage stage : stageGroup.getStages()) {
+				service.addStageParameters(stage);
+			}
+		}
+		Map<String, List<StageGroup>> ret = new HashMap<String, List<StageGroup>>();
+		ret.put("stagegroups", stageGroups);
+		return ret;
 	}
 	
 	@ResponseBody
