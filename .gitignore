@@ -10,3 +10,4 @@ nbactions.xml
 nb-configuration.xml
 .DS_Store
 admin-service/tmp
+pipeline/
