@@ -126,10 +126,18 @@
                            <span class="glyphicon glyphicon-tag"></span>
                            {{name}}
                         </h3>
-                        <button class="btn-sm btn-success pull-right" data-toggle="modal" data-target="#{{@index}}-{{name}}-edit" >
-                            <span class="glyphicon glyphicon-plus-sign"></span> Edit stage
-                        </button>
-			<dl class="dl-horizontal">
+                        <div class="btn-group pull-right">
+                            <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+                              Action <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                              <li><a href="#" data-toggle="modal" data-target="#{{@index}}-{{name}}-edit"><span class="glyphicon glyphicon-edit"></span> Edit stage</a> </li>
+                                <li class="divider"></li>
+                              <li><a href="#" onclick="inactivete('{{name}}');" ><span class="glyphicon glyphicon-remove"></span> Remove</a></li>
+
+                            </ul>
+                      </div>
+                        <dl class="dl-horizontal">
 				<dt>Mode</dt>
 				<dd>{{stageModeLabel mode}}</dd>
 				<dt>Library</dt>
@@ -137,6 +145,8 @@
 				<dt>Latest updated</dt>
 				<dd>{{msToReadable propertiesModifiedDate}}</dd>
 			</dl>
+
+
 			{{#each properties}}
                             <dl class="dl-horizontal">
                                     <dt>{{@key}}</dt>
