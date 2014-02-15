@@ -90,7 +90,7 @@
             </div>
             <div class="col-md-9">
                 {{#each stagegroups}}
-                                <div class="panel panel-default" id="{{this.name}}">
+                                <div class="panel panel-default" id="stagegroups-{{this.name}}">
                                     <div class="panel-heading">
                                         <h1 class="panel-title" > <span class="glyphicon glyphicon-tags"></span> {{this.name}}</h1>
                                     </div>
@@ -111,7 +111,7 @@
         <ul class="nav  nav-pills nav-stacked">
                     {{#each stagegroups}}
                     <li>
-                        <a href="#{{this.name}}">
+                        <a href="#stagegroups-{{this.name}}">
                             {{this.name}}
                         </a>
                     </li>
@@ -188,7 +188,7 @@
 		</div>
 		<div class="col-md-9">
 			{{#each libraries}}
-                            <div class="panel panel-default"  id="{{this.id}}">
+                            <div class="panel panel-default"  id="libraries-{{this.id}}">
                                 <div class="panel-heading">
                                     <h1 class="panel-title">{{this.id}}
 
@@ -223,7 +223,7 @@
 
                             <li><hr /></li>
                                 {{#each libraries}}
-				<li><a href="#{{this.id}}">
+				<li><a href="#libraries-{{this.id}}">
                                 <span class="glyphicon glyphicon-book"></span>
                                     {{this.id}}
                                 </a></li>

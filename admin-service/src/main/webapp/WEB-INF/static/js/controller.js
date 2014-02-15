@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2014 Magnus Ebbesson <magnus.ebbesson@findwise.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,9 +34,9 @@ function refreshCurrentPage() {
 }
 
 function refreshPage(pageId) {
-    
+
 	var endpoint = pages[pageId];
-	
+
         if (pageId === "libraries") {
 		callback = function(data) {
 			data.libraries.forEach(function(library) {
@@ -45,12 +45,12 @@ function refreshPage(pageId) {
 					library.stages[stage].className = stage;
                                         library.stages[stage].libId = library.id;
 				}
-                                
+
 			});
 			return data;
 		};
 	}
-        
+
         else {
 		callback = function(data) {
 			return data;
@@ -151,7 +151,7 @@ function addStage(config){
 
     var modualId = stage_config['modalId'];
     delete stage_config['modalId'];
-    
+
     var postUrl = pages.upload + '/' + stage_config.libId + '/stages/';
     if(stage_config.stageGroup){
         postUrl = postUrl + stage_config.stageGroup;
@@ -159,7 +159,7 @@ function addStage(config){
         postUrl = postUrl + stage_config.stageName;
     }
     postUrl = postUrl + '/' + stage_config.stageName;
-    
+
     $.ajax({
         type: "POST",
         url: postUrl,
@@ -175,7 +175,7 @@ function addStage(config){
             console.log(data);
         }
     });
-    
+
     return false;
 }
 
@@ -191,8 +191,11 @@ function getCurrentPage() {
 	var currentPage = window.location.hash.substring(1);
 	if (currentPage === "") {
 		// Try finding the navigation element with class active and use that
-		currentPage = $("#navigation li.active a").attr("href").substring(1);
+                  currentPage = $("#navigation li.active a").attr("href").substring(1)
+
 	}
+        currentPageList = currentPage.split("-");
+        currentPage = currentPageList[0];
 	return currentPage;
 }
 
