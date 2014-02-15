@@ -12,6 +12,7 @@ public class WebConfig extends WebMvcConfigurerAdapter {
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		registry.addResourceHandler("/gui/**").addResourceLocations("/WEB-INF/static/");
+                  registry.addResourceHandler("/webjars/**").addResourceLocations("/webjars/");
 		super.addResourceHandlers(registry);
 	}
 }
