@@ -75,6 +75,7 @@ public class FullScaleIT {
 	@After
 	public void tearDown() throws Exception {
 		core.shutdown();
+		mongoConnector.getDB().dropDatabase();
 	}
 
 	// A reasonable setting for this timeout is unfortunately very dependent on the
