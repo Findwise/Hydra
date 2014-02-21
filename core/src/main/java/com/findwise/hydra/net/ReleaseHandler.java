@@ -23,61 +23,61 @@ import com.findwise.hydra.net.RESTTools.Method;
 
 public class ReleaseHandler<T extends DatabaseType> implements ResponsibleHandler {
 
-	private CachingDocumentNIO<T> io;
+    private CachingDocumentNIO<T> io;
 
-	private static Logger logger = LoggerFactory
-			.getLogger(ReleaseHandler.class);
+    private static Logger logger = LoggerFactory
+            .getLogger(ReleaseHandler.class);
 
-	public ReleaseHandler(CachingDocumentNIO<T> dbc) {
-		this.io = dbc;
-	}
+    public ReleaseHandler(CachingDocumentNIO<T> dbc) {
+        this.io = dbc;
+    }
 
-	@Override
-	public void handle(HttpRequest request, HttpResponse response,
-			HttpContext arg2) throws HttpException, IOException {
-		logger.trace("handleReleaseDocument()");
-		HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request)
-				.getEntity();
-		String requestContent = EntityUtils.toString(requestEntity);
-		String stage = RESTTools.getParam(request, RemotePipeline.STAGE_PARAM);
+    @Override
+    public void handle(HttpRequest request, HttpResponse response,
+                       HttpContext arg2) throws HttpException, IOException {
+        logger.trace("handleReleaseDocument()");
+        HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request)
+                .getEntity();
+        String requestContent = EntityUtils.toString(requestEntity);
+        String stage = RESTTools.getParam(request, RemotePipeline.STAGE_PARAM);
 
-		if (stage == null) {
-			HttpResponseWriter.printMissingParameter(response,
-					RemotePipeline.STAGE_PARAM);
-			return;
-		}
+        if (stage == null) {
+            HttpResponseWriter.printMissingParameter(response,
+                    RemotePipeline.STAGE_PARAM);
+            return;
+        }
 
-		try {
-			boolean x = release(io.convert(new LocalDocument(requestContent)), stage);
-			if (!x) {
-				HttpResponseWriter.printNoDocument(response);
-			}
-		} catch (JsonException e) {
-			HttpResponseWriter.printJsonException(response, e);
-			return;
-		} catch (ConversionException e) {
-			HttpResponseWriter.printUnhandledException(response, e);
-			return;
-		}
+        try {
+            boolean x = release(io.convert(new LocalDocument(requestContent)), stage);
+            if (!x) {
+                HttpResponseWriter.printNoDocument(response);
+            }
+        } catch (JsonException e) {
+            HttpResponseWriter.printJsonException(response, e);
+            return;
+        } catch (ConversionException e) {
+            HttpResponseWriter.printUnhandledException(response, e);
+            return;
+        }
 
-		HttpResponseWriter.printDocumentReleased(response);
+        HttpResponseWriter.printDocumentReleased(response);
 
-	}
+    }
 
-	private boolean release(Document<T> md, String stage) {
-		return io.markTouched(md.getID(), stage);
-	}
+    private boolean release(Document<T> md, String stage) {
+        return io.markTouched(md.getID(), stage);
+    }
 
-	@Override
-	public boolean supports(HttpRequest request) {
-		return RESTTools.getMethod(request) == Method.POST
-				&& RemotePipeline.RELEASE_DOCUMENT_URL.equals(RESTTools
-						.getBaseUrl(request));
-	}
+    @Override
+    public boolean supports(HttpRequest request) {
+        return RESTTools.getMethod(request) == Method.POST
+                && RemotePipeline.RELEASE_DOCUMENT_URL.equals(RESTTools
+                .getBaseUrl(request));
+    }
 
-	@Override
-	public String[] getSupportedUrls() {
-		return new String[] { RemotePipeline.RELEASE_DOCUMENT_URL };
-	}
+    @Override
+    public String[] getSupportedUrls() {
+        return new String[] { RemotePipeline.RELEASE_DOCUMENT_URL };
+    }
 
 }
