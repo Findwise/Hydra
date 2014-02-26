@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Hydra Admin Service GUI</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="/hydra/webjars/bootstrap/3.0.3/css/bootstrap.min.css" media="screen">
+    <link type="text/css" rel="stylesheet" href="/hydra//gui/css/hydra.css" media="screen">
+
+
+</head>
+<body>
+    <header>
+            <nav class="navbar navbar-inverse navbar-fixed-top">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navigation">
+                      <span class="sr-only">Toggle navigation</span>
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="./">Hydra Admin Service</a>
+                  </div>
+
+                <div class="collapse navbar-collapse" id="navigation">
+                    <ul class="nav navbar-nav">
+                        <li class="active"><a href="#status">Status</a></li>
+                        <li><a href="#stagegroups">Stage groups</a></li>
+                        <li><a href="#libraries"><span class="glyphicon glyphicon-book"></span> Libraries</a></li>
+                        <li><a href="#documents"><span class="glyphicon glyphicon-file"></span> Documents</a></li>
+                    </ul>
+                 </div>
+            </nav>
+
+        </header>
+	<main>
+	<article id="status_content" class="container"></article>
+	<article id="stagegroups_content" class="container"
+		style="display: none"></article>
+	<article id="libraries_content" class="container"
+		style="display: none"></article>
+	<article id="documents_content" class="container"
+		style="display: none"></article>
+	<article id="upload_content" class="container"
+		style="display: none"></article>
+
+        </main>
+	<script type="text/x-handlebars-template" id="status"
+		class="template">
+	{{#with documents}}
+	<div class="well">
+		<h1>Stats</h1>
+		<table class="table table-striped table-bordered sinks">
+		<thead>
+			<tr>
+				<th>Current</th>
+				<th>Archived</th>
+				<th>Processed</th>
+				<th>Discarded</th>
+				<th>Failed</th>
+				<th>Cached</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>{{this.current}}</td>
+				<td>{{this.archived}}</td>
+				<td>{{this.procesed}}</td>
+				<td>{{this.discarded}}</td>
+				<td>{{this.failed}}</td>
+				<td></td>
+			</tr>
+		</tbody>
+		</table>
+	</div>
+	{{/with}}
+	</script>
+	<script type="text/x-handlebars-template" id="stagegroups"
+		class="template">
+        <div class="row">
+            <div class="col-md-3">
+                         <div class="panel panel-default bs-sidebar affix" role="complementary">
+                           <div class="panel-heading">
+                                <h1 class="panel-title">Stage groups</h1>
+                            </div>
+                            <div class="panel-body">
+                                {{> stagegroups_menu}}
+                            </div>
+                        </div>
+            </div>
+            <div class="col-md-9">
+                {{#each stagegroups}}
+                                <div class="panel panel-default" id="stagegroups-{{this.name}}">
+                                    <div class="panel-heading">
+                                        <h1 class="panel-title" > <span class="glyphicon glyphicon-tags"></span> {{this.name}}</h1>
+                                    </div>
+                                    <div class="panel-body">
+                                        {{#each stages}}
+                                              {{> stagegroups_stage}}
+                                        {{/each}}
+                                    </div>
+
+                               </div>
+                {{/each}}
+            </div>
+        </div>
+	</script>
+
+        <!-- Stage Groups Menu -->
+	<script type="text/x-handlebars-template" id="stagegroups_menu" class="partial_template">
+        <ul class="nav  nav-pills nav-stacked">
+                    {{#each stagegroups}}
+                    <li>
+                        <a href="#stagegroups-{{this.name}}">
+                            {{this.name}}
+                        </a>
+                    </li>
+                    {{/each}}
+        </ul>
+	</script>
+
+        <!-- Stage Groups View -->
+	<script type="text/x-handlebars-template" id="stagegroups_stage" class="partial_template">
+		<div>
+			<h3>
+                           <span class="glyphicon glyphicon-tag"></span>
+                           {{name}}
+                        </h3>
+                        <div class="btn-group pull-right">
+                            <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+                              Action <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                              <li><a href="#" data-toggle="modal" data-target="#{{@index}}-{{name}}-edit"><span class="glyphicon glyphicon-edit"></span> Edit stage</a> </li>
+                                <li class="divider"></li>
+                              <li><a href="#" onclick="inactivete('{{name}}');" ><span class="glyphicon glyphicon-remove"></span> Remove</a></li>
+
+                            </ul>
+                      </div>
+                        <dl class="dl-horizontal">
+				<dt>Mode</dt>
+				<dd>{{stageModeLabel mode}}</dd>
+				<dt>Library</dt>
+				<dd>{{databaseFile.id}}</dd>
+				<dt>Latest updated</dt>
+				<dd>{{msToReadable propertiesModifiedDate}}</dd>
+			</dl>
+
+
+			{{#each properties}}
+                            <dl class="dl-horizontal">
+                                    <dt>{{@key}}</dt>
+                                    <dd>{{prettyPrint this}}</dd>
+                            </dl>
+			{{/each}}
+                        </div>
+		</div>
+                <div class="modal fade" id="{{@index}}-{{this.name}}-edit" tabindex="-1" role="dialog" aria-labelledby="editStageModalLabel-{{this.className}}" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                          <h4 class="modal-title" id="editStageModalLabel-{{this.className}}">Edit {{this.name}}</h4>
+                        </div>
+                        <form action="#addstage" class="form-horizontal" role="form"
+                            method="post" id="{{this.className}}-form" onSubmit="return addStage(this);" >
+                            <input type="hidden" id="modalId" value="{{@index}}-{{this.name}}-edit" />
+                            <div class="modal-body">
+                                {{> edit_stage_properties}}
+                            </div>
+                            <div class="modal-footer">
+                              <button class="btn" data-dismiss="modal" onClick="return refreshCurrentPage()" aria-hidden="true">Cancel</button>
+                              <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+	</script>
+        <script type="text/x-handlebars-template" id="edit_stage_properties" class="partial_template">
+                {{#each this.properties}}
+                    {{printProperties @key this}}
+                {{/each}}
+	</script>
+        <!--  END StageGroups -->
+
+        <!--  Libraries -->
+	<script type="text/x-handlebars-template" id="libraries" class="template">
+	<div class="row">
+		<div class="col-md-3">
+                     <div class="panel panel-default bs-sidebar affix" role="complementary">
+                        <div class="panel-heading">
+                            <h1 class="panel-title">Libraries</h1>
+                        </div>
+                        <div class="panel-body">
+                            {{> libraries_menu}}
+                        </div>
+                    </div>
+		</div>
+		<div class="col-md-9">
+			{{#each libraries}}
+                            <div class="panel panel-default"  id="libraries-{{this.id}}">
+                                <div class="panel-heading">
+                                    <h1 class="panel-title">{{this.id}}
+
+                                    </h1>
+                                </div>
+                                <div class="panel-body">
+                                    <dl class="dl-horizontal">
+                                            <dt>Filename</dt>
+                                            <dd>{{this.filename}}</dd>
+                                            <dt>Uploaded</dt>
+                                            <dd>{{this.uploaded}}</dd>
+                                    </dl>
+                                    {{#each this.stages}}
+                                            {{> libraries_stage}}
+
+                                    {{/each}}
+                                </div>
+                            </div>
+			{{/each}}
+		</div>
+                {{> libraries_upload}}
+	</div>
+	</script>
+	<script type="text/x-handlebars-template" id="libraries_menu"
+		class="partial_template">
+                        <ul class="nav  nav-pills nav-stacked">
+                           <li>
+                               <button class="btn-sm btn-primary btn-block" data-toggle="modal" data-target="#upload-lib" >
+                                    <span class="glyphicon glyphicon-cloud-upload"></span> Upload Lib
+                                </button>
+                           </li>
+
+                            <li><hr /></li>
+                                {{#each libraries}}
+				<li><a href="#libraries-{{this.id}}">
+                                <span class="glyphicon glyphicon-book"></span>
+                                    {{this.id}}
+                                </a></li>
+				{{/each}}
+			</ul>
+
+	</script>
+	<script type="text/x-handlebars-template" id="libraries_stage"
+		class="partial_template">
+            <div>
+                <h3>{{this.name}}</h3>
+                <button class="btn-sm btn-primary pull-right" data-toggle="modal" data-target="#{{@index}}-{{this.name}}-add" >
+                    <span class="glyphicon glyphicon-plus-sign"></span> Add Stage
+                </button>
+                <p>{{this.className}}</p>
+                <p>{{this.description}}</p>
+                <div class="accordion" id="{{@index}}-{{this.name}}">
+                    <div class="accordion-group">
+                        <div class="accordion-heading">
+                            <a class="accordion-toggle collapsed" data-toggle="collapse"
+                            data-parent="#{{@index}}-{{this.name}}" href="#{{@index}}-{{this.name}}-parameters">
+                                    Parameters
+                            </a>
+                        </div>
+                        <div id="{{@index}}-{{this.name}}-parameters" class="accordion-body collapse">
+                            <div class="accordion-inner">
+                                    {{> libraries_stage_parameters}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="{{@index}}-{{this.name}}-add" tabindex="-1" role="dialog" aria-labelledby="addStageModalLabel-{{this.className}}" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                          <h4 class="modal-title" id="addStageModalLabel-{{this.className}}">Add {{this.name}}</h4>
+            </div>
+                        <form action="#addstage" class="form-horizontal" role="form"
+                            method="post" id="{{this.className}}-form" onSubmit="return addStage(this);" >
+                             <input type="hidden" id="modalId" value="{{@index}}-{{this.name}}-add" />
+                            <div class="modal-body">
+
+                                {{> libraries_add_stage_properties}}
+
+        </div>
+
+                            <div class="modal-footer">
+                              <button class="btn" data-dismiss="modal" onClick="return refreshCurrentPage()" aria-hidden="true">Cancel</button>
+                              <button type="submit" class="btn btn-primary">Add</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+	</script>
+        <script type="text/x-handlebars-template" id="libraries_add_stage_properties"
+		class="partial_template">
+                <input type="hidden" id="stageClass" value="{{this.className}}" />
+                <input type="hidden" id="libId" value="{{this.libId}}" />
+
+                <div class="form-group">
+                    <label class="col-sm-4 control-label" for="stagename">
+                        Stage name*
+                    </label>
+                    <div class="col-sm-8">
+                        <input type="text" name="stageName" class="form-control" id="stageName" placeholder="String" required />
+                        <span class="help-block">Name for stage to be added</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-4 control-label" for="stagegroup">
+                        Stage group
+                    </label>
+                    <div class="col-sm-8">
+                        <input type="text" name="stageGroup" class="form-control" id="stageGroup" placeholder="String" />
+                        <span class="help-block">Stage group name for stage. If blank, stage name will be used for stage group</span>
+                    </div>
+                </div>
+                {{#each this.parameters}}
+                   {{printProperties @key this}}
+                {{/each}}
+	</script>
+	<script type="text/x-handlebars-template" id="libraries_stage_parameters"
+		class="partial_template">
+                <table class="table table-striped table-bordered sinks">
+                        <thead>
+                                <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Required</th>
+                                        <th>Description</th>
+                                </tr>
+                        </thead>
+                        <tbody>
+                        {{#each this.parameters}}
+                                <tr>
+                                        <td>{{@key}}</td>
+                                        <td>{{this.type}}</td>
+                                        <td>{{#if this.required}}true{{else}}false{{/if}}</td>
+                                        <td>{{this.description}}</td>
+                                </tr>
+                        {{/each}}
+                        </tbody>
+                </table>
+	</script>
+        <script type="text/x-handlebars-template" id="libraries_upload" class="partial_template">
+            <div class="modal fade" id="upload-lib" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
+            <div class="modal-dialog" id="upload-modual-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                  <h4 class="modal-title" id="uploadModalLabel">Upload library</h4>
+                </div>
+                <form action="#upload" class="form-horizontal" role="form"
+                    method="post" onSubmit="return addLibrary();" id="library-upload" enctype="multipart/form-data">
+                <div class="modal-body">
+
+                      <div id="libUploadSuccess" class="alert alert-success" style="display: none">
+                               Upload successfull!
+                      </div>
+
+                      <div  id="libUploadFail" class="alert alert-error" style="display: none"   >
+                          <strong>Error uploading the library</strong>
+                      </div>
+                      <div class="form-group" >
+                          <label class="col-sm-2 control-label" for="lib-id">
+                              Library Id
+                          </label>
+                          <div class="col-sm-10">
+                              <input type="text" class="form-control" id="upload-lib-id" placeholder="Library Id" required />
+                          </div>
+                      </div>
+                      <div class="form-group">
+                          <label class="col-sm-2 control-label" for="lib-jar">
+                              Jar-file
+                          </label>
+                          <div class="col-sm-10">
+                              <input type="file" name="file" class="form-control" id="upload-lib-jar" placeholder="Library Id" required />
+                          </div>
+                      </div>
+                      <div class="form-group">
+                          <label class="col-sm-2 control-label" for="jarupload">
+                              Progress
+                          </label>
+                          <div class="col-sm-10">
+                              <progress id="jarupload" class="form-control" value="0"></progress>
+                          </div>
+                    </div>
+                <div class="modal-footer">
+                  <button class="btn" data-dismiss="modal" onClick="return refreshCurrentPage()" aria-hidden="true">Close</button>
+                  <button type="submit"  class="btn btn-primary">Upload</button>
+                  </div>
+                </div>
+                </form>
+            </div>
+        </script>
+
+	<script type="text/x-handlebars-template" id="documents" class="template">
+
+	<div class="row">
+		<div class="span3">
+			<div id="documents_query">
+				<form id="documents_query_form">
+					<textarea id="documents_query_textarea" rows="3" placeholder='{"touched": "example-stage"}' />
+					<button type="button" class="btn btn-primary" onClick="queryDocuments()">Query</button>
+				</form>
+			</div>
+			<div id="documents_add">
+				<form id="documents_add_form">
+					<textarea id="documents_add_textarea" rows="5" placeholder='{"field1": "a value", "field2": ["val1", "val2"]}' />
+					<button type="button" class="btn btn-primary" onClick="addDocument()">Add</button>
+				</form>
+			</div>
+		</div>
+		<div class="span9">
+			<div id="documents_list"></div>
+		</div>
+	</div>
+	</script>
+    <script type="text/x-handlebars-template" id="documents_list_items"     class="template">
+                    {{#listDocuments documents}}
+                        {{this}}
+                    {{/listDocuments}}
+    </script>
+
+    <script type="text/javascript" src="/hydra/webjars/jquery/1.11.0/jquery.min.js"></script>
+    <script type="text/javascript" src="/hydra/gui/js/controller.js"></script>
+    <script type="text/javascript" src="/hydra/gui/js/helpers.js"></script>
+    <script type="text/javascript" src="/hydra/webjars/handlebars/1.2.1/handlebars.min.js"></script>
+    <script type="text/javascript" src="/hydra/webjars/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/hydra/gui/js/hydra.js"></script>
+
+</body>
+</html>

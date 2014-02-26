@@ -6,21 +6,18 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Map;
 
-import com.findwise.hydra.DatabaseException;
+import com.findwise.hydra.*;
+import com.findwise.hydra.admin.rest.StageClassNotFoundException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.findwise.hydra.DatabaseConnector;
-import com.findwise.hydra.DocumentReader;
-import com.findwise.hydra.DocumentWriter;
-import com.findwise.hydra.Pipeline;
-import com.findwise.hydra.PipelineReader;
-import com.findwise.hydra.PipelineWriter;
 import com.findwise.hydra.admin.database.AdminServiceType;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -34,6 +31,12 @@ public class ConfigurationServiceTest {
 	
 	@Mock
 	private PipelineWriter pipelineWriter;
+
+	@Mock
+	private StatusReader<AdminServiceType> statusReader;
+
+	@Mock
+	private PipelineStatus<AdminServiceType> pipelineStatus;
 	
 	@Mock
 	private Pipeline pipeline;
@@ -56,9 +59,12 @@ public class ConfigurationServiceTest {
 		
 		when(pipelineReader.getPipeline()).thenReturn(pipeline);
 		when(pipelineReader.getDebugPipeline()).thenReturn(debugPipeline);
+
+		when(statusReader.getStatus()).thenReturn(pipelineStatus);
 		
 		when(connector.getPipelineReader()).thenReturn(pipelineReader);
 		when(connector.getPipelineWriter()).thenReturn(pipelineWriter);
+		when(connector.getStatusReader()).thenReturn(statusReader);
 		when(connector.getDocumentReader()).thenReturn(documentReader);
 		when(connector.getDocumentWriter()).thenReturn(documentWriter);
 		service = new ConfigurationService<AdminServiceType>(connector);
@@ -67,16 +73,15 @@ public class ConfigurationServiceTest {
 	@Test
 	public void testGetStats() throws DatabaseException {
 		Map<String, Object> stats = service.getStats();
-		
+
 		verify(pipelineReader).getPipeline();
 		verify(pipelineReader).getDebugPipeline();
-		
+
 		verify(documentReader).getActiveDatabaseSize();
 		verify(documentReader).getInactiveDatabaseSize();
-		
+
 		assertTrue(stats.containsKey("documents"));
 		assertTrue(stats.containsKey("groups"));
 		assertEquals(2, stats.size());
 	}
-	
 }

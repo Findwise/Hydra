@@ -84,5 +84,4 @@ public class AppConfig {
 	public StagesService<MongoType> stagesService(MongoConnector connector) {
 		return new StagesService<MongoType>(connector);
 	}
-
 }

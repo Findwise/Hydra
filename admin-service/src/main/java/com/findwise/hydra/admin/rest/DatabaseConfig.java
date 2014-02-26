@@ -1,30 +1,24 @@
 package com.findwise.hydra.admin.rest;
 
+import com.findwise.hydra.mongodb.MongoConfiguration;
 import org.springframework.beans.factory.annotation.Value;
 
 import com.findwise.hydra.DatabaseConfiguration;
 
 public class DatabaseConfig implements DatabaseConfiguration {
 
-	private static final String DEFAULT_NAMESPACE = "pipeline";
-	private static final String DEFAULT_DB_URL = "localhost";
-	private static final String DEFAULT_DB_USER = "admin";
-	private static final String DEFAULT_DB_PASSWORD = "changeme";
-	private static final int DEFAULT_OLD_MAX_SIZE = 100;
-	private static final int DEFAULT_OLD_MAX_COUNT = 10000;
-
 	@Value("${admin.pipeline:pipeline}")
-	private String namespace = DEFAULT_NAMESPACE;
-	@Value("${database.url:localhost}")
-	private String databaseUrl = DEFAULT_DB_URL;
+	private String namespace = MongoConfiguration.DATABASE_NAMESPACE_DEFAULT;
+	@Value("${database.url:\"mongodb://localhost\"}")
+	private String databaseUrl = MongoConfiguration.DATABASE_URL_PARAM_DEFAULT;
 	@Value("${database.username:admin}")
-	private String databaseUser = DEFAULT_DB_USER;
+	private String databaseUser = MongoConfiguration.DATABASE_USER_DEFAULT;
 	@Value("${database.password:changeme}")
-	private String databasePassword = DEFAULT_DB_PASSWORD;
-	@Value("${old.storage_size_mb:100}")
-	private int oldMaxSize = DEFAULT_OLD_MAX_SIZE;
-	@Value("${old.max_count:10000}")
-	private int oldMaxCount = DEFAULT_OLD_MAX_COUNT;
+	private String databasePassword = MongoConfiguration.DATABASE_PASSWORD_DEFAULT;
+	@Value("${old.storage_size_mb:200}")
+	private int oldMaxSize = MongoConfiguration.OLD_MAX_SIZE_MB_DEFAULT;
+	@Value("${old.max_count:2000}")
+	private int oldMaxCount = MongoConfiguration.OLD_MAX_SIZE_MB_DEFAULT;
 
 	@Override
 	public String getNamespace() {

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.findwise.hydra.DatabaseException;
-import com.google.gson.JsonParseException;
 import com.mongodb.MongoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.findwise.hydra.Stage;
@@ -28,8 +28,6 @@ import com.findwise.hydra.admin.documents.DocumentsService;
 
 import com.findwise.hydra.admin.stages.StagesService;
 import com.findwise.hydra.JsonException;
-
-import javax.servlet.http.HttpServletRequest;
 
 
 @Controller("/rest")
@@ -137,8 +135,16 @@ public class ConfigurationController {
 
 	@ResponseBody
 	@RequestMapping(method = RequestMethod.GET, value = "/stagegroups")
-	public Map<String,List<StageGroup>> getStageGroups() {
-		return stagesService.getStageGroups();
+	public Map<String,List<StageGroup>> getStageGroups() throws DatabaseException, StageClassNotFoundException {
+		List<StageGroup> stageGroups = stagesService.getStageGroups();
+		for (StageGroup stageGroup : stageGroups) {
+			for (Stage stage : stageGroup.getStages()) {
+				service.addStageParameters(stage);
+			}
+		}
+		Map<String, List<StageGroup>> ret = new HashMap<String, List<StageGroup>>();
+		ret.put("stagegroups", stageGroups);
+		return ret;
 	}
 	
 	@ResponseBody
@@ -204,7 +210,7 @@ public class ConfigurationController {
 
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	@ResponseBody
-	@ExceptionHandler({IOException.class, DatabaseException.class, MongoException.class})
+	@ExceptionHandler({IOException.class, DatabaseException.class, MongoException.class, StageClassNotFoundException.class})
 	public Map<String, Object> handleIoError(Exception exception) {
 		return getErrorMap(exception);
 	}
