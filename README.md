@@ -33,6 +33,7 @@ You have two alternatives, either build Hydra yourself to get the very latest fe
 #### Download Hydra
 
 You can find the latest released build on [the download page](http://findwise.github.io/Hydra/#downloads). The main executable is called Hydra Core.
+See the section "Setting up a pipeline" in this readme for how to get started.
 
 #### Building Hydra 
 
@@ -128,7 +129,7 @@ Basically, an input connector pushes data directly to mongodb by creating an ins
 
 A `StdinInput`connector can be found in the `stages/debugging` package, and can be used as a reference implementation.
 
-## Setting up a demo pipeline
+## Setting up a pipeline
 
 To set up a pipeline, we want to add *stage libraries* containing stages, *stage configuration* to instruct Hydra how the stages should be run, and a *document* to process.
 
@@ -141,7 +142,8 @@ Get hold of the following jars, either by building Hydra or downloading from htt
 * Stage library - Basic: `basic-jar-with-dependencies.jar`
 * Stage library - Debugging: `debugging-jar-with-dependencies.jar`
 
-Place the jars in a folder and enter it.
+Place the jars in a folder (*NOTE: Due to a bug, the path cannot contain any spaces!*).
+Enter the folder.
 
 Insert the libraries to hydra:
 
