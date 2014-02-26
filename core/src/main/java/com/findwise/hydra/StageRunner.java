@@ -19,6 +19,7 @@ import org.apache.commons.exec.launcher.CommandLauncher;
 import org.apache.commons.exec.launcher.CommandLauncherFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,6 @@ public class StageRunner extends Thread {
 	private List<File> files = null;
 	private String jvmParameters = null;
 	private String startupArgsString = null;
-	private String classPathString = null;
 	private String java = "java";
 
 	private boolean hasQueried = false;
@@ -182,8 +182,6 @@ public class StageRunner extends Thread {
 	private boolean runGroup() {
 		CommandLine cmdLine = new CommandLine(java);
 		cmdLine.addArgument(jvmParameters, false);
-		String cp = getClassPath();
-
 		cmdLine.addArgument("-cp");
 		cmdLine.addArgument("${classpath}", false);
 		cmdLine.addArgument(GroupStarter.class.getCanonicalName());
@@ -196,7 +194,7 @@ public class StageRunner extends Thread {
 
 		HashMap<String, Object> map = new HashMap<String, Object>();
 
-		map.put("classpath", cp);
+		map.put("classpath", getClassPath());
 
 		cmdLine.setSubstitutionMap(map);
 		logger.info("Launching with command " + cmdLine.toString());
@@ -236,19 +234,11 @@ public class StageRunner extends Thread {
 	}
 
 	private String getClassPath() {
-		if (classPathString == null) {
-			return getAllJars();
-		} else {
-			return classPathString + File.pathSeparator + getAllJars();
+		String[] jarPaths = targetDirectory.list();
+		for (int i = 0; i < jarPaths.length; i++) {
+			jarPaths[i] = targetDirectory.getAbsolutePath() + File.separator + jarPaths[i];
 		}
-	}
-
-	private String getAllJars() {
-		String jars = "";
-		for (String s : targetDirectory.list()) {
-			jars += targetDirectory.getAbsolutePath() + File.separator + s + File.pathSeparator;
-		}
-		return jars.substring(0, jars.length() - 1);
+		return StringUtils.join(jarPaths, File.pathSeparator);
 	}
 
 	/**
