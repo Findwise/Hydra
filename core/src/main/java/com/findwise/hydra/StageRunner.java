@@ -185,7 +185,7 @@ public class StageRunner extends Thread {
 		String cp = getClassPath();
 
 		cmdLine.addArgument("-cp");
-		cmdLine.addArgument("${classpath}");
+		cmdLine.addArgument("${classpath}", false);
 		cmdLine.addArgument(GroupStarter.class.getCanonicalName());
 		cmdLine.addArgument(stageGroup.getName());
 		cmdLine.addArgument("localhost");
