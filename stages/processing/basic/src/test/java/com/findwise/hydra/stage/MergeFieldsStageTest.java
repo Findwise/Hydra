@@ -19,39 +19,29 @@ public class MergeFieldsStageTest {
 	@Test
 	public void testInit() throws Exception {
 		MergeFieldsStage mfs = new MergeFieldsStage();
-		
-		Map<String, Object> map = new HashMap<String, Object>();
-		
+
 		try {
-			mfs.setParameters(map);
 			mfs.init();
 			Assert.fail("Did not throw RequiredArgumentMissing");
 		} catch(RequiredArgumentMissingException e) {
 		}
-		
-		map.put("outputField", "out");
-		map.put("fromFields", new ArrayList<String>());
-		
-		mfs.setParameters(map);
-		
+
+		mfs.setOutputField("out");
+		mfs.setFromFields(new ArrayList<String>());
 		mfs.init();
 	}
 	
 	@Test
 	public void testProcessNoFromFields() throws Exception {
 		MergeFieldsStage mfs = new MergeFieldsStage();
-		
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("outputField", "out");
-		map.put("fromFields", new ArrayList<String>());
-		
-		mfs.setParameters(map);
-		
+		mfs.setOutputField("out");
+		mfs.setFromFields(new ArrayList<String>());
+
 		LocalDocument doc = new LocalDocument();
 		doc.putContentField("out", "xyz");
 		doc.putContentField("test", "test");
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		Assert.assertTrue(doc.isEqual(doc2));
@@ -60,22 +50,13 @@ public class MergeFieldsStageTest {
 	@Test
 	public void testProcessFieldNames() throws Exception {
 		MergeFieldsStage mfs = new MergeFieldsStage();
-		
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("outputField", "out");
-		
-		List<String> list =  new ArrayList<String>();
-		list.add("in1");
-		list.add("in2");
-		list.add("in3");
-		map.put("fromFields", list);
-		
-		mfs.setParameters(map);
-		
+		mfs.setOutputField("out");
+		mfs.setFromFields(Arrays.asList("in1", "in2", "in3"));
+
 		LocalDocument doc = getDocument();
 		doc.putContentField("out", "xyz");
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		Assert.assertEquals(doc.getContentField("in1"), doc2.getContentField("in1"));
@@ -93,21 +74,12 @@ public class MergeFieldsStageTest {
 	@Test
 	public void testProcessMultipleMatches() throws Exception {
 		MergeFieldsStage mfs = new MergeFieldsStage();
-		
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("outputField", "out");
-		
-		List<String> list =  new ArrayList<String>();
-		list.add("in1");
-		list.add("in1");
-		list.add("in2");
-		map.put("fromFields", list);
-		
-		mfs.setParameters(map);
-		
+		mfs.setOutputField("out");
+		mfs.setFromFields(Arrays.asList("in1", "in1", "in2"));
+
 		LocalDocument doc = getDocument();
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		String[] outString = doc2.getContentField("out").toString().split(" ");
@@ -121,21 +93,13 @@ public class MergeFieldsStageTest {
 	@Test
 	public void testSeparator() throws Exception {
 		MergeFieldsStage mfs = new MergeFieldsStage();
-		
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("outputField", "out");
-		map.put("separator", "___");
-		List<String> list =  new ArrayList<String>();
-		list.add("in1");
-		list.add("in2");
-		list.add("in3");
-		map.put("fromFields", list);
-		
-		mfs.setParameters(map);
-		
+		mfs.setOutputField("out");
+		mfs.setSeparator("___");
+		mfs.setFromFields(Arrays.asList("in1", "in2", "in3"));
+
 		LocalDocument doc = getDocument();
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		String[] outString = doc2.getContentField("out").toString().split("___");
@@ -152,31 +116,21 @@ public class MergeFieldsStageTest {
 	@Test
 	public void testClearOutputField() throws Exception {
 		MergeFieldsStage mfs = new MergeFieldsStage();
-		
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("outputField", "out");
-		map.put("clearOutputField", true);
+		mfs.setOutputField("out");
+		mfs.setClearOutputField(true);
+		mfs.setFromFields(new ArrayList<String>());
 
 		LocalDocument doc = getDocument();
 		doc.putContentField("out", "xyz");
 
-		List<String> list =  new ArrayList<String>();
-		map.put("fromFields", list);
-		
-		mfs.setParameters(map);
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		Assert.assertNull(doc2.getContentField("out"));
 		
-		list.add("in1");
-		list.add("in2");
-		list.add("in3");
-		
-		mfs.setParameters(map);
-		
-		doc2 = new LocalDocument(doc.toJson());
+		mfs.setFromFields(Arrays.asList("in1", "in2", "in3"));
+
+		doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		String[] outString = doc2.getContentField("out").toString().split(" ");
@@ -190,20 +144,13 @@ public class MergeFieldsStageTest {
 	@Test
 	public void testProcessRegexNames() throws Exception {
 		MergeFieldsStage mfs = new MergeFieldsStage();
-		
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("outputField", "out");
-		
-		List<String> list =  new ArrayList<String>();
-		list.add("in[0-9]*");
-		map.put("fromFields", list);
-		
-		mfs.setParameters(map);
-		
+		mfs.setOutputField("out");
+		mfs.setFromFields(Arrays.asList("in[0-9]*"));
+
 		LocalDocument doc = getDocument();
 		doc.putContentField("out", "xyz");
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		String[] outString = doc2.getContentField("out").toString().split(" ");
@@ -218,21 +165,13 @@ public class MergeFieldsStageTest {
 	@Test
 	public void testProcessExtraFieldNames() throws Exception {
 		MergeFieldsStage mfs = new MergeFieldsStage();
-		
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("outputField", "newfield");
-		
-		List<String> list =  new ArrayList<String>();
-		list.add("in1");
-		list.add("in3");
-		map.put("fromFields", list);
-		
-		mfs.setParameters(map);
-		
+		mfs.setOutputField("newfield");
+		mfs.setFromFields(Arrays.asList("in1", "in3"));
+
 		LocalDocument doc = getDocument();
 		doc.putContentField("out", "xyz");
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 
 		String[] newString = doc2.getContentField("newfield").toString().split(" ");
@@ -246,25 +185,16 @@ public class MergeFieldsStageTest {
 	@Test
 	public void testProcessIntegerFields() throws Exception {
 		MergeFieldsStage mfs = new MergeFieldsStage();
-		
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("outputField", "out");
-		map.put("additionIfNumbers", true);
-		
-		List<String> list =  new ArrayList<String>();
-		list.add("in1");
-		list.add("in2");
-		list.add("in3");
-		map.put("fromFields", list);
-		
-		mfs.setParameters(map);
-		
+		mfs.setOutputField("out");
+		mfs.setAdditionIfNumbers(true);
+		mfs.setFromFields(Arrays.asList("in1", "in2", "in3"));
+
 		LocalDocument doc = new LocalDocument();
 		doc.putContentField("in1", 1);
 		doc.putContentField("in2", 2);
 		doc.putContentField("in3", 5);
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		Assert.assertEquals(1+2+5, doc2.getContentField("out"));
@@ -273,25 +203,16 @@ public class MergeFieldsStageTest {
 	@Test
 	public void testProcessDoubleFields() throws Exception {
 		MergeFieldsStage mfs = new MergeFieldsStage();
-		
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("outputField", "out");
-		map.put("additionIfNumbers", true);
-		
-		List<String> list =  new ArrayList<String>();
-		list.add("in1");
-		list.add("in2");
-		list.add("in3");
-		map.put("fromFields", list);
-		
-		mfs.setParameters(map);
-		
+		mfs.setOutputField("out");
+		mfs.setAdditionIfNumbers(true);
+		mfs.setFromFields(Arrays.asList("in1", "in2", "in3"));
+
 		LocalDocument doc = new LocalDocument();
 		doc.putContentField("in1", 1);
 		doc.putContentField("in2", 2.2);
 		doc.putContentField("in3", 5.3);
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		Assert.assertEquals(8.5, doc2.getContentField("out"));
@@ -300,25 +221,16 @@ public class MergeFieldsStageTest {
 	@Test
 	public void testProcessMixedFields() throws Exception {
 		MergeFieldsStage mfs = new MergeFieldsStage();
-		
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("outputField", "out");
-		map.put("additionIfNumbers", true);
-		
-		List<String> list =  new ArrayList<String>();
-		list.add("in1");
-		list.add("in2");
-		list.add("in3");
-		map.put("fromFields", list);
-		
-		mfs.setParameters(map);
-		
+		mfs.setOutputField("out");
+		mfs.setAdditionIfNumbers(true);
+		mfs.setFromFields(Arrays.asList("in1", "in2", "in3"));
+
 		LocalDocument doc = new LocalDocument();
 		doc.putContentField("in1", 1);
 		doc.putContentField("in2", 2.2);
 		doc.putContentField("in3", "string");
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		Assert.assertEquals(String.class, doc2.getContentField("out").getClass());
@@ -361,20 +273,11 @@ public class MergeFieldsStageTest {
 	
 	public LocalDocument testList(LocalDocument doc) throws Exception {
 		MergeFieldsStage mfs = new MergeFieldsStage();
-		
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("outputField", "out");
-		map.put("createList", true);
-		
-		List<String> list =  new ArrayList<String>();
-		list.add("in1");
-		list.add("in2");
-		list.add("in3");
-		map.put("fromFields", list);
-		
-		mfs.setParameters(map);
-		
-		LocalDocument doc2 = new LocalDocument(doc.toJson());
+		mfs.setOutputField("out");
+		mfs.setCreateList(true);
+		mfs.setFromFields(Arrays.asList("in1", "in2", "in3"));
+
+		LocalDocument doc2 = new LocalDocument(doc);
 		mfs.process(doc2);
 		
 		
@@ -404,18 +307,10 @@ public class MergeFieldsStageTest {
 	@Test
 	public void testInfieldWithListToString() throws Exception {
 		MergeFieldsStage mfs = new MergeFieldsStage();
-		
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("outputField", "out");
-		map.put("createList", false);
-		
-		List<String> list =  new ArrayList<String>();
-		list.add("in");
-		
-		map.put("fromFields", list);
-		
-		mfs.setParameters(map);
-		
+		mfs.setOutputField("out");
+		mfs.setCreateList(false);
+		mfs.setFromFields(Arrays.asList("in"));
+
 		LocalDocument doc = new LocalDocument();
 		String[] content = new String[] {"x", "y", "random", "content", "etc"};
 		doc.putContentField("in", Arrays.asList(content));

@@ -11,7 +11,7 @@ import com.findwise.hydra.DatabaseException;
 import com.findwise.hydra.PipelineStatus;
 import com.findwise.hydra.Stage;
 import com.findwise.hydra.admin.rest.StageClassNotFoundException;
-import com.findwise.hydra.stage.AbstractStage;
+import com.findwise.hydra.stage.AbstractProcessStageMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,7 +119,7 @@ public class ConfigurationService<T extends DatabaseType> {
 	public void addStageParameters(Stage stage) throws DatabaseException, StageClassNotFoundException {
 		try {
 			Map<String, StageInformation> stages = getPipelineScanner().getStagesMap(stage.getDatabaseFile());
-			String stageClass = (String) stage.getProperties().get(AbstractStage.ARG_NAME_STAGE_CLASS);
+			String stageClass = (String) stage.getProperties().get(AbstractProcessStageMapper.ARG_NAME_STAGE_CLASS);
 			if (null != stageClass && stages.containsKey(stageClass)) {
 				Map<String, Object> parameters = (Map<String, Object>) stages.get(stageClass).get("parameters");
 				Map<String, Object> properties = stage.getProperties();

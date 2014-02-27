@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.findwise.hydra.Logging;
+import com.google.common.util.concurrent.ServiceManager;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.util.EntityUtils;
@@ -19,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Starts a StageGroup in a new JVM by fetching stage names and setting up logging.
- * This class delegates the actual startup procedure to {@link AbstractStage}.
  *
  * @author joel.westberg
  *
@@ -30,46 +30,50 @@ public class GroupStarter {
 	public static final String GROUP_PARAM = "group";
 	
 	public static void main(String[] args) throws UnknownHostException {
-		if (args.length < 1) {
-			logger.error("No group name found", new RequiredArgumentMissingException("No group name specified"));
-			System.exit(1);
-		} 
-		String host;
-		String port;
-		String groupName = args[0];
-		String logging;
-		String logPort;
-		
-		host = (args.length>1) ? args[1] : "localhost";
-		port = (args.length>2) ? args[2] : "12001";
-		logging = (args.length>3) ? args[3] : "false";
-		logPort = (args.length>4) ? args[4] : "12002";
-
+		StageCommandLineArguments cmdLineArgs = null;
 		try {
-			Logging.setup(host, Integer.parseInt(logPort));
-		} catch (UnknownHostException e) {
-			logger.error("Unable to connect to remote logging host on "+host+":"+logPort, e);
-			return;
-		}
-
-		List<String> stages;
-		try {
-			stages = getStages(host, Integer.parseInt(port), groupName);
-		} catch (IOException e) {
-			Logging.addConsoleAppender();
-			logger.error("Unable to get stages for the group '"+groupName+"'", e);
-			return;
-		}
-
-		try {
-			for (String stage : stages) {
-				logger.debug("Attempting to start stage: " + stage);
-				AbstractStage.main(new String[] { stage, host, port, logging, logPort });
-			}
+			cmdLineArgs = StageCommandLineArguments.parse(args);
 		} catch (Exception e) {
-			Logging.addConsoleAppender();
-			logger.error("An exception was thrown when starting the stages in the group", e);
+			logger.error("Error parsing arguments", e);
+			System.exit(1);
 		}
+
+		String groupName = cmdLineArgs.getStageGroupName();
+		String host = cmdLineArgs.getHost();
+		int port = cmdLineArgs.getPort();
+		boolean performanceLogging = cmdLineArgs.isPerformanceLogging();
+		int logPort = cmdLineArgs.getLogPort();
+
+		try {
+			Logging.setup(host, logPort);
+		} catch (Exception e) {
+			logger.error("Unable to connect to remote logging host on "+ host +":"+cmdLineArgs.getLogPort(), e);
+			System.exit(1);
+		}
+
+		final ServiceManager manager;
+		try {
+			manager = getServiceManager(groupName, host, port, performanceLogging);
+		} catch (Exception e) {
+			logger.error("Failed to get stage service manager. Shutting down.", e);
+			System.exit(1);
+			return; // Otherwise compiler doesn't understand that manager is initialized.
+		}
+		try {
+			StageStarter.startServices(manager);
+		} catch (Exception e) {
+			logger.error("Failed to start services. Shutting down.", e);
+			System.exit(1);
+		}
+	}
+
+	private static ServiceManager getServiceManager(String groupName, String host, int port, boolean performanceLogging) throws Exception {
+		List<StageService> stageServices = new ArrayList<StageService>();
+		for (String stageName : getStages(host, port, groupName)) {
+			List<StageService> stageServicesForStage = StageServiceFactory.createStageServices(stageName, host, port, performanceLogging, null);
+			stageServices.addAll(stageServicesForStage);
+		}
+		return new ServiceManager(stageServices);
 	}
 
     @SuppressWarnings("unchecked")

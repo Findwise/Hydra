@@ -18,24 +18,17 @@ import org.mockito.Mockito;
 
 import com.findwise.hydra.Document.Action;
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.local.RemotePipeline;
 
 public class SolrOutputStageTest {
 
 	SolrOutputStage solrOutput;
 	SolrServer mockServer;
-	RemotePipeline mockRP;
 
 	@Before
 	public void setUp() throws Exception {
 		solrOutput = new SolrOutputStage();
 		mockServer = Mockito.mock(SolrServer.class);
-		mockRP = Mockito.mock(RemotePipeline.class);
-		
-		
 		solrOutput.setSolrServer(mockServer);
-		solrOutput.setRemotePipeline(mockRP);
-		
 	}
 
 	@After
@@ -59,7 +52,9 @@ public class SolrOutputStageTest {
 		LocalDocument doc = new LocalDocument();
 		doc.setAction(Action.DELETE);
 		doc.putContentField("name", "jonas");
-		solrOutput.output(doc);
+		try {
+			solrOutput.output(doc);
+		} catch(Exception e) {}
 		Mockito.verify(mockServer, Mockito.never()).deleteById(Mockito.any(String.class));
 		
 		doc.putContentField("id", "someid");

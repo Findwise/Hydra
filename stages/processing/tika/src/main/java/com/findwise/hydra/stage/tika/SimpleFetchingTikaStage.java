@@ -2,24 +2,20 @@ package com.findwise.hydra.stage.tika;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.tika.exception.TikaException;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
-import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
 import com.findwise.hydra.stage.tika.utils.TikaUtils;
@@ -48,43 +44,28 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 	private Parser parser = new AutoDetectParser();
 
 	@Override
-	public void process(LocalDocument doc) throws ProcessException {
+	public void process(LocalDocument doc) throws Exception {
 		Map<String, Object> urls = TikaUtils.getFieldMatchingPattern(doc,
 				urlFieldPattern);
 		for (String field : urls.keySet()) {
-			try {
-				Iterator<URL> it = TikaUtils.getUrlsFromObject(urls.get(field))
-						.iterator();
-				for (int i = 1; it.hasNext(); i++) {
-					String num = (i > 1) ? "" + i : "";
-					URL url = it.next();
-					URLConnection connection = createConnection(url);
-					final InputStream inputStream = connection.getInputStream();
-					try {
+			Iterator<URL> it = TikaUtils.getUrlsFromObject(urls.get(field)).iterator();
+			for (int i = 1; it.hasNext(); i++) {
+				String num = (i > 1) ? "" + i : "";
+				URL url = it.next();
+				URLConnection connection = createConnection(url);
+				final InputStream inputStream = connection.getInputStream();
+				try {
 					TikaUtils.enrichDocumentWithFileContents(doc, field + num
 							+ "_", inputStream, parser,
 							addMetaData, addLanguage);
-					} finally {
-						inputStream.close();
-					}
+				} finally {
+					inputStream.close();
 				}
-			} catch (URISyntaxException e) {
-				throw new ProcessException("A field matching the pattern "
-						+ field + " contained a malformed url", e);
-			} catch (IOException e) {
-				throw new ProcessException(
-						"Failed opening or reading from stream", e);
-			} catch (SAXException e) {
-				throw new ProcessException("Failed parsing document", e);
-			} catch (TikaException e) {
-				throw new ProcessException("Got exception from Tika", e);
 			}
 		}
-
 	}
 
-	private URLConnection createConnection(URL url) throws ProcessException,
-			IOException {
+	private URLConnection createConnection(URL url) throws IOException {
 		URLConnection connection = url.openConnection();
 		if (useBasicAuthentication()) {
 			String authString = username + ":" + password;

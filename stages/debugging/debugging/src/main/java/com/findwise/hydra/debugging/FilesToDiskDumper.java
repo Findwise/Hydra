@@ -1,18 +1,18 @@
 package com.findwise.hydra.debugging;
 
-import com.findwise.hydra.DocumentFile;
-import com.findwise.hydra.local.Local;
-import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.stage.AbstractProcessStage;
-import com.findwise.hydra.stage.Parameter;
-import com.findwise.hydra.stage.ProcessException;
-import com.findwise.hydra.stage.RequiredArgumentMissingException;
-import com.findwise.hydra.stage.Stage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+
+import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.local.Local;
+import com.findwise.hydra.local.LocalDocument;
+import com.findwise.hydra.stage.AbstractProcessStage;
+import com.findwise.hydra.stage.Parameter;
+import com.findwise.hydra.stage.RequiredArgumentMissingException;
+import com.findwise.hydra.stage.Stage;
 
 /**
  * This stage will print any files to a specified folder (intended for debugging)
@@ -37,39 +37,34 @@ public class FilesToDiskDumper extends AbstractProcessStage {
     }
 
     @Override
-    public void process(LocalDocument doc) throws ProcessException {
+    public void process(LocalDocument doc) throws IOException {
 
-        List<String> files;
-        try {
-            files = getRemotePipeline().getFileNames(doc.getID());
+        List<String> files = doc.getFileNames();
 
-            for (String fileName : files) {
-                DocumentFile<Local> df = getRemotePipeline().getFile(fileName, doc.getID());
+        for (String fileName : files) {
+            DocumentFile<Local> df = doc.getFile(fileName);
 
-                File dir = new File(path + "/");
-                dir.mkdirs();
-                
-                File file = null;
-                if (prefix) {
-                    file = new File(path + "/" + doc.getContentField("id") + "_" + fileName);
-                } else {
-                    file = new File(path + "/" + fileName);
-                }
-                
-                file.createNewFile();
-                FileOutputStream fw = new FileOutputStream(file);
-                InputStream in = df.getStream();
+            File dir = new File(path + "/");
+            dir.mkdirs();
 
-
-                byte[] buffer = new byte[1024];
-                int len;
-                while ((len = in.read(buffer)) != -1) {
-                    fw.write(buffer, 0, len);
-                }
-                fw.close();
+            File file = null;
+            if (prefix) {
+                file = new File(path + "/" + doc.getContentField("id") + "_" + fileName);
+            } else {
+                file = new File(path + "/" + fileName);
             }
-        } catch (IOException ex) {
-            throw new ProcessException("", ex);
+
+            file.createNewFile();
+            FileOutputStream fw = new FileOutputStream(file);
+            InputStream in = df.getStream();
+
+
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = in.read(buffer)) != -1) {
+                fw.write(buffer, 0, len);
+            }
+            fw.close();
         }
     }
 

@@ -31,16 +31,16 @@ public class SimpleHttpFetchingStage extends AbstractHttpFetchingProcessStage {
 	}
 
 	@Override
-	public void processResponseEntity(HttpEntity responseEntity, LocalDocument doc) throws ProcessException {
+	public void processResponseEntity(HttpEntity responseEntity, LocalDocument doc) throws Exception {
 		try {
 			InputStream inputStream = responseEntity.getContent();
 			Charset encoding = Charset.forName(responseEntity.getContentEncoding().getValue());
 			String content = IOUtils.toString(inputStream, encoding);
 			doc.putContentField(outputField, content);
 		} catch (IOException e) {
-			throw new ProcessException("Failed to read HTTP entity body", e);
+			throw new Exception("Failed to read HTTP entity body", e);
 		} catch (UnsupportedCharsetException e) {
-			throw new ProcessException("Response used unsupported encoding", e);
+			throw new Exception("Response used unsupported encoding", e);
 		}
 	}
 

@@ -207,11 +207,11 @@ Hydra will print out the processed document, that should contain a title as well
 
 You can run your stages from the command line (or you IDE) if you need to debug them. 
 
-java -cp `{libraryJarWithDependencies}` com.findwise.hydra.stage.AbstractStage `{fieldName}` `{hydraHost}` `{hydraRestPort}` `{performaceLoggingEnabled}` `{loggingPort}` `{configuration}`
+java -cp `{libraryJarWithDependencies}` com.findwise.hydra.stage.StageStarter `{fieldName}` `{hydraHost}` `{hydraRestPort}` `{performaceLoggingEnabled}` `{loggingPort}` `{configuration}`
 
 i.e.
 ```
-	java -cp basic-jar-with-dependincies.jar com.findwise.hydra.stage.AbstractStage staticField localhost 12001 false 12002 "{ stageClass: \"com.findwise.hydra.stage.SetStaticFieldStage\", fieldValueMap: {\"source\": \"my source\" } }"
+	java -cp basic-jar-with-dependincies.jar com.findwise.hydra.stage.StageStarter staticField localhost 12001 false 12002 "{ stageClass: \"com.findwise.hydra.stage.SetStaticFieldStage\", fieldValueMap: {\"source\": \"my source\" } }"
 ```
 
 

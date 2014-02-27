@@ -3,21 +3,26 @@ package com.findwise.hydra.local;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashMap;
+
+import com.google.gson.JsonParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.findwise.hydra.Document;
+import com.findwise.hydra.DocumentFile;
+import com.findwise.hydra.DocumentFileRepository;
 import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.SerializationUtils;
 import com.findwise.tools.Comparator;
-import com.google.gson.JsonParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class LocalDocument implements Document<Local> {
     private static Logger internalLogger = LoggerFactory.getLogger("internal");
@@ -27,6 +32,13 @@ public class LocalDocument implements Document<Local> {
 
 	private Set<String> touchedMetadata;
 	private boolean touchedAction;
+
+	// The documentFileRepository is set by a setter instead of in the constructor, since
+	// the class is also used in the core for serialization / deserialization. If it is unset,
+	// getFile et.al. will throw NPE. // TODO: Still code smell...
+	private DocumentFileRepository documentFileRepository;
+
+	private boolean discardAfterProcessing = false;
 
 	public LocalDocument() {
 		documentMap = new HashMap<String, Object>();
@@ -45,7 +57,24 @@ public class LocalDocument implements Document<Local> {
 		// let's clean that up in this case
 		markSynced();
 	}
-	
+
+	public LocalDocument(LocalDocument doc) {
+		this();
+		try {
+			fromJson(doc.toJson());
+		} catch (JsonException e) {
+			// I don't want to expose that we are reusing the json stuff for copying
+			// Also, this should *never* happen since doc.toJson() should hopefully
+			// always return valid json.
+			throw new RuntimeException(e);
+		}
+		touchedContent = new HashSet<String>(doc.touchedContent);
+		touchedMetadata = new HashSet<String>(doc.touchedMetadata);
+		// The following objects are immutable so don't need to be copied
+		touchedAction = doc.touchedAction;
+		documentFileRepository = doc.documentFileRepository;
+	}
+
 	@Override
 	public Action getAction() {
 		return (Action) documentMap.get(ACTION_KEY);
@@ -556,4 +585,48 @@ public class LocalDocument implements Document<Local> {
 	public Object removeContentField(String key) {
 		return putContentField(key, null);
 	}
+
+	public void setDocumentFileRepository(DocumentFileRepository documentFileRepository) {
+		this.documentFileRepository = documentFileRepository;
+	}
+
+	public List<String> getFileNames() {
+		checkNotNull(documentFileRepository, "documentFileRepository is not set!");
+		return documentFileRepository.getFileNames(getID());
+	}
+
+	public DocumentFile<Local> getFile(String fileName) {
+		checkNotNull(documentFileRepository, "documentFileRepository is not set!");
+		return documentFileRepository.getFile(fileName, getID());
+	}
+
+	public List<DocumentFile<Local>> getFiles() {
+		checkNotNull(documentFileRepository, "documentFileRepository is not set!");
+		return documentFileRepository.getFiles(getID());
+	}
+
+	public boolean saveFile(DocumentFile<Local> file) {
+		checkNotNull(documentFileRepository, "documentFileRepository is not set!");
+		return documentFileRepository.saveFile(file);
+	}
+
+	public boolean deleteFile(String fileName) {
+		checkNotNull(documentFileRepository, "documentFileRepository is not set!");
+		return documentFileRepository.deleteFile(fileName, getID());
+	}
+
+	/**
+	 * Sets this document to be discarded after processing.
+	 *
+	 * N.B. Throwing an exception in a stage after discarding the document
+	 * will still set the document as failed instead of discarded.
+	 */
+	public void discard() {
+		this.discardAfterProcessing = true;
+	}
+
+	public boolean isDiscarded() {
+		return discardAfterProcessing;
+	}
+
 }

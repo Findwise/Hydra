@@ -107,7 +107,7 @@ public abstract class AbstractHttpFetchingProcessStage extends AbstractProcessSt
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void process(LocalDocument doc) throws ProcessException {
+	public void process(LocalDocument doc) throws Exception {
 		List<String> identifiers = new ArrayList<String>();
 		try {
 			identifiers.add(doc.getContentFieldAsString(identifierField));
@@ -115,7 +115,7 @@ public abstract class AbstractHttpFetchingProcessStage extends AbstractProcessSt
 			try {
 				identifiers.addAll(doc.getContentFieldAsStrings(identifierField));
 			} catch (IncorrectFieldTypeException e2) {
-				throw new ProcessException("Field '" + identifierField + "' was not a String or List", e2);
+				throw new Exception("Field '" + identifierField + "' was not a String or List", e2);
 			}
 		}
 		try {
@@ -132,7 +132,7 @@ public abstract class AbstractHttpFetchingProcessStage extends AbstractProcessSt
 	}
 
 	private void processIdentifier(String identifier, LocalDocument doc)
-			throws ProcessException {
+			throws Exception {
 		if (ignoredIdentifiers.containsKey(identifier)) {
 			String fieldName = ignoredIdentifiers.get(identifier);
 			logger.debug("Ignoring identifier '{}', copying it to '{}'", identifier,
@@ -166,7 +166,7 @@ public abstract class AbstractHttpFetchingProcessStage extends AbstractProcessSt
 	 * @param responseEntity
 	 */
 	public abstract void processResponseEntity(HttpEntity responseEntity,
-	                                           LocalDocument doc) throws ProcessException;
+	                                           LocalDocument doc) throws Exception;
 
 	/**
 	 * Value of the HTTP header 'ACCEPT'. This will be set on all requests.

@@ -6,15 +6,13 @@ import com.findwise.hydra.local.LocalDocument;
 class InterruptibleWaitingStage extends AbstractProcessStage {
 
 	@Override
-	public void process(LocalDocument doc) throws ProcessException {
+	public void process(LocalDocument doc) {
 		try {
 			while (true) {
-				sleep(100);
+				Thread.sleep(100);
 			}
 		} catch (InterruptedException e) {
 			return;
-		} finally {
-			stopStage();
 		}
 	}
 }

@@ -76,7 +76,7 @@ public class DateFormatterStage extends AbstractProcessStage {
     }
 
     @Override
-    public void process(LocalDocument doc) throws ProcessException {
+    public void process(LocalDocument doc) throws Exception {
         Map<String, Object> contentMap = doc.getContentMap();
 
         for (Entry<String, Object> contentField : contentMap.entrySet()) {
@@ -113,5 +113,13 @@ public class DateFormatterStage extends AbstractProcessStage {
         long epochInMilliSeconds = Long.parseLong(epoch) * 1000;
         return new DateTime(epochInMilliSeconds)
             .withZone(DateTimeZone.forID(epochTimeZone));
+    }
+
+    public void setDateFields(List<String> dateFields) {
+        this.dateFields = dateFields;
+    }
+
+    public void setEpochTimeZone(String epochTimeZone) {
+        this.epochTimeZone = epochTimeZone;
     }
 }

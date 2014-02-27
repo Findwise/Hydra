@@ -55,18 +55,13 @@ public class DocumentDiscardStage extends AbstractProcessStage {
 	}
 	
 	@Override
-	public void process(LocalDocument doc) throws ProcessException {
-		boolean alreadyDiscarded = false;
+	public void process(LocalDocument doc) {
 		for (Map<String, String> discardConfig : discardConfigs) {
-			if (alreadyDiscarded) {
+			if (doc.isDiscarded()) {
 				return;
 			}
 			if (shouldBeDiscarded(doc, discardConfig)) {
-				try {
-					alreadyDiscarded = getRemotePipeline().markDiscarded(doc);
-				} catch (Exception e) {
-					throw new ProcessException("Couldn't mark document with id: " + doc.getID().toJSON() + " as discarded.");
-				}
+				doc.discard();
 			}
 		}
 	}

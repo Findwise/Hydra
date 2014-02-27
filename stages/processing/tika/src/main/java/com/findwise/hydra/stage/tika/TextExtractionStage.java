@@ -22,7 +22,6 @@ import org.xml.sax.SAXException;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
-import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
 
@@ -48,7 +47,7 @@ public class TextExtractionStage extends AbstractProcessStage {
 	private Set<String> lowerCaseAllowedFileFormatsSet = null;
 	
 	@Override
-	public void process(LocalDocument doc) throws ProcessException {
+	public void process(LocalDocument doc) {
 		InputStream stream = null;
 		long size = getFileSize(doc);
 
