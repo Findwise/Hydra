@@ -13,13 +13,13 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-core</artifactId>
-			<version>${parent.version}</version>
+			<version>${project.parent.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-mongodb</artifactId>
-			<version>${parent.version}</version>
+			<version>${project.parent.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -62,19 +62,19 @@
 								<artifactItem>
 									<groupId>com.findwise.hydra</groupId>
 									<artifactId>hydra-basic-stages</artifactId>
-									<version>${project.version}</version>
+									<version>${project.parent.version}</version>
 									<classifier>jar-with-dependencies</classifier>
 								</artifactItem>
 								<artifactItem>
 									<groupId>com.findwise.hydra</groupId>
 									<artifactId>hydra-tika-stages</artifactId>
-									<version>${project.version}</version>
+									<version>${project.parent.version}</version>
 									<classifier>jar-with-dependencies</classifier>
 								</artifactItem>
 								<artifactItem>
 									<groupId>com.findwise.hydra</groupId>
 									<artifactId>integration-test-stages</artifactId>
-									<version>${project.version}</version>
+									<version>${project.parent.version}</version>
 									<classifier>jar-with-dependencies</classifier>
 								</artifactItem>
 							</artifactItems>

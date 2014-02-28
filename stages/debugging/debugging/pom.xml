@@ -15,12 +15,12 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-api</artifactId>
-			<version>${parent.version}</version>
+			<version>${project.parent.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-mongodb</artifactId>
-			<version>${parent.version}</version>
+			<version>${project.parent.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
