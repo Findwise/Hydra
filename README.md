@@ -142,8 +142,7 @@ Get hold of the following jars, either by building Hydra or downloading from htt
 * Stage library - Basic: `basic-jar-with-dependencies.jar`
 * Stage library - Debugging: `debugging-jar-with-dependencies.jar`
 
-Place the jars in a folder (*NOTE: Due to a bug, the path cannot contain any spaces!*).
-Enter the folder.
+Place the jars in a folder. Enter the folder.
 
 Insert the libraries to hydra:
 
