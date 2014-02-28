@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.findwise.hydra</groupId>
 		<artifactId>stages</artifactId>
-		<version>0.5.0-SNAPSHOT</version>
+		<version>0.4.1</version>
 		<relativePath>../..</relativePath>
 	</parent>
 	<artifactId>hydra-solr-in</artifactId>
@@ -15,12 +15,12 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-api</artifactId>
-			<version>0.5.0-SNAPSHOT</version>
+			<version>0.4.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-input-server</artifactId>
-			<version>0.5.0-SNAPSHOT</version>
+			<version>0.4.1</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
@@ -37,7 +37,7 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-core</artifactId>
-			<version>0.5.0-SNAPSHOT</version>
+			<version>0.4.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
