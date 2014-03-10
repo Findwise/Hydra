@@ -18,6 +18,7 @@ public class JsonPipelineUtilTest {
 
     private static final String JSON_FILE = "/sample pipeline.json";
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testFromJson_InputStreamReader() throws FileNotFoundException {
         InputStream in = this.getClass().getResourceAsStream(JSON_FILE);
@@ -42,23 +43,4 @@ public class JsonPipelineUtilTest {
         assertEquals("$1$2$3", regexConfig.get("substitute"));
         System.out.println("* " + cfg.toString());
     }
-
-//    @Test
-//    public void testToJson() {
-//        PipelineConfiguration cfg = new PipelineConfiguration();
-//        cfg.setPipelineName("contacts");
-//        List<Map<String, Object>> stages = new ArrayList<Map<String, Object>>();
-//        Map<String, Object> stage = new HashMap<String, Object>();        
-//        stage.put("stageName", "regexdates");
-//        stage.put("stageClass", "com.findwise.hydra.stage.RegexStage");
-//        stage.put("jarId", "basic");
-//        stage.put("queryOptions", new String[]{"touched(mergeFields,true)"});
-//        Map<String, String> regexConfigs = new HashMap<String, String>();
-//        regexConfigs.put("inField", "releasedatetime");
-//        regexConfigs.put("outField", "releasedatetime");
-//        regexConfigs.put("regex", "(.*)(\\+\\d{2}):(\\d{2})");
-//        regexConfigs.put("substitute", "$1$2$3");
-//        stage.put("regexConfigs", new Object[]{regexConfigs});
-//        cfg.addStage(stage);
-//    }
 }

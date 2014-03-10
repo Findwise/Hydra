@@ -1,6 +1,6 @@
 package com.findwise.hydra.output.elasticsearch;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.get.GetResponse;

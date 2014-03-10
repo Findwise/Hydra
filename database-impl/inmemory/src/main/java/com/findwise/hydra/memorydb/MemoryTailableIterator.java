@@ -21,7 +21,6 @@ public class MemoryTailableIterator implements TailableIterator<MemoryType> {
 	private boolean closed = false;
 	
 	/**
-	 * @param dbc
 	 * @throws BackingStoreException if there is a problem in getting an iterator
 	 */
 	public MemoryTailableIterator(BlockingQueue<MemoryDocument> queue, boolean[] modified) {
@@ -29,7 +28,6 @@ public class MemoryTailableIterator implements TailableIterator<MemoryType> {
 	}
 	
 	/**
-	 * @param dbc
 	 * @throws BackingStoreException if there is a problem in getting an iterator
 	 */
 	public MemoryTailableIterator(BlockingQueue<MemoryDocument> queue, boolean[] modified, MemoryQuery query) {

@@ -3,7 +3,9 @@ package com.findwise.hydra.mongodb;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -77,8 +79,8 @@ public class MongoDocumentIOMongoLessTest {
 
 		boolean processed = documentIO.markProcessed(document, "Test stage");
 
-		Assert.assertFalse("Processing should not be fine", processed);
-		Assert.assertTrue("The document should have logged errors", document.hasErrors());
+		assertFalse("Processing should not be fine", processed);
+		assertTrue("The document should have logged errors", document.hasErrors());
 	}
 
 	@Test
@@ -103,10 +105,10 @@ public class MongoDocumentIOMongoLessTest {
 
 		boolean processed = documentIO.markProcessed(document, "Test stage");
 
-		Assert.assertTrue("Processing should return successfully.", processed);
-		Assert.assertTrue("The field 'body' should be removed.",
+		assertTrue("Processing should return successfully.", processed);
+		assertTrue("The field 'body' should be removed.",
 				document.getContentField(contentField).equals("<Removed>"));
-		Assert.assertTrue("The document should have logged errors", document.hasErrors());
+		assertTrue("The document should have logged errors", document.hasErrors());
 	}
 
 	@Test
@@ -135,9 +137,9 @@ public class MongoDocumentIOMongoLessTest {
 		boolean processed = documentIO.markProcessed(document, "Test stage");
 
 		// One field should have been removed now, and it should be the longest one.
-		Assert.assertEquals(shortValue, document.getContentField("short"));
-		Assert.assertEquals("<Removed>", document.getContentField("long"));
-		Assert.assertTrue("Processing should return successfully.", processed);
+		assertEquals(shortValue, document.getContentField("short"));
+		assertEquals("<Removed>", document.getContentField("long"));
+		assertTrue("Processing should return successfully.", processed);
 	}
 
 }

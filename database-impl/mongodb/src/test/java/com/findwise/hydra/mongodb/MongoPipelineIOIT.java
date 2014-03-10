@@ -1,6 +1,7 @@
 package com.findwise.hydra.mongodb;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
@@ -8,8 +9,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
-
-import junit.framework.Assert;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -108,25 +107,25 @@ public class MongoPipelineIOIT {
 		p.addGroup(multiGroup);
 		p.addGroup(singleGroup);
 		
-		Assert.assertEquals(2, p.getStageGroups().size());
-		Assert.assertTrue(p.hasGroup("multi"));
-		Assert.assertTrue(p.hasGroup("singleStage"));
+		assertEquals(2, p.getStageGroups().size());
+		assertTrue(p.hasGroup("multi"));
+		assertTrue(p.hasGroup("singleStage"));
 		
 		mongoConnectorResource.reset();
 		mdc = mongoConnectorResource.getConnector();
 		MongoPipelineReader reader = new MongoPipelineReader(mdc.getDB());
 		MongoPipelineWriter writer = new MongoPipelineWriter(reader, WriteConcern.SAFE);
 		
-		Assert.assertEquals(0, reader.getPipeline().getStages().size());
+		assertEquals(0, reader.getPipeline().getStages().size());
 		writer.write(p);
 		
-		Assert.assertEquals(3, reader.getPipeline().getStages().size());
+		assertEquals(3, reader.getPipeline().getStages().size());
 
-		Assert.assertTrue(reader.getPipeline().hasGroup("multi"));
-		Assert.assertTrue(reader.getPipeline().hasGroup("singleStage"));
+		assertTrue(reader.getPipeline().hasGroup("multi"));
+		assertTrue(reader.getPipeline().hasGroup("singleStage"));
 
-		Assert.assertEquals(2, reader.getPipeline().getGroup("multi").getSize());
-		Assert.assertEquals(1, reader.getPipeline().getGroup("singleStage").getSize());
+		assertEquals(2, reader.getPipeline().getGroup("multi").getSize());
+		assertEquals(1, reader.getPipeline().getGroup("singleStage").getSize());
 	}
 	
 	@Test
@@ -158,9 +157,9 @@ public class MongoPipelineIOIT {
 		writer.write(p);
 		
 		StageGroup g2 = reader.getPipeline().getGroup("multi");
-		Assert.assertEquals(multiGroup.getJvmParameters(), g2.getJvmParameters());
-		Assert.assertEquals(multiGroup.getRetries(), g2.getRetries());
-		Assert.assertEquals(multiGroup.isLogging(), g2.isLogging());
-		Assert.assertEquals(multiGroup.getCmdlineArgs(), g2.getCmdlineArgs());
+		assertEquals(multiGroup.getJvmParameters(), g2.getJvmParameters());
+		assertEquals(multiGroup.getRetries(), g2.getRetries());
+		assertEquals(multiGroup.isLogging(), g2.isLogging());
+		assertEquals(multiGroup.getCmdlineArgs(), g2.getCmdlineArgs());
 	}
 }
