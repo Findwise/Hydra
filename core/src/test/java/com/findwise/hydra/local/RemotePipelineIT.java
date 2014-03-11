@@ -18,7 +18,6 @@ import com.findwise.hydra.net.HttpRESTHandler;
 import com.findwise.hydra.net.RESTServer;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
-import junit.framework.Assert;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -27,6 +26,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class RemotePipelineIT {
@@ -403,13 +404,13 @@ public class RemotePipelineIT {
 		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
 		
 		LocalDocument ld = rp.getDocument(new LocalQuery());
-		Assert.assertTrue(ld.hasContentField("field"));
+		assertTrue(ld.hasContentField("field"));
 		ld.removeContentField("field");
 		
 		rp.save(ld);
 		
 		rp = new RemotePipeline("localhost", server.getPort(), "stage2");
 		ld = rp.getDocument(new LocalQuery());
-		Assert.assertFalse(ld.hasContentField("field"));
+		assertFalse(ld.hasContentField("field"));
 	}
 }

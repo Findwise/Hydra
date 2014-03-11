@@ -2,10 +2,10 @@ package com.findwise.hydra.net;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import java.util.List;
-
-import junit.framework.Assert;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -47,9 +47,9 @@ public class PropertiesHandlerTest {
 		
 		List<String> stages = GroupStarter.getStages("localhost", server.getPort(), "1");
 
-		Assert.assertTrue(stages.contains("stage"));
-		Assert.assertTrue(stages.contains("stage2"));
-		Assert.assertFalse(stages.contains("notingroup"));
+		assertTrue(stages.contains("stage"));
+		assertTrue(stages.contains("stage2"));
+		assertFalse(stages.contains("notingroup"));
 
 		StageGroup g2 = new StageGroup("2");
 		g2.addStage(new Stage("debug", Mockito.mock(DatabaseFile.class)));
@@ -59,8 +59,8 @@ public class PropertiesHandlerTest {
 		Mockito.when(reader.getDebugPipeline()).thenReturn(p2);
 		stages = GroupStarter.getStages("localhost", server.getPort(), "2");
 
-		Assert.assertTrue(stages.contains("debug"));
-		Assert.assertFalse(stages.contains("stage"));
+		assertTrue(stages.contains("debug"));
+		assertFalse(stages.contains("stage"));
 	}
 
 }

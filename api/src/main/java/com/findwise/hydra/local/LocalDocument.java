@@ -509,7 +509,7 @@ public class LocalDocument implements Document<Local> {
 	 * Must be nullsafe, for all parameters and other operations. 
 	 * @param contentFields
 	 * @param metadataFields
-	 * @return
+	 * @return json map with id, contents, metadata and action
 	 */
 	private String fieldsToJson(Iterable<String> contentFields, Iterable<String> metadataFields) {
 		HashMap<String, Object> map = new HashMap<String, Object>();

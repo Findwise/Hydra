@@ -23,6 +23,7 @@ public class AbstractProcessStageMapper {
 		return fromMap(properties);
 	}
 
+    @SuppressWarnings("unchecked")
 	private static AbstractProcessStage fromMap(Map<String, Object> properties) throws RequiredArgumentMissingException, ClassNotFoundException, IllegalAccessException, InstantiationException, InitFailedException {
 		String stageClass;
 		if (properties.containsKey(ARG_NAME_STAGE_CLASS)) {
@@ -43,7 +44,7 @@ public class AbstractProcessStageMapper {
 	/**
 	 * Injects the parameters found in the map to any fields annotated with @Stage, whose names matches
 	 * the keys in this map.
-	 * @param map
+	 * @param map stage parameter map
 	 * @throws IllegalArgumentException
 	 * @throws IllegalAccessException
 	 */

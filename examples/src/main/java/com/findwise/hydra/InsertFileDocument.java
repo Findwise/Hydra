@@ -9,8 +9,7 @@ import java.net.URL;
 
 import org.apache.http.HttpException;
 
-import com.findwise.hydra.DocumentFile;
-import com.findwise.hydra.JsonException;
+import com.findwise.hydra.local.Local;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.local.LocalQuery;
 import com.findwise.hydra.local.RemotePipeline;
@@ -28,7 +27,7 @@ public class InsertFileDocument {
 			LocalDocument ld = rp2.getDocument(new LocalQuery());
 			File f = getFile();
 			FileInputStream fis = new FileInputStream(f);
-			DocumentFile df = new DocumentFile(ld.getID(), f.getName(), fis);
+			DocumentFile<Local> df = new DocumentFile<Local>(ld.getID(), f.getName(), fis);
 			df.setEncoding(new InputStreamReader(df.getStream()).getEncoding());
 			df.setMimetype("application/msword");
 			rp2.saveFile(df);

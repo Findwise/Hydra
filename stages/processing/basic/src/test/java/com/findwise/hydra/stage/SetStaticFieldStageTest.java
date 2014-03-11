@@ -8,7 +8,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.SetStaticFieldStage.Policy;

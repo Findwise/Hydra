@@ -152,7 +152,7 @@ public final class Comparator {
 	 * @param c
 	 * @param o
 	 * @param o2
-	 * @return
+	 * @return true if o and o2 have the getters of c and their values are equal
 	 */
 	@SuppressWarnings("rawtypes")
 	public static boolean getterEqual(Class c, Object o, Object o2) {

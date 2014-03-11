@@ -6,7 +6,7 @@ import java.util.Collection;
  * Interface specifying the operations that must be supported for a
  * DatabaseDocument cache.
  * 
- * Bear in mind when using, that a cache that does absolutely nothing {@see
+ * Bear in mind when using, that a cache that does absolutely nothing {@link
  * NoopCache} is a valid implementation. As such it can not be trusted that just
  * because you added something to the cache, it means you can get it out again.
  * 

@@ -13,7 +13,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.findwise.hydra.local.LocalDocument;
-import junit.framework.Assert;
 
 public class JsoupSelectorTest {
 
@@ -126,9 +125,9 @@ public class JsoupSelectorTest {
 	public void testUnavaiablefield() throws Exception {
 		
 		jsoup.process(new LocalDocument());
-                Assert.assertNull(doc.getContentField("extracted_text"));
-                Assert.assertNull(doc.getContentField("h1"));
-                Assert.assertNull(doc.getContentField("h2"));
+		assertNull(doc.getContentField("extracted_text"));
+		assertNull(doc.getContentField("h1"));
+		assertNull(doc.getContentField("h2"));
 	}
 	
 	@Test
@@ -184,6 +183,5 @@ public class JsoupSelectorTest {
 		assertTrue("Expected " + correct + " got " + result,
 					result.equalsIgnoreCase(correct));
 	}
-		
 }
 

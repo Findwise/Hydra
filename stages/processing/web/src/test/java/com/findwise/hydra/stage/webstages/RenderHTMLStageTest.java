@@ -4,14 +4,13 @@
  */
 package com.findwise.hydra.stage.webstages;
 
-import com.findwise.hydra.stage.webstages.RenderHTMLStage;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 

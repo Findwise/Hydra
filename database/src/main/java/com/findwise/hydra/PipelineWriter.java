@@ -29,7 +29,7 @@ public interface PipelineWriter {
 	/**
 	 * Removes a file from the database.
 	 * @param id
-	 * @return
+	 * @return true if successful
 	 */
 	boolean deleteFile(Object id);
 

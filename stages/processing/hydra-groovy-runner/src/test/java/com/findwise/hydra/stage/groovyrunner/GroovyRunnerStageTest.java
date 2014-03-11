@@ -2,7 +2,6 @@ package com.findwise.hydra.stage.groovyrunner;
 
 import java.io.InputStream;
 
-import junit.framework.Assert;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
@@ -17,7 +16,7 @@ public class GroovyRunnerStageTest {
 		GroovyRunnerStage stage = new GroovyRunnerStage();
 		String script = "nothing";
 		stage.setGroovyScript(script);
-		Assert.assertEquals(script, stage.getGroovyScript());
+		assertEquals(script, stage.getGroovyScript());
 	}
 
 	@Test
@@ -30,7 +29,7 @@ public class GroovyRunnerStageTest {
 				+ " public class " + className + " implements GroovyStage{"
 				+ "public void process(LocalDocument doc){}" + "}";
 		GroovyStage stage = runner.loadGroovyStage(script);
-		Assert.assertEquals(className, stage.getClass().getCanonicalName());
+		assertEquals(className, stage.getClass().getCanonicalName());
 	}
 
 	@Test

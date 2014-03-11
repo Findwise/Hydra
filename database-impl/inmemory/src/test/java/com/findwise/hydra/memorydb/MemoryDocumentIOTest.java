@@ -4,12 +4,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import junit.framework.Assert;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +19,7 @@ import com.findwise.hydra.Document;
 import com.findwise.hydra.Document.Status;
 import com.findwise.hydra.DocumentFile;
 import com.findwise.hydra.SerializationUtils;
+import org.mockito.Matchers;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -28,7 +27,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 
@@ -77,7 +75,9 @@ public class MemoryDocumentIOTest {
 
 		byte[] inputData = new byte[]{1,2,3};
 		DocumentFile<MemoryType> documentFile = buildSimpleDocumentFile(inputData);
-		io.insert(md, Arrays.asList(documentFile));
+		List<DocumentFile<MemoryType>> l = new ArrayList<DocumentFile<MemoryType>>();
+		l.add(documentFile);
+		io.insert(md, l);
 
 		/* First of all, we should be able to fetch the attachment */
 		DocumentFile outputDocFile = io.getDocumentFile(md, documentFile.getFileName());
@@ -100,10 +100,12 @@ public class MemoryDocumentIOTest {
 		io = spy(io);
 		MemoryDocument md = TestTools.getRandomDocument();
 
-		/* Assume that writing a DocumentFile raises an exception */
-		doThrow(new RuntimeException()).when(io).write(any(DocumentFile.class));
+		// Assume that writing a DocumentFile raises an exception
+		doThrow(new RuntimeException()).when(io).write(Matchers.<DocumentFile<MemoryType>>any());
+		List<DocumentFile<MemoryType>> l = new ArrayList<DocumentFile<MemoryType>>();
+		l.add(buildSimpleDocumentFile(new byte[]{}));
 		try {
-			io.insert(md, Arrays.asList(buildSimpleDocumentFile(new byte[]{})));
+			io.insert(md, l);
 		} catch (RuntimeException e) {
 		}
 
@@ -265,17 +267,17 @@ public class MemoryDocumentIOTest {
 
 		MemoryDocument d2 = io.getDocumentById(md.getID());
 		
-		Assert.assertTrue(d2.getMetadataMap().containsKey(MemoryDocument.FETCHED_METADATA_TAG));
+		assertTrue(d2.getMetadataMap().containsKey(MemoryDocument.FETCHED_METADATA_TAG));
 		Map<String, Object> fetched = (Map<String, Object>)d2.getMetadataMap().get(MemoryDocument.FETCHED_METADATA_TAG);
 		
-		Assert.assertTrue(fetched.containsKey("tag"));
+		assertTrue(fetched.containsKey("tag"));
 		fetched.remove("tag");
 		
 		MemoryDocument d3 = new MemoryDocument();
 		d3.fromJson(d2.toJson());
 		io.update(d3);
 
-		Assert.assertFalse((
+		assertFalse((
 				(Map<String, Object>) io.getDocumentById(d2.getID()).getMetadataMap().get(MemoryDocument.FETCHED_METADATA_TAG))
 				.containsKey("tag"));
 	}
@@ -297,7 +299,7 @@ public class MemoryDocumentIOTest {
 		while ((d = io.getAndTag(new MemoryQuery(), "testRet")) != null) {
 			allDocs.add(d.getID());
 		}
-		if (allDocs.contains(discarded_d.getID()) == false) {
+		if (!allDocs.contains(discarded_d.getID())) {
 			fail("Discarded document should still be there since it's not yet discarded");
 		}
 		
@@ -331,7 +333,7 @@ public class MemoryDocumentIOTest {
 		if(indb.hasContentField("nullfield")) {
 			fail("Null field was persisted in database on insert");
 		}
-		Assert.assertEquals("value", indb.getContentField("field"));
+		assertEquals("value", indb.getContentField("field"));
 		
 		md.putContentField("field", null);
 		

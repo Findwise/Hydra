@@ -39,21 +39,6 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 * more clever.
 	 */
 	Collection<DatabaseDocument<T>> getAndTag(DatabaseQuery<T> query, int n, String ... tag);
-	
-	/**
-	 * Calls getAndTagRecurring(DatabaseQuery query, String tag, int
-	 * intervalMillis) with a default value specified by the implementing class.
-	 */
-//	DatabaseDocument<T> getAndTagRecurring(DatabaseQuery<T> query, String tag);
-
-	/**
-	 * Functionally the same as getAndTag(), but instead of rejecting all
-	 * documents that have been tagged by the supplied tag, it will return them,
-	 * should <code>intervalMillis</code> be less than the less than the time
-	 * elapsed since the document was last tagged.
-	 */
-//	DatabaseDocument<T> getAndTagRecurring(DatabaseQuery<T> query, String tag,
-//			int intervalMillis);
 
 	/**
 	 * Upon returning, will have updated the document with the specified ID with
@@ -71,7 +56,6 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 * 
 	 * @param id
 	 * @param tag
-	 * @return
 	 */
 	boolean markTouched(DocumentID<T> id, String tag);
 
@@ -101,7 +85,6 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 *            the document to discard
 	 * @param stage
 	 *            the name of the stage that discarded this document.
-	 * @return
 	 */
 	boolean markDiscarded(DatabaseDocument<T> d, String stage);
 	
@@ -117,7 +100,6 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 *            the document to fail
 	 * @param stage
 	 *            the name of the stage that discarded this document.
-	 * @return
 	 */
 	boolean markFailed(DatabaseDocument<T> d, String stage);
 
@@ -138,7 +120,6 @@ public interface DocumentWriter<T extends DatabaseType> {
 	 *            the document to mark as pending
 	 * @param stage
 	 *            the stage marking the document
-	 * @return
 	 */
 	boolean markPending(DatabaseDocument<T> d, String stage);
 

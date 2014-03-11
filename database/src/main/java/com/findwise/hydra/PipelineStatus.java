@@ -19,7 +19,7 @@ public interface PipelineStatus<T extends DatabaseType> {
 	/**
 	 * Set whether or not to discard old documents.
 	 * 
-	 * @param discard
+	 * @param discardOld
 	 */
 	void setDiscardOldDocuments(boolean discardOld);
 	
@@ -28,7 +28,7 @@ public interface PipelineStatus<T extends DatabaseType> {
 	/**
 	 * If set to discard old documents, this dictates how many to keep.
 	 * 
-	 * @param number
+	 * @param numberToKeep
 	 */
 	void setDiscardedToKeep(long numberToKeep);
 	
