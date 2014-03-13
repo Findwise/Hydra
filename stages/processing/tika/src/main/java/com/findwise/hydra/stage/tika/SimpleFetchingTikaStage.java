@@ -20,6 +20,28 @@ import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
 import com.findwise.hydra.stage.tika.utils.TikaUtils;
 
+/**
+ * Downloads content which should be parsed by Tika. A pattern is given which 
+ * points out all the fields containing URLs to download and parsed.
+ * 
+ * Notice that the stage will add a prefix to all parsed fields. The prefix has 
+ * the following format FIRST_CAPTURING_CROUP + _ + PARSED_FIELD_NAME
+ * 
+ * e.g. If urlFieldPattern is set to crawl_(url) all parsed fields from tika 
+ * will start with url_.
+ * 
+ * Sample configuration:
+ {@code 
+ {
+   "stageClass": "com.findwise.hydra.stage.tika.SimpleFetchingTikaStage",
+   "query": {
+     "equals":{"type": "file" },
+     "touched":{"set-internal-type": true}
+   }, 
+   "urlFieldPattern" : "(url)"   
+  }  
+  }
+  */
 @Stage(description = "A stage that fetches the content from a given url and appends it the the document")
 public class SimpleFetchingTikaStage extends AbstractProcessStage {
     private static Logger logger = LoggerFactory.getLogger(SimpleFetchingTikaStage.class);
