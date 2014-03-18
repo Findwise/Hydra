@@ -351,14 +351,15 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		}
 		DBObject update = new BasicDBObject();
 		List<String> tags = new ArrayList<String>();
+		
 		for(String t : tag) {
 			update.put(MongoDocument.METADATA_KEY + "." + DatabaseDocument.FETCHED_METADATA_TAG + "." + t, new Date());
 			tags.add(t);
 		}
-		update.put(MongoDocument.METADATA_KEY + "." + MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST, tags);
 
 		DBObject dbo = getUpdateObject(update);
-
+		dbo.put("$addToSet", new BasicDBObject(MongoDocument.METADATA_KEY + "." + MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST,new BasicDBObject("$each",tags)));
+		
 		return findAndModify(mq.toDBObject(), dbo);
 	}
 	
@@ -626,7 +627,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	}
 	
 	private MongoDocument findAndModify(DBObject query, DBObject modification) {
-		DBObject c = documents.findAndModify(query, modification);
+		DBObject c = documents.findAndModify( query, null, null, false, modification, true, false );
 		
 		if(c==null) {
 			return null;
