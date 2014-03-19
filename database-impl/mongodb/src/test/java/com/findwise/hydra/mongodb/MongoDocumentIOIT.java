@@ -3,7 +3,6 @@ package com.findwise.hydra.mongodb;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -21,7 +20,6 @@ import java.util.Random;
 
 import org.apache.commons.io.IOUtils;
 import org.bson.types.ObjectId;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
