@@ -3,6 +3,7 @@ package com.findwise.hydra.net;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
+import com.findwise.hydra.local.HttpEndpointConstants;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpException;
@@ -20,7 +21,6 @@ import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.Document;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.net.RESTTools.Method;
 
 public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler {
@@ -44,21 +44,21 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
         String requestContent = EntityUtils.toString(requestEntity);
         long tostring = System.currentTimeMillis();
 
-        String stage = RESTTools.getParam(request, RemotePipeline.STAGE_PARAM);
+        String stage = RESTTools.getParam(request, HttpEndpointConstants.STAGE_PARAM);
         if(stage==null) {
-            HttpResponseWriter.printMissingParameter(response, RemotePipeline.STAGE_PARAM);
+            HttpResponseWriter.printMissingParameter(response, HttpEndpointConstants.STAGE_PARAM);
             return;
         }
 
-        String partial = RESTTools.getParam(request, RemotePipeline.PARTIAL_PARAM);
+        String partial = RESTTools.getParam(request, HttpEndpointConstants.PARTIAL_PARAM);
         if(partial==null) {
-            HttpResponseWriter.printMissingParameter(response, RemotePipeline.PARTIAL_PARAM);
+            HttpResponseWriter.printMissingParameter(response, HttpEndpointConstants.PARTIAL_PARAM);
             return;
         }
 
-        String norelease = RESTTools.getParam(request, RemotePipeline.NORELEASE_PARAM);
+        String norelease = RESTTools.getParam(request, HttpEndpointConstants.NORELEASE_PARAM);
         if(norelease==null) {
-            HttpResponseWriter.printMissingParameter(response, RemotePipeline.NORELEASE_PARAM);
+            HttpResponseWriter.printMissingParameter(response, HttpEndpointConstants.NORELEASE_PARAM);
             return;
         }
 
@@ -159,13 +159,13 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
     @Override
     public boolean supports(HttpRequest request) {
         return RESTTools.getMethod(request) == Method.POST
-                && RemotePipeline.WRITE_DOCUMENT_URL.equals(RESTTools
+                && HttpEndpointConstants.WRITE_DOCUMENT_URL.equals(RESTTools
                 .getBaseUrl(request));
     }
 
     @Override
     public String[] getSupportedUrls() {
-        return new String[] { RemotePipeline.WRITE_DOCUMENT_URL };
+        return new String[] { HttpEndpointConstants.WRITE_DOCUMENT_URL };
     }
 
 }

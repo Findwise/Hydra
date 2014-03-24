@@ -2,9 +2,9 @@ package com.findwise.hydra;
 
 import java.io.IOException;
 
+import com.findwise.hydra.local.HttpRemotePipeline;
 import org.apache.http.HttpException;
 
-import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.RemotePipeline;
 
 public class FlowCheck {
@@ -18,7 +18,7 @@ public class FlowCheck {
 	
 	public void postDocuments(int numberToPost) throws JsonException, IOException, HttpException {
 
-		RemotePipeline rp = new RemotePipeline("insertStage");
+		RemotePipeline rp = new HttpRemotePipeline("insertStage");
 		for(int i=0; i<numberToPost; i++) {
 			rp.saveFull(LocalDocumentFactory.getRandomStringDocument("in", "id", "x", "y", "z", "a", "b", "c", "d", "e", "f"));
 		}

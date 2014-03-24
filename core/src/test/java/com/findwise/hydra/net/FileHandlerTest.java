@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 import java.io.InputStream;
 import java.util.List;
 
+import com.findwise.hydra.local.HttpRemotePipeline;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +38,7 @@ public class FileHandlerTest {
 		MemoryDocument testDoc = new MemoryDocument();
 		mc.getDocumentWriter().insert(testDoc);
 		
-		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
+		RemotePipeline rp = new HttpRemotePipeline("localhost", server.getPort(), "stage");
 		
 		String content = "adsafgoaiuhgahgo\ndasdas";
 		String fileName = "test.txt";
@@ -63,7 +64,7 @@ public class FileHandlerTest {
 	
 	@Test
 	public void testFileList() throws Exception {		
-		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
+		RemotePipeline rp = new HttpRemotePipeline("localhost", server.getPort(), "stage");
 		if(rp.getFileNames(new LocalDocumentID(""))!=null) {
 			fail("Got filenames for non-existant document");
 		}
@@ -102,7 +103,7 @@ public class FileHandlerTest {
 	
 	@Test
 	public void testGetFile() throws Exception {		
-		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
+		RemotePipeline rp = new HttpRemotePipeline("localhost", server.getPort(), "stage");
 		if(rp.getFile("id", new LocalDocumentID("file"))!=null) {
 			fail("Got non-null for non-existant document and non-existant file");
 		}
@@ -143,7 +144,7 @@ public class FileHandlerTest {
 	
 	@Test
 	public void testDeleteFile() throws Exception {		
-		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
+		RemotePipeline rp = new HttpRemotePipeline("localhost", server.getPort(), "stage");
 		if(rp.deleteFile("name", new LocalDocumentID("id"))) {
 			fail("Got positive response for non-existant document and non-existant file");
 		}

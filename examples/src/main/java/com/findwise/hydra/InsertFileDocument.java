@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import com.findwise.hydra.local.HttpRemotePipeline;
 import org.apache.http.HttpException;
 
 import com.findwise.hydra.local.Local;
@@ -20,10 +21,10 @@ public class InsertFileDocument {
 	}
 	
 	public void postDocuments(int numberToPost) throws JsonException, IOException, HttpException, URISyntaxException {
-		RemotePipeline rp = new RemotePipeline("insertStage");
+		RemotePipeline rp = new HttpRemotePipeline("insertStage");
 		for(int i=0; i<numberToPost; i++) {
 			rp.saveFull(LocalDocumentFactory.getRandomStringDocument("in", "id"));
-			RemotePipeline rp2 = new RemotePipeline("fileAdder");
+			RemotePipeline rp2 = new HttpRemotePipeline("fileAdder");
 			LocalDocument ld = rp2.getDocument(new LocalQuery());
 			File f = getFile();
 			FileInputStream fis = new FileInputStream(f);

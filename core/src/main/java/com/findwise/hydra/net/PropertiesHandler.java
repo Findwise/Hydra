@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.findwise.hydra.local.HttpEndpointConstants;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -16,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.Pipeline;
 import com.findwise.hydra.PipelineReader;
-import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.stage.GroupStarter;
 
 public class PropertiesHandler<T extends DatabaseType> implements ResponsibleHandler {
@@ -31,7 +31,7 @@ public class PropertiesHandler<T extends DatabaseType> implements ResponsibleHan
     @Override
     public void handle(HttpRequest request, HttpResponse response, HttpContext context)
             throws HttpException, IOException {
-        if(RESTTools.getBaseUrl(request).equals(RemotePipeline.GET_PROPERTIES_URL)) {
+        if(RESTTools.getBaseUrl(request).equals(HttpEndpointConstants.GET_PROPERTIES_URL)) {
             getPropetries(request, response, context);
         } else if(RESTTools.getBaseUrl(request).equals(GroupStarter.GET_STAGES_URL)) {
             getStages(request, response, context);
@@ -66,7 +66,7 @@ public class PropertiesHandler<T extends DatabaseType> implements ResponsibleHan
         logger.debug("Received getProperties()-request for stage: "+stage);
 
         if(stage==null) {
-            HttpResponseWriter.printMissingParameter(response, RemotePipeline.STAGE_PARAM);
+            HttpResponseWriter.printMissingParameter(response, HttpEndpointConstants.STAGE_PARAM);
             return;
         }
 
@@ -84,12 +84,12 @@ public class PropertiesHandler<T extends DatabaseType> implements ResponsibleHan
 
     @Override
     public boolean supports(HttpRequest request) {
-        return RESTTools.isGet(request) && (RESTTools.getBaseUrl(request).equals(RemotePipeline.GET_PROPERTIES_URL) || RESTTools.getBaseUrl(request).equals(GroupStarter.GET_STAGES_URL));
+        return RESTTools.isGet(request) && (RESTTools.getBaseUrl(request).equals(HttpEndpointConstants.GET_PROPERTIES_URL) || RESTTools.getBaseUrl(request).equals(GroupStarter.GET_STAGES_URL));
     }
 
     @Override
     public String[] getSupportedUrls() {
-        return new String[] {RemotePipeline.GET_PROPERTIES_URL, GroupStarter.GET_STAGES_URL};
+        return new String[] {HttpEndpointConstants.GET_PROPERTIES_URL, GroupStarter.GET_STAGES_URL};
     }
 
 }

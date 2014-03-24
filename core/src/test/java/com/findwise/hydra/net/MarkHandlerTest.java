@@ -1,5 +1,6 @@
 package com.findwise.hydra.net;
 
+import com.findwise.hydra.local.HttpRemotePipeline;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,7 +28,7 @@ public class MarkHandlerTest {
 	
 	@Test
 	public void testMarkPersistance() throws Exception {
-		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "x");
+		RemotePipeline rp = new HttpRemotePipeline("localhost", server.getPort(), "x");
 		
 		LocalDocument doc = new LocalDocument();
 

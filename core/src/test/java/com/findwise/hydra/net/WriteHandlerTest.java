@@ -7,6 +7,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.findwise.hydra.local.HttpRemotePipeline;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,7 +51,7 @@ public class WriteHandlerTest {
 		
 		when(dbdoc.getID()).thenReturn(null);
 		
-		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
+		RemotePipeline rp = new HttpRemotePipeline("localhost", server.getPort(), "stage");
 		LocalDocument ld = new LocalDocument();
 		
 		boolean result = rp.saveFull(ld);
@@ -75,7 +76,7 @@ public class WriteHandlerTest {
 		when(dbdoc.getID()).thenReturn(id);
 		when(reader.getDocumentById(id)).thenReturn(dbdoc);
 		
-		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
+		RemotePipeline rp = new HttpRemotePipeline("localhost", server.getPort(), "stage");
 		LocalDocument ld = new LocalDocument();
 		
 		boolean result = rp.saveFull(ld);

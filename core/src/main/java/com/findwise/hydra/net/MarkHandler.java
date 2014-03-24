@@ -2,6 +2,7 @@ package com.findwise.hydra.net;
 
 import java.io.IOException;
 
+import com.findwise.hydra.local.HttpEndpointConstants;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpException;
@@ -18,7 +19,6 @@ import com.findwise.hydra.DatabaseDocument;
 import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.local.RemotePipeline;
 
 public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
     private enum Mark {
@@ -43,9 +43,9 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
                 .getEntity();
         String requestContent = EntityUtils.toString(requestEntity);
         long tostring = System.currentTimeMillis();
-        String stage = RESTTools.getParam(request, RemotePipeline.STAGE_PARAM);
+        String stage = RESTTools.getParam(request, HttpEndpointConstants.STAGE_PARAM);
         if (stage == null) {
-            HttpResponseWriter.printMissingParameter(response, RemotePipeline.STAGE_PARAM);
+            HttpResponseWriter.printMissingParameter(response, HttpEndpointConstants.STAGE_PARAM);
             return;
         }
 
@@ -84,13 +84,13 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
 
     private Mark getMark(HttpRequest request) {
         String uri = RESTTools.getBaseUrl(request);
-        if (uri.equals(RemotePipeline.PROCESSED_DOCUMENT_URL)) {
+        if (uri.equals(HttpEndpointConstants.PROCESSED_DOCUMENT_URL)) {
             return Mark.PROCESSED;
-        } else if (uri.equals(RemotePipeline.PENDING_DOCUMENT_URL)) {
+        } else if (uri.equals(HttpEndpointConstants.PENDING_DOCUMENT_URL)) {
             return Mark.PENDING;
-        } else if (uri.equals(RemotePipeline.DISCARDED_DOCUMENT_URL)) {
+        } else if (uri.equals(HttpEndpointConstants.DISCARDED_DOCUMENT_URL)) {
             return Mark.DISCARDED;
-        } else if (uri.equals(RemotePipeline.FAILED_DOCUMENT_URL)) {
+        } else if (uri.equals(HttpEndpointConstants.FAILED_DOCUMENT_URL)) {
             return Mark.FAILED;
         }
         return null;
@@ -124,10 +124,10 @@ public class MarkHandler<T extends DatabaseType> implements ResponsibleHandler {
 
     @Override
     public String[] getSupportedUrls() {
-        return new String[] { RemotePipeline.DISCARDED_DOCUMENT_URL,
-                RemotePipeline.FAILED_DOCUMENT_URL,
-                RemotePipeline.PROCESSED_DOCUMENT_URL,
-                RemotePipeline.PENDING_DOCUMENT_URL };
+        return new String[] { HttpEndpointConstants.DISCARDED_DOCUMENT_URL,
+                HttpEndpointConstants.FAILED_DOCUMENT_URL,
+                HttpEndpointConstants.PROCESSED_DOCUMENT_URL,
+                HttpEndpointConstants.PENDING_DOCUMENT_URL };
     }
 
 }

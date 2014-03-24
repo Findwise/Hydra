@@ -29,9 +29,9 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class RemotePipelineTest {
+public class HttpRemotePipelineTest {
 
-	RemotePipeline rp;
+	HttpRemotePipeline rp;
 
 	LocalDocument doc;
 
@@ -44,16 +44,16 @@ public class RemotePipelineTest {
 
 	@Before
 	public void setUp() {
-		rp = new RemotePipeline(mockHost, mockPort, stageName, false);
+		rp = new HttpRemotePipeline(mockHost, mockPort, stageName, false);
 		doc = new LocalDocument();
 		doc.setID(new LocalDocumentID("testdoc"));
 	}
 
 	@Test
 	public void testGetFileNames() throws IOException {
-		String fileUrl = "/" + RemotePipeline.FILE_URL
-				+ "?" + RemotePipeline.STAGE_PARAM + "=" + stageName
-				+ "&" + RemotePipeline.DOCID_PARAM + "=" + URLEncoder.encode(doc.getID().toJSON(), "UTF-8");
+		String fileUrl = "/" + HttpEndpointConstants.FILE_URL
+				+ "?" + HttpEndpointConstants.STAGE_PARAM + "=" + stageName
+				+ "&" + HttpEndpointConstants.DOCID_PARAM + "=" + URLEncoder.encode(doc.getID().toJSON(), "UTF-8");
 
 		stubFor(get(urlEqualTo(fileUrl)).willReturn(aResponse().withBody("[\"file1\", \"file2\"]")));
 
@@ -87,9 +87,9 @@ public class RemotePipelineTest {
 		testFiles.put("file1", "file1 contents".getBytes(encoding));
 		testFiles.put("file2", "contents of file2".getBytes(encoding));
 
-		String fileNamesUrl = "/" + RemotePipeline.FILE_URL
-				+ "?" + RemotePipeline.STAGE_PARAM + "=" + stageName
-				+ "&" + RemotePipeline.DOCID_PARAM + "=" + URLEncoder.encode(doc.getID().toJSON(), "UTF-8");
+		String fileNamesUrl = "/" + HttpEndpointConstants.FILE_URL
+				+ "?" + HttpEndpointConstants.STAGE_PARAM + "=" + stageName
+				+ "&" + HttpEndpointConstants.DOCID_PARAM + "=" + URLEncoder.encode(doc.getID().toJSON(), "UTF-8");
 
 		stubFor(get(urlEqualTo(fileNamesUrl)).willReturn(aResponse().withBody("[\"file2\", \"file1\"]")));
 
@@ -115,10 +115,10 @@ public class RemotePipelineTest {
 	}
 
 	private void stubFile(String fileName, LocalDocumentID docId, byte[] content, Date date, String encoding, String mimetype) throws UnsupportedEncodingException {
-		String fileUrl = "/" + RemotePipeline.FILE_URL
-				+ "?" + RemotePipeline.STAGE_PARAM + "=" + stageName
-				+ "&" + RemotePipeline.FILENAME_PARAM + "=" + fileName
-				+ "&" + RemotePipeline.DOCID_PARAM + "=" + URLEncoder.encode(docId.toJSON(), "UTF-8");
+		String fileUrl = "/" + HttpEndpointConstants.FILE_URL
+				+ "?" + HttpEndpointConstants.STAGE_PARAM + "=" + stageName
+				+ "&" + HttpEndpointConstants.FILENAME_PARAM + "=" + fileName
+				+ "&" + HttpEndpointConstants.DOCID_PARAM + "=" + URLEncoder.encode(docId.toJSON(), "UTF-8");
 
 		Map<String, Object> fileMap = new HashMap<String, Object>();
 		fileMap.put("uploadDate", date);

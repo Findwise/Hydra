@@ -8,6 +8,7 @@ import java.net.URLDecoder;
 import java.util.Date;
 import java.util.Map;
 
+import com.findwise.hydra.local.HttpEndpointConstants;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.SerializationException;
 import org.apache.http.HttpEntity;
@@ -28,7 +29,6 @@ import com.findwise.hydra.DocumentFile;
 import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.SerializationUtils;
-import com.findwise.hydra.local.RemotePipeline;
 
 public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 
@@ -46,7 +46,7 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
         if(RESTTools.isPost(request)) {
             handleSaveFile(request, response);
         } else if (RESTTools.isGet(request)) {
-            if(RESTTools.getParam(request, RemotePipeline.FILENAME_PARAM)!=null) {
+            if(RESTTools.getParam(request, HttpEndpointConstants.FILENAME_PARAM)!=null) {
                 handleGetFile(request, response);
             } else {
                 handleGetFilenames(request, response);
@@ -58,12 +58,12 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 
     @Override
     public boolean supports(HttpRequest request) {
-        return (RESTTools.isGet(request) || RESTTools.isPost(request) || RESTTools.isDelete(request)) && RESTTools.getBaseUrl(request).equals(RemotePipeline.FILE_URL);
+        return (RESTTools.isGet(request) || RESTTools.isPost(request) || RESTTools.isDelete(request)) && RESTTools.getBaseUrl(request).equals(HttpEndpointConstants.FILE_URL);
     }
 
     @Override
     public String[] getSupportedUrls() {
-        return new String[] { RemotePipeline.FILE_URL };
+        return new String[] { HttpEndpointConstants.FILE_URL };
     }
 
     private void handleSaveFile(HttpRequest request, HttpResponse response) {
@@ -182,15 +182,15 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 
     private Tuple getTuple(HttpRequest request, HttpResponse response) {
         Tuple tuple = new Tuple();
-        tuple.stage = RESTTools.getParam(request, RemotePipeline.STAGE_PARAM);
+        tuple.stage = RESTTools.getParam(request, HttpEndpointConstants.STAGE_PARAM);
         if(tuple.stage==null) {
-            HttpResponseWriter.printMissingParameter(response, RemotePipeline.STAGE_PARAM);
+            HttpResponseWriter.printMissingParameter(response, HttpEndpointConstants.STAGE_PARAM);
             return null;
         }
 
-        String rawparam = RESTTools.getParam(request, RemotePipeline.DOCID_PARAM);
+        String rawparam = RESTTools.getParam(request, HttpEndpointConstants.DOCID_PARAM);
         if(rawparam==null) {
-            HttpResponseWriter.printMissingParameter(response, RemotePipeline.DOCID_PARAM);
+            HttpResponseWriter.printMissingParameter(response, HttpEndpointConstants.DOCID_PARAM);
             return null;
         }
         try {
@@ -199,7 +199,7 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
 
         }
         if(tuple.docid==null) {
-            HttpResponseWriter.printUnhandledException(response, new SerializationException("Unable to deserialize the parameter "+RemotePipeline.DOCID_PARAM));
+            HttpResponseWriter.printUnhandledException(response, new SerializationException("Unable to deserialize the parameter "+ HttpEndpointConstants.DOCID_PARAM));
             return null;
         }
 
@@ -217,9 +217,9 @@ public class FileHandler<T extends DatabaseType> implements ResponsibleHandler {
         triple.docid = tuple.docid;
         triple.stage = tuple.stage;
 
-        triple.fileName = RESTTools.getParam(request, RemotePipeline.FILENAME_PARAM);
+        triple.fileName = RESTTools.getParam(request, HttpEndpointConstants.FILENAME_PARAM);
         if(triple.fileName==null) {
-            HttpResponseWriter.printMissingParameter(response, RemotePipeline.FILENAME_PARAM);
+            HttpResponseWriter.printMissingParameter(response, HttpEndpointConstants.FILENAME_PARAM);
             return null;
         }
 

@@ -95,7 +95,7 @@ public class RemotePipelineIT {
 	
 	@Test
 	public void testPersistedAction() {
-		RemotePipeline rp = new RemotePipeline("127.0.0.1", server.getPort(), "stage1");
+		RemotePipeline rp = new HttpRemotePipeline("127.0.0.1", server.getPort(), "stage1");
 		try {
 			LocalDocument ld = rp.getDocument(new LocalQuery());
 			if(ld.getAction()!=test.getAction()) {
@@ -111,7 +111,7 @@ public class RemotePipelineIT {
 
 	@Test
 	public void testRemotePipeline() {
-		RemotePipeline rp = new RemotePipeline("127.0.0.1", server.getPort(), "stage1");
+		RemotePipeline rp = new HttpRemotePipeline("127.0.0.1", server.getPort(), "stage1");
 		try {
 			rp.getDocument(new LocalQuery());
 		}
@@ -129,7 +129,7 @@ public class RemotePipelineIT {
 
 	@Test
 	public void testGetDocument() throws Exception {
-		RemotePipeline rp1 = new RemotePipeline("127.0.0.1", server.getPort(), "stage1");
+		RemotePipeline rp1 = new HttpRemotePipeline("127.0.0.1", server.getPort(), "stage1");
 		LocalDocument d = rp1.getDocument(new LocalQuery());
 		if(d==null) {
 			fail("getDocument returned null");
@@ -143,7 +143,7 @@ public class RemotePipelineIT {
 			fail("Got document, but was expecting null. Both documents in DB should have been tagged by stage1 already. This was "+d3.getID()+", previous were "+d.getID()+" and "+d2.getID());
 		}
 		
-		RemotePipeline rp2 = new RemotePipeline("127.0.0.1", server.getPort(), "stage2");
+		RemotePipeline rp2 = new HttpRemotePipeline("127.0.0.1", server.getPort(), "stage2");
 		LocalQuery lq = new LocalQuery();
 		lq.requireContentFieldNotExists("name");
 		
@@ -155,7 +155,7 @@ public class RemotePipelineIT {
 
 	@Test
 	public void testSave() throws Exception {
-		RemotePipeline rp1 = new RemotePipeline("127.0.0.1", server.getPort(), "stage1");
+		RemotePipeline rp1 = new HttpRemotePipeline("127.0.0.1", server.getPort(), "stage1");
 		LocalDocument d1 = rp1.getDocument(new LocalQuery());
 		LocalDocument d2 = rp1.getDocument(new LocalQuery());
 		d1.putContentField("x", "y");
@@ -164,7 +164,7 @@ public class RemotePipelineIT {
 		d2.putContentField("x2", "z");
 		rp1.save(d2);
 
-		RemotePipeline rp2 = new RemotePipeline("127.0.0.1", server.getPort(), "stage2");
+		RemotePipeline rp2 = new HttpRemotePipeline("127.0.0.1", server.getPort(), "stage2");
 		LocalQuery query = new LocalQuery();
 		query.requireContentFieldExists("x");
 		LocalDocument x = rp2.getDocument(query);
@@ -184,7 +184,7 @@ public class RemotePipelineIT {
 	
 	@Test
 	public void testSaveWithoutId() throws Exception {
-		RemotePipeline rp2 = new RemotePipeline("127.0.0.1", server.getPort(), "stage2");
+		RemotePipeline rp2 = new HttpRemotePipeline("127.0.0.1", server.getPort(), "stage2");
 		
 		LocalDocument d = new LocalDocument();
 		d.putContentField("aField", "aValue");
@@ -196,7 +196,7 @@ public class RemotePipelineIT {
 	
 	@Test
 	public void testSaveIncorrectId() throws Exception {
-		RemotePipeline rp1 = new RemotePipeline("127.0.0.1", server.getPort(), "stage1");
+		RemotePipeline rp1 = new HttpRemotePipeline("127.0.0.1", server.getPort(), "stage1");
 		boolean res = rp1.save(new LocalDocument("{_id : 123}"));
 		if(res) {
 			fail("Save returned false even though it should fail -- that ID doesn't exist.");
@@ -212,9 +212,9 @@ public class RemotePipelineIT {
 	@Test
 	public void testSaveFull() throws Exception {
 		//Primary use case: Write an entirely new document to the database
-		RemotePipeline rp1 = new RemotePipeline("127.0.0.1", server.getPort(), "inputNode");
-		RemotePipeline rp2 = new RemotePipeline("127.0.0.1", server.getPort(), "stage");
-		RemotePipeline rp3 = new RemotePipeline("127.0.0.1", server.getPort(), "stage2");
+		RemotePipeline rp1 = new HttpRemotePipeline("127.0.0.1", server.getPort(), "inputNode");
+		RemotePipeline rp2 = new HttpRemotePipeline("127.0.0.1", server.getPort(), "stage");
+		RemotePipeline rp3 = new HttpRemotePipeline("127.0.0.1", server.getPort(), "stage2");
 		LocalDocument ld = new LocalDocument();
 		ld.putContentField("fieldName", "unique!");
 		ld.putContentField("status", "new");
@@ -269,8 +269,8 @@ public class RemotePipelineIT {
 	
 	@Test
 	public void testMarkProcessed() throws Exception {
-		RemotePipeline rp1 = new RemotePipeline("127.0.0.1", server.getPort(), "stage1");
-		RemotePipeline rp2 = new RemotePipeline("127.0.0.1", server.getPort(), "outputNode");
+		RemotePipeline rp1 = new HttpRemotePipeline("127.0.0.1", server.getPort(), "stage1");
+		RemotePipeline rp2 = new HttpRemotePipeline("127.0.0.1", server.getPort(), "outputNode");
 
 		LocalDocument d = rp2.getDocument(new LocalQuery());
 		if(!rp2.markProcessed(d)) {
@@ -287,8 +287,8 @@ public class RemotePipelineIT {
 	
 	@Test
 	public void testMarkPending() throws Exception {
-		RemotePipeline rp1 = new RemotePipeline("127.0.0.1", server.getPort(), "stage1");
-		RemotePipeline rp2 = new RemotePipeline("127.0.0.1", server.getPort(), "outputNode");
+		RemotePipeline rp1 = new HttpRemotePipeline("127.0.0.1", server.getPort(), "stage1");
+		RemotePipeline rp2 = new HttpRemotePipeline("127.0.0.1", server.getPort(), "outputNode");
 
 		LocalDocument d = rp2.getDocument(new LocalQuery());
 		if(!rp2.markPending(d)) {
@@ -305,8 +305,8 @@ public class RemotePipelineIT {
 	
 	@Test
 	public void testMarkDiscarded() throws Exception {
-		RemotePipeline rp = new RemotePipeline("127.0.0.1", server.getPort(), "testStage");
-		RemotePipeline rpOut = new RemotePipeline("127.0.0.1", server.getPort(), "outStage");
+		RemotePipeline rp = new HttpRemotePipeline("127.0.0.1", server.getPort(), "testStage");
+		RemotePipeline rpOut = new HttpRemotePipeline("127.0.0.1", server.getPort(), "outStage");
 		
 		LocalQuery lq = new LocalQuery();
 		LocalDocument testDoc = rp.getDocument(lq);
@@ -328,7 +328,7 @@ public class RemotePipelineIT {
 	
 	@Test
 	public void testMarkFailed() throws Exception {
-		RemotePipeline rp = new RemotePipeline("127.0.0.1", server.getPort(), "testStage");
+		RemotePipeline rp = new HttpRemotePipeline("127.0.0.1", server.getPort(), "testStage");
 		
 		LocalQuery lq = new LocalQuery();
 		LocalDocument testDoc = rp.getDocument(lq);
@@ -367,7 +367,7 @@ public class RemotePipelineIT {
 		MongoDocument testDoc = new MongoDocument();
 		dbc.getDocumentWriter().insert(testDoc);
 		
-		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
+		RemotePipeline rp = new HttpRemotePipeline("localhost", server.getPort(), "stage");
 		
 		String content = "xäöåx";
 
@@ -401,7 +401,7 @@ public class RemotePipelineIT {
 		MongoDocument testDoc = new MongoDocument();
 		testDoc.putContentField("field", "value");
 		dbc.getDocumentWriter().insert(testDoc);
-		RemotePipeline rp = new RemotePipeline("localhost", server.getPort(), "stage");
+		RemotePipeline rp = new HttpRemotePipeline("localhost", server.getPort(), "stage");
 		
 		LocalDocument ld = rp.getDocument(new LocalQuery());
 		assertTrue(ld.hasContentField("field"));
@@ -409,7 +409,7 @@ public class RemotePipelineIT {
 		
 		rp.save(ld);
 		
-		rp = new RemotePipeline("localhost", server.getPort(), "stage2");
+		rp = new HttpRemotePipeline("localhost", server.getPort(), "stage2");
 		ld = rp.getDocument(new LocalQuery());
 		assertFalse(ld.hasContentField("field"));
 	}

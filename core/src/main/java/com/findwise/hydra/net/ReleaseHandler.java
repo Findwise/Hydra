@@ -2,6 +2,7 @@ package com.findwise.hydra.net;
 
 import java.io.IOException;
 
+import com.findwise.hydra.local.HttpEndpointConstants;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpException;
@@ -18,7 +19,6 @@ import com.findwise.hydra.DatabaseType;
 import com.findwise.hydra.Document;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.net.RESTTools.Method;
 
 public class ReleaseHandler<T extends DatabaseType> implements ResponsibleHandler {
@@ -39,11 +39,11 @@ public class ReleaseHandler<T extends DatabaseType> implements ResponsibleHandle
         HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request)
                 .getEntity();
         String requestContent = EntityUtils.toString(requestEntity);
-        String stage = RESTTools.getParam(request, RemotePipeline.STAGE_PARAM);
+        String stage = RESTTools.getParam(request, HttpEndpointConstants.STAGE_PARAM);
 
         if (stage == null) {
             HttpResponseWriter.printMissingParameter(response,
-                    RemotePipeline.STAGE_PARAM);
+                    HttpEndpointConstants.STAGE_PARAM);
             return;
         }
 
@@ -71,13 +71,13 @@ public class ReleaseHandler<T extends DatabaseType> implements ResponsibleHandle
     @Override
     public boolean supports(HttpRequest request) {
         return RESTTools.getMethod(request) == Method.POST
-                && RemotePipeline.RELEASE_DOCUMENT_URL.equals(RESTTools
+                && HttpEndpointConstants.RELEASE_DOCUMENT_URL.equals(RESTTools
                 .getBaseUrl(request));
     }
 
     @Override
     public String[] getSupportedUrls() {
-        return new String[] { RemotePipeline.RELEASE_DOCUMENT_URL };
+        return new String[] { HttpEndpointConstants.RELEASE_DOCUMENT_URL };
     }
 
 }

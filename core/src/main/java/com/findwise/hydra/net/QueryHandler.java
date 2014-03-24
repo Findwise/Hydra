@@ -2,6 +2,7 @@ package com.findwise.hydra.net;
 
 import java.io.IOException;
 
+import com.findwise.hydra.local.HttpEndpointConstants;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpException;
@@ -19,7 +20,6 @@ import com.findwise.hydra.Document;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.StageManager;
 import com.findwise.hydra.local.LocalQuery;
-import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.net.RESTTools.Method;
 
 public class QueryHandler<T extends DatabaseType> implements ResponsibleHandler {
@@ -42,11 +42,11 @@ public class QueryHandler<T extends DatabaseType> implements ResponsibleHandler 
         HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request).getEntity();
         String requestContent = EntityUtils.toString(requestEntity);
         long tostring = System.currentTimeMillis();
-        String stage = RESTTools.getParam(request, RemotePipeline.STAGE_PARAM);
+        String stage = RESTTools.getParam(request, HttpEndpointConstants.STAGE_PARAM);
 
         if (stage == null) {
             HttpResponseWriter.printMissingParameter(response,
-                    RemotePipeline.STAGE_PARAM);
+                    HttpEndpointConstants.STAGE_PARAM);
             return;
         }
 
@@ -88,13 +88,13 @@ public class QueryHandler<T extends DatabaseType> implements ResponsibleHandler 
     @Override
     public boolean supports(HttpRequest request) {
         return RESTTools.getMethod(request) == Method.POST
-                && RemotePipeline.GET_DOCUMENT_URL.equals(RESTTools
+                && HttpEndpointConstants.GET_DOCUMENT_URL.equals(RESTTools
                 .getBaseUrl(request));
     }
 
     @Override
     public String[] getSupportedUrls() {
-        return new String[] { RemotePipeline.GET_DOCUMENT_URL };
+        return new String[] { HttpEndpointConstants.GET_DOCUMENT_URL };
     }
 
     private void reportQuery(String stage) {
