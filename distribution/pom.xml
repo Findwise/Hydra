@@ -41,8 +41,16 @@
 						<configuration>
 							<tasks>
 								<copy file="../core/target/hydra-core-jar-with-dependencies.jar" tofile="bin/hydra-core.jar" />
-								<copy file="../core/target/resource.properties" tofile="bin/resource.properties" />
+								<copy file="../core/target/resource.properties" tofile="bin/hydra-core.properties" />
+								<copy file="../admin-service/target/hydra.war" tofile="bin/hydra-admin-service.war" />
+								<copy file="../admin-service/target/admin-service.properties" tofile="bin/hydra-admin-service.properties" />
 								<copy file="../tools/inserter/target/hydra-inserter-jar-with-dependencies.jar" tofile="tools/hydra-inserter.jar" />
+								<copy file="../stages/processing/basic/target/hydra-basic-stages-jar-with-dependencies.jar" tofile="lib/hydra-basic-stages-jar-with-dependencies.jar" />
+								<copy file="../stages/processing/tika/target/hydra-tika-stages-jar-with-dependencies.jar" tofile="lib/hydra-tika-stages-jar-with-dependencies.jar" />
+								<copy file="../stages/processing/web/target/hydra-web-stages-jar-with-dependencies.jar" tofile="lib/hydra-web-stages-jar-with-dependencies.jar" />
+								<copy file="../stages/out/elasticsearch-out/target/hydra-elasticsearch-out-stage-jar-with-dependencies.jar" tofile="lib/hydra-elasticsearch-out-stage-jar-with-dependencies.jar" />
+								<copy file="../stages/out/solr-out/target/hydra-solr-out-stage-jar-with-dependencies.jar" tofile="lib/hydra-solr-out-stage-jar-with-dependencies.jar" />
+								<copy file="../stages/out/solr-out-3.6/target/hydra-solr-3-out-stage-jar-with-dependencies.jar" tofile="lib/hydra-solr-3-out-stage-jar-with-dependencies.jar" />
 							</tasks>
 						</configuration>
 						<goals>
