@@ -5,10 +5,12 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.http.HttpEntity;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.Parser;
@@ -23,6 +25,10 @@ import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
 import com.findwise.hydra.stage.tika.utils.TikaUtils;
+import com.findwise.utils.http.AuthMethod;
+import com.findwise.utils.http.HttpFetchConfigurationBuilder;
+import com.findwise.utils.http.HttpFetchException;
+import com.findwise.utils.http.HttpFetcher;
 
 @Stage(description = "A stage that fetches the content from a given url and appends it the the document")
 public class SimpleFetchingTikaStage extends AbstractProcessStage {
@@ -31,19 +37,30 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 	@Parameter(required = true, description = "The field name pattern that should be matched where " +
 			"urls will be found. First group plus \"_\" will be used as field prefix. Example:" +
 			" \"attachment_(.*)\" will match for example attachment_a and will use \"a_\" as prefix")
-	public String urlFieldPattern = null;
+	private String urlFieldPattern = null;
 
 	@Parameter(name = "addMetaData", description = "Add the metadata to the document or not. Defaults to true")
-	public boolean addMetaData = true;
+	private boolean addMetaData = true;
 
 	@Parameter(description = "Set to true, will also do language detection and add the field 'prefix_language' according to the prefix rules. Defaults to true")
-	public boolean addLanguage = true;
+	private boolean addLanguage = true;
 
 	@Parameter(description = "Username for basic authentication.")
-	public String username = null;
+	private String username = null;
 
 	@Parameter(description = "Password for basic authentication.")
-	public String password = null;
+	private String password = null;
+
+	@Parameter
+	private AuthMethod authMethod = AuthMethod.NONE;
+
+	@Parameter
+	private String formBasedLoginUrl = null;
+
+	@Parameter
+	private Map<String, String> formValues = Collections.emptyMap();
+
+	private HttpFetcher httpFetcher;
 
 	private Parser parser = new AutoDetectParser();
 
@@ -58,8 +75,20 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 				for (int i = 1; it.hasNext(); i++) {
 					String num = (i > 1) ? "" + i : "";
 					URL url = it.next();
+					final InputStream inputStream;
+					if (httpFetcher.isSupportedScheme(url.toURI().getScheme())) {
+						HttpEntity responseEntity;
+						try {
+							responseEntity = httpFetcher.fetch(
+									url.toExternalForm(), "*/*");
+						} catch (HttpFetchException e) {
+							throw new ProcessException(e);
+						}
+						inputStream = responseEntity.getContent();
+					} else {
 					URLConnection connection = createConnection(url);
-					final InputStream inputStream = connection.getInputStream();
+						inputStream = connection.getInputStream();
+					}
 					try {
 					TikaUtils.enrichDocumentWithFileContents(doc, field + num
 							+ "_", inputStream, parser,
@@ -86,7 +115,7 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 	private URLConnection createConnection(URL url) throws ProcessException,
 			IOException {
 		URLConnection connection = url.openConnection();
-		if (useBasicAuthentication()) {
+		if (authMethod == AuthMethod.BASIC) {
 			String authString = username + ":" + password;
 			byte[] authEncBytes = Base64.encodeBase64(authString
 					.getBytes("UTF-8"));
@@ -96,24 +125,24 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 		return connection;
 	}
 
-	private boolean useBasicAuthentication() {
-		return username != null && password != null;
-	}
-
 	@Override
 	public void init() throws RequiredArgumentMissingException {
 		if (urlFieldPattern == null) {
 			throw new RequiredArgumentMissingException(
 					"Missing parameter urlFieldPattern");
 		}
+		HttpFetchConfigurationBuilder configurationBuilder = new HttpFetchConfigurationBuilder();
+		configurationBuilder.setAuthMethod(authMethod);
+		configurationBuilder.setBasicAuthUsername(username);
+		configurationBuilder.setBasicAuthPassword(password);
+		configurationBuilder.setFormBasedLoginUrl(formBasedLoginUrl);
+		configurationBuilder.setFormValues(formValues);
+		configurationBuilder.setRetries(0);
+		httpFetcher = new HttpFetcher(configurationBuilder.build());
 		logger.debug("Initiated SimpleTikaStage");
 	}
 
 	/* For testing purposes */
-
-	void setUrlFieldPattern(String urlFieldPattern) {
-		this.urlFieldPattern = urlFieldPattern;
-	}
 
 	void setParser(Parser parser) {
 		this.parser = parser;
