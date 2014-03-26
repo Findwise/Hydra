@@ -13,9 +13,9 @@
         <cglib.version>2.2.2</cglib.version>
     </properties>
 
-	<build>
-		<finalName>hydra</finalName>
-		<plugins>
+    <build>
+        <finalName>hydra</finalName>
+        <plugins>
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.4</version>
@@ -34,19 +34,19 @@
                     </execution>
                 </executions>
             </plugin>
-			<plugin>
-				<groupId>org.mortbay.jetty</groupId>
-				<artifactId>jetty-maven-plugin</artifactId>
-				<version>8.1.14.v20131031</version>
-				<configuration>
-					<scanIntervalSeconds>10</scanIntervalSeconds>
-					<webApp>
-						<contextPath>/hydra</contextPath>
-					</webApp>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+            <plugin>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <version>8.1.14.v20131031</version>
+                <configuration>
+                    <scanIntervalSeconds>10</scanIntervalSeconds>
+                    <webApp>
+                        <contextPath>/hydra</contextPath>
+                    </webApp>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencies>
         <dependency>
