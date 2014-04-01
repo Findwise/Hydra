@@ -7,6 +7,10 @@ import java.net.URLConnection;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.findwise.utils.tika.AttachmentParser;
+import com.findwise.utils.tika.FieldHelper;
+import com.findwise.utils.tika.ParsedAttachment;
+import com.findwise.utils.tika.UriParser;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.Parser;
@@ -18,7 +22,6 @@ import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
-import com.findwise.utils.tika.TikaUtils;
 
 /**
  * Downloads content which should be parsed by Tika. A pattern is given which 
@@ -67,19 +70,30 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 
 	@Override
 	public void process(LocalDocument doc) throws Exception {
-		Map<String, Object> urls = TikaUtils.getFieldMatchingPattern(doc,
-				urlFieldPattern);
+		Map<String, Object> urls = FieldHelper.getFieldMatchingPattern(doc.getContentMap(),
+                urlFieldPattern);
+        UriParser uriParser = new UriParser();
+        AttachmentParser attachmentParser = new AttachmentParser(parser);
 		for (String field : urls.keySet()) {
-			Iterator<URL> it = TikaUtils.getUrlsFromObject(urls.get(field)).iterator();
+			Iterator<URL> it = uriParser.getUrlsFromObject(urls.get(field)).iterator();
 			for (int i = 1; it.hasNext(); i++) {
 				String num = (i > 1) ? "" + i : "";
 				URL url = it.next();
 				URLConnection connection = createConnection(url);
 				final InputStream inputStream = connection.getInputStream();
 				try {
-					TikaUtils.enrichDocumentWithFileContents(doc, field + num
-							+ "_", inputStream, parser,
-							addMetaData, addLanguage);
+                    String prefix = field + num + "_";
+                    ParsedAttachment parsedAttachment = attachmentParser.parse(inputStream);
+
+                    if (addMetaData) {
+                        Map<String, Object> metadata = parsedAttachment.getMetadata();
+                        for (String metadataField : metadata.keySet()) {
+                            doc.putContentField(prefix + metadataField, metadata.get(metadataField));
+                        }
+                    }
+                    if (addLanguage) {
+                        doc.putContentField(prefix + "language", parsedAttachment.getLanguage());
+                    }
 				} finally {
 					inputStream.close();
 				}

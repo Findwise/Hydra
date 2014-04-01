@@ -2,7 +2,10 @@ package com.findwise.hydra.stage.tika;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
+import com.findwise.utils.tika.AttachmentParser;
+import com.findwise.utils.tika.ParsedAttachment;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.Parser;
@@ -14,7 +17,6 @@ import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.Stage;
-import com.findwise.utils.tika.TikaUtils;
 
 /**
  * @author jwestberg
@@ -34,7 +36,19 @@ public class TikaStage extends AbstractProcessStage {
 		List<String> files = doc.getFileNames();
 		for(String fileName : files) {
 			DocumentFile<Local> df = doc.getFile(fileName);
-			TikaUtils.enrichDocumentWithFileContents(doc, fileName.replace('.', '_')+"_", df.getStream(), parser, addMetaData, addLanguage);
+            String prefix = fileName.replace('.', '_') + "_";
+            AttachmentParser attachmentParser = new AttachmentParser(parser);
+            ParsedAttachment parsedAttachment = attachmentParser.parse(df.getStream());
+
+            if (addMetaData) {
+                Map<String, Object> metadata = parsedAttachment.getMetadata();
+                for (String metadataField : metadata.keySet()) {
+                    doc.putContentField(prefix + metadataField, metadata.get(metadataField));
+                }
+            }
+            if (addLanguage) {
+                doc.putContentField(prefix + "language", parsedAttachment.getLanguage());
+            }
 		}
 	}
 
