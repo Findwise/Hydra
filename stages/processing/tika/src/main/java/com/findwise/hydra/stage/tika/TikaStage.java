@@ -3,6 +3,8 @@ package com.findwise.hydra.stage.tika;
 import java.io.IOException;
 import java.util.List;
 
+import com.findwise.utils.tika.InputStreamParser;
+import com.findwise.utils.tika.ParsedData;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.Parser;
@@ -15,7 +17,6 @@ import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.Stage;
-import com.findwise.hydra.stage.tika.utils.TikaUtils;
 
 /**
  * @author jwestberg
@@ -33,10 +34,14 @@ public class TikaStage extends AbstractProcessStage {
 	@Override
 	public void process(LocalDocument doc) throws ProcessException { 
 		try {
+			DocumentParserHelper documentParserHelper = new DocumentParserHelper(addMetaData, addLanguage);
+			InputStreamParser inputStreamParser = new InputStreamParser(parser);
 			List<String> files = getRemotePipeline().getFileNames(doc.getID());
 			for(String fileName : files) {
 				DocumentFile<Local> df = getRemotePipeline().getFile(fileName, doc.getID());
-				TikaUtils.enrichDocumentWithFileContents(doc, fileName.replace('.', '_')+"_", df.getStream(), parser, addMetaData, addLanguage);
+				ParsedData parsedData = inputStreamParser.parse(df.getStream());
+				String prefix = fileName.replace('.', '_')+"_";
+				documentParserHelper.addParsedDataToDocument(parsedData, doc, prefix);
 			}
 		} catch (IOException e) {
 			throw new ProcessException("Failed opening or reading from stream", e);

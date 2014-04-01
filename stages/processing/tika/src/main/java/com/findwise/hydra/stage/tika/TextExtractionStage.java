@@ -2,19 +2,15 @@ package com.findwise.hydra.stage.tika;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import com.findwise.utils.tika.InputStreamParser;
+import com.findwise.utils.tika.ParsedData;
 import org.apache.tika.exception.TikaException;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.parser.AutoDetectParser;
-import org.apache.tika.parser.ParseContext;
-import org.apache.tika.parser.Parser;
-import org.apache.tika.sax.BodyContentHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -161,30 +157,21 @@ public class TextExtractionStage extends AbstractProcessStage {
 
 	private void enrichDocumentWithFileContents(LocalDocument doc, InputStream stream) throws IOException,
 			SAXException, TikaException {
-		Metadata metadata = new Metadata();
-		Parser parser = new AutoDetectParser();
-		ParseContext parseContext = new ParseContext();
-		parseContext.set(Parser.class, parser);
+		InputStreamParser inputStreamParser = new InputStreamParser();
+		ParsedData parsedData = inputStreamParser.parse(stream);
 
-		StringWriter textData = new StringWriter();
-		parser.parse(stream, new BodyContentHandler(textData), metadata, parseContext);
-
-		addTextToDocument(doc, textData);
-		addMetadataToDocument(doc, metadata);
+		addTextToDocument(doc, parsedData.getContent());
+		addMetadataToDocument(doc, parsedData.getMetadata());
 
 	}
 
-	void addTextToDocument(LocalDocument doc, StringWriter textData) {
-		doc.putContentField(contentField, textData.toString());
+	void addTextToDocument(LocalDocument doc, String textData) {
+		doc.putContentField(contentField, textData);
 	}
 
-	void addMetadataToDocument(LocalDocument doc, Metadata metadata) {
-		for (String name : metadata.names()) {
-			if (metadata.getValues(name).length > 1) {
-				doc.putContentField(metadataPrefix + name, Arrays.asList(metadata.getValues(name)));
-			} else {
-				doc.putContentField(metadataPrefix + name, metadata.get(name));
-			}
+	void addMetadataToDocument(LocalDocument doc, Map<String, Object> metadata) {
+		for (String name : metadata.keySet()) {
+			doc.putContentField(metadataPrefix + name, metadata.get(name));
 		}
 	}
 
