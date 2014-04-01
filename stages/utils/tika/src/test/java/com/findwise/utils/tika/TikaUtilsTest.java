@@ -1,4 +1,4 @@
-package com.findwise.hydra.stage.tika.utils;
+package com.findwise.utils.tika;
 
 
 import java.io.StringWriter;

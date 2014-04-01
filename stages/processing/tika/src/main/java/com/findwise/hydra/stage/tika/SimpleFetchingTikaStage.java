@@ -18,7 +18,7 @@ import com.findwise.hydra.stage.AbstractProcessStage;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
-import com.findwise.hydra.stage.tika.utils.TikaUtils;
+import com.findwise.utils.tika.TikaUtils;
 
 /**
  * Downloads content which should be parsed by Tika. A pattern is given which 
