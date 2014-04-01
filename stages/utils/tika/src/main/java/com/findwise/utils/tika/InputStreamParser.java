@@ -12,19 +12,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 
-public class AttachmentParser {
+public class InputStreamParser {
 
     private final Parser parser;
 
-    public AttachmentParser() {
+    public InputStreamParser() {
         parser = new AutoDetectParser();
     }
 
-    public AttachmentParser(Parser parser) {
+    public InputStreamParser(Parser parser) {
         this.parser = parser;
     }
 
-    public ParsedAttachment parse(InputStream stream) throws TikaException, SAXException, IOException {
+    public ParsedData parse(InputStream stream) throws TikaException, SAXException, IOException {
         Metadata metadata = new Metadata();
         ParseContext parseContext = new ParseContext();
         parseContext.set(Parser.class, parser);
@@ -32,6 +32,6 @@ public class AttachmentParser {
         parser.parse(stream, new BodyContentHandler(textData), metadata, parseContext);
         String content = textData.toString();
 
-        return new ParsedAttachment(content, metadata);
+        return new ParsedData(content, metadata);
     }
 }

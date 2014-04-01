@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * Wrapper for a parsed attachment
  */
-public class ParsedAttachment {
+public class ParsedData {
 
     private final String content;
 
@@ -18,7 +18,7 @@ public class ParsedAttachment {
 
     private final TextSanitizer textSanitizer;
 
-    public ParsedAttachment(String content, Metadata metadata) {
+    public ParsedData(String content, Metadata metadata) {
         this.content = content;
         this.metadata = metadata;
         this.textSanitizer = new TextSanitizer();

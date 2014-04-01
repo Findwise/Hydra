@@ -7,9 +7,9 @@ import java.net.URLConnection;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.findwise.utils.tika.AttachmentParser;
+import com.findwise.utils.tika.InputStreamParser;
 import com.findwise.utils.tika.FieldHelper;
-import com.findwise.utils.tika.ParsedAttachment;
+import com.findwise.utils.tika.ParsedData;
 import com.findwise.utils.tika.UriParser;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.tika.parser.AutoDetectParser;
@@ -73,7 +73,7 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 		Map<String, Object> urls = FieldHelper.getFieldMatchingPattern(doc.getContentMap(),
                 urlFieldPattern);
         UriParser uriParser = new UriParser();
-        AttachmentParser attachmentParser = new AttachmentParser(parser);
+        InputStreamParser inputStreamParser = new InputStreamParser(parser);
 		for (String field : urls.keySet()) {
 			Iterator<URL> it = uriParser.getUrlsFromObject(urls.get(field)).iterator();
 			for (int i = 1; it.hasNext(); i++) {
@@ -83,16 +83,17 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 				final InputStream inputStream = connection.getInputStream();
 				try {
                     String prefix = field + num + "_";
-                    ParsedAttachment parsedAttachment = attachmentParser.parse(inputStream);
+                    ParsedData parsedData = inputStreamParser.parse(inputStream);
+                    doc.putContentField(prefix + "content", parsedData.getContent());
 
                     if (addMetaData) {
-                        Map<String, Object> metadata = parsedAttachment.getMetadata();
+                        Map<String, Object> metadata = parsedData.getMetadata();
                         for (String metadataField : metadata.keySet()) {
                             doc.putContentField(prefix + metadataField, metadata.get(metadataField));
                         }
                     }
                     if (addLanguage) {
-                        doc.putContentField(prefix + "language", parsedAttachment.getLanguage());
+                        doc.putContentField(prefix + "language", parsedData.getLanguage());
                     }
 				} finally {
 					inputStream.close();
