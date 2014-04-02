@@ -72,6 +72,8 @@
                     </ignoredResources>
                     <exceptions>
                         <exception>
+                            <!-- These are transitive dependencies from Apache POI
+                             and the metadata-extractor parser libraries -->
                             <conflictingDependencies>
                                 <dependency>
                                     <groupId>org.apache.xmlbeans</groupId>
