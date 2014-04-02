@@ -1,4 +1,4 @@
-package com.findwise.utils.tika;
+package com.findwise.hydra.stage.tika;
 
 import org.junit.Assert;
 import org.junit.Before;

@@ -2,7 +2,6 @@ package com.findwise.hydra.stage.tika;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import com.findwise.utils.tika.InputStreamParser;
 import com.findwise.utils.tika.ParsedData;

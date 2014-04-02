@@ -1,4 +1,4 @@
-package com.findwise.utils.tika;
+package com.findwise.hydra.stage.tika;
 
 import java.util.HashMap;
 import java.util.Map;

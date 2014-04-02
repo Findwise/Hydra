@@ -18,6 +18,7 @@ public class DocumentParserHelper {
 
     /**
      * Adds the parsed data as fields to the document, using a prefix for the field names
+     *
      * @param parsedData results of parsing something
      * @param doc the document to modify
      * @param prefix field name prefix

@@ -8,9 +8,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.findwise.utils.tika.InputStreamParser;
-import com.findwise.utils.tika.FieldHelper;
 import com.findwise.utils.tika.ParsedData;
-import com.findwise.utils.tika.UriParser;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.Parser;

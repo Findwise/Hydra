@@ -1,4 +1,6 @@
-package com.findwise.utils.tika;
+package com.findwise.hydra.stage.tika;
+
+import org.apache.http.client.utils.URLEncodedUtils;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -20,7 +22,7 @@ public class UriParser {
         String path = "";
         String query = null;
         String fragment = null;
-        //URLEncodedUtils.parse(s, Charset.defaultCharset());
+        URLEncodedUtils.parse(s, Charset.defaultCharset());
         Matcher m = Pattern.compile("([^:]+)://.*").matcher(s);
         if(m.matches()) {
             scheme = m.group(1);

@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Wrapper for a parsed attachment
+ * Container for data parsed by Tika
  */
 public class ParsedData {
 
@@ -24,10 +24,16 @@ public class ParsedData {
         this.textSanitizer = new TextSanitizer();
     }
 
+    /**
+     * @return sanitized content from the parsed data
+     */
     public String getContent() {
         return textSanitizer.filterInvalidChars(content);
     }
 
+    /**
+     * @return a map with metadata fields, with sanitized field values
+     */
     public Map<String, Object> getMetadata() {
         Map<String, Object> fields = new HashMap<String, Object>();
         for (String name : metadata.names()) {
@@ -41,6 +47,9 @@ public class ParsedData {
         return fields;
     }
 
+    /**
+     * @return the identified language of the content
+     */
     public String getLanguage() {
         return new LanguageIdentifier(content).getLanguage();
     }

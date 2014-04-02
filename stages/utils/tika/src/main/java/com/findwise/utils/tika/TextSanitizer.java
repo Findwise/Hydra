@@ -2,6 +2,12 @@ package com.findwise.utils.tika;
 
 import java.util.List;
 
+/**
+ * Sanitizer for content extracted by Tika
+ *
+ * In some cases, Tika will generate null and other control characters
+ * that can cause problems when used throughout Hydra.
+ */
 public class TextSanitizer {
 
     /**
