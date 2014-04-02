@@ -34,23 +34,13 @@ public class TikaStage extends AbstractProcessStage {
     @Override
     public void process(LocalDocument doc) throws TikaException, SAXException, IOException {
         List<String> files = doc.getFileNames();
+        DocumentParserHelper documentParserHelper = new DocumentParserHelper(addMetaData, addLanguage);
         for (String fileName : files) {
             DocumentFile<Local> df = doc.getFile(fileName);
             String prefix = fileName.replace('.', '_') + "_";
             InputStreamParser inputStreamParser = new InputStreamParser(parser);
             ParsedData parsedData = inputStreamParser.parse(df.getStream());
-
-            doc.putContentField(prefix + "content", parsedData.getContent());
-
-            if (addMetaData) {
-                Map<String, Object> metadata = parsedData.getMetadata();
-                for (String metadataField : metadata.keySet()) {
-                    doc.putContentField(prefix + metadataField, metadata.get(metadataField));
-                }
-            }
-            if (addLanguage) {
-                doc.putContentField(prefix + "language", parsedData.getLanguage());
-            }
+            documentParserHelper.addParsedDataToDocument(parsedData, doc, prefix);
         }
     }
 

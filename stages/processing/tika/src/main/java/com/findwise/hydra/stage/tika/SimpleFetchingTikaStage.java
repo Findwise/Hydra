@@ -73,6 +73,7 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
         Map<String, Object> urls = FieldHelper.getFieldMatchingPattern(doc.getContentMap(),
                 urlFieldPattern);
         UriParser uriParser = new UriParser();
+        DocumentParserHelper documentParserHelper = new DocumentParserHelper(addMetaData, addLanguage);
         InputStreamParser inputStreamParser = new InputStreamParser(parser);
         for (String field : urls.keySet()) {
             Iterator<URL> it = uriParser.getUrlsFromObject(urls.get(field)).iterator();
@@ -84,17 +85,7 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
                 try {
                     String prefix = field + num + "_";
                     ParsedData parsedData = inputStreamParser.parse(inputStream);
-                    doc.putContentField(prefix + "content", parsedData.getContent());
-
-                    if (addMetaData) {
-                        Map<String, Object> metadata = parsedData.getMetadata();
-                        for (String metadataField : metadata.keySet()) {
-                            doc.putContentField(prefix + metadataField, metadata.get(metadataField));
-                        }
-                    }
-                    if (addLanguage) {
-                        doc.putContentField(prefix + "language", parsedData.getLanguage());
-                    }
+                    documentParserHelper.addParsedDataToDocument(parsedData, doc, prefix);
                 } finally {
                     inputStream.close();
                 }

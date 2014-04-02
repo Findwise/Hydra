@@ -5,7 +5,9 @@ import static org.junit.Assert.fail;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.tika.metadata.Metadata;
 import org.junit.Before;
@@ -95,11 +97,9 @@ public class TestTextExtractionStage {
 
 	@Test
 	public void testAddTextToDocument() {
-		StringWriter textData = new StringWriter();
 		String text = "My text";
-		textData.append(text);		
 		
-		stage.addTextToDocument(doc, textData);
+		stage.addTextToDocument(doc, text);
 		
 		String field = (String)doc.getContentField(stage.getContentField());
 		if (!text.equals(field)) {
@@ -109,9 +109,9 @@ public class TestTextExtractionStage {
 	
 	@Test
 	public void testAddMetadataToDocument() {
-		Metadata meta = new Metadata();
-		meta.set("author", "Simon");
-		meta.set("pages", "5");
+        Map<String, Object> meta = new HashMap<String, Object>();
+		meta.put("author", "Simon");
+		meta.put("pages", "5");
 		
 		stage.addMetadataToDocument(doc, meta);
 		
@@ -130,9 +130,8 @@ public class TestTextExtractionStage {
 
 	@Test
 	public void testAddMultiValueMetadataToDocument() {
-		Metadata meta = new Metadata();
-		meta.add("author", "Olof");
-		meta.add("author", "Simon");
+		Map<String, Object> meta = new HashMap<String, Object>();
+		meta.put("author", Arrays.asList("Olof", "Simon"));
 		
 		stage.addMetadataToDocument(doc, meta);
 		
