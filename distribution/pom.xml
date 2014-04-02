@@ -17,14 +17,61 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-core</artifactId>
-			<version>0.6.0-SNAPSHOT</version>
+			<version>${project.parent.version}</version>
 			<classifier>jar-with-dependencies</classifier>
 		</dependency>
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-inserter</artifactId>
-			<version>0.6.0-SNAPSHOT</version>
+			<version>${project.parent.version}</version>
 			<classifier>jar-with-dependencies</classifier>
+		</dependency>
+		<dependency>
+			<groupId>com.findwise.hydra</groupId>
+			<artifactId>hydra-admin-service</artifactId>
+			<version>${project.parent.version}</version>
+			<type>war</type>
+		</dependency>
+		<!-- Stage Libraries -->
+		<dependency>
+			<groupId>com.findwise.hydra</groupId>
+			<artifactId>hydra-basic-stages</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.findwise.hydra</groupId>
+			<artifactId>hydra-groovy-runner</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.findwise.hydra</groupId>
+			<artifactId>hydra-tika-stages</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.findwise.hydra</groupId>
+			<artifactId>hydra-web-stages</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.findwise.hydra</groupId>
+			<artifactId>hydra-elasticsearch-out-stage</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.findwise.hydra</groupId>
+			<artifactId>hydra-solr-out-stage</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.findwise.hydra</groupId>
+			<artifactId>hydra-solr-3-out-stage</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.findwise.hydra</groupId>
+			<artifactId>hydra-debugging</artifactId>
+			<version>${project.parent.version}</version>
 		</dependency>
 	</dependencies>
 
@@ -40,9 +87,25 @@
 						<inherited>false</inherited>
 						<configuration>
 							<tasks>
+								<!-- Core -->
 								<copy file="../core/target/hydra-core-jar-with-dependencies.jar" tofile="bin/hydra-core.jar" />
-								<copy file="../core/target/resource.properties" tofile="bin/resource.properties" />
+								<copy file="../core/target/resource.properties" tofile="bin/hydra-core.properties" />
+								<!-- Admin Service -->
+								<copy file="../admin-service/target/hydra.war" tofile="bin/hydra-admin-service.war" />
+								<copy file="../admin-service/target/admin-service.properties" tofile="bin/hydra-admin-service.properties" />
+								<!-- Tools -->
 								<copy file="../tools/inserter/target/hydra-inserter-jar-with-dependencies.jar" tofile="tools/hydra-inserter.jar" />
+								<!-- Stage Libraries: Processing -->
+								<copy file="../stages/processing/basic/target/hydra-basic-stages-jar-with-dependencies.jar" tofile="lib/hydra-basic-stages-jar-with-dependencies.jar" />
+								<copy file="../stages/processing/hydra-groovy-runner/target/hydra-groovy-runner-jar-with-dependencies.jar" tofile="lib/hydra-groovy-runner-jar-with-dependencies.jar" />
+								<copy file="../stages/processing/tika/target/hydra-tika-stages-jar-with-dependencies.jar" tofile="lib/hydra-tika-stages-jar-with-dependencies.jar" />
+								<copy file="../stages/processing/web/target/hydra-web-stages-jar-with-dependencies.jar" tofile="lib/hydra-web-stages-jar-with-dependencies.jar" />
+								<!-- Stage Libraries: Output -->
+								<copy file="../stages/out/elasticsearch-out/target/hydra-elasticsearch-out-stage-jar-with-dependencies.jar" tofile="lib/hydra-elasticsearch-out-stage-jar-with-dependencies.jar" />
+								<copy file="../stages/out/solr-out/target/hydra-solr-out-stage-jar-with-dependencies.jar" tofile="lib/hydra-solr-out-stage-jar-with-dependencies.jar" />
+								<copy file="../stages/out/solr-out-3.6/target/hydra-solr-3-out-stage-jar-with-dependencies.jar" tofile="lib/hydra-solr-3-out-stage-jar-with-dependencies.jar" />
+								<!-- Stage Libraries: Debugging -->
+								<copy file="../stages/debugging/debugging/target/hydra-debugging-jar-with-dependencies.jar" tofile="lib/hydra-debugging-jar-with-dependencies.jar" />
 							</tasks>
 						</configuration>
 						<goals>

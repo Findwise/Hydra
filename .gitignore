@@ -6,6 +6,7 @@ examples/src/main/resources/*.jar
 .springBeans
 distribution/bin/
 distribution/tools/
+distribution/lib/
 nbactions.xml
 nb-configuration.xml
 .DS_Store
