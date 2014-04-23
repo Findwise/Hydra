@@ -73,7 +73,7 @@ public class MongoDocumentIOMongoLessTest {
 		document.putContentField("a", "b");
 
 		when(oldDocuments.insert(any(DBObject.class))).thenThrow(new MongoInternalException(
-				"I am suck!"));
+				"Intentional exception on insertion!"));
 
 		boolean processed = documentIO.markProcessed(document, "Test stage");
 		

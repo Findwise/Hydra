@@ -43,11 +43,36 @@ public class MongoTailableIterator implements TailableIterator<MongoType> {
 		if(!dbc.isCapped()) {
 			throw new BackingStoreException("Unable to create cursor: collection is not capped");
 		}
-		cursor = dbc.find(query).sort(new BasicDBObject("$natural", 1)).addOption(Bytes.QUERYOPTION_TAILABLE).addOption(Bytes.QUERYOPTION_AWAITDATA);
+		cursor = dbc.find(query)
+				.sort(new BasicDBObject("$natural", 1))
+				.addOption(Bytes.QUERYOPTION_TAILABLE)
+				.addOption(Bytes.QUERYOPTION_AWAITDATA)
+				.addOption(Bytes.QUERYOPTION_NOTIMEOUT);
 	}
 	
 	@Override
 	public boolean hasNext() {
+		ensureValidCursor();
+		if (closed) {
+			return false;
+		}
+		try {
+			return cursor.hasNext();
+		} catch(CursorNotFound e) {
+			if(!closed) {
+				logger.error("Cursor lost without iterator being closed", e);
+			}
+			return false;
+		}
+	}
+
+	/**
+	 * A freshly initialized capped collection will cause
+	 * the cursor to return false on the first call to hasNext().
+	 * This method ensures that the cursor waits for the first
+	 * document to arrive.
+	 */
+	private void ensureValidCursor() {
 		while (cursor.count() == 0 && !closed) {
 			try {
 				createCursor();
@@ -58,17 +83,6 @@ public class MongoTailableIterator implements TailableIterator<MongoType> {
 				logger.info("Interrupt caught during sleep", e);
 				Thread.currentThread().interrupt();
 			}
-		}
-		if (closed) {
-			return false;
-		}
-		try {
-			return cursor.hasNext();
-		} catch(CursorNotFound e) {
-			if(!closed) {
-				logger.error("Cursor lost without being closed", e);
-			}
-			return false;
 		}
 	}
 
