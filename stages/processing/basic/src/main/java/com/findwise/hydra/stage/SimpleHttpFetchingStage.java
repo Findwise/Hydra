@@ -25,6 +25,7 @@ public class SimpleHttpFetchingStage extends AbstractHttpFetchingProcessStage {
 	@Parameter(required = true, description = "Destination field for fetched content")
 	private String outputField;
 
+
 	@Override
 	public URI getUriFromIdentifier(String identifier, int attempts) throws URISyntaxException {
 		return new URI(identifier);
@@ -34,8 +35,13 @@ public class SimpleHttpFetchingStage extends AbstractHttpFetchingProcessStage {
 	public void processResponseEntity(HttpEntity responseEntity, LocalDocument doc) throws ProcessException {
 		try {
 			InputStream inputStream = responseEntity.getContent();
-			Charset encoding = Charset.forName(responseEntity.getContentEncoding().getValue());
-			String content = IOUtils.toString(inputStream, encoding);
+			String content;
+			if (responseEntity.getContentEncoding() != null) {
+				Charset encoding = Charset.forName(responseEntity.getContentEncoding().getValue());
+				content = IOUtils.toString(inputStream, encoding);
+			} else {
+				content = IOUtils.toString(inputStream);
+			}
 			doc.putContentField(outputField, content);
 		} catch (IOException e) {
 			throw new ProcessException("Failed to read HTTP entity body", e);
