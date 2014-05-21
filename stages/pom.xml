@@ -1,15 +1,17 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>com.findwise.hydra</groupId>
-		<artifactId>hydra-parent</artifactId>
-		<version>0.6.0-SNAPSHOT</version>
-	</parent>
+    <parent>
+        <groupId>com.findwise.hydra</groupId>
+        <artifactId>hydra-parent</artifactId>
+        <version>0.6.0-SNAPSHOT</version>
+    </parent>
     <artifactId>stages</artifactId>
     <packaging>pom</packaging>
 
     <modules>
         <module>utils/http</module>
+        <module>utils/tika</module>
         <module>debugging/debugging</module>
         <module>out/elasticsearch-out</module>
         <module>out/solr-out</module>
@@ -20,24 +22,24 @@
         <module>processing/web</module>
     </modules>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>com.ning.maven.plugins</groupId>
-				<artifactId>maven-duplicate-finder-plugin</artifactId>
-				<version>1.0.4</version>
-				<configuration>
-					<failBuildInCaseOfConflict>true</failBuildInCaseOfConflict>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>test</phase>
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.ning.maven.plugins</groupId>
+                <artifactId>maven-duplicate-finder-plugin</artifactId>
+                <version>1.0.4</version>
+                <configuration>
+                    <failBuildInCaseOfConflict>true</failBuildInCaseOfConflict>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
