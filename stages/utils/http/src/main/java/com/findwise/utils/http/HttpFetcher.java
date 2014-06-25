@@ -134,6 +134,7 @@ public class HttpFetcher {
                 attemptIndex++;
                 continue;
             } else {
+                EntityUtils.consumeQuietly(response.getEntity());
                 throw new HttpFetchException(String.format(
                         "Could not process identifier '%s', got response '%s'",
                         identifier, status.toString()));
