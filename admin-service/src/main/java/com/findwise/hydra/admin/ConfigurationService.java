@@ -119,10 +119,10 @@ public class ConfigurationService<T extends DatabaseType> {
 	public void addStageParameters(Stage stage) throws DatabaseException, StageClassNotFoundException {
 		try {
 			Map<String, StageInformation> stages = getPipelineScanner().getStagesMap(stage.getDatabaseFile());
-			String stageClass = (String) stage.getProperties().get(AbstractProcessStageMapper.ARG_NAME_STAGE_CLASS);
+			Map<String, Object> properties = stage.getProperties();
+			String stageClass = (String) properties.get(AbstractProcessStageMapper.ARG_NAME_STAGE_CLASS);
 			if (null != stageClass && stages.containsKey(stageClass)) {
 				Map<String, Object> parameters = (Map<String, Object>) stages.get(stageClass).get("parameters");
-				Map<String, Object> properties = stage.getProperties();
 				for (String parameterName : parameters.keySet()) {
 					Map<String, Object> parameter = (Map<String, Object>) parameters.get(parameterName);
 					if (properties.containsKey(parameterName)) {
@@ -130,6 +130,9 @@ public class ConfigurationService<T extends DatabaseType> {
 					}
 					properties.put(parameterName, parameter);
 				}
+				properties.put("stageName", stage.getName());
+				properties.put("stageGroup", connector.getPipelineReader().getPipeline().getGroupForStage(stage.getName()).getName());
+				properties.put("libId", stage.getDatabaseFile().getId());
 			} else {
 				throw new StageClassNotFoundException("Stage class '" + stageClass
 						+ "' for stage '" + stage.getName() + "' not found."
