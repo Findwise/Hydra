@@ -1,5 +1,6 @@
 package com.findwise.hydra;
 
+import com.findwise.hydra.local.HttpRemotePipeline;
 import org.apache.commons.lang.StringUtils;
 
 import com.findwise.hydra.local.LocalDocument;
@@ -15,7 +16,7 @@ public class StdinInput {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		RemotePipeline rp1 = new RemotePipeline("127.0.0.1", 12001, "StdinInputNode");
+		RemotePipeline rp1 = new HttpRemotePipeline("127.0.0.1", 12001, "StdinInputNode");
 		LocalDocument ld = new LocalDocument();
 		
 		for (String tuple : StringUtils.join(args, " ").split(";")) {

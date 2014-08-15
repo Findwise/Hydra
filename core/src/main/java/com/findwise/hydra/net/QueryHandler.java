@@ -2,6 +2,7 @@ package com.findwise.hydra.net;
 
 import java.io.IOException;
 
+import com.findwise.hydra.local.HttpEndpointConstants;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpException;
@@ -19,90 +20,89 @@ import com.findwise.hydra.Document;
 import com.findwise.hydra.JsonException;
 import com.findwise.hydra.StageManager;
 import com.findwise.hydra.local.LocalQuery;
-import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.net.RESTTools.Method;
 
 public class QueryHandler<T extends DatabaseType> implements ResponsibleHandler {
-	
-	private CachingDocumentNIO<T> io;
-	private boolean performanceLogging = false;
 
-	private static Logger logger = LoggerFactory.getLogger(QueryHandler.class);
+    private CachingDocumentNIO<T> io;
+    private boolean performanceLogging = false;
 
-	public QueryHandler(CachingDocumentNIO<T> dbc, boolean performanceLogging) {
-		this.io = dbc;
-		this.performanceLogging = performanceLogging;
-	}
+    private static Logger logger = LoggerFactory.getLogger(QueryHandler.class);
 
-	@Override
-	public void handle(HttpRequest request, HttpResponse response,
-			HttpContext arg2) throws HttpException, IOException {
-		long start = System.currentTimeMillis();
-		logger.trace("handleGetDocument()");
-		HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request).getEntity();
-		String requestContent = EntityUtils.toString(requestEntity);
-		long tostring = System.currentTimeMillis();
-		String stage = RESTTools.getParam(request, RemotePipeline.STAGE_PARAM);
-		
-		if (stage == null) {
-			HttpResponseWriter.printMissingParameter(response,
-					RemotePipeline.STAGE_PARAM);
-			return;
-		}
+    public QueryHandler(CachingDocumentNIO<T> dbc, boolean performanceLogging) {
+        this.io = dbc;
+        this.performanceLogging = performanceLogging;
+    }
 
-		DatabaseQuery<T> dbq;
-		try {
-			dbq = requestToQuery(requestContent);
-		} catch (JsonException e) {
-			HttpResponseWriter.printJsonException(response, e);
-			return;
-		}
-		
-		long parse = System.currentTimeMillis();
-		
-		reportQuery(stage);		
-		
+    @Override
+    public void handle(HttpRequest request, HttpResponse response,
+                       HttpContext arg2) throws HttpException, IOException {
+        long start = System.currentTimeMillis();
+        logger.trace("handleGetDocument()");
+        HttpEntity requestEntity = ((HttpEntityEnclosingRequest) request).getEntity();
+        String requestContent = EntityUtils.toString(requestEntity);
+        long tostring = System.currentTimeMillis();
+        String stage = RESTTools.getParam(request, HttpEndpointConstants.STAGE_PARAM);
 
-		Document<T> d = io.getAndTag(dbq, stage);
-		
-		long query = System.currentTimeMillis();
-		
-		if (d != null) {
-			HttpResponseWriter.printDocument(response, d, stage);
-		} else {
-			HttpResponseWriter.printNoDocument(response);
-		}
+        if (stage == null) {
+            HttpResponseWriter.printMissingParameter(response,
+                    HttpEndpointConstants.STAGE_PARAM);
+            return;
+        }
 
-		if(performanceLogging) {
-			long serialize = System.currentTimeMillis();
-			Object id = d != null ? d.getID() : null;
-			logger.info(String.format("type=performance event=query stage_name=%s doc_id=\"%s\" start=%d end=%d total=%d entitystring=%d parse=%d query=%d serialize=%d", stage, id, start, serialize, serialize-start, tostring-start, parse-tostring, query-parse, serialize-query));
-		}
-	}
+        DatabaseQuery<T> dbq;
+        try {
+            dbq = requestToQuery(requestContent);
+        } catch (JsonException e) {
+            HttpResponseWriter.printJsonException(response, e);
+            return;
+        }
 
-	private DatabaseQuery<T> requestToQuery(String requestContent)
-			throws JsonException {
-		return io.convert(new LocalQuery(requestContent));
-	}
+        long parse = System.currentTimeMillis();
 
-	@Override
-	public boolean supports(HttpRequest request) {
-		return RESTTools.getMethod(request) == Method.POST
-				&& RemotePipeline.GET_DOCUMENT_URL.equals(RESTTools
-						.getBaseUrl(request));
-	}
+        reportQuery(stage);
 
-	@Override
-	public String[] getSupportedUrls() {
-		return new String[] { RemotePipeline.GET_DOCUMENT_URL };
-	}
-	
-	private void reportQuery(String stage) {
-		StageManager sm = StageManager.getStageManager();
-		
-		if(sm.hasRunnerForStage(stage)) {
-			sm.getRunnerForStage(stage).setHasQueried();
-		}
-	}
+
+        Document<T> d = io.getAndTag(dbq, stage);
+
+        long query = System.currentTimeMillis();
+
+        if (d != null) {
+            HttpResponseWriter.printDocument(response, d, stage);
+        } else {
+            HttpResponseWriter.printNoDocument(response);
+        }
+
+        if(performanceLogging) {
+            long serialize = System.currentTimeMillis();
+            Object id = d != null ? d.getID() : null;
+            logger.info(String.format("type=performance event=query stage_name=%s doc_id=\"%s\" start=%d end=%d total=%d entitystring=%d parse=%d query=%d serialize=%d", stage, id, start, serialize, serialize-start, tostring-start, parse-tostring, query-parse, serialize-query));
+        }
+    }
+
+    private DatabaseQuery<T> requestToQuery(String requestContent)
+            throws JsonException {
+        return io.convert(new LocalQuery(requestContent));
+    }
+
+    @Override
+    public boolean supports(HttpRequest request) {
+        return RESTTools.getMethod(request) == Method.POST
+                && HttpEndpointConstants.GET_DOCUMENT_URL.equals(RESTTools
+                .getBaseUrl(request));
+    }
+
+    @Override
+    public String[] getSupportedUrls() {
+        return new String[] { HttpEndpointConstants.GET_DOCUMENT_URL };
+    }
+
+    private void reportQuery(String stage) {
+        StageManager sm = StageManager.getStageManager();
+
+        if(sm.hasRunnerForStage(stage)) {
+            sm.getRunnerForStage(stage).setHasQueried();
+        }
+    }
 
 }

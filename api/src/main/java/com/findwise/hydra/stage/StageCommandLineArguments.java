@@ -1,5 +1,6 @@
 package com.findwise.hydra.stage;
 
+import com.findwise.hydra.local.HttpEndpointConstants;
 import com.findwise.hydra.local.RemotePipeline;
 
 public class StageCommandLineArguments {
@@ -34,8 +35,8 @@ public class StageCommandLineArguments {
 		}
 
 		String stageName = args[STAGE_NAME_PARAM];
-		String host = (args.length>PIPELINE_HOST_PARAM) ? args[PIPELINE_HOST_PARAM] : RemotePipeline.DEFAULT_HOST;
-		int port = (args.length>PIPELINE_PORT_PARAM) ? Integer.parseInt(args[PIPELINE_PORT_PARAM]) : RemotePipeline.DEFAULT_PORT;
+		String host = (args.length>PIPELINE_HOST_PARAM) ? args[PIPELINE_HOST_PARAM] : HttpEndpointConstants.DEFAULT_HOST;
+		int port = (args.length>PIPELINE_PORT_PARAM) ? Integer.parseInt(args[PIPELINE_PORT_PARAM]) : HttpEndpointConstants.DEFAULT_PORT;
 		boolean usePerformanceLogging = (args.length>PERFORMANCE_LOG_PARAM) ? Boolean.parseBoolean(args[PERFORMANCE_LOG_PARAM]) : false;
 		int logPort = (args.length>LOG_PORT_PARAM) ? Integer.parseInt(args[LOG_PORT_PARAM]) : RemotePipeline.DEFAULT_LOG_PORT;
 		AbstractProcessStage stageOverrideProperties = (args.length>OVERRIDE_PROPERTIES_PARAM) ? AbstractProcessStageMapper.fromJsonString(args[OVERRIDE_PROPERTIES_PARAM]) : null;

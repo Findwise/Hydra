@@ -1,12 +1,11 @@
 package com.findwise.hydra;
 
+import com.findwise.hydra.local.HttpEndpointConstants;
 import com.findwise.hydra.mongodb.MongoConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.findwise.hydra.local.RemotePipeline;
 
 public class FileConfiguration implements CoreConfiguration, Configuration {
 	public static final String DEFAULT_PROPERTIES_FILE = "resource.properties";
@@ -50,7 +49,7 @@ public class FileConfiguration implements CoreConfiguration, Configuration {
 
 	@Override
 	public int getRestPort() {
-		return conf.getInt(COMMUNICATION_PORT_PARAM, RemotePipeline.DEFAULT_PORT);
+		return conf.getInt(COMMUNICATION_PORT_PARAM, HttpEndpointConstants.DEFAULT_PORT);
 	}
 
 	@Override

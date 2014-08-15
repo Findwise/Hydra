@@ -10,19 +10,19 @@ import org.apache.http.protocol.HttpRequestHandler;
 
 public interface ResponsibleHandler extends HttpRequestHandler {
 
-	/**
-	 * Implementing classes should guarantee expected behavior if and only if
-	 * supports(request) returns true.
-	 */
-	@Override
-	public void handle(HttpRequest request, HttpResponse response,
-			HttpContext context) throws HttpException, IOException;
+    /**
+     * Implementing classes should guarantee expected behavior if and only if
+     * supports(request) returns true.
+     */
+    @Override
+    public void handle(HttpRequest request, HttpResponse response,
+                       HttpContext context) throws HttpException, IOException;
 
-	/**
-	 * Indicates that this handler can serve the given request by a later call
-	 * to handle(...)
-	 */
-	public boolean supports(HttpRequest request);
+    /**
+     * Indicates that this handler can serve the given request by a later call
+     * to handle(...)
+     */
+    public boolean supports(HttpRequest request);
 
-	public String[] getSupportedUrls();
+    public String[] getSupportedUrls();
 }

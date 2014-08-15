@@ -2,8 +2,8 @@ package com.findwise.hydra.stage;
 
 import ch.qos.logback.classic.Level;
 import com.findwise.hydra.Logging;
+import com.findwise.hydra.local.HttpRemotePipeline;
 import com.findwise.hydra.local.LocalDocument;
-import com.findwise.hydra.local.LocalDocumentID;
 import com.findwise.hydra.local.RemotePipeline;
 import org.junit.Before;
 import org.junit.Rule;
@@ -15,9 +15,7 @@ import java.util.concurrent.TimeoutException;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -32,7 +30,7 @@ public class ProcessStageRunnerTest {
 	@Before
 	public void setUp() throws Exception {
 		Logging.setGlobalLoggingLevel(Level.OFF);
-		rp = mock(RemotePipeline.class);
+		rp = mock(HttpRemotePipeline.class);
 	}
 
 	public ProcessStageRunner buildStageRunner(AbstractProcessStage stage) {

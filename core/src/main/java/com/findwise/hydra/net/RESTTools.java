@@ -4,9 +4,8 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.findwise.hydra.local.HttpEndpointConstants;
 import org.apache.http.HttpRequest;
-
-import com.findwise.hydra.local.RemotePipeline;
 
 public final class RESTTools {
 	public enum Method { GET, PUT, POST, DELETE, HEAD, TRACE, CONNECT, PATCH, OPTIONS };
@@ -44,7 +43,7 @@ public final class RESTTools {
 	}
 	
 	public static String getStage(HttpRequest request) {
-		return getParam(request, RemotePipeline.STAGE_PARAM);
+		return getParam(request, HttpEndpointConstants.STAGE_PARAM);
 	}
 	
 	public static boolean isPost(HttpRequest request) {

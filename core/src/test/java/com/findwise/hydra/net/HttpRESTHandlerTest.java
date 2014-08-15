@@ -9,10 +9,10 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Random;
 
+import com.findwise.hydra.local.HttpRemotePipeline;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.findwise.hydra.local.RemotePipeline;
 import com.findwise.hydra.memorydb.MemoryConnector;
 import com.findwise.hydra.memorydb.MemoryType;
 
@@ -33,7 +33,7 @@ public class HttpRESTHandlerTest {
 	public void testSupportsAllUrls() throws
 			IllegalArgumentException,
 			IllegalAccessException {
-		Field[] fields = RemotePipeline.class.getFields();
+		Field[] fields = HttpRemotePipeline.class.getFields();
 		for (Field f : fields) {
 			int mod = f.getModifiers();
 			if (Modifier.isFinal(mod) && f.getName().endsWith("_URL")) {

@@ -1,6 +1,6 @@
 package com.findwise.hydra;
 
-import com.findwise.hydra.local.RemotePipeline;
+import com.findwise.hydra.local.HttpEndpointConstants;
 import com.findwise.hydra.mongodb.MongoConfiguration;
 
 public class CoreMapConfiguration implements CoreConfiguration, Configuration {
@@ -44,7 +44,7 @@ public class CoreMapConfiguration implements CoreConfiguration, Configuration {
 
 	public int getRestPort() {
 		return Integer.parseInt(getParameter(COMMUNICATION_PORT_PARAM, ""
-				+ RemotePipeline.DEFAULT_PORT));
+				+ HttpEndpointConstants.DEFAULT_PORT));
 	}
 
 	public String getDatabaseUser() {
