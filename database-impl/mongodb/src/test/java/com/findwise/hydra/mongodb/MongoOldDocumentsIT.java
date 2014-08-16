@@ -10,6 +10,7 @@ import org.bson.types.ObjectId;
 import org.junit.Rule;
 import org.junit.Test;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -122,8 +123,8 @@ public class MongoOldDocumentsIT {
 		}
 	}
 
-	@Test(expected = MongoException.class)
-	public void markingDocumentTwiceThrowsExceptionForDuplicateInserts() {
+	@Test
+	public void documentsCannotBeMarkedDoneTwice() {
 
 		MongoConnector mdc = mongoConnectorResource.getConnector();
 		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
@@ -143,10 +144,10 @@ public class MongoOldDocumentsIT {
 		// Manually insert documents and mark as processed
 		documents.insert(doc1);
 		DatabaseDocument<MongoType> doc1inserted = dw.getAndTag(new MongoQuery(), "duplicateKeyTest");
-		assertTrue(dw.markProcessed(doc1inserted, "duplicateKeyTest"));
+		assertTrue(dw.markFailed(doc1inserted, "duplicateKeyTest"));
 
 		documents.insert(doc2);
 		DatabaseDocument<MongoType> doc2inserted = dw.getAndTag(new MongoQuery(), "duplicateKeyTest");
-		dw.markProcessed(doc2inserted, "duplicateKeyTest"); // Should throw exception
+		assertFalse(dw.markFailed(doc2inserted, "duplicateKeyTest"));
 	}
 }
