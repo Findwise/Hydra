@@ -555,6 +555,13 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 						+ document.getID() + " to " + oldDocuments.getName() + ": "
 						+ e.getMessage(),
 						e);
+			} catch (MongoException e) {
+				// Thrown on duplicate key insert
+				logger.error("An error occurred while writing document "
+						+ document.getID() + " to " + oldDocuments.getName() + ": "
+						+ e.getMessage(),
+						e);
+				break; // No retries for duplicate inserts
 			}
 		}
 
