@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.findwise.hydra</groupId>
 		<artifactId>hydra-parent</artifactId>
-		<version>0.4.2-SNAPSHOT</version>
+		<version>0.4.2</version>
 	</parent>
 
 	<artifactId>distribution</artifactId>
@@ -17,13 +17,13 @@
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-core</artifactId>
-			<version>0.4.2-SNAPSHOT</version>
+			<version>0.4.2</version>
 			<classifier>jar-with-dependencies</classifier>
 		</dependency>
 		<dependency>
 			<groupId>com.findwise.hydra</groupId>
 			<artifactId>hydra-inserter</artifactId>
-			<version>0.4.2-SNAPSHOT</version>
+			<version>0.4.2</version>
 			<classifier>jar-with-dependencies</classifier>
 		</dependency>
 	</dependencies>

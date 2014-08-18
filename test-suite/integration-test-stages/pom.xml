@@ -5,7 +5,7 @@
 	<parent>
 		<artifactId>hydra-test-suite</artifactId>
 		<groupId>com.findwise.hydra</groupId>
-		<version>0.4.2-SNAPSHOT</version>
+		<version>0.4.2</version>
 	</parent>
 
 	<artifactId>integration-test-stages</artifactId>
