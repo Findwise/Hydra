@@ -44,23 +44,6 @@ public class StagesService<T extends DatabaseType> {
 		return connector.getPipelineReader().getPipeline().getGroup(groupName);
 	}
 	
-	public void addStage(Stage stage) throws IOException {
-		addStage(stage, null);
-	}
-	
-	public void addStage(Stage stage, String groupName) throws IOException {
-
-		Pipeline pipeline = connector.getPipelineReader().getPipeline();
-		if(groupName == null) {
-			groupName = stage.getName();
-		}
-		if(!pipeline.hasGroup(groupName)) {
-			pipeline.addGroup(new StageGroup(groupName));
-		}
-		pipeline.getGroup(groupName).addStage(stage);
-		connector.getPipelineWriter().write(pipeline);
-	}
-	
 	private DatabaseFile toDatabaseFile(String libraryId) {
 		DatabaseFile df = new DatabaseFile();
 		try {
@@ -86,7 +69,9 @@ public class StagesService<T extends DatabaseType> {
 	 * @param groupName may be <pre>null</pre> to indicate the same group name as the name of the stage
 	 */
 	public void addStage(String libraryId, String groupName, String name, String jsonConfig, boolean debug) throws JsonException, IOException {
-
+		if(groupName == null) {
+			groupName = name;
+		}
 		Stage s = new Stage(name, toDatabaseFile(libraryId));
 		Map<String, Object> config = SerializationUtils.fromJson(jsonConfig);
 		if (null == config) {
@@ -94,14 +79,26 @@ public class StagesService<T extends DatabaseType> {
 		} else if (!config.containsKey("stageClass")) {
 			throw new JsonException(new JsonParseException("Required configuration parameter 'stageClass' missing"));
 		}
+		config.put("stageName", name);
+		config.put("stageGroup", groupName);
+		config.put("libId", libraryId);
 		s.setProperties(config);
 		if (debug) {
 			s.setMode(Stage.Mode.DEBUG);
 		} else {
 			s.setMode(Stage.Mode.ACTIVE);
 		}
-
 		addStage(s, groupName);
+	}
+
+	public void addStage(Stage stage, String groupName) throws IOException {
+
+		Pipeline pipeline = connector.getPipelineReader().getPipeline();
+		if(!pipeline.hasGroup(groupName)) {
+			pipeline.addGroup(new StageGroup(groupName));
+		}
+		pipeline.getGroup(groupName).addStage(stage);
+		connector.getPipelineWriter().write(pipeline);
 	}
 
 	public Stage getStageInfo(String stageName) {
