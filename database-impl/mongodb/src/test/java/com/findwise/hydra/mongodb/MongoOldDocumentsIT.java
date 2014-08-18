@@ -1,11 +1,16 @@
 package com.findwise.hydra.mongodb;
 
 import com.findwise.hydra.DatabaseDocument;
+import com.findwise.hydra.DocumentID;
 import com.findwise.hydra.DocumentWriter;
 import com.findwise.hydra.TailableIterator;
+import com.mongodb.DBCollection;
+import com.mongodb.MongoException;
+import org.bson.types.ObjectId;
 import org.junit.Rule;
 import org.junit.Test;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -116,5 +121,33 @@ public class MongoOldDocumentsIT {
 		if(tr.hasError) {
 			fail("An exception was thrown by the TailableIterator after interrupt");
 		}
+	}
+
+	@Test
+	public void documentsCannotBeMarkedDoneTwice() {
+
+		MongoConnector mdc = mongoConnectorResource.getConnector();
+		DocumentWriter<MongoType> dw = mdc.getDocumentWriter();
+		dw.prepare();
+
+		DBCollection documents = mdc.getDB().getCollection(MongoDocumentIO.DOCUMENT_COLLECTION);
+
+		// Create two different documents with the same ID
+		DocumentID<MongoType> docId = new MongoDocumentID(new ObjectId());
+		MongoDocument doc1 = new MongoDocument();
+		doc1.setID(docId);
+		doc1.putContentField("a", "test");
+		MongoDocument doc2 = new MongoDocument();
+		doc2.setID(docId);
+		doc2.putContentField("b", "test");
+
+		// Manually insert documents and mark as processed
+		documents.insert(doc1);
+		DatabaseDocument<MongoType> doc1inserted = dw.getAndTag(new MongoQuery(), "duplicateKeyTest");
+		assertTrue(dw.markFailed(doc1inserted, "duplicateKeyTest"));
+
+		documents.insert(doc2);
+		DatabaseDocument<MongoType> doc2inserted = dw.getAndTag(new MongoQuery(), "duplicateKeyTest");
+		assertFalse(dw.markFailed(doc2inserted, "duplicateKeyTest"));
 	}
 }
