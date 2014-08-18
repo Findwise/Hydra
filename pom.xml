@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.findwise.hydra</groupId>
 	<artifactId>hydra-parent</artifactId>
-	<version>0.4.2</version>
+	<version>0.4.3-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<url>http://findwise.github.com/Hydra</url>
 
@@ -28,7 +28,7 @@
 		<connection>scm:git:git@github.com:Findwise/Hydra.git</connection>
 		<developerConnection>scm:git:git@github.com:Findwise/Hydra.git</developerConnection>
 		<url>https://github.com/Findwise/Hydra</url>
-	  <tag>0.4.2</tag>
+	  <tag>HEAD</tag>
   </scm>
 
 	<developers>
