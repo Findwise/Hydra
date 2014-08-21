@@ -24,7 +24,9 @@ import com.findwise.hydra.PipelineReader;
 public class ConfigurationService<T extends DatabaseType> {
 	private PipelineScanner<T> pipelineScanner;
 
-	private DatabaseConnector<T> connector; 
+	private DatabaseConnector<T> connector;
+
+	private LibraryCache libraryCache;
 	
 	private static Logger logger = LoggerFactory
 			.getLogger(ConfigurationService.class);
@@ -32,6 +34,7 @@ public class ConfigurationService<T extends DatabaseType> {
 	public ConfigurationService(DatabaseConnector<T> connector) {
 		this.connector = connector;
 
+		this.libraryCache = new LibraryCache();
 		try {
 			initialize();
 		} catch (IOException e) {
@@ -72,6 +75,7 @@ public class ConfigurationService<T extends DatabaseType> {
 		try {
 			Map<String, Object> map = new HashMap<String, Object>();
 			List<Map<String, Object>> libraries = new ArrayList<Map<String, Object>>();
+
 			for (DatabaseFile df : getPipelineScanner().getLibraryFiles()) {
 				libraries.add(getLibraryMap(df));
 			}
@@ -106,8 +110,19 @@ public class ConfigurationService<T extends DatabaseType> {
 		map.put("id", df.getId());
 		map.put("filename", df.getFilename());
 		map.put("uploaded", df.getUploadDate());
-		map.put("stages", getPipelineScanner().getStagesMap(df));
+		map.put("stages", getStagesMap(df));
 		return map;
+	}
+
+	private Map<String, StageInformation> getStagesMap(DatabaseFile df) throws IOException {
+		Map<String, StageInformation> stages;
+		if (libraryCache.isValidFor(df)) {
+			stages = libraryCache.getStages(df);
+		} else {
+			stages = getPipelineScanner().getStagesMap(df);
+			libraryCache.put(df, stages);
+		}
+		return stages;
 	}
 
 	/**
@@ -118,7 +133,7 @@ public class ConfigurationService<T extends DatabaseType> {
 	@SuppressWarnings("unchecked")
 	public void addStageParameters(Stage stage) throws DatabaseException, StageClassNotFoundException {
 		try {
-			Map<String, StageInformation> stages = getPipelineScanner().getStagesMap(stage.getDatabaseFile());
+			Map<String, StageInformation> stages = getStagesMap(stage.getDatabaseFile());
 			Map<String, Object> properties = stage.getProperties();
 			String stageClass = (String) properties.get(AbstractStage.ARG_NAME_STAGE_CLASS);
 			if (null != stageClass && stages.containsKey(stageClass)) {
