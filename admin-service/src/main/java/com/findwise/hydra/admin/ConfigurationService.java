@@ -6,12 +6,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 import com.findwise.hydra.DatabaseException;
 import com.findwise.hydra.PipelineStatus;
 import com.findwise.hydra.Stage;
 import com.findwise.hydra.admin.rest.StageClassNotFoundException;
 import com.findwise.hydra.stage.AbstractStage;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +30,7 @@ public class ConfigurationService<T extends DatabaseType> {
 
 	private DatabaseConnector<T> connector;
 
-	private LibraryCache libraryCache;
+	private final Cache<String, Map<String, StageInformation>> libraryCache;
 	
 	private static Logger logger = LoggerFactory
 			.getLogger(ConfigurationService.class);
@@ -34,7 +38,7 @@ public class ConfigurationService<T extends DatabaseType> {
 	public ConfigurationService(DatabaseConnector<T> connector) {
 		this.connector = connector;
 
-		this.libraryCache = new LibraryCache();
+		this.libraryCache = CacheBuilder.newBuilder().build();
 		try {
 			initialize();
 		} catch (IOException e) {
@@ -61,6 +65,7 @@ public class ConfigurationService<T extends DatabaseType> {
 	public void addLibrary(String id, String filename, InputStream stream) throws DatabaseException {
 		try {
 			getConnector().getPipelineWriter().save(id, filename, stream);
+			libraryCache.invalidate(id);
 		} catch (IOException e) {
 			throw new DatabaseException("Failed to connect to database", e);
 		}
@@ -116,11 +121,10 @@ public class ConfigurationService<T extends DatabaseType> {
 
 	private Map<String, StageInformation> getStagesMap(DatabaseFile df) throws IOException {
 		Map<String, StageInformation> stages;
-		if (libraryCache.isValidFor(df)) {
-			stages = libraryCache.getStages(df);
-		} else {
-			stages = getPipelineScanner().getStagesMap(df);
-			libraryCache.put(df, stages);
+		try {
+			stages = libraryCache.get(df.getId().toString(), new LibraryCallable(df));
+		} catch (ExecutionException e) {
+			throw new IOException("Failed to fetch stages from library", e);
 		}
 		return stages;
 	}
@@ -208,5 +212,19 @@ public class ConfigurationService<T extends DatabaseType> {
 			initialize();
 		}
 		return pipelineScanner;
+	}
+
+	private class LibraryCallable implements Callable<Map<String, StageInformation>> {
+
+		private final DatabaseFile databaseFile;
+
+		private LibraryCallable(DatabaseFile databaseFile) {
+			this.databaseFile = databaseFile;
+		}
+
+		@Override
+		public Map<String, StageInformation> call() throws Exception {
+			return getPipelineScanner().getStagesMap(databaseFile);
+		}
 	}
 }
