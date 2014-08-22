@@ -121,60 +121,67 @@
 
         <!-- Stage Groups View -->
 	<script type="text/x-handlebars-template" id="stagegroups_stage" class="partial_template">
-		<div>
-			<h3>
-                           <span class="glyphicon glyphicon-tag"></span>
-                           {{name}}
-                        </h3>
-                        <div class="btn-group pull-right">
-                            <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
-                              Action <span class="caret"></span>
-                            </button>
-                            <ul class="dropdown-menu" role="menu">
-                              <li><a href="#" data-toggle="modal" data-target="#{{@index}}-{{name}}-edit"><span class="glyphicon glyphicon-edit"></span> Edit stage</a> </li>
-                                <li class="divider"></li>
-                              <li><a href="#" onclick="inactivete('{{name}}');" ><span class="glyphicon glyphicon-remove"></span> Remove</a></li>
+        <div>
+            <h3>
+                <span class="glyphicon glyphicon-tag"></span>
+                {{name}}
+            </h3>
 
-                            </ul>
-                      </div>
-                        <dl class="dl-horizontal">
-				<dt>Mode</dt>
-				<dd>{{stageModeLabel mode}}</dd>
-				<dt>Library</dt>
-				<dd>{{databaseFile.id}}</dd>
-				<dt>Latest updated</dt>
-				<dd>{{msToReadable propertiesModifiedDate}}</dd>
-			</dl>
+            <div class="btn-group pull-right">
+                <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+                    Action <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li><a href="#" data-toggle="modal" data-target="#{{@index}}-{{name}}-edit"><span
+                            class="glyphicon glyphicon-edit"></span> Edit stage</a></li>
+                    <li class="divider"></li>
+                    <li><a href="#" onclick="inactivete('{{name}}');"><span class="glyphicon glyphicon-remove"></span>
+                        Remove</a></li>
+
+                </ul>
+            </div>
+            <dl class="dl-horizontal">
+                <dt>Mode</dt>
+                <dd>{{stageModeLabel mode}}</dd>
+                <dt>Library</dt>
+                <dd>{{databaseFile.id}}</dd>
+                <dt>Latest updated</dt>
+                <dd>{{msToReadable propertiesModifiedDate}}</dd>
+            </dl>
 
 
-			{{#each properties}}
-                            <dl class="dl-horizontal">
-                                    <dt>{{@key}}</dt>
-                                    <dd>{{prettyPrint this}}</dd>
-                            </dl>
-			{{/each}}
-                        </div>
-		</div>
-                <div class="modal fade" id="{{@index}}-{{this.name}}-edit" tabindex="-1" role="dialog" aria-labelledby="editStageModalLabel-{{this.className}}" aria-hidden="true">
-                    <div class="modal-dialog">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                          <h4 class="modal-title" id="editStageModalLabel-{{this.className}}">Edit {{this.name}}</h4>
-                        </div>
-                        <form action="#addstage" class="form-horizontal" role="form"
-                            method="post" id="{{this.className}}-form" onSubmit="return addStage(this);" >
-                            <input type="hidden" id="modalId" value="{{@index}}-{{this.name}}-edit" />
-                            <div class="modal-body">
-                                {{> edit_stage_properties}}
-                            </div>
-                            <div class="modal-footer">
-                              <button class="btn" data-dismiss="modal" onClick="return refreshCurrentPage()" aria-hidden="true">Cancel</button>
-                              <button type="submit" class="btn btn-primary">Save</button>
-                            </div>
-                        </form>
+            {{#each properties}}
+            <dl class="dl-horizontal">
+                <dt>{{@key}}</dt>
+                <dd>{{prettyPrint this}}</dd>
+            </dl>
+            {{/each}}
+        </div>
+        <div class="modal fade" id="{{@index}}-{{this.name}}-edit" tabindex="-1" role="dialog"
+             aria-labelledby="editStageModalLabel-{{this.className}}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="editStageModalLabel-{{this.className}}">Edit {{this.name}}</h4>
                     </div>
+                    <form action="#addstage" class="form-horizontal" role="form"
+                          method="post" id="{{this.className}}-form" onSubmit="return addStage(this);">
+                        <input type="hidden" id="modalId" value="{{@index}}-{{this.name}}-edit"/>
+
+                        <div class="modal-body">
+                            {{> edit_stage_properties}}
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn" data-dismiss="modal" onClick="return refreshCurrentPage()"
+                                    aria-hidden="true">Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
                 </div>
+            </div>
+        </div>
 	</script>
         <script type="text/x-handlebars-template" id="edit_stage_properties" class="partial_template">
                 {{#each this.properties}}
@@ -209,7 +216,7 @@
                                             <dt>Filename</dt>
                                             <dd>{{this.filename}}</dd>
                                             <dt>Uploaded</dt>
-                                            <dd>{{this.uploaded}}</dd>
+                                            <dd>{{msToReadable this.uploaded}}</dd>
                                     </dl>
                                     {{#each this.stages}}
                                             {{> libraries_stage}}
@@ -342,54 +349,65 @@
                 </table>
 	</script>
         <script type="text/x-handlebars-template" id="libraries_upload" class="partial_template">
-            <div class="modal fade" id="upload-lib" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
-            <div class="modal-dialog" id="upload-modual-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                  <h4 class="modal-title" id="uploadModalLabel">Upload library</h4>
-                </div>
-                <form action="#upload" class="form-horizontal" role="form"
-                    method="post" onSubmit="return addLibrary();" id="library-upload" enctype="multipart/form-data">
-                <div class="modal-body">
+            <div class="modal fade" id="upload-lib" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog" id="upload-modual-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="uploadModalLabel">Upload library</h4>
+                        </div>
+                        <form action="#upload" class="form-horizontal" role="form"
+                              method="post" onSubmit="return addLibrary();" id="library-upload"
+                              enctype="multipart/form-data">
+                            <div class="modal-body">
 
-                      <div id="libUploadSuccess" class="alert alert-success" style="display: none">
-                               Upload successfull!
-                      </div>
+                                <div id="libUploadSuccess" class="alert alert-success" style="display: none">
+                                    Upload successfull!
+                                </div>
 
-                      <div  id="libUploadFail" class="alert alert-error" style="display: none"   >
-                          <strong>Error uploading the library</strong>
-                      </div>
-                      <div class="form-group" >
-                          <label class="col-sm-2 control-label" for="lib-id">
-                              Library Id
-                          </label>
-                          <div class="col-sm-10">
-                              <input type="text" class="form-control" id="upload-lib-id" placeholder="Library Id" required />
-                          </div>
-                      </div>
-                      <div class="form-group">
-                          <label class="col-sm-2 control-label" for="lib-jar">
-                              Jar-file
-                          </label>
-                          <div class="col-sm-10">
-                              <input type="file" name="file" class="form-control" id="upload-lib-jar" placeholder="Library Id" required />
-                          </div>
-                      </div>
-                      <div class="form-group">
-                          <label class="col-sm-2 control-label" for="jarupload">
-                              Progress
-                          </label>
-                          <div class="col-sm-10">
-                              <progress id="jarupload" class="form-control" value="0"></progress>
-                          </div>
+                                <div id="libUploadFail" class="alert alert-error" style="display: none">
+                                    <strong>Error uploading the library</strong>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label" for="lib-id">
+                                        Library Id
+                                    </label>
+
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control" id="upload-lib-id"
+                                               placeholder="Library Id" required/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label" for="lib-jar">
+                                        Jar-file
+                                    </label>
+
+                                    <div class="col-sm-10">
+                                        <input type="file" name="file" class="form-control" id="upload-lib-jar"
+                                               placeholder="Library Id" required/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label" for="jarupload">
+                                        Progress
+                                    </label>
+
+                                    <div class="col-sm-10">
+                                        <progress id="jarupload" class="form-control" value="0"></progress>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="btn" data-dismiss="modal" onClick="return refreshCurrentPage()"
+                                            aria-hidden="true">Close
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">Upload</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                <div class="modal-footer">
-                  <button class="btn" data-dismiss="modal" onClick="return refreshCurrentPage()" aria-hidden="true">Close</button>
-                  <button type="submit"  class="btn btn-primary">Upload</button>
-                  </div>
                 </div>
-                </form>
             </div>
         </script>
 

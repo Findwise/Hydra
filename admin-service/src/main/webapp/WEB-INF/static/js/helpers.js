@@ -39,7 +39,12 @@ function propertyFieldHelper(name, property) {
             ret = ret + ' required';
         }
         if (property.value) {
-            ret = ret + ' value=' + JSON.stringify(property.value);
+            if (property.type == 'String') {
+                ret = ret + ' value=' + property.value;
+            }
+            else {
+                ret = ret + ' value=' + JSON.stringify(property.value);
+            }
         }
         ret = ret + ' />';
     }
@@ -73,7 +78,11 @@ function prettyPrint(value) {
         return new Handlebars.SafeString(value);
     } else if (typeof value == 'object') {
         if(value.value){
-            return new Handlebars.SafeString(JSON.stringify(value.value));
+            if (value.type == 'String') {
+                return new Handlebars.SafeString(value.value);
+            } else {
+                return new Handlebars.SafeString(JSON.stringify(value.value));
+            }
         } else {
              return new Handlebars.SafeString('-');
         }
@@ -110,7 +119,8 @@ function printProperties(key, value) {
 }
 
 function msToReadable(ms) {
-    x = ms / 1000;
+    var x = new Date() - new Date(ms);
+    x /= 1000;
     seconds = Math.round(x % 60);
     x /= 60;
     minutes = Math.round(x % 60);
