@@ -39,7 +39,12 @@ function propertyFieldHelper(name, property) {
             ret = ret + ' required';
         }
         if (property.value) {
-            ret = ret + ' value=' + JSON.stringify(property.value);
+            if (property.type == 'String') {
+                ret = ret + ' value=' + property.value;
+            }
+            else {
+                ret = ret + ' value=' + JSON.stringify(property.value);
+            }
         }
         ret = ret + ' />';
     }
