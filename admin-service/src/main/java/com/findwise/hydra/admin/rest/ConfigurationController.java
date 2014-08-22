@@ -1,6 +1,7 @@
 package com.findwise.hydra.admin.rest;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -139,7 +140,7 @@ public class ConfigurationController {
 		List<StageGroup> stageGroups = stagesService.getStageGroups();
 		for (StageGroup stageGroup : stageGroups) {
 			for (Stage stage : stageGroup.getStages()) {
-				service.addStageParameters(stage);
+				service.addStageParameters(stage, stageGroup.getName());
 			}
 		}
 		Map<String, List<StageGroup>> ret = new HashMap<String, List<StageGroup>>();

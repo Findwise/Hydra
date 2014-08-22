@@ -3,6 +3,7 @@ package com.findwise.hydra.admin;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.Map;
 import com.findwise.hydra.DatabaseException;
 import com.findwise.hydra.PipelineStatus;
 import com.findwise.hydra.Stage;
+import com.findwise.hydra.StageGroup;
 import com.findwise.hydra.admin.rest.StageClassNotFoundException;
 import com.findwise.hydra.stage.AbstractProcessStageMapper;
 import org.slf4j.Logger;
@@ -116,7 +118,7 @@ public class ConfigurationService<T extends DatabaseType> {
 	 * @param stage a stage configuration
 	 */
 	@SuppressWarnings("unchecked")
-	public void addStageParameters(Stage stage) throws DatabaseException, StageClassNotFoundException {
+	public void addStageParameters(Stage stage, String stageGroupName) throws DatabaseException, StageClassNotFoundException {
 		try {
 			Map<String, StageInformation> stages = getPipelineScanner().getStagesMap(stage.getDatabaseFile());
 			Map<String, Object> properties = stage.getProperties();
@@ -124,14 +126,10 @@ public class ConfigurationService<T extends DatabaseType> {
 			if (null != stageClass && stages.containsKey(stageClass)) {
 				Map<String, Object> parameters = (Map<String, Object>) stages.get(stageClass).get("parameters");
 				for (String parameterName : parameters.keySet()) {
-					Map<String, Object> parameter = (Map<String, Object>) parameters.get(parameterName);
-					if (properties.containsKey(parameterName)) {
-						parameter.put("value", properties.get(parameterName));
-					}
-					properties.put(parameterName, parameter);
+					addParameter(properties, parameters, parameterName);
 				}
 				properties.put("stageName", stage.getName());
-				properties.put("stageGroup", connector.getPipelineReader().getPipeline().getGroupForStage(stage.getName()).getName());
+				properties.put("stageGroup", stageGroupName);
 				properties.put("libId", stage.getDatabaseFile().getId());
 			} else {
 				throw new StageClassNotFoundException("Stage class '" + stageClass
@@ -141,6 +139,16 @@ public class ConfigurationService<T extends DatabaseType> {
 		} catch (IOException e) {
 			throw new DatabaseException("Failed to scan pipeline", e);
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void addParameter(Map<String, Object> properties, Map<String, Object> parameters, String parameterName) {
+		Map<String, Object> parameter = new HashMap<String, Object>();
+		parameter.putAll((Map<String, Object>) parameters.get(parameterName));
+		if (properties.containsKey(parameterName)) {
+			parameter.put("value", properties.get(parameterName));
+		}
+		properties.put(parameterName, parameter);
 	}
 
 	/**
