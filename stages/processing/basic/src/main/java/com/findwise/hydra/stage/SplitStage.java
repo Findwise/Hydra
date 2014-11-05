@@ -22,10 +22,23 @@ public class SplitStage extends AbstractProcessStage {
     @Parameter(required = true, name = "splitRegex", description = "The regex to split on")
     private String splitRegex;
 
+    @Parameter(required = false, name = "failOnMissing", description = "If true, stage will throw ProcessException when inField is missing.")
+    private boolean failOnMissing = false;
+
     @Override
     public void process(LocalDocument doc) throws ProcessException {
         try {
             String content = doc.getContentFieldAsString(inField);
+
+            if (content == null) {
+                logger.warn("Missing field '{}'", inField);
+                if (failOnMissing) {
+                    throw new ProcessException("Missing field '"+inField+"'");
+                } else {
+                    return;
+                }
+            }
+
             String[] parts = content.split(splitRegex);
             doc.putContentField(outField, Arrays.asList(parts));
         } catch (IncorrectFieldTypeException e) {
@@ -34,4 +47,19 @@ public class SplitStage extends AbstractProcessStage {
         }
     }
 
+    public void setInField(String inField) {
+        this.inField = inField;
+    }
+
+    public void setOutField(String outField) {
+        this.outField = outField;
+    }
+
+    public void setSplitRegex(String splitRegex) {
+        this.splitRegex = splitRegex;
+    }
+
+    public void setFailOnMissing(boolean failOnMissing) {
+        this.failOnMissing = failOnMissing;
+    }
 }
