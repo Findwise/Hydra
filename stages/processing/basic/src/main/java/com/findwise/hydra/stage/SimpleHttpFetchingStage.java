@@ -25,6 +25,8 @@ public class SimpleHttpFetchingStage extends AbstractHttpFetchingProcessStage {
 	@Parameter(required = true, description = "Destination field for fetched content")
 	private String outputField;
 
+	@Parameter(name="fallbackEncoding", required = false, description = "The encoding to use for pages with unspecified encoding")
+        private String fallbackEncoding = "UTF-8";
 
 	@Override
 	public URI getUriFromIdentifier(String identifier, int attempts) throws URISyntaxException {
@@ -40,7 +42,7 @@ public class SimpleHttpFetchingStage extends AbstractHttpFetchingProcessStage {
 				Charset encoding = Charset.forName(responseEntity.getContentEncoding().getValue());
 				content = IOUtils.toString(inputStream, encoding);
 			} else {
-				content = IOUtils.toString(inputStream);
+				content = IOUtils.toString(inputStream, fallbackEncoding);
 			}
 			doc.putContentField(outputField, content);
 		} catch (IOException e) {
