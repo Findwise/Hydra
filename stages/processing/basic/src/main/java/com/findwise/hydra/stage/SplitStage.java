@@ -31,10 +31,11 @@ public class SplitStage extends AbstractProcessStage {
             String content = doc.getContentFieldAsString(inField);
 
             if (content == null) {
-                logger.warn("Missing field '{}'", inField);
                 if (failOnMissing) {
+                    logger.warn("Missing field '{}'", inField);
                     throw new ProcessException("Missing field '"+inField+"'");
                 } else {
+                    logger.debug("Missing field '{}'", inField);
                     return;
                 }
             }
