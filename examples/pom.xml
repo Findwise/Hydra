@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.findwise.hydra</groupId>
 		<artifactId>hydra-parent</artifactId>
-		<version>0.4.3</version>
+		<version>0.4.4-SNAPSHOT</version>
 	</parent>
     <artifactId>hydra-examples</artifactId>
     <name>${artifactId}</name>
@@ -14,13 +14,13 @@
         <dependency>
             <groupId>com.findwise.hydra</groupId>
             <artifactId>hydra-database</artifactId>
-            <version>0.4.3</version>
+            <version>0.4.4-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>com.findwise.hydra</groupId>
             <artifactId>hydra-api</artifactId>
-            <version>0.4.3</version>
+            <version>0.4.4-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -38,7 +38,7 @@
         <dependency>
             <groupId>com.findwise.hydra</groupId>
             <artifactId>hydra-mongodb</artifactId>
-            <version>0.4.3</version>
+            <version>0.4.4-SNAPSHOT</version>
         </dependency>
 
         <!-- Commandline parser -->
