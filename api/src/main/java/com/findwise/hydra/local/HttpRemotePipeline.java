@@ -93,7 +93,7 @@ public class HttpRemotePipeline implements RemotePipeline {
 			internalLogger.debug("No document found matching query");
 			EntityUtils.consume(response.getEntity());
 		} else {
-			logUnexpected(response);
+			logUnexpected("getDocument()", response);
 		}
 		if (isPerformanceLogging()) {
 			long end = System.currentTimeMillis();
@@ -115,9 +115,8 @@ public class HttpRemotePipeline implements RemotePipeline {
 		return ld;
 	}
 
-	private static void logUnexpected(HttpResponse response) throws IOException {
-		internalLogger.error("Node gave an unexpected response: " + response.getStatusLine());
-		internalLogger.error("Message: " + EntityUtils.toString(response.getEntity()));
+	private static void logUnexpected(String apiMethod, HttpResponse response) throws IOException {
+		internalLogger.error(apiMethod + " gave an unexpected response: " + response.getStatusLine() + ", Message: " + EntityUtils.toString(response.getEntity()));
 	}
 
 	@Override
@@ -164,7 +163,7 @@ public class HttpRemotePipeline implements RemotePipeline {
 			return true;
 		}
 
-		logUnexpected(response);
+		logUnexpected("save(partial=" + partialUpdate + ")", response);
 		return false;
 	}
 
@@ -177,7 +176,7 @@ public class HttpRemotePipeline implements RemotePipeline {
 			return true;
 		}
 
-		logUnexpected(response);
+		logUnexpected("markPending()", response);
 
 		return false;
 	}
@@ -191,7 +190,7 @@ public class HttpRemotePipeline implements RemotePipeline {
 			return true;
 		}
 
-		logUnexpected(response);
+		logUnexpected("markFailed()", response);
 
 		return false;
 	}
@@ -211,7 +210,7 @@ public class HttpRemotePipeline implements RemotePipeline {
 			return true;
 		}
 
-		logUnexpected(response);
+		logUnexpected("markProcessed()", response);
 
 		return false;
 	}
@@ -225,7 +224,7 @@ public class HttpRemotePipeline implements RemotePipeline {
 			return true;
 		}
 
-		logUnexpected(response);
+		logUnexpected("markDiscarded()", response);
 
 		return false;
 	}
@@ -259,7 +258,7 @@ public class HttpRemotePipeline implements RemotePipeline {
 			EntityUtils.consume(response.getEntity());
 			throw new RuntimeException("No stage properties found for " + stageName);
 		} else {
-			logUnexpected(response);
+			logUnexpected("getStagePropertiesJsonString()", response);
 			throw new RuntimeException("Unexpected error while fetching stage properties for " + stageName);
 		}
 		return jsonString;
@@ -307,7 +306,7 @@ public class HttpRemotePipeline implements RemotePipeline {
 
 				return df;
 			} else {
-				logUnexpected(response);
+				logUnexpected("getFile()", response);
 				return null;
 			}
 		} catch (IOException e) {
@@ -323,7 +322,7 @@ public class HttpRemotePipeline implements RemotePipeline {
 				EntityUtils.consume(response.getEntity());
 				return true;
 			} else {
-				logUnexpected(response);
+				logUnexpected("saveFile()", response);
 				return false;
 			}
 		} catch(IOException e) {
@@ -340,7 +339,7 @@ public class HttpRemotePipeline implements RemotePipeline {
 				EntityUtils.consume(response.getEntity());
 				return true;
 			} else {
-				logUnexpected(response);
+				logUnexpected("deleteFile()", response);
 				return false;
 			}
 		} catch (IOException e) {
@@ -360,7 +359,7 @@ public class HttpRemotePipeline implements RemotePipeline {
 					throw new IOException(e);
 				}
 			} else {
-				logUnexpected(response);
+				logUnexpected("getFileNames()", response);
 				return null;
 			}
 		} catch (IOException e) {
