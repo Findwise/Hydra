@@ -223,12 +223,12 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 	}
 
 	@Override
-	public final void putAll(Document<?> d) {
+	public synchronized final void putAll(Document<?> d) {
 		if(d==null) {
 			logger.warn("null passed to MongoDocument.putAll(), doing nothing.");
 			return;
 		}
-		
+
 		if(d.getID() == null) {
 			//Do nothing.
 		}
@@ -239,22 +239,21 @@ public class MongoDocument implements DBObject, DatabaseDocument<MongoType> {
 				ObjectId id = MongoDocumentID.getObjectId(d.getID().toJSON());
 				documentMap.put(MONGO_ID_KEY, id);
 			} catch (JsonException e) {
-				logger.error("Unable to convert ID of type "+d.getID().getClass()+ " to MongoDucumentID", e);
+				logger.error("Unable to convert ID of type " + d.getID().getClass() + " to " + MongoDocumentID.class.getSimpleName(), e);
 				return;
 			}
 		}
-		
-		
-		if(d.getAction()!=null) {
-			setAction(d.getAction());
+
+		if (d.getAction() != null) {
+		    setAction(d.getAction());
 		}
-		
-		for(Map.Entry<String, Object> e : d.getMetadataMap().entrySet()) {
-			putMetadataField(e.getKey(), e.getValue());
+
+		for (Map.Entry<String, Object> e : d.getMetadataMap().entrySet()) {
+		    putMetadataField(e.getKey(), e.getValue());
 		}
-		
-		for(Map.Entry<String, Object> e : d.getContentMap().entrySet()) {
-			putContentField(e.getKey(), e.getValue());
+
+		for (Map.Entry<String, Object> e : d.getContentMap().entrySet()) {
+		    putContentField(e.getKey(), e.getValue());
 		}
 	}
 
