@@ -5,7 +5,7 @@ import com.findwise.hydra.mongodb.MongoConfiguration;
 
 public class CoreMapConfiguration implements CoreConfiguration, Configuration {
 
-	private final MongoConfiguration databaseConfiguration;
+    private final MongoConfiguration databaseConfiguration;
 	private final MapConfiguration mapConfiguration;
 
 	public CoreMapConfiguration(MongoConfiguration databaseConfiguration, MapConfiguration mapConfiguration) {
@@ -100,11 +100,21 @@ public class CoreMapConfiguration implements CoreConfiguration, Configuration {
 		setParameter(CACHE_TIMEOUT, ""+timeout);
 	}
 
-    public int getLoggingPort() {
-        return Integer.parseInt(getParameter(LOGGING_PORT, "" + DEFAULT_LOGGING_PORT));
-    }
+	public int getLoggingPort() {
+		return Integer.parseInt(getParameter(LOGGING_PORT, "" + DEFAULT_LOGGING_PORT));
+	}
 
-    public void setLoggingPort(int loggingPort) {
+	@Override
+	public int getRestThreadCount() {
+		return Integer.parseInt(getParameter(REST_THREAD_COUNT, String
+			.valueOf(Runtime.getRuntime().availableProcessors())));
+	}
+
+	public void setRestThreadCount(int restThreadCount) {
+	    	setParameter(REST_THREAD_COUNT, String.valueOf(restThreadCount));
+	}
+
+	public void setLoggingPort(int loggingPort) {
         setParameter(LOGGING_PORT, "" + loggingPort);
     }
 

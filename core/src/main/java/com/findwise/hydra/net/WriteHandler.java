@@ -110,7 +110,7 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 	private boolean release(Document<T> md, String stage) {
 		return io.markTouched(md.getID(), stage);
 	}
-	
+
 	private boolean handlePartialWrite(DatabaseDocument<T> md, HttpResponse response) throws UnsupportedEncodingException{
 		logger.trace("handlePartialWrite()");
 		if(md.getID()==null) {
@@ -118,21 +118,19 @@ public class WriteHandler<T extends DatabaseType> implements ResponsibleHandler 
 			return false;
 		}
 		logger.debug("Handling a partial write for document "+md.getID());
-		DatabaseDocument<T> inDB = io.getDocumentById(md.getID());
-		if(inDB==null) {
-			HttpResponseWriter.printNoDocument(response);
-			return false;
+
+		if(io.getDocumentById(md.getID()) == null) {
+		    HttpResponseWriter.printNoDocument(response);
+		    return false;
 		}
-		inDB.putAll(md);
 
-
-		if(io.update(inDB)){
-			HttpResponseWriter.printSaveOk(response, md.getID());
-			return true;
-		} 
+		if(io.update(md)){
+		    HttpResponseWriter.printSaveOk(response, md.getID());
+		    return true;
+		}
 		else {
-			HttpResponseWriter.printSaveFailed(response, md.getID());
-			return false;
+		    HttpResponseWriter.printSaveFailed(response, md.getID());
+		    return false;
 		}
 	}
 	

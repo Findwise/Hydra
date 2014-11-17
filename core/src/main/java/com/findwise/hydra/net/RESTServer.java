@@ -12,6 +12,7 @@ import org.apache.http.impl.nio.DefaultHttpServerIODispatch;
 import org.apache.http.impl.nio.DefaultNHttpServerConnection;
 import org.apache.http.impl.nio.DefaultNHttpServerConnectionFactory;
 import org.apache.http.impl.nio.reactor.DefaultListeningIOReactor;
+import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.apache.http.nio.NHttpConnectionFactory;
 import org.apache.http.nio.NHttpServerConnection;
 import org.apache.http.nio.protocol.BasicAsyncRequestHandler;
@@ -53,13 +54,15 @@ public class RESTServer extends Thread {
 
 	private boolean shutdownCalled = false;
 	private boolean executing = false;
-	
+
+	private final int dispatcherThreadCount;
 	private HttpRESTHandler<?> requestHandler;
 	
 	private String id;
 
 	@SuppressWarnings("rawtypes")
-	public RESTServer(int port, HttpRESTHandler requestHandler) {
+	public RESTServer(int port, int restThreadCount, HttpRESTHandler requestHandler) {
+		this.dispatcherThreadCount = restThreadCount;
 		this.requestHandler = requestHandler;
 		id = UUID.randomUUID().toString();
 		requestHandler.setRestId(id);
@@ -70,7 +73,7 @@ public class RESTServer extends Thread {
 	
 	@SuppressWarnings("rawtypes")
 	public RESTServer(CoreConfiguration conf, HttpRESTHandler requestHandler) {
-		this(conf.getRestPort(), requestHandler);
+		this(conf.getRestPort(), conf.getRestThreadCount(), requestHandler);
 	}
 	
 	public boolean isExecuting() {
@@ -168,7 +171,9 @@ public class RESTServer extends Thread {
 
 	        IOEventDispatch ioEventDispatch = new DefaultHttpServerIODispatch(handler, connFactory);
 
-			ioReactor = new DefaultListeningIOReactor();
+		    IOReactorConfig config = new IOReactorConfig();
+		    config.setIoThreadCount(dispatcherThreadCount);
+		    ioReactor = new DefaultListeningIOReactor(config);
 
 			ioReactor.listen(new InetSocketAddress(port));
 			executing = true;
@@ -194,7 +199,8 @@ public class RESTServer extends Thread {
 	}
 	
 	public static RESTServer getNewStartedRESTServer(int port, HttpRESTHandler<?> restHandler) {
-		RESTServer rest = new RESTServer(port, restHandler);
+		RESTServer rest = new RESTServer(port, Runtime.getRuntime().availableProcessors(),
+						 restHandler);
 		
 		if(!rest.blockingStart()) {
 			return getNewStartedRESTServer((int)(Math.random()*64000)+1024, restHandler);
