@@ -109,7 +109,6 @@ public class CachingDocumentNIOTest {
 		inOrder.verify(cache, times(1)).getAndTag(q1, "tag");
 		inOrder.verify(writer, times(1)).getAndTag(eq(q1), (String[]) Mockito.anyVararg());
 		inOrder.verify(cache).add(doc1);
-		verify(doc1).setFetchedBy(eq("tag"), any(Date.class));
 	}
 
 	@Test
