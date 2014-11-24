@@ -30,7 +30,9 @@ public final class Main implements ShutdownHandler {
 	private RESTServer server = null;
 
 	private volatile boolean shuttingDown = false;
-	
+
+	private static Main main;
+
 	public static void main(String[] args) {
 		if (args.length > 1) {
 			logger.error("Some parameters on command line were ignored.");
@@ -43,7 +45,17 @@ public final class Main implements ShutdownHandler {
 			conf = getConfiguration(null);
 		}
 
-		new Main(conf).startup();
+		main = new Main(conf);
+		main.startup();
+	}
+
+	/**
+	 * This method should be used by service wrappers to properly shutdown Hydra.
+	 */
+	public static void stop(@SuppressWarnings("unused") String[] args) {
+		if (main != null) { // No need to shut things down if main never was
+			main.shutdown();
+		}
 	}
 
 	public void startup() {
@@ -103,7 +115,7 @@ public final class Main implements ShutdownHandler {
 		try {
 			nm.blockingStart();
 		} catch (IOException e) {
-			logger.error("Unable to start nodemaster... Shutting down.");
+			logger.error("Unable to start "+nm.getClass().getSimpleName()+"... Shutting down.");
 			shutdown();
 		}
 	}
@@ -117,10 +129,10 @@ public final class Main implements ShutdownHandler {
 			try {
 				simpleSocketServer.close();
 			} catch (Exception e) {
-				logger.debug("Caught exception while shutting down simpleSocketServer. Was it not started?", e);
+				logger.debug("Caught exception while shutting down "+simpleSocketServer.getClass().getSimpleName()+". Was it not started?", e);
 			}
 		} else {
-			logger.trace("simpleSocketServer was null");
+			logger.trace(simpleSocketServer.getClass().getSimpleName()+" was null");
 		}
 
 		if (server != null) {
@@ -194,6 +206,8 @@ public final class Main implements ShutdownHandler {
 
 		@Override
 		public void run() {
+			currentThread().setName(getClass().getSimpleName());
+
 			try {
 				logger.debug("Hydra will be killed in " + killDelay + "ms unless it is shut down gracefully before then");
 				Thread.sleep(killDelay);
