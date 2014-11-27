@@ -66,9 +66,6 @@ public class CachingDocumentNIO<T extends DatabaseType> implements
 			}
 			doc = writer.getAndTag(query, addCacheTag(tags));
 			if (doc != null) {
-				for (String t : tags) {
-					doc.setFetchedBy(t, new Date());
-				}
 				cache.add(doc);
 			}
 		}

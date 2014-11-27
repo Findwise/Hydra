@@ -95,18 +95,28 @@ public class CoreMapConfiguration implements CoreConfiguration, Configuration {
 		return Integer.parseInt(getParameter(CACHE_TIMEOUT, ""
 				+ CachingDocumentNIO.DEFAULT_CACHE_TIMEOUT));
 	}
-	
+
 	public void setCacheTimeout(int timeout) {
-		setParameter(CACHE_TIMEOUT, ""+timeout);
+		setParameter(CACHE_TIMEOUT, "" + timeout);
 	}
 
-    public int getLoggingPort() {
-        return Integer.parseInt(getParameter(LOGGING_PORT, "" + DEFAULT_LOGGING_PORT));
-    }
+	public int getLoggingPort() {
+		return Integer.parseInt(getParameter(LOGGING_PORT, "" + DEFAULT_LOGGING_PORT));
+	}
 
-    public void setLoggingPort(int loggingPort) {
-        setParameter(LOGGING_PORT, "" + loggingPort);
-    }
+	@Override
+	public int getRestThreadCount() {
+		return Integer.parseInt(getParameter(REST_THREAD_COUNT, String
+				.valueOf(Runtime.getRuntime().availableProcessors())));
+	}
+
+	public void setRestThreadCount(int restThreadCount) {
+		setParameter(REST_THREAD_COUNT, String.valueOf(restThreadCount));
+	}
+
+	public void setLoggingPort(int loggingPort) {
+		setParameter(LOGGING_PORT, "" + loggingPort);
+	}
 
 	public String getParameter(String key) {
 		return mapConfiguration.getParameter(key);

@@ -88,8 +88,13 @@ public class FileConfiguration implements CoreConfiguration, Configuration {
 		return conf.getInt(CACHE_TIMEOUT, CachingDocumentNIO.DEFAULT_CACHE_TIMEOUT);
 	}
 
-    @Override
-    public int getLoggingPort() {
+	@Override
+	public int getLoggingPort() {
         return conf.getInt(LOGGING_PORT, DEFAULT_LOGGING_PORT);
     }
+
+	@Override
+	public int getRestThreadCount() {
+		return conf.getInt(REST_THREAD_COUNT, Runtime.getRuntime().availableProcessors());
+	}
 }

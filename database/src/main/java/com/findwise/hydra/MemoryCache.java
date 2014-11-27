@@ -138,10 +138,10 @@ public class MemoryCache<T extends DatabaseType> implements Cache<T> {
 	}
 
 	@Override
-	public boolean update(DatabaseDocument<T> document) {
-		DatabaseDocument<T> inCache = getDocumentById(document.getID());
+	public boolean update(DatabaseDocument<T> partialDocument) {
+		DatabaseDocument<T> inCache = getDocumentById(partialDocument.getID());
 		if (inCache != null) {
-			inCache.putAll(document);
+			inCache.putAll(partialDocument);
 			freshen(inCache.getID());
 			return true;
 		}
