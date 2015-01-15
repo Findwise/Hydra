@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.findwise.hydra.stage.InitFailedException;
-import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -14,14 +12,17 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.findwise.hydra.Document.Action;
+import com.findwise.hydra.SerializationUtils;
 import com.findwise.hydra.local.LocalDocument;
 import com.findwise.hydra.stage.AbstractOutputStage;
+import com.findwise.hydra.stage.InitFailedException;
 import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Writes to elasticsearch via the Transport protocol.
@@ -79,26 +80,20 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 				delete(document);
 				break;
 			case UPDATE:
-				update(document);
+				add(document);
 				break;
 			default:
 				failDocument(document, new RequiredArgumentMissingException("Action must be ADD, DELETE or UPDATE."));
 				break;
 			}
-		} catch (ElasticSearchException e) {
-			failDocument(document, e);
 		} catch (IOException e) {
 			failDocument(document, e);
 		}
 	}
 
-	private void update(LocalDocument document) throws ElasticSearchException, IOException {
-		add(document);
-	}
-
-	private void add(LocalDocument document) throws ElasticSearchException, IOException {
+	private void add(LocalDocument document) throws IOException {
 		String docId = getDocumentId(document);
-		String json = document.contentFieldsToJson(document.getContentFields());
+		String json = SerializationUtils.toJson(document.getContentMap());
 		logger.debug("Indexing document " + getDocumentId(document) + " to index " + documentIndex + " with type " + documentType);
 		ListenableActionFuture<IndexResponse> actionFuture = client.prepareIndex(documentIndex, documentType, docId)
 			.setSource(json)
@@ -107,7 +102,7 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 		logger.debug("Got response for docId " + response.getId());
 		accept(document);
 	}
-
+	
 	private void delete(LocalDocument document) throws IOException {
 		
 		String docId = getDocumentId(document);
@@ -115,7 +110,7 @@ public class ElasticsearchOutputStage extends AbstractOutputStage {
 		ListenableActionFuture<DeleteResponse> actionFuture = client.prepareDelete(documentIndex, documentType, docId)
 				.execute();
 		DeleteResponse response = actionFuture.actionGet(requestTimeout);
-		if (response.isNotFound()) {
+		if (!response.isFound()) {
 			logger.debug("Delete failed, document not found");
 		}
 		else {
