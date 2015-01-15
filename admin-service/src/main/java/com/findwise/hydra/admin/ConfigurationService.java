@@ -3,15 +3,21 @@ package com.findwise.hydra.admin;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 import com.findwise.hydra.DatabaseException;
 import com.findwise.hydra.PipelineStatus;
 import com.findwise.hydra.Stage;
+import com.findwise.hydra.StageGroup;
 import com.findwise.hydra.admin.rest.StageClassNotFoundException;
 import com.findwise.hydra.stage.AbstractStage;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +30,9 @@ import com.findwise.hydra.PipelineReader;
 public class ConfigurationService<T extends DatabaseType> {
 	private PipelineScanner<T> pipelineScanner;
 
-	private DatabaseConnector<T> connector; 
+	private DatabaseConnector<T> connector;
+
+	private final Cache<String, Map<String, StageInformation>> libraryCache;
 	
 	private static Logger logger = LoggerFactory
 			.getLogger(ConfigurationService.class);
@@ -32,6 +40,7 @@ public class ConfigurationService<T extends DatabaseType> {
 	public ConfigurationService(DatabaseConnector<T> connector) {
 		this.connector = connector;
 
+		this.libraryCache = CacheBuilder.newBuilder().build();
 		try {
 			initialize();
 		} catch (IOException e) {
@@ -58,6 +67,7 @@ public class ConfigurationService<T extends DatabaseType> {
 	public void addLibrary(String id, String filename, InputStream stream) throws DatabaseException {
 		try {
 			getConnector().getPipelineWriter().save(id, filename, stream);
+			libraryCache.invalidate(id);
 		} catch (IOException e) {
 			throw new DatabaseException("Failed to connect to database", e);
 		}
@@ -72,6 +82,7 @@ public class ConfigurationService<T extends DatabaseType> {
 		try {
 			Map<String, Object> map = new HashMap<String, Object>();
 			List<Map<String, Object>> libraries = new ArrayList<Map<String, Object>>();
+
 			for (DatabaseFile df : getPipelineScanner().getLibraryFiles()) {
 				libraries.add(getLibraryMap(df));
 			}
@@ -106,8 +117,18 @@ public class ConfigurationService<T extends DatabaseType> {
 		map.put("id", df.getId());
 		map.put("filename", df.getFilename());
 		map.put("uploaded", df.getUploadDate());
-		map.put("stages", getPipelineScanner().getStagesMap(df));
+		map.put("stages", getStagesMap(df));
 		return map;
+	}
+
+	private Map<String, StageInformation> getStagesMap(DatabaseFile df) throws IOException {
+		Map<String, StageInformation> stages;
+		try {
+			stages = libraryCache.get(df.getId().toString(), new LibraryCallable(df));
+		} catch (ExecutionException e) {
+			throw new IOException("Failed to fetch stages from library", e);
+		}
+		return stages;
 	}
 
 	/**
@@ -116,22 +137,18 @@ public class ConfigurationService<T extends DatabaseType> {
 	 * @param stage a stage configuration
 	 */
 	@SuppressWarnings("unchecked")
-	public void addStageParameters(Stage stage) throws DatabaseException, StageClassNotFoundException {
+	public void addStageParameters(Stage stage, String stageGroupName) throws DatabaseException, StageClassNotFoundException {
 		try {
-			Map<String, StageInformation> stages = getPipelineScanner().getStagesMap(stage.getDatabaseFile());
-			Map<String, Object> properties = stage.getProperties();
+			final Map<String, StageInformation> stages = getStagesMap(stage.getDatabaseFile());
+			final Map<String, Object> properties = stage.getProperties();
 			String stageClass = (String) properties.get(AbstractStage.ARG_NAME_STAGE_CLASS);
 			if (null != stageClass && stages.containsKey(stageClass)) {
 				Map<String, Object> parameters = (Map<String, Object>) stages.get(stageClass).get("parameters");
 				for (String parameterName : parameters.keySet()) {
-					Map<String, Object> parameter = (Map<String, Object>) parameters.get(parameterName);
-					if (properties.containsKey(parameterName)) {
-						parameter.put("value", properties.get(parameterName));
-					}
-					properties.put(parameterName, parameter);
+					addParameter(properties, parameters, parameterName);
 				}
 				properties.put("stageName", stage.getName());
-				properties.put("stageGroup", connector.getPipelineReader().getPipeline().getGroupForStage(stage.getName()).getName());
+				properties.put("stageGroup", stageGroupName);
 				properties.put("libId", stage.getDatabaseFile().getId());
 			} else {
 				throw new StageClassNotFoundException("Stage class '" + stageClass
@@ -141,6 +158,16 @@ public class ConfigurationService<T extends DatabaseType> {
 		} catch (IOException e) {
 			throw new DatabaseException("Failed to scan pipeline", e);
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void addParameter(Map<String, Object> properties, Map<String, Object> parameters, String parameterName) {
+		Map<String, Object> parameter = new HashMap<String, Object>();
+		parameter.putAll((Map<String, Object>) parameters.get(parameterName));
+		if (properties.containsKey(parameterName)) {
+			parameter.put("value", properties.get(parameterName));
+		}
+		properties.put(parameterName, parameter);
 	}
 
 	/**
@@ -193,5 +220,19 @@ public class ConfigurationService<T extends DatabaseType> {
 			initialize();
 		}
 		return pipelineScanner;
+	}
+
+	private class LibraryCallable implements Callable<Map<String, StageInformation>> {
+
+		private final DatabaseFile databaseFile;
+
+		private LibraryCallable(DatabaseFile databaseFile) {
+			this.databaseFile = databaseFile;
+		}
+
+		@Override
+		public Map<String, StageInformation> call() throws Exception {
+			return getPipelineScanner().getStagesMap(databaseFile);
+		}
 	}
 }

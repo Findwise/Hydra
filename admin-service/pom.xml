@@ -99,6 +99,11 @@
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>16.0</version>
+        </dependency>
         <!--  Web dependencies -->
         <dependency>
             <groupId>org.webjars</groupId>
