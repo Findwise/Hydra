@@ -1,18 +1,27 @@
 package com.findwise.utils.http;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class HttpFetchConfigurationBuilder {
+    private AuthMethod authMethod = AuthMethod.NONE;
     private String basicAuthUsername = null;
     private String basicAuthPassword = null;
     private String basicAuthHost = null;
     private int basicAuthPort = -1;
+    private String formBasedLoginUrl = null;
+    private Map<String, String> formValues = Collections.emptyMap();
     private String sessionCookieUri = null;
     private List<String> sslHostExceptions = new ArrayList<String>();
     private int retries = 3;
     private long cacheExpiration = -1L;
 
+    public HttpFetchConfigurationBuilder setAuthMethod(AuthMethod authMethod) {
+        this.authMethod = authMethod;
+        return this;
+    }
     public HttpFetchConfigurationBuilder setBasicAuthUsername(String basicAuthUsername) {
         this.basicAuthUsername = basicAuthUsername;
         return this;
@@ -33,6 +42,16 @@ public class HttpFetchConfigurationBuilder {
         return this;
     }
 
+    public HttpFetchConfigurationBuilder setFormBasedLoginUrl(
+            String formBasedLoginUrl) {
+        this.formBasedLoginUrl = formBasedLoginUrl;
+        return this;
+    }
+
+    public HttpFetchConfigurationBuilder setFormValues(Map<String, String> formValues) {
+        this.formValues = formValues;
+        return this;
+    }
     public HttpFetchConfigurationBuilder setSessionCookieUri(String sessionCookieUri) {
         this.sessionCookieUri = sessionCookieUri;
         return this;
@@ -54,8 +73,9 @@ public class HttpFetchConfigurationBuilder {
     }
 
     public HttpFetchConfiguration build() {
-        return new HttpFetchConfiguration(basicAuthUsername, basicAuthPassword,
-                basicAuthHost, basicAuthPort, sessionCookieUri, sslHostExceptions,
-                retries, cacheExpiration);
+        return new HttpFetchConfiguration(authMethod, basicAuthUsername,
+                basicAuthPassword, basicAuthHost, basicAuthPort,
+                formBasedLoginUrl, formValues, sessionCookieUri,
+                sslHostExceptions, retries, cacheExpiration);
     }
 }

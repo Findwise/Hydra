@@ -1,17 +1,32 @@
 package com.findwise.utils.http;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.net.ssl.SSLContext;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.http.Consts;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.conn.scheme.PlainSocketFactory;
@@ -24,19 +39,12 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.cache.CacheConfig;
 import org.apache.http.impl.client.cache.CachingHttpClient;
 import org.apache.http.impl.conn.BasicClientConnectionManager;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.net.ssl.SSLContext;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Generic HTTP fetching utility.
@@ -98,32 +106,41 @@ public class HttpFetcher {
 		return fetch(url, acceptHeader, PLAIN_URI_PROVIDER, PLAIN_GET_REQUEST_PROVIDER);
 	}
 
-	public HttpEntity fetch(String identifier,
-	                        String acceptHeader,
-	                        UriProvider uriProvider, RequestProvider requestProvider) throws HttpFetchException {
-		int attemptIndex = 0;
-		while (true) {
-			HttpResponse response = attemptFetch(identifier, acceptHeader, uriProvider, requestProvider, attemptIndex);
-			StatusLine status = response.getStatusLine();
-			if (HttpStatus.SC_OK == status.getStatusCode()) {
-				return response.getEntity();
-			} else if (attemptIndex < settings.getRetries()) { // If retries = 2, then we should attempt 3 times in total
-				logger.debug("Retrying identifier '{}' due to response '{}'",
-						identifier, status.getStatusCode());
-				EntityUtils.consumeQuietly(response.getEntity());
-				attemptIndex++;
-				continue;
-			} else {
-				throw new HttpFetchException(
-						String.format(
-								"Could not process identifier '%s', got response '%s'",
-								identifier,
-								status.toString()
-						)
-				);
-			}
-		}
-	}
+    public HttpEntity fetch(String identifier, String acceptHeader,
+            UriProvider uriProvider, RequestProvider requestProvider)
+            throws HttpFetchException {
+        cookieStore.clear();
+        int attemptIndex = 0;
+        while (true) {
+            HttpResponse response = attemptFetch(identifier, acceptHeader, uriProvider, requestProvider, attemptIndex);
+            StatusLine status = response.getStatusLine();
+            if (HttpStatus.SC_OK == status.getStatusCode()) {
+                return response.getEntity();
+            } else if (needsFormBasedAuthentication(status)) {
+                try {
+                    EntityUtils.consume(response.getEntity());
+                    if (authenticateWithForm()) {
+                        --attemptIndex;
+                    }
+                } catch (IOException e) {
+                    throw new HttpFetchException(
+                            "Could not process identifier '" + identifier
+                                    + "', HTTPClient reported error", e);
+                }
+                continue;
+            } else if (attemptIndex < settings.getRetries()) { // If retries = 2, then we should attempt 3 times in total
+                logger.debug("Retrying identifier '{}' due to response '{}'", identifier, status.getStatusCode());
+                EntityUtils.consumeQuietly(response.getEntity());
+                attemptIndex++;
+                continue;
+            } else {
+                EntityUtils.consumeQuietly(response.getEntity());
+                throw new HttpFetchException(String.format(
+                        "Could not process identifier '%s', got response '%s'",
+                        identifier, status.toString()));
+            }
+        }
+    }
 
 	private HttpResponse attemptFetch(String identifier, String acceptHeader, UriProvider uriProvider, RequestProvider requestProvider, int attempts) {
 		HttpRequestBase request = createRequest(identifier, acceptHeader, uriProvider, requestProvider, attempts);
@@ -140,6 +157,9 @@ public class HttpFetcher {
 		URI uriFromIdentifier = getUri(identifier, uriProvider, attempts);
 		request.setURI(uriFromIdentifier);
 		request.addHeader(HttpHeaders.ACCEPT, acceptHeader);
+		if (shouldUseBasicAuth()) {
+		    addBasicAuthHeader(request);
+		}
 		return request;
 	}
 
@@ -152,6 +172,49 @@ public class HttpFetcher {
 							+ "'", e);
 		}
 	}
+
+    private boolean shouldUseBasicAuth() {
+        return settings.getAuthMethod() == AuthMethod.BASIC
+                && settings.getBasicAuthUsername() != null
+                && settings.getBasicAuthPassword() != null;
+    }
+
+    private void addBasicAuthHeader(HttpRequestBase request) {
+        String usernamePassword = settings.getBasicAuthUsername() + ":"
+                + settings.getBasicAuthPassword();
+        String headerValue = "Basic "
+                + Base64.encodeBase64String(usernamePassword.getBytes(Charset
+                        .forName("UTF-8")));
+        request.addHeader("Authorization", headerValue);
+    }
+
+    private boolean needsFormBasedAuthentication(StatusLine status) {
+        return HttpStatus.SC_UNAUTHORIZED == status.getStatusCode()
+                && settings.getAuthMethod() == AuthMethod.FORM_BASED;
+    }
+
+    private boolean authenticateWithForm() throws IOException,
+            ClientProtocolException {
+        HttpPost httpPost = new HttpPost(settings.getFormBasedUrl());
+        List<NameValuePair> formEntries = new ArrayList<NameValuePair>();
+        for (Map.Entry<String, String> entry : settings.getFormValues()
+                .entrySet()) {
+            formEntries.add(new BasicNameValuePair(entry.getKey(), entry
+                    .getValue()));
+        }
+        httpPost.setEntity(new UrlEncodedFormEntity(formEntries, Consts.UTF_8));
+        HttpResponse httpResponse = client.execute(httpPost);
+        EntityUtils.consume(httpResponse.getEntity());
+        Header[] locations = httpResponse.getHeaders("Location");
+        while (locations.length > 0) {
+            String location = locations[0].getValue();
+            HttpGet httpGet = new HttpGet(location);
+            httpResponse = client.execute(httpGet);
+            EntityUtils.consume(httpResponse.getEntity());
+            locations = httpResponse.getHeaders("Location");
+        }
+        return HttpStatus.SC_OK == httpResponse.getStatusLine().getStatusCode();
+    }
 
 	private HttpResponse performRequest(HttpRequestBase request) throws IOException {
 		logger.debug("Performing request, uriProvider:'{}', headers:'{}'",
@@ -184,16 +247,6 @@ public class HttpFetcher {
 					new Scheme("http", 80, PlainSocketFactory.getSocketFactory()));
 			BasicClientConnectionManager mgr = new BasicClientConnectionManager(registry);
 			DefaultHttpClient defaultClient = new DefaultHttpClient(mgr);
-			// Set up Basic Auth
-			if (settings.shouldUseBasicAuth()) {
-				defaultClient.getCredentialsProvider()
-						.setCredentials(new AuthScope(
-								settings.getBasicAuthHost(),
-								settings.getBasicAuthPort()),
-								new UsernamePasswordCredentials(
-										settings.getBasicAuthUsername(),
-										settings.getBasicAuthPassword()));
-			}
 			// Set up cookies
 			defaultClient.setCookieStore(cookieStore);
 			// Set up caching
@@ -239,10 +292,6 @@ public class HttpFetcher {
 		}
 	}
 
-	private RequestProvider newDefaultRequestProvider() {
-		return new PlainGetRequestProvider();
-	}
-
 	public CookieStore getCookieStore() {
 		return cookieStore;
 	}
@@ -254,4 +303,8 @@ public class HttpFetcher {
 	public HttpFetchConfiguration getConfiguration() {
 		return settings;
 	}
+
+    public boolean isSupportedScheme(String schemeName) {
+        return client.getConnectionManager().getSchemeRegistry().getSchemeNames().contains(schemeName);
+    }
 }
