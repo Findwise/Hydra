@@ -1,13 +1,15 @@
 package com.findwise.hydra.mongodb;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNull;
-import static junit.framework.Assert.assertTrue;
-import static junit.framework.Assert.fail;
+import static org.junit.Assert.*;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import com.findwise.hydra.Document;
 import org.bson.types.ObjectId;
 import org.junit.Test;
 
@@ -252,7 +254,7 @@ public class MongoDocumentTest {
 		mq.requireNotFetchedByStage("stage2");
 		assertTrue(md.matches(mq));
 	}
-	
+
 	@Test
 	public void testRemoveFetchedBy() {
 		MongoDocument md = new MongoDocument();
@@ -260,10 +262,14 @@ public class MongoDocumentTest {
 		md.setFetchedBy("stage", new Date());
 		md.setFetchedBy("stage2", new Date());
 		assertEquals(2, md.getFetchedBy().size());
-		
+		assertEquals(Arrays.asList("stage", "stage2"),
+				md.getMetadataField(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST));
+
 		md.removeFetchedBy("stage2");
 		assertEquals(1, md.getFetchedBy().size());
 		assertTrue(md.fetchedBy("stage"));
+		assertEquals(Arrays.asList("stage"),
+				md.getMetadataField(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST));
 	}
 	
 	@Test
@@ -301,4 +307,35 @@ public class MongoDocumentTest {
 		mq.requireNotTouchedByStage("stage2");
 		assertTrue(md.matches(mq));
 	}
+
+	@Test
+	public void testPutMetadataField_adds_to_fetchedList() {
+		MongoDocument md = new MongoDocument();
+		Map<String, Date> fetched = new HashMap<String, Date>();
+		fetched.put("somestage", new Date());
+		md.putMetadataField(Document.FETCHED_METADATA_TAG, fetched);
+
+		assertTrue(md.hasMetadataField(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST));
+		assertEquals(Arrays.asList("somestage"), md.getMetadataField(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST));
+	}
+
+	@Test
+	public void testPutMetadataField_does_not_append_to_fetchedList_when_stage_already_there() {
+		MongoDocument md = new MongoDocument();
+		Map<String, Date> fetched1 = new HashMap<String, Date>();
+		fetched1.put("somestage", new Date());
+		md.putMetadataField(Document.FETCHED_METADATA_TAG, fetched1);
+		Map<String, Date> fetched2 = new HashMap<String, Date>();
+		fetched2.put("somestage", new Date());
+		fetched2.put("someOtherStage", new Date());
+		md.putMetadataField(Document.FETCHED_METADATA_TAG, fetched2);
+
+		assertTrue(md.hasMetadataField(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST));
+		List<String> expected = Arrays.asList("somestage", "someOtherStage");
+		List<?> actual = (List<?>) md.getMetadataField(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST);
+		assertEquals(expected.size(), actual.size());
+		assertTrue(actual.containsAll(expected));
+		assertFalse(Collections.disjoint(expected, actual));
+	}
+
 }

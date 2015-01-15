@@ -53,13 +53,12 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	private final WriteConcern concern;
 	
 	private final StatusUpdater updater;
-	
-	private final Set<String> seenTags = new HashSet<String>();
-	
+		
 	private static Logger logger = LoggerFactory.getLogger(MongoDocumentIO.class);
 
 	private final long maxDocumentsToKeep;
 	private final int oldDocsSize;
+	private boolean indexEnsured =false;
 	
 	public static final String DOCUMENT_COLLECTION = "documents";
 	public static final String OLD_DOCUMENT_COLLECTION ="oldDocuments";
@@ -335,9 +334,9 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	 */
 	@Override
 	public MongoDocument getAndTag(DatabaseQuery<MongoType> query, String ... tag) {
-		for(String t : tag) {
-			ensureIndex(t);
-		}
+		
+		ensureIndex();
+		
 		MongoQuery mq = (MongoQuery)query;
 		mq.requireMetadataFieldNotExists(Document.PENDING_METADATA_FLAG);
 
@@ -347,24 +346,28 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 		mq.requireMetadataFieldNotEquals(Document.COMMITTING_METADATA_FLAG, true);
 
 		for(String t : tag) {
-			mq.requireMetadataFieldNotExists(DatabaseDocument.FETCHED_METADATA_TAG+"."+t);
+			mq.requireNotFetchedByStage(t);
 		}
 		DBObject update = new BasicDBObject();
-		for(String t : tag) {
-			update.put(MongoDocument.METADATA_KEY+"."+DatabaseDocument.FETCHED_METADATA_TAG+"."+t, new Date());
-		}
+		List<String> tags = new ArrayList<String>();
 		
-		DBObject dbo = getUpdateObject(update);
+		for(String t : tag) {
+			update.put(MongoDocument.METADATA_KEY + "." + DatabaseDocument.FETCHED_METADATA_TAG + "." + t, new Date());
+			tags.add(t);
+		}
 
+		DBObject dbo = getUpdateObject(update);
+		dbo.put("$addToSet", new BasicDBObject(MongoDocument.METADATA_KEY + "." + MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST,new BasicDBObject("$each",tags)));
+		
 		return findAndModify(mq.toDBObject(), dbo);
 	}
 	
-	private void ensureIndex(String tag) {
-		if(!seenTags.contains(tag)) {
+	private void ensureIndex() {
+		if(!indexEnsured) {
 			long start = System.currentTimeMillis();
-			documents.ensureIndex(MongoDocument.METADATA_KEY+"."+DatabaseDocument.FETCHED_METADATA_TAG+"."+tag);
-			logger.info("Ensured index for stage "+tag+" in "+(System.currentTimeMillis()-start)+" ms");
-			seenTags.add(tag);
+			documents.ensureIndex(MongoDocument.METADATA_KEY + "." + MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST);
+			logger.info("Ensured index for"+ MongoDocument.METADATA_KEY + "." + MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST +" in " + (System.currentTimeMillis() - start) + " ms");
+			indexEnsured = true;
 		}
 	}
 	
@@ -623,7 +626,7 @@ public class MongoDocumentIO implements DocumentReader<MongoType>, DocumentWrite
 	}
 	
 	private MongoDocument findAndModify(DBObject query, DBObject modification) {
-		DBObject c = documents.findAndModify(query, modification);
+		DBObject c = documents.findAndModify( query, null, null, false, modification, true, false );
 		
 		if(c==null) {
 			return null;

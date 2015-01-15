@@ -29,6 +29,8 @@ public class MongoQuery implements DatabaseQuery<MongoType> {
 	private List<String> metadataNotExists;
 	private Map<String, Object> metadataNotEquals;
 	private Map<String, Object> metadataEquals;
+	private Map<String, List<Object>> metadataNotContains;
+	private Map<String, List<Object>> metadataContains;
 	
 	
 	private LocalQuery lq;
@@ -46,6 +48,8 @@ public class MongoQuery implements DatabaseQuery<MongoType> {
 		metadataNotExists = new ArrayList<String>();
 		metadataEquals = new HashMap<String, Object>();
 		metadataNotEquals = new HashMap<String, Object>();
+		metadataContains = new HashMap<String, List<Object>>();
+		metadataNotContains = new HashMap<String, List<Object>>();
 		lq = new LocalQuery();
 	}
 	
@@ -143,24 +147,56 @@ public class MongoQuery implements DatabaseQuery<MongoType> {
 
 	@Override
 	public final void requireTouchedByStage(String stageName) {
-		requireMetadataFieldExists("touched."+stageName, false);
+		requireMetadataFieldExists(MongoDocument.TOUCHED_METADATA_TAG + "." + stageName, false);
 		touchedBy.add(stageName);
 	}
 
 	@Override
 	public final void requireNotTouchedByStage(String stageName) {
-		requireMetadataFieldNotExists("touched."+stageName, false);
+		requireMetadataFieldNotExists(MongoDocument.TOUCHED_METADATA_TAG + "." + stageName, false);
 		notTouchedBy.add(stageName);
 	}
 	
 	public final void requireFetchedByStage(String stageName) {
-		requireMetadataFieldExists("fetched."+stageName, false);
+		requireMetadataFieldContains(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST, stageName);
 		fetchedBy.add(stageName);
 	}
 
 	public final void requireNotFetchedByStage(String stageName) {
-		requireMetadataFieldNotExists("fetched."+stageName, false);
+		requireMetadataFieldNotContains(MongoDocument.MONGO_FETCHED_METADATA_TAG_LIST, stageName);
 		notFetchedBy.add(stageName);
+	}
+
+	public final void requireMetadataFieldContains(String s, Object o) {
+		List<Object> l;
+		if (metadataContains.containsKey(s)) {
+			l = metadataContains.get(s);
+		} else {
+			l = new ArrayList<Object>();
+		}
+		l.add(o);
+		requireMetadataFieldContains(s, l);
+	}
+
+	public final void requireMetadataFieldContains(String s, List<Object> l) {
+		qb = putMetadataField(s).all(l);
+		metadataContains.put(s, l);
+	}
+
+	public final void requireMetadataFieldNotContains(String s, Object o) {
+		List<Object> l;
+		if (metadataNotContains.containsKey(s)) {
+			l = metadataNotContains.get(s);
+		} else {
+			l = new ArrayList<Object>();
+		}
+		l.add(o);
+		requireMetadataFieldNotContains(s, l);
+	}
+
+	public final void requireMetadataFieldNotContains(String s, List<Object> l) {
+		qb = putMetadataField(s).notIn(l);
+		metadataNotContains.put(s, l);
 	}
 	
 	public final DocumentID<MongoType> getRequiredID() {
