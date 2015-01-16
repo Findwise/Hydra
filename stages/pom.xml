@@ -10,6 +10,7 @@
 
     <modules>
         <module>utils/http</module>
+        <module>utils/tika</module>
         <module>debugging/debugging</module>
         <module>in/json-in</module>
         <module>in/server</module>

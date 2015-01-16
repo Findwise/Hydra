@@ -9,6 +9,12 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.findwise.utils.http.AuthMethod;
+import com.findwise.utils.http.HttpFetchConfigurationBuilder;
+import com.findwise.utils.http.HttpFetchException;
+import com.findwise.utils.http.HttpFetcher;
+import com.findwise.utils.tika.InputStreamParser;
+import com.findwise.utils.tika.ParsedData;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.tika.exception.TikaException;
@@ -24,12 +30,29 @@ import com.findwise.hydra.stage.Parameter;
 import com.findwise.hydra.stage.ProcessException;
 import com.findwise.hydra.stage.RequiredArgumentMissingException;
 import com.findwise.hydra.stage.Stage;
-import com.findwise.hydra.stage.tika.utils.TikaUtils;
-import com.findwise.utils.http.AuthMethod;
-import com.findwise.utils.http.HttpFetchConfigurationBuilder;
-import com.findwise.utils.http.HttpFetchException;
-import com.findwise.utils.http.HttpFetcher;
 
+/**
+ * Downloads content which should be parsed by Tika. A pattern is given which 
+ * points out all the fields containing URLs to download and parsed.
+ * 
+ * Notice that the stage will add a prefix to all parsed fields. The prefix has 
+ * the following format FIRST_CAPTURING_CROUP + _ + PARSED_FIELD_NAME
+ * 
+ * e.g. If urlFieldPattern is set to crawl_(url) all parsed fields from tika 
+ * will start with url_.
+ * 
+ * Sample configuration:
+ {@code 
+ {
+   "stageClass": "com.findwise.hydra.stage.tika.SimpleFetchingTikaStage",
+   "query": {
+     "equals":{"type": "file" },
+     "touched":{"set-internal-type": true}
+   }, 
+   "urlFieldPattern" : "(url)"   
+  }  
+  }
+  */
 @Stage(description = "A stage that fetches the content from a given url and appends it the the document")
 public class SimpleFetchingTikaStage extends AbstractProcessStage {
     private static Logger logger = LoggerFactory.getLogger(SimpleFetchingTikaStage.class);
@@ -66,14 +89,18 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 
 	@Override
 	public void process(LocalDocument doc) throws ProcessException {
-		Map<String, Object> urls = TikaUtils.getFieldMatchingPattern(doc,
-				urlFieldPattern);
+		Map<String, Object> urls = FieldHelper.getFieldMatchingPattern(doc.getContentMap(),
+			urlFieldPattern);
+		UriParser uriParser = new UriParser();
+		DocumentParserHelper documentParserHelper = new DocumentParserHelper(addMetaData, addLanguage);
+		InputStreamParser inputStreamParser = new InputStreamParser(parser);
 		for (String field : urls.keySet()) {
 			try {
-				Iterator<URL> it = TikaUtils.getUrlsFromObject(urls.get(field))
+				Iterator<URL> it = uriParser.getUrlsFromObject(urls.get(field))
 						.iterator();
 				for (int i = 1; it.hasNext(); i++) {
 					String num = (i > 1) ? "" + i : "";
+					String prefix = field + num + "_";
 					URL url = it.next();
 					final InputStream inputStream;
 					if (httpFetcher.isSupportedScheme(url.toURI().getScheme())) {
@@ -90,9 +117,8 @@ public class SimpleFetchingTikaStage extends AbstractProcessStage {
 						inputStream = connection.getInputStream();
 					}
 					try {
-					TikaUtils.enrichDocumentWithFileContents(doc, field + num
-							+ "_", inputStream, parser,
-							addMetaData, addLanguage);
+						ParsedData parsedData = inputStreamParser.parse(inputStream);
+						documentParserHelper.addParsedDataToDocument(parsedData, doc, prefix);
 					} finally {
 						inputStream.close();
 					}
