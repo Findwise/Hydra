@@ -1,5 +1,6 @@
 package com.findwise.hydra.mongodb;
 
+import java.util.concurrent.TimeUnit;
 import java.util.prefs.BackingStoreException;
 
 import org.slf4j.Logger;
@@ -16,14 +17,13 @@ import com.mongodb.MongoException.CursorNotFound;
 public class MongoTailableIterator implements TailableIterator<MongoType> {
 	
 	private static Logger logger = LoggerFactory.getLogger(MongoTailableIterator.class);
-	private DBCursor cursor;
+	private DBCursor cursor = null;
 	private DBCollection dbc;
 	
 	
 	boolean closed = false;
 	private DBObject query;
-
-	
+	private boolean collectionIsEmpty = true;
 	
 	/**
 	 * @param dbc
@@ -36,38 +36,67 @@ public class MongoTailableIterator implements TailableIterator<MongoType> {
 	public MongoTailableIterator(DBObject query, DBCollection dbc) throws BackingStoreException{
 		this.dbc = dbc;
 		this.query = query;
-		createCursor();
 	}
 	
 	private void createCursor() throws BackingStoreException {
 		if(!dbc.isCapped()) {
 			throw new BackingStoreException("Unable to create cursor: collection is not capped");
 		}
-		cursor = dbc.find(query).sort(new BasicDBObject("$natural", 1)).addOption(Bytes.QUERYOPTION_TAILABLE).addOption(Bytes.QUERYOPTION_AWAITDATA);
+		cursor = dbc.find(query)
+				.sort(new BasicDBObject("$natural", 1))
+				.addOption(Bytes.QUERYOPTION_TAILABLE)
+				.addOption(Bytes.QUERYOPTION_AWAITDATA)
+				.addOption(Bytes.QUERYOPTION_NOTIMEOUT);
 	}
 	
 	@Override
 	public boolean hasNext() {
-		while (cursor.count() == 0 && !closed) {
+		waitForFirstDocument();
+		if (cursor == null && !ensureValidCursor()) {
+			return false;
+		}
+		while (!closed) {
 			try {
-				createCursor();
-				Thread.sleep(500);
-			} catch (BackingStoreException e) {
-				logger.error("Unable to create cursor during call to hasNext()", e);
+				return cursor.hasNext();
+			} catch(CursorNotFound e) {
+				if(!closed) {
+					logger.error("Cursor lost without iterator being closed", e);
+					if (!ensureValidCursor()) {
+						return false;
+					}
+				} else {
+					return false;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * A freshly initialized capped collection will cause
+	 * the cursor to return false on the first call to hasNext().
+	 * This method ensures that the cursor waits for the first
+	 * document to arrive.
+	 */
+	private void waitForFirstDocument() {
+		while (collectionIsEmpty && !closed) {
+			try {
+				TimeUnit.MILLISECONDS.sleep(500);
 			} catch (InterruptedException e) {
 				logger.info("Interrupt caught during sleep", e);
 				Thread.currentThread().interrupt();
 			}
+			collectionIsEmpty = dbc.count() == 0L;
 		}
-		if (closed) {
-			return false;
-		}
+	}
+
+	private boolean ensureValidCursor() {
 		try {
-			return cursor.hasNext();
-		} catch(CursorNotFound e) {
-			if(!closed) {
-				logger.error("Cursor lost without being closed", e);
-			}
+			createCursor();
+			return true;
+		} catch (BackingStoreException bse) {
+			logger.error(
+					"Unable to create cursor during call to hasNext()", bse);
 			return false;
 		}
 	}
