@@ -24,7 +24,7 @@ public class StageRunnerTest {
 		ShutdownHandler shutdownHandler = Mockito.mock(ShutdownHandler.class);
 		Mockito.when(shutdownHandler.isShuttingDown()).thenReturn(false);
 		
-		StageRunner sr = new StageRunner(group, new File("test"), 0, false, 0, shutdownHandler);
+		StageRunner sr = new StageRunner(group, new File("test"), 0, false, 0, shutdownHandler, "");
 		sr.setStageDestroyer(sd);
 		
 		sr.destroy();

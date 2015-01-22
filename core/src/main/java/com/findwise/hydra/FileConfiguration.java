@@ -97,4 +97,9 @@ public class FileConfiguration implements CoreConfiguration, Configuration {
 	public int getRestThreadCount() {
 		return conf.getInt(REST_THREAD_COUNT, Runtime.getRuntime().availableProcessors());
 	}
+
+	@Override
+	public String getStageJvmParameters() {
+		return conf.getString(STAGE_JVM_PARAMETERS, DEFAULT_STAGE_JVM_PARAMETERS);
+	}
 }

@@ -27,18 +27,19 @@ import com.findwise.hydra.stage.GroupStarter;
 
 public class StageRunner extends Thread {
 
+	private static final int DEFAULT_TIMES_TO_RETRY = -1;
+	private static final String DEFAULT_JAVA_PATH = "java";
 	private StageGroup stageGroup;
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	private StageDestroyer stageDestroyer;
 	private boolean prepared = false;
-	private int timesToRetry = -1;
+	private int timesToRetry = DEFAULT_TIMES_TO_RETRY;
 	private int timesStarted;
 	private int pipelinePort;
 
-	private List<File> files = null;
 	private String jvmParameters = null;
 	private String startupArgsString = null;
-	private String java = "java";
+	private String java = DEFAULT_JAVA_PATH;
 
 	private boolean hasQueried = false;
 
@@ -60,7 +61,7 @@ public class StageRunner extends Thread {
 		return hasQueried;
 	}
 
-	public StageRunner(StageGroup stageGroup, File baseDirectory, int pipelinePort, boolean performanceLogging, int loggingPort, ShutdownHandler shutdownHandler) {
+	public StageRunner(StageGroup stageGroup, File baseDirectory, int pipelinePort, boolean performanceLogging, int loggingPort, ShutdownHandler shutdownHandler, String defaultJvmParameters) {
 		this.stageGroup = stageGroup;
 		this.baseDirectory = baseDirectory;
 		this.targetDirectory = new File(baseDirectory, stageGroup.getName());
@@ -68,6 +69,7 @@ public class StageRunner extends Thread {
 		this.performanceLogging = performanceLogging;
 		this.loggingPort = loggingPort;
 		this.shutdownHandler = shutdownHandler;
+		this.jvmParameters = defaultJvmParameters;
 		timesStarted = 0;
 	}
 
@@ -77,57 +79,57 @@ public class StageRunner extends Thread {
 	 * @throws IOException
 	 */
 	public void prepare() throws IOException {
-		files = new ArrayList<File>();
-
-
 		if ((!baseDirectory.isDirectory() && !baseDirectory.mkdir()) ||
 				(!targetDirectory.isDirectory() && !targetDirectory.mkdir())) {
 			throw new IOException("Unable to write files, target (" + targetDirectory.getAbsolutePath() + ") is not a directory");
 		}
 
 		for (DatabaseFile df : stageGroup.getDatabaseFiles()) {
-			File f = new File(targetDirectory, df.getFilename());
-			files.add(f);
-			InputStream dfis = df.getInputStream();
-			assert(dfis != null);
-			FileOutputStream fos = new FileOutputStream(f);
-			assert(fos != null);
-			try {
-				IOUtils.copy(dfis, fos);
-			} finally {
-				IOUtils.closeQuietly(dfis);
-				IOUtils.closeQuietly(fos);
-			}
+			copyStageLibraryToDirectory(df, targetDirectory);
 		}
 
 		stageDestroyer = new StageDestroyer();
 
-		setParameters(stageGroup.toPropertiesMap());
 		if (stageGroup.getSize() == 1) {
 			//If there is only a single stage in this group, it's configuration takes precedent
 			setParameters(stageGroup.getStages().iterator().next().getProperties());
+		} else {
+			setParameters(stageGroup.toPropertiesMap());
 		}
 
 		prepared = true;
 	}
 
+	private void copyStageLibraryToDirectory(DatabaseFile df, File directory) throws IOException {
+		File f = new File(directory, df.getFilename());
+		InputStream dfis = df.getInputStream();
+		assert(dfis != null);
+		FileOutputStream fos = new FileOutputStream(f);
+		assert(fos != null);
+		try {
+			IOUtils.copy(dfis, fos);
+		} finally {
+			IOUtils.closeQuietly(dfis);
+			IOUtils.closeQuietly(fos);
+		}
+	}
+
 	public final void setParameters(Map<String, Object> conf) {
-		if (conf.containsKey(StageGroup.JVM_PARAMETERS_KEY) && conf.get(StageGroup.JVM_PARAMETERS_KEY) != null) {
-			jvmParameters = (String) conf.get(StageGroup.JVM_PARAMETERS_KEY);
-		} else {
-			jvmParameters = null;
+		if (hasParameter(conf, StageGroup.JAVA_LOCATION_KEY)) {
+			java = (String) conf.get(StageGroup.JAVA_LOCATION_KEY);
 		}
 
-		if (conf.containsKey(StageGroup.JAVA_LOCATION_KEY) && conf.get(StageGroup.JAVA_LOCATION_KEY) != null) {
-			java = (String) conf.get(StageGroup.JAVA_LOCATION_KEY);
-		} else {
-			java = "java";
+		if (hasParameter(conf, StageGroup.JVM_PARAMETERS_KEY)) {
+			jvmParameters = (String) conf.get(StageGroup.JVM_PARAMETERS_KEY);
 		}
-		if (conf.containsKey(StageGroup.RETRIES_KEY) && conf.get(StageGroup.RETRIES_KEY) != null) {
+
+		if (hasParameter(conf, StageGroup.RETRIES_KEY)) {
 			timesToRetry = (Integer) conf.get(StageGroup.RETRIES_KEY);
-		} else {
-			timesToRetry = -1;
 		}
+	}
+
+	private boolean hasParameter(Map<String, Object> conf, String parameter) {
+		return conf.containsKey(parameter) && conf.get(parameter) != null;
 	}
 
 	public void run() {

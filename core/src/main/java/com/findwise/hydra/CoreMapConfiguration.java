@@ -104,6 +104,10 @@ public class CoreMapConfiguration implements CoreConfiguration, Configuration {
 		return Integer.parseInt(getParameter(LOGGING_PORT, "" + DEFAULT_LOGGING_PORT));
 	}
 
+	public void setLoggingPort(int loggingPort) {
+		setParameter(LOGGING_PORT, "" + loggingPort);
+	}
+
 	@Override
 	public int getRestThreadCount() {
 		return Integer.parseInt(getParameter(REST_THREAD_COUNT, String
@@ -114,8 +118,13 @@ public class CoreMapConfiguration implements CoreConfiguration, Configuration {
 		setParameter(REST_THREAD_COUNT, String.valueOf(restThreadCount));
 	}
 
-	public void setLoggingPort(int loggingPort) {
-		setParameter(LOGGING_PORT, "" + loggingPort);
+	@Override
+	public String getStageJvmParameters() {
+		return getParameter(STAGE_JVM_PARAMETERS, DEFAULT_STAGE_JVM_PARAMETERS);
+	}
+
+	public void setDefaultJvmParameters(String defaultJvmParameters) {
+		setParameter(STAGE_JVM_PARAMETERS, defaultJvmParameters);
 	}
 
 	public String getParameter(String key) {
