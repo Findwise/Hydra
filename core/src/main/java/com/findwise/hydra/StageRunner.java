@@ -79,6 +79,9 @@ public class StageRunner extends Thread {
 	 * @throws IOException
 	 */
 	public void prepare() throws IOException {
+		// Clean working directory to ensure renamed libraries are not added on classpath
+		removeFiles();
+
 		if ((!baseDirectory.isDirectory() && !baseDirectory.mkdir()) ||
 				(!targetDirectory.isDirectory() && !targetDirectory.mkdir())) {
 			throw new IOException("Unable to write files, target (" + targetDirectory.getAbsolutePath() + ") is not a directory");
