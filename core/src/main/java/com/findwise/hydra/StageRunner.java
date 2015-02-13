@@ -239,7 +239,11 @@ public class StageRunner extends Thread {
 	}
 
 	private String[] splitJvmParameters() {
-		return jvmParameters.split("(\\s)(?=-)");
+		if (jvmParameters != null) {
+			return jvmParameters.split("\\s(?=-)");
+		} else {
+			return new String[]{};
+		}
 	}
 
 	private String getClassPath() {

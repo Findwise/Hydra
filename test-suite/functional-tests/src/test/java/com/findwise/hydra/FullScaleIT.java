@@ -68,7 +68,8 @@ public class FullScaleIT {
 		mongoConnector.connect();
 
 		// Initialize core, but don't start until test wants to.
-		CoreConfiguration coreConfiguration = new CoreMapConfiguration(mongoConfiguration, new MapConfiguration());
+		CoreMapConfiguration coreConfiguration = new CoreMapConfiguration(mongoConfiguration, new MapConfiguration());
+		coreConfiguration.setDefaultJvmParameters("-Xms4m -Xmx16m");
 		core = new Main(coreConfiguration);
 	}
 
