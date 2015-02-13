@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecuteResultHandler;
@@ -93,11 +94,10 @@ public class StageRunner extends Thread {
 
 		stageDestroyer = new StageDestroyer();
 
+		setParameters(stageGroup.toPropertiesMap());
 		if (stageGroup.getSize() == 1) {
 			//If there is only a single stage in this group, it's configuration takes precedent
 			setParameters(stageGroup.getStages().iterator().next().getProperties());
-		} else {
-			setParameters(stageGroup.toPropertiesMap());
 		}
 
 		prepared = true;
@@ -186,7 +186,7 @@ public class StageRunner extends Thread {
 	 */
 	private boolean runGroup() {
 		CommandLine cmdLine = new CommandLine(java);
-		cmdLine.addArgument(jvmParameters, false);
+		cmdLine.addArguments(splitJvmParameters(), false);
 		cmdLine.addArgument("-cp");
 		cmdLine.addArgument("${classpath}", false);
 		cmdLine.addArgument(GroupStarter.class.getCanonicalName());
@@ -236,6 +236,10 @@ public class StageRunner extends Thread {
 			return false;
 		}
 		return true;
+	}
+
+	private String[] splitJvmParameters() {
+		return jvmParameters.split("(\\s)(?=-)");
 	}
 
 	private String getClassPath() {
