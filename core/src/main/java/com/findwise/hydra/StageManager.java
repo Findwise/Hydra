@@ -16,14 +16,14 @@ public final class StageManager {
 	}
 	
 	public static StageManager getStageManager() {
-		if(self==null) {
+		if (self == null) {
 			self = new StageManager();
 		}
 		return self;
 	}
 	
 	public StageRunner getRunner(String groupName) {
-		if(runnerMap.containsKey(groupName)) {
+		if (runnerMap.containsKey(groupName)) {
 			return runnerMap.get(groupName);
 		}
 		return null;
@@ -34,8 +34,8 @@ public final class StageManager {
 	}
 	
 	public StageRunner getRunnerForStage(String stageName) {
-		for(StageRunner runner : runnerMap.values()) {
-			if(runner.getStageGroup().hasStage(stageName)) {
+		for (StageRunner runner : runnerMap.values()) {
+			if (runner.getStageGroup().hasStage(stageName)) {
 				return runner;
 			}
 		}
@@ -51,7 +51,7 @@ public final class StageManager {
 	}
 	
 	public StageRunner removeRunner(String groupName) {
-		if(runnerMap.containsKey(groupName)) {
+		if (runnerMap.containsKey(groupName)) {
 			StageRunner ret = runnerMap.get(groupName);
 			runnerMap.remove(groupName);
 			return ret;
@@ -61,7 +61,7 @@ public final class StageManager {
 	
 	public void findAndDestroy(String groupName) {
 		StageRunner sw = removeRunner(groupName);
-		if(sw!=null) {
+		if (sw != null) {
 			sw.destroy();
 		}
 	}

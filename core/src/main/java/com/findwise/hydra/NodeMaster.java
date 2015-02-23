@@ -127,13 +127,20 @@ public final class NodeMaster<T extends DatabaseType> extends Thread {
 	}
 	
 	private void addMissingGroups(Pipeline newPipeline) {
-		for(StageGroup group : newPipeline.getStageGroups()) {
-			if(!pipeline.hasGroup(group.getName())) {
+		for (StageGroup group : newPipeline.getStageGroups()) {
+			if (!pipeline.hasGroup(group.getName())) {
 				pipeline.addGroup(group);
-				if(attachFiles(group)) {
-					sm.addRunner(new StageRunner(group, new File(namespace), port, conf.isPerformanceLogging(), conf.getLoggingPort(), shutdownHandler));
+				if (attachFiles(group)) {
+					sm.addRunner(new StageRunner(
+							group,
+							new File(namespace),
+							port,
+							conf.isPerformanceLogging(),
+							conf.getLoggingPort(),
+							shutdownHandler,
+							conf.getStageJvmParameters()));
 				} else {
-					logger.error("Was unable to start the stage group '"+group.getName()+"' due to missing libraries.");
+					logger.error("Was unable to start the stage group '" + group.getName() + "' due to missing libraries.");
 				}
 			}
 		}
@@ -141,13 +148,14 @@ public final class NodeMaster<T extends DatabaseType> extends Thread {
 	
 	private boolean attachFiles(StageGroup group) {
 		Set<DatabaseFile> files = group.getDatabaseFiles();
-		if(files == null) {
+		if (files != null) {
+			for(DatabaseFile file : files) {
+				file.attach(dbc.getPipelineReader().getStream(file));
+			}
+			return true;
+		} else {
 			return false;
 		}
-		for(DatabaseFile file : group.getDatabaseFiles()) {
-			file.attach(dbc.getPipelineReader().getStream(file));
-		}
-		return true;
 	}
 	
 	public CachingDocumentNIO<T> getDocumentIO() {
