@@ -69,7 +69,7 @@ public class FullScaleIT {
 
 		// Initialize core, but don't start until test wants to.
 		CoreMapConfiguration coreConfiguration = new CoreMapConfiguration(mongoConfiguration, new MapConfiguration());
-		coreConfiguration.setDefaultJvmParameters("-Xms4m -Xmx16m");
+		coreConfiguration.setDefaultJvmParameters("-Xms4m -Xmx64m");
 		core = new Main(coreConfiguration);
 	}
 
