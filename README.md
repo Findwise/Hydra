@@ -153,7 +153,7 @@ The `query` in the configuration is used to decide what documents the stage shou
 * `{ "touched" : { "stageId" : true/false } }` - Matches if a documents has (or has not if value is `false`) been processed by the stage with id `stageId`
 * `{ "exists" : { "fieldName" : true/false } }` - Matches if the document has (or has not if value is `false`) a field called `fieldName`
 * `{ "equals" : { "fieldName" : fieldValue} }` - Matches if the document has a field called `fieldName` with the value `fieldValue` (where `fieldValue` may be any object)
-* `{ "notEquals" : { "fieldName" : fieldValue} }` - Matches whenever equlas is not matching
+* `{ "notEquals" : { "fieldName" : fieldValue} }` - Matches whenever equals is not matching
 * `{ "action" : "ADD"/"UPDATE"/"DELETE" }` - Matches if the action of the document is set to `ADD`, `UPDATE` or `DELETE`
 
 #### Inserting the configuration
